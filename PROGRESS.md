@@ -131,3 +131,16 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - Build + lint + 9 tests pass. **Verified loop:** create card -> persists to IndexedDB
   -> shows in Browse -> survives reload.
 - ✅ **M1 done.** Next: M2 (review engine — FSRS + review session).
+
+### 2026-06-23 — M2: FSRS scheduler module
+- Installed `ts-fsrs` (v5.4.1).
+- Added `learningSteps` to `SchedulingState` (persisted so FSRS short-term learning
+  steps survive across sessions; DESIGN §3 updated). `initialSchedulingState` seeds 0.
+- `domain/scheduling/scheduler.ts`: pure wrapper mapping our camelCase/Millis/string-state
+  <-> ts-fsrs Card (Date/snake_case/State enum). `reviewState(state, rating, now)`,
+  `previewStates(state, now)` (per-grade next states for button labels), and
+  `buildReviewLog({before, after, ...})` with exact deltas.
+- `domain/scheduling/format.ts`: `formatInterval` (<1m / 10m / 2h / 5d / mo / y).
+- `scheduler.test.ts`: 5 tests (Good advances reps/due, Again < Easy, preview monotonic,
+  log deltas, interval formatting). Total suite: 14 tests, all green.
+- Build + lint clean. Next: review session (state machine + GradeBar + wiring).

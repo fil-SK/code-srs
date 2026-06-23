@@ -15,6 +15,7 @@ export interface SchedulingState {
   scheduledDays: number
   reps: number
   lapses: number
+  learningSteps: number // current (re)learning step index; persisted for FSRS
   state: SchedulingStateKind
   lastReview?: Millis
 }

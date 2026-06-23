@@ -166,6 +166,7 @@ interface SchedulingState {     // mirrors ts-fsrs Card
   due: Millis; stability: number; difficulty: number;
   elapsedDays: number; scheduledDays: number;
   reps: number; lapses: number;
+  learningSteps: number;        // current (re)learning step index, persisted for FSRS
   state: 'new' | 'learning' | 'review' | 'relearning';
   lastReview?: Millis;
 }

@@ -12,6 +12,7 @@ export function initialSchedulingState(now: Millis = Date.now()): SchedulingStat
     scheduledDays: 0,
     reps: 0,
     lapses: 0,
+    learningSteps: 0,
     state: 'new',
   }
 }
