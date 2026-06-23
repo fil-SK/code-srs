@@ -54,3 +54,12 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   `PagePlaceholder` stub noting its target milestone.
 - No-flash inline theme script in index.html; removed stock `App.tsx`.
 - Build passes; oxlint clean. **M0 remaining:** PWA + first deploy.
+
+### 2026-06-23 — M0: PWA setup (M0 complete; deploy deferred)
+- Installed `vite-plugin-pwa`; configured manifest (name, theme/bg `#0b0e14`,
+  standalone, `icon.svg`) with `registerType: autoUpdate`, `injectRegister: auto`.
+- Added `public/icon.svg` brand mark; ignored `dev-dist/`.
+- Build emits `sw.js`, `manifest.webmanifest`, Workbox precache (6 entries) →
+  app is installable + offline-capable.
+- **Deployment deferred** by choice — will set up (provider TBD) when going live.
+- ✅ **M0 done.** Next: M1 (data seam + Basic card).
