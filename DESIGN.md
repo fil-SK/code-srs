@@ -265,6 +265,11 @@ App
 
 Dark mode via Tailwind + ThemeProvider. Syntax highlighting + editing via CodeMirror 6.
 
+**Reveal interaction:** self-graded cards (basic, codeReading, bugFinding) use a
+**flip-to-reveal** animation (tap card -> 3D rotate to answer -> grade bar appears).
+Cards with tall code snippets fall back to a smooth slide/expand reveal, since a 3D
+flip is awkward for long content on mobile. Finalized per-type in M3.
+
 ---
 
 ## 8. Folder Structure
