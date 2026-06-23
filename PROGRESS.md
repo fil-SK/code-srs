@@ -91,3 +91,14 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - `data/index.ts`: `getRepository()` factory (the one place that picks the backend).
 - Build + oxlint clean. Note: no automated tests yet — Vitest + fake-indexeddb is a
   small dedicated step to schedule. Next: TanStack Query layer + Basic card UI.
+
+### 2026-06-23 — M1: test setup + DexieRepository coverage
+- Installed `vitest` + `fake-indexeddb`; added `vitest.config.ts` (node env, `@` alias,
+  setup file importing `fake-indexeddb/auto`) and `test` / `test:watch` scripts.
+- Excluded `*.test.ts(x)` and `src/test` from the app tsconfig so the prod build skips them.
+- `domain/scheduling/state.ts`: `initialSchedulingState(now)` — neutral "new" seed (M2
+  wires ts-fsrs to evolve it).
+- `DexieRepository.test.ts`: 9 tests covering CRUD/upsert/delete/bulkPut, getDue
+  (due/new vs future vs suspended, deck filter, limit, sort), search (text, suspended,
+  type, tag), and reviews (append, forCard ordering, range). All green.
+- Build + lint + tests pass. Next: TanStack Query layer + Basic card UI.
