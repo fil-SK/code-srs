@@ -75,3 +75,19 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - `data/repository.ts`: the storage seam — `CrudRepo<T>` (incl. `bulkPut` for import),
   `CardRepo` (`getDue`, `search`), `ReviewRepo`, and the `Repository` aggregate.
 - Build + oxlint clean. Next: DexieRepository (IndexedDB implementation).
+
+### 2026-06-23 — M1: DexieRepository (IndexedDB)
+- Installed `dexie`.
+- `data/dexie/db.ts`: `AppDB` (v1) with tables cards/decks/drafts/reviewLogs.
+  Indexes: cards `id, deckId, type, *tags, scheduling.due`; decks `id, parentId, name`;
+  drafts `id, createdAt`; reviewLogs `id, cardId, reviewedAt`. Booleans not indexed
+  (IndexedDB keys can't be boolean) — `suspended` filtered in memory.
+- `domain/search/searchableText.ts`: exhaustive switch flattening each card type's
+  content to a search string (compile error forces handling new types).
+- `data/dexie/DexieRepository.ts`: implements the `Repository` seam. Generic `crud()`
+  helper (`getAll/getById/put/bulkPut/delete`); `getDue` (index by due date + in-memory
+  filters, sorted by due); `search` (in-memory filter, sorted by updatedAt); review log
+  append/forCard/range.
+- `data/index.ts`: `getRepository()` factory (the one place that picks the backend).
+- Build + oxlint clean. Note: no automated tests yet — Vitest + fake-indexeddb is a
+  small dedicated step to schedule. Next: TanStack Query layer + Basic card UI.
