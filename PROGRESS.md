@@ -102,3 +102,17 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   (due/new vs future vs suspended, deck filter, limit, sort), search (text, suspended,
   type, tag), and reviews (append, forCard ordering, range). All green.
 - Build + lint + tests pass. Next: TanStack Query layer + Basic card UI.
+
+### 2026-06-23 — M1: TanStack Query layer
+- Installed `@tanstack/react-query`; `app/queryClient.ts` (staleTime 30s, no retry, no
+  refetch-on-focus — local data only changes via our mutations); wired
+  `QueryClientProvider` into `providers.tsx`.
+- `domain/cards/factory.ts`: `createCard(input)` fills the envelope (id, timestamps,
+  suspended, initial scheduling). `NewCardInput` uses a **distributive Omit** so the
+  discriminated `type`<->`content` correlation survives.
+- `hooks/queryKeys.ts`: centralized keys for consistent invalidation.
+- `hooks/useDecks.ts` (useDecks, useCreateDeck, useSaveDeck, useDeleteDeck) and
+  `hooks/useCards.ts` (useCard, useDueCards, useSearchCards, useCreateCard, useSaveCard,
+  useDeleteCard) wrapping `getRepository()`; mutations invalidate affected keys.
+- Build + lint clean. Next: Basic card UI (create/edit + list) — closes the
+  UI -> Query -> repo -> IndexedDB loop end-to-end.
