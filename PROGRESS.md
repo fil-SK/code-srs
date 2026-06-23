@@ -176,3 +176,20 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   `CardEditorPage` (renders `def.Editor`; page owns deck/tags/type). Removed inline Basic.
 - Build + lint + 15 tests pass; Basic behavior unchanged. Next M3 (b): CodeMirror + Code
   Reading / Bug Finding.
+
+### 2026-06-23 — M3 (b): CodeMirror + Code Reading & Bug Finding
+- Installed CodeMirror 6 (state/view/language + lang-cpp/python/javascript/rust +
+  theme-one-dark). Curated language set (C/C++, Python, JS, TS, Rust, plaintext).
+- `components/code/CodeView.tsx`: read-only highlighted display; transparent over
+  `--code-bg`; highlight style follows app theme (oneDark vs default).
+- `components/code/LazyCodeView.tsx`: React.lazy wrapper so CodeMirror loads on demand.
+- Split language module: `languageList.ts` (labels only, for editor select) vs
+  `languageExtensions.ts` (grammars, used only by CodeView). This keeps grammars out of
+  the main bundle: initial JS dropped from ~1084kB to ~497kB (157kB gz); CodeMirror is a
+  ~588kB chunk fetched lazily. (Lazy chunk triggers the >500kB warning — acceptable.)
+- `components/code/CodeBlockField.tsx`: language picker + mono textarea for editors.
+- Renderers: `codeReading` (code + question -> answer) and `bugFinding` (prompt + code +
+  optional progressive hint -> explanation). Both self-graded; registered.
+- Added a **card-type picker** to the New Card editor (implemented types only), so the new
+  types are creatable.
+- Build + lint + 15 tests pass. Next M3 (c): MCQ (first auto-graded type).

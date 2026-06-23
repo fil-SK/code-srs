@@ -4,6 +4,9 @@ import type { ReactNode } from 'react'
 export const fieldClass =
   'w-full rounded-[9px] border border-border bg-code-bg px-3.5 py-2.5 text-sm text-text outline-none focus:border-accent'
 
+export const selectClass =
+  'w-full rounded-[9px] border border-border bg-code-bg px-3 py-2 text-sm text-text outline-none focus:border-accent'
+
 // Labeled form field wrapper.
 export function Field({
   label,

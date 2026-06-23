@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
-import { Field, fieldClass } from '@/components/ui/Field'
+import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import type { NewCardInput } from '@/domain/cards/factory'
 import { useCard, useCreateCard, useSaveCard } from '@/hooks/useCards'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
 import { cardTypeMeta } from './cardTypeMeta'
-import { getCardDefinition } from './registry'
+import { getCardDefinition, isTypeImplemented } from './registry'
+
+const IMPLEMENTED_TYPES = (Object.keys(cardTypeMeta) as CardType[]).filter(
+  isTypeImplemented,
+)
 
 function parseTags(raw: string): string[] {
   return Array.from(
@@ -34,11 +38,12 @@ export function CardEditorPage() {
   const saveCard = useSaveCard()
   const createDeck = useCreateDeck()
 
-  const type: CardType = existing?.type ?? 'basic'
+  const [newType, setNewType] = useState<CardType>('basic')
+  const type: CardType = existing?.type ?? newType
   const def = getCardDefinition(type)
 
   const [content, setContent] = useState<Card['content'] | null>(() =>
-    isEdit ? null : (def?.emptyContent() ?? null),
+    getCardDefinition('basic')?.emptyContent() ?? null,
   )
   const [tags, setTags] = useState('')
 
@@ -48,6 +53,11 @@ export function CardEditorPage() {
       setTags(existing.tags.join(', '))
     }
   }, [existing, def, isEdit])
+
+  // Switching type for a new card resets the content to that type's blank shape.
+  useEffect(() => {
+    if (!isEdit) setContent(getCardDefinition(newType)?.emptyContent() ?? null)
+  }, [newType, isEdit])
 
   const unsupported = isEdit && existing && !def
   const canSave = !!def && !!content && def.isComplete(content)
@@ -117,6 +127,22 @@ export function CardEditorPage() {
       </h2>
 
       <div className="space-y-4 rounded-card border border-border bg-panel p-6">
+        {!isEdit && (
+          <Field label="Card type">
+            <select
+              className={selectClass}
+              value={newType}
+              onChange={(e) => setNewType(e.target.value as CardType)}
+            >
+              {IMPLEMENTED_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {cardTypeMeta[t].label}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
         <Editor content={content} onChange={setContent} />
 
         <Field label="Tags (comma-separated)">
