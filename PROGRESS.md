@@ -29,3 +29,28 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - Merged scaffold into repo root; kept DESIGN.md / PROGRESS.md / mockup.html / README.md.
 - Renamed package to `code-srs`. `npm run build` passes (tsc + vite build clean).
 - **Still in M0:** Tailwind + shadcn/ui setup, folder structure, router, PWA, deploy.
+
+### 2026-06-23 — M0: Tailwind v4 + theme system
+- Installed `tailwindcss` + `@tailwindcss/vite` (v4); added plugin to vite.config.ts.
+- Added `@` → `src` path alias (vite + tsconfig).
+- Ported mockup palette into runtime CSS variables in `index.css`; mapped to
+  Tailwind tokens via `@theme inline` so utilities (`bg-panel`, `text-muted`,
+  `border-border`, …) swap live when `[data-theme]` flips.
+- Dark mode via `[data-theme="dark"]` on `<html>` (default dark), not media query.
+- Replaced stock starter `App.tsx`/`App.css`/demo assets with a themed placeholder
+  that toggles dark/light to prove the system. Build passes.
+- **Still in M0:** shadcn-style primitives, folder structure, router + AppShell, PWA, deploy.
+
+### 2026-06-23 — M0: folder structure + Router + AppShell
+- Installed `react-router-dom`, `clsx`, `tailwind-merge`, `lucide-react`.
+- Created the DESIGN.md §8 skeleton: `app/`, `components/{layout,ui,code,markdown}/`,
+  `features/{dashboard,review,cards,drafts,stats,settings,decks}/`,
+  `domain/{scheduling,grading,search,io}/`, `data/`, `hooks/`, `lib/` (.gitkeep for empties).
+- `lib/cn.ts` (clsx + tailwind-merge); `app/theme.tsx` (ThemeProvider + useTheme,
+  persists to localStorage, default dark); `app/providers.tsx` (QueryClient added in M1).
+- AppShell: desktop sidebar + mobile bottom-nav + sticky topbar (title/sub from a
+  shared `navItems` config) + theme toggle + "Study now". Matches the mockup layout.
+- React Router with 6 routes (Dashboard/Review/Browse/Drafts/Stats/Settings), each a
+  `PagePlaceholder` stub noting its target milestone.
+- No-flash inline theme script in index.html; removed stock `App.tsx`.
+- Build passes; oxlint clean. **M0 remaining:** PWA + first deploy.
