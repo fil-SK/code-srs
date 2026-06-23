@@ -63,3 +63,15 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   app is installable + offline-capable.
 - **Deployment deferred** by choice — will set up (provider TBD) when going live.
 - ✅ **M0 done.** Next: M1 (data seam + Basic card).
+
+### 2026-06-23 — M1: domain types + Repository interface
+- Added `lib/id.ts` (`newId()` via crypto.randomUUID).
+- Domain entity types in **`src/types/`** (common, card, deck, draft, review) with a
+  barrel `index.ts`. **Deviation from DESIGN §8:** entities live in a shared
+  `src/types/` rather than `features/cards/types/`, because Card/Deck/Draft/ReviewLog
+  are tightly coupled (Card embeds SchedulingState; Repository touches all) and a
+  shared location avoids cross-feature import cycles. DESIGN updated to match.
+- `Card` is the discriminated union from DESIGN §3; added `CardOfType<T>` helper.
+- `data/repository.ts`: the storage seam — `CrudRepo<T>` (incl. `bulkPut` for import),
+  `CardRepo` (`getDue`, `search`), `ReviewRepo`, and the `Repository` aggregate.
+- Build + oxlint clean. Next: DexieRepository (IndexedDB implementation).

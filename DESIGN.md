@@ -277,6 +277,7 @@ flip is awkward for long content on mobile. Finalized per-type in M3.
 ```
 src/
   app/            bootstrap: providers, router, theme
+  types/          shared domain entities (card, deck, draft, review, common)
   components/     shared presentational (ui/, code/, markdown/, layout/)
   features/
     cards/        types/, registry/, renderers/<type>/, CardRenderer, CardEditorPage, CardBrowserPage
