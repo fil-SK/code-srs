@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>code-srs — mockup</title>
+<style>
+  /* ---------- Design tokens ---------- */
+  :root {
+    --radius: 12px;
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", "Cascadia Code", "Fira Code", ui-monospace, monospace;
+  }
+  [data-theme="dark"] {
+    --bg: #0b0e14;
+    --bg-elev: #11151d;
+    --panel: #151a23;
+    --panel-2: #1b212c;
+    --border: #232b38;
+    --text: #e6e9ef;
+    --muted: #8b94a7;
+    --faint: #5b6473;
+    --accent: #8b7cf6;
+    --accent-soft: rgba(139,124,246,.14);
+    --green: #3fb27f;
+    --amber: #d8a657;
+    --red: #e06c75;
+    --blue: #61afef;
+    --code-bg: #0d111a;
+    --shadow: 0 8px 30px rgba(0,0,0,.45);
+  }
+  [data-theme="light"] {
+    --bg: #f4f5f8;
+    --bg-elev: #ffffff;
+    --panel: #ffffff;
+    --panel-2: #f7f8fa;
+    --border: #e3e6ec;
+    --text: #1b2130;
+    --muted: #5d6678;
+    --faint: #98a0b0;
+    --accent: #6d57e0;
+    --accent-soft: rgba(109,87,224,.10);
+    --green: #1f9d63;
+    --amber: #b9802f;
+    --red: #d2515c;
+    --blue: #2f74c0;
+    --code-bg: #f7f8fb;
+    --shadow: 0 8px 30px rgba(20,24,40,.10);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    transition: background .25s, color .25s;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent-soft); }
+
+  /* ---------- App shell ---------- */
+  .app {
+    display: grid;
+    grid-template-columns: 248px 1fr;
+    min-height: 100vh;
+  }
+  .sidebar {
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px 18px;
+  }
+  .brand .logo {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), #5b8cff);
+    display: grid; place-items: center;
+    font-family: var(--mono); font-weight: 700; color: white; font-size: 15px;
+    box-shadow: 0 4px 14px var(--accent-soft);
+  }
+  .brand b { font-size: 15.5px; letter-spacing: -.2px; }
+  .brand span { color: var(--faint); font-size: 11px; font-family: var(--mono); }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 11px; border-radius: 9px;
+    color: var(--muted); font-size: 14px; font-weight: 500;
+    cursor: pointer; user-select: none;
+    transition: background .15s, color .15s;
+  }
+  .nav-item:hover { background: var(--panel); color: var(--text); }
+  .nav-item.active { background: var(--accent-soft); color: var(--text); }
+  .nav-item .ic { width: 18px; text-align: center; opacity: .9; }
+  .nav-item .badge {
+    margin-left: auto; font-size: 11px; font-weight: 600;
+    background: var(--accent); color: white; border-radius: 20px;
+    padding: 1px 8px;
+  }
+  .nav-spacer { flex: 1; }
+  .nav-foot { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 6px; }
+
+  /* ---------- Main ---------- */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 26px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px); z-index: 5;
+  }
+  .topbar h1 { font-size: 18px; margin: 0; letter-spacing: -.3px; }
+  .topbar .sub { color: var(--faint); font-size: 12.5px; }
+  .grow { flex: 1; }
+  .icon-btn {
+    width: 36px; height: 36px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--panel);
+    color: var(--muted); cursor: pointer; font-size: 15px;
+    display: grid; place-items: center;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .content { padding: 26px; max-width: 1080px; width: 100%; margin: 0 auto; }
+  .view { display: none; animation: fade .25s ease; }
+  .view.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Generic UI ---------- */
+  .grid { display: grid; gap: 16px; }
+  .cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .panel h3 { margin: 0 0 4px; font-size: 14px; }
+  .stat { font-size: 30px; font-weight: 700; letter-spacing: -1px; }
+  .stat small { font-size: 13px; color: var(--faint); font-weight: 500; }
+  .label { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .6px; font-weight: 600; }
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+  .section-title { font-size: 13px; color: var(--faint); text-transform: uppercase; letter-spacing: .7px; font-weight: 600; margin: 26px 0 12px; }
+
+  .btn {
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    border-radius: 9px; padding: 9px 16px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: var(--font);
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.block { width: 100%; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+  }
+  .tag { font-family: var(--mono); font-size: 11.5px; color: var(--blue); }
+  .tag::before { content: "#"; opacity: .6; }
+
+  .type-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; letter-spacing: .3px; }
+  .t-basic        { background: rgba(97,175,239,.15); color: var(--blue); }
+  .t-mcq          { background: rgba(63,178,127,.15); color: var(--green); }
+  .t-codeReading  { background: rgba(139,124,246,.18); color: var(--accent); }
+  .t-codeCompletion{ background: rgba(216,166,87,.15); color: var(--amber); }
+  .t-bugFinding   { background: rgba(224,108,117,.15); color: var(--red); }
+  .t-ordering     { background: rgba(97,175,239,.15); color: var(--blue); }
+  .t-matching     { background: rgba(63,178,127,.15); color: var(--green); }
+
+  /* ---------- Code block ---------- */
+  pre.code {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px; margin: 0;
+    font-family: var(--mono); font-size: 13px; line-height: 1.65;
+    overflow-x: auto; tab-size: 2;
+  }
+  .code .ln { color: var(--faint); user-select: none; display: inline-block; width: 22px; text-align: right; margin-right: 16px; }
+  .kw { color: var(--accent); } .ty { color: var(--blue); } .fn { color: var(--green); }
+  .str { color: var(--amber); } .num { color: var(--amber); } .cm { color: var(--faint); font-style: italic; }
+  .hl { background: rgba(224,108,117,.12); display: inline-block; width: 100%; }
+
+  /* ---------- Review ---------- */
+  .review-wrap { max-width: 760px; margin: 0 auto; }
+  .progress { height: 6px; background: var(--panel-2); border-radius: 20px; overflow: hidden; margin-bottom: 4px; }
+  .progress > i { display: block; height: 100%; width: 42%; background: var(--accent); border-radius: 20px; }
+  .review-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 26px; box-shadow: var(--shadow); }
+  .q-text { font-size: 17px; font-weight: 600; margin: 4px 0 18px; line-height: 1.4; }
+  .reveal { margin-top: 20px; border-top: 1px dashed var(--border); padding-top: 18px; }
+  .grade-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 22px; }
+  .grade { border-radius: 10px; padding: 12px 8px; text-align: center; cursor: pointer; border: 1px solid var(--border); background: var(--panel-2); }
+  .grade b { display: block; font-size: 14px; }
+  .grade small { font-size: 11px; color: var(--faint); }
+  .grade.again:hover { border-color: var(--red); } .grade.again b { color: var(--red); }
+  .grade.hard:hover  { border-color: var(--amber); } .grade.hard b { color: var(--amber); }
+  .grade.good:hover  { border-color: var(--green); } .grade.good b { color: var(--green); }
+  .grade.easy:hover  { border-color: var(--blue); } .grade.easy b { color: var(--blue); }
+
+  .opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 9px; cursor: pointer; }
+  .opt:hover { border-color: var(--accent); }
+  .opt .box { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--faint); flex: none; }
+  .opt.correct { border-color: var(--green); background: rgba(63,178,127,.08); }
+  .opt.correct .box { background: var(--green); border-color: var(--green); }
+  .opt.wrong { border-color: var(--red); background: rgba(224,108,117,.07); }
+
+  /* ---------- Lists / browser ---------- */
+  .search { display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .search input { background: none; border: none; outline: none; color: var(--text); font-size: 14px; width: 100%; font-family: var(--font); }
+  .row { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); margin-bottom: 9px; }
+  .row .ttl { font-weight: 600; font-size: 14px; }
+  .row .meta { color: var(--faint); font-size: 12px; }
+
+  .deck { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 11px; background: var(--panel); margin-bottom: 10px; cursor: pointer; }
+  .deck:hover { border-color: var(--accent); }
+  .deck .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .deck .due { margin-left: auto; }
+
+  .draft { border-left: 3px solid var(--amber); }
+  textarea.capture { width: 100%; background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: var(--mono); font-size: 13px; padding: 14px; resize: vertical; min-height: 90px; outline: none; }
+
+  /* ---------- Mobile ---------- */
+  .bottom-nav { display: none; }
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .content { padding: 18px 16px 90px; }
+    .cols-3, .cols-2 { grid-template-columns: 1fr; }
+    .grade-bar { grid-template-columns: repeat(2,1fr); }
+    .bottom-nav {
+      display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-elev); border-top: 1px solid var(--border);
+      padding: 8px; justify-content: space-around; z-index: 20;
+    }
+    .bottom-nav .nav-item { flex-direction: column; gap: 3px; font-size: 10px; padding: 6px 8px; }
+    .bottom-nav .nav-item .badge { position: absolute; margin: 0; transform: translate(14px,-6px); }
+    .topbar { padding: 14px 16px; }
+  }
+  .mock-tip { text-align: center; color: var(--faint); font-size: 11px; padding: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">{}</div>
+      <div>
+        <b>code-srs</b><br><span>v0 mockup</span>
+      </div>
+    </div>
+    <div class="nav-item active" data-view="dashboard"><span class="ic">▤</span> Dashboard</div>
+    <div class="nav-item" data-view="review"><span class="ic">▶</span> Review <span class="badge">24</span></div>
+    <div class="nav-item" data-view="browse"><span class="ic">▦</span> Browse</div>
+    <div class="nav-item" data-view="drafts"><span class="ic">✎</span> Drafts <span class="badge">3</span></div>
+    <div class="nav-item" data-view="stats"><span class="ic">◷</span> Stats</div>
+    <div class="nav-spacer"></div>
+    <div class="nav-foot">
+      <div class="nav-item" data-view="settings"><span class="ic">⚙</span> Settings</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <h1 id="page-title">Dashboard</h1>
+        <div class="sub" id="page-sub">Tuesday, 23 June · 24 cards due today</div>
+      </div>
+      <div class="grow"></div>
+      <button class="icon-btn" id="theme-btn" title="Toggle theme">☾</button>
+      <button class="btn primary" data-view="review" id="study-btn">Study now</button>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+        <div class="grid cols-3">
+          <div class="panel">
+            <div class="label">Due today</div>
+            <div class="stat">24 <small>cards</small></div>
+            <div class="muted" style="font-size:12.5px;margin-top:6px">18 review · 6 new</div>
+          </div>
+          <div class="panel">
+            <div class="label">Streak</div>
+            <div class="stat">37 <small>days 🔥</small></div>
+            <div class="muted" style="font-size:12.5px;margin-top:6px">Best: 52 days</div>
+          </div>
+          <div class="panel">
+            <div class="label">Retention (30d)</div>
+            <div class="stat">91<small>%</small></div>
+            <div class="muted" style="font-size:12.5px;margin-top:6px">412 reviews</div>
+          </div>
+        </div>
+
+        <div class="section-title">Decks</div>
+        <div class="deck"><span class="dot" style="background:var(--accent)"></span>
+          <div><div class="ttl" style="font-weight:600">MLIR &amp; LLVM</div><div class="meta faint" style="font-size:12px">128 cards</div></div>
+          <span class="chip due">9 due</span></div>
+        <div class="deck"><span class="dot" style="background:var(--blue)"></span>
+          <div><div class="ttl" style="font-weight:600">C++ Core Language</div><div class="meta faint" style="font-size:12px">204 cards</div></div>
+          <span class="chip due">11 due</span></div>
+        <div class="deck"><span class="dot" style="background:var(--green)"></span>
+          <div><div class="ttl" style="font-weight:600">Algorithms &amp; Complexity</div><div class="meta faint" style="font-size:12px">96 cards</div></div>
+          <span class="chip due">4 due</span></div>
+        <div class="deck"><span class="dot" style="background:var(--amber)"></span>
+          <div><div class="ttl" style="font-weight:600">Compiler Theory</div><div class="meta faint" style="font-size:12px">71 cards</div></div>
+          <span class="chip">0 due</span></div>
+      </section>
+
+      <!-- ============ REVIEW ============ -->
+      <section class="view" id="view-review">
+        <div class="review-wrap">
+          <div class="progress"><i></i></div>
+          <div class="muted" style="font-size:12px;margin-bottom:18px">Card 10 of 24 · MLIR &amp; LLVM</div>
+
+          <div class="review-card">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+              <span class="type-badge t-codeReading">CODE READING</span>
+              <span class="tag">mlir</span><span class="tag">dialects</span>
+            </div>
+
+            <pre class="code"><span class="ln">1</span><span class="kw">func</span>.<span class="fn">func</span> @add(%arg0: <span class="ty">i32</span>, %arg1: <span class="ty">i32</span>) -> <span class="ty">i32</span> {
+<span class="ln">2</span>  %0 = <span class="ty">arith</span>.<span class="fn">addi</span> %arg0, %arg1 : <span class="ty">i32</span>
+<span class="ln">3</span>  <span class="kw">return</span> %0 : <span class="ty">i32</span>
+<span class="ln">4</span>}</pre>
+
+            <div class="q-text" style="margin-top:18px">What does <code style="font-family:var(--mono);color:var(--accent)">arith.addi</code> require of its operand types, and why can't it be used here for floats?</div>
+
+            <button class="btn block" id="reveal-btn" onclick="document.getElementById('answer').style.display='block';this.style.display='none'">Show answer</button>
+
+            <div class="reveal" id="answer" style="display:none">
+              <div class="label" style="margin-bottom:8px">Answer</div>
+              <p style="margin:0;line-height:1.6">
+                <code style="font-family:var(--mono);color:var(--accent)">arith.addi</code> operates on <b>integer</b> (or index) types and both operands plus the result must share the same type. Floats need <code style="font-family:var(--mono);color:var(--accent)">arith.addf</code>, which carries fast-math flags and IEEE semantics that integer add doesn't.
+              </p>
+              <div class="grade-bar">
+                <div class="grade again"><b>Again</b><small>&lt;1m</small></div>
+                <div class="grade hard"><b>Hard</b><small>2d</small></div>
+                <div class="grade good"><b>Good</b><small>5d</small></div>
+                <div class="grade easy"><b>Easy</b><small>12d</small></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- second example: auto-graded MCQ -->
+          <div class="section-title">Example: auto-graded card (MCQ)</div>
+          <div class="review-card">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+              <span class="type-badge t-mcq">MULTIPLE CHOICE</span>
+              <span class="tag">cpp</span><span class="tag">move-semantics</span>
+            </div>
+            <div class="q-text">Which of these leaves a moved-from <code style="font-family:var(--mono)">std::unique_ptr</code> in a valid, destructible state?</div>
+            <div class="opt correct"><span class="box">✓</span> It is set to <code style="font-family:var(--mono)">nullptr</code></div>
+            <div class="opt wrong"><span class="box"></span> Its destructor is called immediately</div>
+            <div class="opt"><span class="box"></span> It points to freed memory</div>
+            <p class="muted" style="font-size:12.5px;margin:12px 0 0">✓ Auto-graded <b style="color:var(--green)">correct</b> → scheduled as <b>Good</b>. You can still override below.</p>
+            <div class="grade-bar">
+              <div class="grade again"><b>Again</b><small>&lt;1m</small></div>
+              <div class="grade hard"><b>Hard</b><small>3d</small></div>
+              <div class="grade good" style="border-color:var(--green)"><b>Good ✓</b><small>6d</small></div>
+              <div class="grade easy"><b>Easy</b><small>14d</small></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ BROWSE ============ -->
+      <section class="view" id="view-browse">
+        <div class="search">
+          <span class="faint">⌕</span>
+          <input placeholder="Search cards, code, tags…  e.g.  type:bugFinding deck:cpp" />
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px">
+          <span class="chip" style="border-color:var(--accent);color:var(--text)">All types</span>
+          <span class="chip">Basic</span><span class="chip">MCQ</span>
+          <span class="chip">Code reading</span><span class="chip">Code completion</span>
+          <span class="chip">Bug finding</span><span class="chip">Ordering</span><span class="chip">Matching</span>
+        </div>
+
+        <div class="row"><span class="type-badge t-bugFinding">BUG</span>
+          <div><div class="ttl">Off-by-one in this loop bound</div><div class="meta">C++ Core · <span class="tag">loops</span> <span class="tag">ub</span> · due in 2d</div></div></div>
+        <div class="row"><span class="type-badge t-codeCompletion">COMPLETION</span>
+          <div><div class="ttl">Complete the RAII wrapper's move ctor</div><div class="meta">C++ Core · <span class="tag">raii</span> · new</div></div></div>
+        <div class="row"><span class="type-badge t-ordering">ORDERING</span>
+          <div><div class="ttl">Arrange the MLIR lowering pipeline stages</div><div class="meta">MLIR · <span class="tag">passes</span> · due today</div></div></div>
+        <div class="row"><span class="type-badge t-matching">MATCHING</span>
+          <div><div class="ttl">Match each STL container to its complexity</div><div class="meta">Algorithms · <span class="tag">stl</span> · due in 5d</div></div></div>
+        <div class="row"><span class="type-badge t-basic">BASIC</span>
+          <div><div class="ttl">What is SSA form?</div><div class="meta">Compiler Theory · <span class="tag">ssa</span> · due in 1d</div></div></div>
+      </section>
+
+      <!-- ============ DRAFTS ============ -->
+      <section class="view" id="view-drafts">
+        <div class="panel" style="margin-bottom:22px">
+          <div class="label" style="margin-bottom:10px">Quick capture</div>
+          <textarea class="capture" placeholder="Dump a question, snippet, or idea — turn it into a card later…">Why does arith.maximumf differ from arith.maxf re: NaN propagation? (saw this in ReluOp lowering)</textarea>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button class="btn primary">Save to inbox</button>
+            <span class="chip">⌘+Enter</span>
+          </div>
+        </div>
+
+        <div class="section-title">Inbox · 3 drafts</div>
+        <div class="row draft"><div style="flex:1"><div class="ttl">arith.maximumf vs maxf — NaN handling</div><div class="meta">captured 2h ago · suggested: <span class="tag">mlir</span></div></div><button class="btn">Make card →</button></div>
+        <div class="row draft"><div style="flex:1"><div class="ttl">Snippet: dangling reference returned from lambda</div><div class="meta">captured yesterday · type guess: <span class="type-badge t-bugFinding">BUG</span></div></div><button class="btn">Make card →</button></div>
+        <div class="row draft"><div style="flex:1"><div class="ttl">Steps to register a custom MLIR dialect</div><div class="meta">captured 3d ago · type guess: <span class="type-badge t-ordering">ORDERING</span></div></div><button class="btn">Make card →</button></div>
+      </section>
+
+      <!-- ============ STATS ============ -->
+      <section class="view" id="view-stats">
+        <div class="grid cols-2">
+          <div class="panel">
+            <h3>Reviews per day (last 14d)</h3>
+            <div style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:14px">
+              <div style="flex:1;height:40%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:65%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:30%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:80%;background:var(--accent);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:55%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:90%;background:var(--accent);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:70%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:100%;background:var(--accent);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:45%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+              <div style="flex:1;height:75%;background:var(--accent-soft);border-radius:4px 4px 0 0"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Mastery by deck</h3>
+            <div style="margin-top:16px">
+              <div class="muted" style="font-size:13px;margin-bottom:4px">MLIR &amp; LLVM</div>
+              <div class="progress"><i style="width:72%"></i></div>
+              <div class="muted" style="font-size:13px;margin:14px 0 4px">C++ Core</div>
+              <div class="progress"><i style="width:88%"></i></div>
+              <div class="muted" style="font-size:13px;margin:14px 0 4px">Algorithms</div>
+              <div class="progress"><i style="width:61%"></i></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-title">Due forecast</div>
+        <div class="panel"><div class="muted" style="font-size:13px">Next 7 days: 24 · 19 · 31 · 12 · 28 · 9 · 17 cards</div></div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="panel" style="margin-bottom:16px">
+          <h3>Appearance</h3>
+          <div class="muted" style="font-size:13px;margin:8px 0 12px">Theme follows your choice; defaults to dark.</div>
+          <button class="btn" onclick="document.getElementById('theme-btn').click()">Toggle dark / light</button>
+        </div>
+        <div class="panel" style="margin-bottom:16px">
+          <h3>Scheduler (FSRS)</h3>
+          <div class="muted" style="font-size:13px;margin:8px 0">Daily new-card limit, target retention, and FSRS parameters are configurable here.</div>
+          <div style="display:flex;gap:10px"><span class="chip">New/day: 20</span><span class="chip">Target retention: 90%</span></div>
+        </div>
+        <div class="panel">
+          <h3>Data</h3>
+          <div class="muted" style="font-size:13px;margin:8px 0 12px">Stored locally (IndexedDB). Export is your backup &amp; migration path.</div>
+          <div style="display:flex;gap:10px"><button class="btn">Export JSON</button><button class="btn">Import JSON</button></div>
+        </div>
+      </section>
+
+      <div class="mock-tip">Static mockup · click the left nav to switch screens · ☾ toggles theme · resize narrow to see the mobile layout</div>
+    </div>
+
+    <!-- Mobile bottom nav -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" data-view="dashboard"><span class="ic">▤</span> Home</div>
+      <div class="nav-item" data-view="review"><span class="ic">▶</span> Review <span class="badge">24</span></div>
+      <div class="nav-item" data-view="browse"><span class="ic">▦</span> Browse</div>
+      <div class="nav-item" data-view="drafts"><span class="ic">✎</span> Drafts</div>
+      <div class="nav-item" data-view="stats"><span class="ic">◷</span> Stats</div>
+    </nav>
+  </main>
+</div>
+
+<script>
+  const titles = {
+    dashboard: ["Dashboard", "Tuesday, 23 June · 24 cards due today"],
+    review:    ["Review", "Self-grade or auto-grade · FSRS scheduling"],
+    browse:    ["Browse", "Search and filter across all decks"],
+    drafts:    ["Drafts", "Capture now, shape into cards later"],
+    stats:     ["Stats", "Progress, retention, and forecast"],
+    settings:  ["Settings", "Appearance, scheduler, and data"],
+  };
+  function go(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + view).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n =>
+      n.classList.toggle('active', n.dataset.view === view));
+    document.getElementById('page-title').textContent = titles[view][0];
+    document.getElementById('page-sub').textContent = titles[view][1];
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll('[data-view]').forEach(el =>
+    el.addEventListener('click', () => go(el.dataset.view)));
+
+  const tbtn = document.getElementById('theme-btn');
+  tbtn.addEventListener('click', () => {
+    const root = document.documentElement;
+    const dark = root.getAttribute('data-theme') === 'dark';
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+    tbtn.textContent = dark ? '☀' : '☾';
+  });
+</script>
+</body>
+</html>
