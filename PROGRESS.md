@@ -144,3 +144,20 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - `scheduler.test.ts`: 5 tests (Good advances reps/due, Again < Easy, preview monotonic,
   log deltas, interval formatting). Total suite: 14 tests, all green.
 - Build + lint clean. Next: review session (state machine + GradeBar + wiring).
+
+### 2026-06-23 — M2: review session (M2 complete)
+- Added `ReviewRepo.delete(id)` (interface + Dexie) for undo; +1 repo test (now 15 total).
+- `hooks/useReview.ts`: `useGradeCard` (compute next scheduling, persist card + append
+  log) and `useUndoGrade` (restore original card + delete log).
+- `features/review/useReviewSession.ts`: state machine over a snapshotted due-card queue
+  (Presenting -> Answered -> Scheduled -> next) with a one-step undo stack and per-card
+  timing for ReviewLog.durationMs.
+- `features/review/GradeBar.tsx`: Again/Hard/Good/Easy with per-grade interval labels
+  from `previewStates` + `formatInterval`.
+- `features/review/ReviewSession.tsx`: reveal flow, progress bar, undo, completion screen,
+  keyboard shortcuts (Space/Enter reveal; 1-4 grade; U undo). Basic cards render fully;
+  other types get a self-graded fallback until M3.
+- `features/review/ReviewPage.tsx`: wired to `useDueCards`, with loading / nothing-due states.
+- Build + lint + 15 tests pass. **Verified path:** create Basic cards -> Review -> grade ->
+  due date advances (card leaves the queue). ✅ **M2 done.** Next: M3 (all card types via
+  the renderer registry + flip-to-reveal).

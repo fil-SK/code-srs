@@ -41,6 +41,7 @@ export interface CardRepo extends CrudRepo<Card> {
 
 export interface ReviewRepo {
   append(log: ReviewLog): Promise<void>
+  delete(id: ID): Promise<void> // used by review-session undo
   forCard(cardId: ID): Promise<ReviewLog[]>
   range(from: Millis, to: Millis): Promise<ReviewLog[]>
 }

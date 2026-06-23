@@ -156,4 +156,11 @@ describe('DexieRepository — reviews', () => {
     expect(await repo.reviews.range(100, 200)).toHaveLength(1)
     expect(await repo.reviews.range(50, 250)).toHaveLength(3)
   })
+
+  it('deletes a log (undo path)', async () => {
+    const entry = log()
+    await repo.reviews.append(entry)
+    await repo.reviews.delete(entry.id)
+    expect(await repo.reviews.forCard('c1')).toHaveLength(0)
+  })
 })

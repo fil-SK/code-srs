@@ -79,6 +79,9 @@ function createReviewRepo(db: AppDB): ReviewRepo {
     append: async (log: ReviewLog) => {
       await db.reviewLogs.add(log)
     },
+    delete: async (id: ID) => {
+      await db.reviewLogs.delete(id)
+    },
     forCard: (cardId: ID) =>
       db.reviewLogs.where('cardId').equals(cardId).sortBy('reviewedAt'),
     range: (from: Millis, to: Millis) =>
