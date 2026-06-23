@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
+import { Field, fieldClass } from '@/components/ui/Field'
+import type { NewCardInput } from '@/domain/cards/factory'
 import { useCard, useCreateCard, useSaveCard } from '@/hooks/useCards'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
-
-const fieldClass =
-  'w-full rounded-[9px] border border-border bg-code-bg px-3.5 py-2.5 text-sm text-text outline-none focus:border-accent'
+import { cardTypeMeta } from './cardTypeMeta'
+import { getCardDefinition } from './registry'
 
 function parseTags(raw: string): string[] {
   return Array.from(
@@ -18,8 +20,9 @@ function parseTags(raw: string): string[] {
   )
 }
 
-// Basic Q&A editor. M3 replaces this with a type-aware editor registry; for now
-// new cards are Basic, and editing a non-Basic card shows a notice.
+// Edits/creates a card via the registry's per-type Editor. The page owns the
+// envelope (deck, tags, type); content editing is delegated to the type.
+// New cards are Basic for now — a type picker arrives later in M3.
 export function CardEditorPage() {
   const { id } = useParams()
   const isEdit = !!id
@@ -31,33 +34,36 @@ export function CardEditorPage() {
   const saveCard = useSaveCard()
   const createDeck = useCreateDeck()
 
-  const [front, setFront] = useState('')
-  const [back, setBack] = useState('')
+  const type: CardType = existing?.type ?? 'basic'
+  const def = getCardDefinition(type)
+
+  const [content, setContent] = useState<Card['content'] | null>(() =>
+    isEdit ? null : (def?.emptyContent() ?? null),
+  )
   const [tags, setTags] = useState('')
 
   useEffect(() => {
-    if (existing && existing.type === 'basic') {
-      setFront(existing.content.front)
-      setBack(existing.content.back)
+    if (isEdit && existing && def) {
+      setContent(existing.content)
       setTags(existing.tags.join(', '))
     }
-  }, [existing])
+  }, [existing, def, isEdit])
 
-  const unsupported = isEdit && existing && existing.type !== 'basic'
-  const canSave = front.trim().length > 0 && back.trim().length > 0
+  const unsupported = isEdit && existing && !def
+  const canSave = !!def && !!content && def.isComplete(content)
   const saving = createCard.isPending || saveCard.isPending || createDeck.isPending
 
   async function handleSave() {
+    if (!def || !content) return
     const parsedTags = parseTags(tags)
 
-    if (isEdit && existing && existing.type === 'basic') {
+    if (isEdit && existing) {
       await saveCard.mutateAsync({
         ...existing,
         tags: parsedTags,
-        content: { front, back },
-      })
+        content,
+      } as Card)
     } else {
-      // Ensure a deck exists for the card to live in (proper deck mgmt in M4).
       let deckId = decks?.[0]?.id
       if (!deckId) {
         const deck = await createDeck.mutateAsync({
@@ -69,9 +75,9 @@ export function CardEditorPage() {
       await createCard.mutateAsync({
         deckId,
         tags: parsedTags,
-        type: 'basic',
-        content: { front, back },
-      })
+        type,
+        content,
+      } as NewCardInput)
     }
     navigate('/browse')
   }
@@ -83,10 +89,12 @@ export function CardEditorPage() {
   if (unsupported) {
     return (
       <div className="rounded-card border border-dashed border-border bg-panel p-8">
-        <h2 className="text-base font-semibold">Editing this card type comes in M3</h2>
+        <h2 className="text-base font-semibold">
+          Editing this card type comes in a later M3 checkpoint
+        </h2>
         <p className="mt-2 text-sm text-muted">
           This is a <code className="font-mono text-accent">{existing.type}</code>{' '}
-          card. Only Basic cards are editable so far.
+          card; its editor is not implemented yet.
         </p>
         <Button className="mt-4" onClick={() => navigate('/browse')}>
           Back to Browse
@@ -95,51 +103,30 @@ export function CardEditorPage() {
     )
   }
 
+  if (!def || !content) return null
+
+  const Editor = def.Editor
+
   return (
     <div className="mx-auto max-w-2xl">
       <h2 className="mb-5 text-lg font-semibold tracking-tight">
         {isEdit ? 'Edit card' : 'New card'}{' '}
-        <span className="text-sm font-normal text-faint">· Basic Q&amp;A</span>
+        <span className="text-sm font-normal text-faint">
+          · {cardTypeMeta[type].label}
+        </span>
       </h2>
 
       <div className="space-y-4 rounded-card border border-border bg-panel p-6">
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
-            Front (question)
-          </span>
-          <textarea
-            className={fieldClass}
-            rows={3}
-            value={front}
-            onChange={(e) => setFront(e.target.value)}
-            placeholder="What is SSA form?"
-          />
-        </label>
+        <Editor content={content} onChange={setContent} />
 
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
-            Back (answer)
-          </span>
-          <textarea
-            className={fieldClass}
-            rows={5}
-            value={back}
-            onChange={(e) => setBack(e.target.value)}
-            placeholder="Static Single Assignment: each variable is assigned exactly once…"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
-            Tags (comma-separated)
-          </span>
+        <Field label="Tags (comma-separated)">
           <input
             className={fieldClass}
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="ssa, compilers"
           />
-        </label>
+        </Field>
 
         <div className="flex gap-2.5 pt-1">
           <Button variant="primary" onClick={handleSave} disabled={!canSave || saving}>

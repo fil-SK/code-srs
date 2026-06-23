@@ -1,45 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Undo2 } from 'lucide-react'
 import type { Card } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { CardTypeBadge } from '@/features/cards/CardTypeBadge'
+import { CardView } from '@/features/cards/CardView'
+import type { CardResponse } from '@/features/cards/registry/types'
 import { GradeBar } from './GradeBar'
 import { useReviewSession } from './useReviewSession'
-
-// M2 renders Basic cards fully; other types get a minimal self-graded fallback
-// until the card renderer registry lands in M3.
-function CardFace({ card, revealed }: { card: Card; revealed: boolean }) {
-  if (card.type === 'basic') {
-    return (
-      <>
-        <div className="text-[17px] font-semibold leading-snug">
-          {card.content.front}
-        </div>
-        {revealed && (
-          <div className="mt-5 border-t border-dashed border-border pt-4">
-            <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
-              Answer
-            </div>
-            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-              {card.content.back}
-            </div>
-          </div>
-        )}
-      </>
-    )
-  }
-
-  return (
-    <div className="text-sm text-muted">
-      This card type renders in M3. Reveal and self-grade still work.
-    </div>
-  )
-}
 
 export function ReviewSession({ cards }: { cards: Card[] }) {
   const session = useReviewSession(cards)
   const { current, revealed, isComplete, busy, canUndo } = session
+
+  // Per-card interaction state for interactive types (MCQ, ordering…); reset on
+  // each card. Self-graded types ignore it.
+  const [response, setResponse] = useState<CardResponse>(undefined)
+  useEffect(() => {
+    setResponse(undefined)
+  }, [current?.id])
 
   // Keyboard: Space/Enter reveals; 1–4 grade once revealed; U undoes.
   useEffect(() => {
@@ -119,7 +98,12 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
           ))}
         </div>
 
-        <CardFace card={current} revealed={revealed} />
+        <CardView
+          card={current}
+          revealed={revealed}
+          response={response}
+          setResponse={setResponse}
+        />
 
         {!revealed ? (
           <Button

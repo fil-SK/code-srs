@@ -161,3 +161,18 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - Build + lint + 15 tests pass. **Verified path:** create Basic cards -> Review -> grade ->
   due date advances (card leaves the queue). ✅ **M2 done.** Next: M3 (all card types via
   the renderer registry + flip-to-reveal).
+
+### 2026-06-23 — M3 (a): card renderer registry + Basic on it
+- `components/ui/Field.tsx`: shared `Field` wrapper + `fieldClass` for all editors.
+- `features/cards/registry/types.ts`: `CardTypeDefinition<T>` (type, interactive,
+  emptyContent, isComplete, Question/Answer/Editor components, optional autoGrade) and
+  `QuestionProps`/`AnswerProps`/`EditorProps`/`CardResponse`.
+- `features/cards/renderers/basic/`: Question, Answer, Editor + `basicDefinition`.
+- `features/cards/registry/index.ts`: registry map (Partial during M3 — TODO: tighten to
+  full Record for compile-time exhaustiveness at M3 end) + `getCardDefinition` (single
+  widening cast; callers stay type-safe) + `isTypeImplemented`.
+- `features/cards/CardView.tsx`: dispatcher rendering Question + revealed Answer.
+- Refactored `ReviewSession` (uses CardView; threads per-card `response` state) and
+  `CardEditorPage` (renders `def.Editor`; page owns deck/tags/type). Removed inline Basic.
+- Build + lint + 15 tests pass; Basic behavior unchanged. Next M3 (b): CodeMirror + Code
+  Reading / Bug Finding.
