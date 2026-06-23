@@ -116,3 +116,18 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   useDeleteCard) wrapping `getRepository()`; mutations invalidate affected keys.
 - Build + lint clean. Next: Basic card UI (create/edit + list) — closes the
   UI -> Query -> repo -> IndexedDB loop end-to-end.
+
+### 2026-06-23 — M1: Basic card end-to-end (M1 complete)
+- `components/ui/Button.tsx` (primary/secondary/ghost variants).
+- `features/cards/cardTypeMeta.ts`: per-type label + badge color + `getCardTitle()`
+  (exhaustive). `CardTypeBadge.tsx` renders the colored badge.
+- `features/cards/CardEditorPage.tsx`: Basic Q&A editor (front/back/tags). Create via
+  `useCreateCard`; edit via `useSaveCard`; auto-creates an "Inbox" deck on first card
+  (proper deck mgmt in M4). Non-Basic edit shows an M3 notice. Type picker + per-type
+  editor registry deferred to M3.
+- `features/cards/BrowsePage.tsx`: real list from IndexedDB via `useSearchCards`, with
+  badges, tags, empty state, and links to new/edit.
+- Routes added: `/cards/new`, `/cards/:id/edit`.
+- Build + lint + 9 tests pass. **Verified loop:** create card -> persists to IndexedDB
+  -> shows in Browse -> survives reload.
+- ✅ **M1 done.** Next: M2 (review engine — FSRS + review session).
