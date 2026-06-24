@@ -252,3 +252,13 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   on slide (flip is janky for tall content), per the design note.
 - Build + lint + 33 tests pass. ✅ **M3 complete** — all 7 card types, auto-grade flow, and
   reveal animations done. Next: M4 (decks, tags, search, browse polish + card delete).
+
+### 2026-06-23 — M4 (a): Browse search, filters, suspend, delete
+- Rebuilt `BrowsePage`: text search (deferred via useDeferredValue), type filter chips,
+  tag filter chips (tag universe derived from an all-cards query), and a "show suspended"
+  toggle. Filtered list uses `repo.search` via `useSearchCards`.
+- Row actions: suspend/unsuspend (via `useSaveCard`, toggles `suspended`) and delete (via
+  `useDeleteCard`, window.confirm — can swap for a nicer dialog later). Suspended cards show
+  dimmed with a badge; excluded from the review queue.
+- Counts ("X of N shown"), empty state, and no-match state.
+- Build + lint + 33 tests pass. Next M4 (b): deck management + deck selector in editor.
