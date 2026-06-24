@@ -286,3 +286,16 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   /drafts.
 - Build + lint + 33 tests pass. ✅ **M5 complete**. Next: M6 (import/export JSON + PWA
   offline polish).
+
+### 2026-06-23 — M6: import/export (M6 complete)
+- Extended the seam: `CrudRepo.clear()`, `ReviewRepo.bulkPut/all/clear` (+ Dexie impls).
+- `domain/io/backup.ts`: versioned envelope (`{app,version,exportedAt,data}`), `buildBackup`,
+  `serializeBackup`, `parseBackup` (validates app/version/data — friendly errors). 5 tests.
+- `data/backup.ts`: `exportBackup()` (gathers all entities) and `importBackup(backup, mode)`
+  (merge = upsert; replace = clear then bulkPut). `lib/download.ts` for file download.
+- `hooks/useBackup.ts`: `useImportBackup` (invalidates all queries after a bulk write).
+- `SettingsPage`: real Appearance (theme), Scheduler note, and Data section — Export JSON
+  (downloads `code-srs-backup-<date>.json`), Import JSON with merge/replace (replace confirms),
+  status feedback. Round-trip integration test (export→clear→import, merge upsert). 40 tests.
+- PWA offline was set up in M0 (Workbox precache); verify via `npm run preview` offline.
+- Build + lint + 40 tests pass. ✅ **M6 complete**. Next: M7 (stats + dark-mode/a11y polish).

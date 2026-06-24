@@ -17,6 +17,7 @@ export interface CrudRepo<T> {
   put(entity: T): Promise<void>
   bulkPut(entities: T[]): Promise<void> // used by import
   delete(id: ID): Promise<void>
+  clear(): Promise<void> // used by replace-import
 }
 
 export interface CardQuery {
@@ -41,7 +42,10 @@ export interface CardRepo extends CrudRepo<Card> {
 
 export interface ReviewRepo {
   append(log: ReviewLog): Promise<void>
+  bulkPut(logs: ReviewLog[]): Promise<void> // used by import
   delete(id: ID): Promise<void> // used by review-session undo
+  all(): Promise<ReviewLog[]> // used by export and stats
+  clear(): Promise<void> // used by replace-import
   forCard(cardId: ID): Promise<ReviewLog[]>
   range(from: Millis, to: Millis): Promise<ReviewLog[]>
 }

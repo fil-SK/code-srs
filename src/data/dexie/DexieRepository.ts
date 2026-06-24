@@ -26,6 +26,9 @@ function crud<T>(table: Table<T, ID>): CrudRepo<T> {
     delete: async (id) => {
       await table.delete(id)
     },
+    clear: async () => {
+      await table.clear()
+    },
   }
 }
 
@@ -79,8 +82,15 @@ function createReviewRepo(db: AppDB): ReviewRepo {
     append: async (log: ReviewLog) => {
       await db.reviewLogs.add(log)
     },
+    bulkPut: async (logs: ReviewLog[]) => {
+      await db.reviewLogs.bulkPut(logs)
+    },
     delete: async (id: ID) => {
       await db.reviewLogs.delete(id)
+    },
+    all: () => db.reviewLogs.toArray(),
+    clear: async () => {
+      await db.reviewLogs.clear()
     },
     forCard: (cardId: ID) =>
       db.reviewLogs.where('cardId').equals(cardId).sortBy('reviewedAt'),
