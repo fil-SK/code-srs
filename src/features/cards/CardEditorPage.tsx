@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import type { NewCardInput } from '@/domain/cards/factory'
 import { useCard, useCreateCard, useSaveCard } from '@/hooks/useCards'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
+import { useDeleteDraft, useDraft } from '@/hooks/useDrafts'
+import { seedContent } from '@/features/drafts/seedContent'
 import { cardTypeMeta } from './cardTypeMeta'
 import { getCardDefinition } from './registry'
 
@@ -30,11 +32,16 @@ export function CardEditorPage() {
   const isEdit = !!id
   const navigate = useNavigate()
 
+  const [searchParams] = useSearchParams()
+  const draftId = isEdit ? null : searchParams.get('draft')
+
   const { data: existing, isLoading } = useCard(id)
+  const { data: draft } = useDraft(draftId)
   const { data: decks } = useDecks()
   const createCard = useCreateCard()
   const saveCard = useSaveCard()
   const createDeck = useCreateDeck()
+  const deleteDraft = useDeleteDraft()
 
   const [newType, setNewType] = useState<CardType>('basic')
   const type: CardType = existing?.type ?? newType
@@ -45,6 +52,8 @@ export function CardEditorPage() {
   )
   const [tags, setTags] = useState('')
   const [deckId, setDeckId] = useState('')
+  // Free text seeded into the primary field when converting a draft.
+  const [seedText, setSeedText] = useState('')
 
   useEffect(() => {
     if (isEdit && existing) {
@@ -54,15 +63,24 @@ export function CardEditorPage() {
     }
   }, [existing, isEdit])
 
+  // Prefill from a draft being converted.
+  useEffect(() => {
+    if (!isEdit && draft) {
+      setSeedText(draft.rawText)
+      setNewType(draft.intendedType ?? 'basic')
+      if (draft.intendedDeckId) setDeckId(draft.intendedDeckId)
+    }
+  }, [draft, isEdit])
+
   // Default a new card to the first deck once decks load.
   useEffect(() => {
     if (!isEdit && !deckId && decks?.length) setDeckId(decks[0].id)
   }, [decks, isEdit, deckId])
 
-  // Switching type for a new card resets the content to that type's blank shape.
+  // Switching type for a new card resets content (seeding draft text if present).
   useEffect(() => {
-    if (!isEdit) setContent(getCardDefinition(newType).emptyContent())
-  }, [newType, isEdit])
+    if (!isEdit) setContent(seedContent(newType, seedText))
+  }, [newType, isEdit, seedText])
 
   const canSave = def.isComplete(content)
   const saving = createCard.isPending || saveCard.isPending || createDeck.isPending
@@ -94,8 +112,9 @@ export function CardEditorPage() {
         type,
         content,
       } as NewCardInput)
+      if (draftId) await deleteDraft.mutateAsync(draftId)
     }
-    navigate('/browse')
+    navigate(draftId ? '/drafts' : '/browse')
   }
 
   if (isEdit && isLoading) {

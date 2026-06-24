@@ -9,4 +9,6 @@ export const qk = {
   cardsDue: (query: DueQuery) => ['cards', 'due', query] as const,
   cardsSearch: (query: CardQuery) => ['cards', 'search', query] as const,
   reviewsForCard: (cardId: ID) => ['reviews', 'card', cardId] as const,
+  drafts: ['drafts'] as const,
+  draft: (id: ID) => ['drafts', 'byId', id] as const,
 }

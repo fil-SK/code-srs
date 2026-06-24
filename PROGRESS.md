@@ -273,3 +273,16 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   decks exist.
 - Build + lint + 33 tests pass. ✅ **M4 complete** (search/filters/suspend/delete + deck
   management). Next: M5 (draft inbox / quick capture).
+
+### 2026-06-23 — M5: draft inbox (M5 complete)
+- `hooks/useDrafts.ts`: useDrafts (newest-first), useDraft(id), useCreateDraft,
+  useDeleteDraft (over the `drafts` repo). Added drafts query keys.
+- `features/drafts/seedContent.ts`: maps a draft's free text into the primary field of the
+  chosen type (front/prompt/question/explanation).
+- `DraftsPage`: quick-capture box (textarea + optional intended-type select; ⌘/Ctrl+Enter)
+  and the inbox list (relative time, type badge, Make-card, delete). Empty state.
+- Convert-to-card: "Make card" → `/cards/new?draft=<id>`; editor reads the draft, seeds
+  type/deck/content, and on save creates the card **and deletes the draft**, returning to
+  /drafts.
+- Build + lint + 33 tests pass. ✅ **M5 complete**. Next: M6 (import/export JSON + PWA
+  offline polish).
