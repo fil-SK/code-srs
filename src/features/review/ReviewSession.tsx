@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Undo2 } from 'lucide-react'
-import type { Card } from '@/types'
+import type { Card, Rating } from '@/types'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/cn'
 import { CardTypeBadge } from '@/features/cards/CardTypeBadge'
 import { CardView } from '@/features/cards/CardView'
+import { getCardDefinition } from '@/features/cards/registry'
 import type { CardResponse } from '@/features/cards/registry/types'
 import { GradeBar } from './GradeBar'
 import { useReviewSession } from './useReviewSession'
@@ -20,16 +22,39 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
     setResponse(undefined)
   }, [current?.id])
 
-  // Keyboard: Space/Enter reveals; 1–4 grade once revealed; U undoes.
+  const def = current ? getCardDefinition(current.type) : undefined
+  const interactive = def?.interactive ?? false
+  const responseReady =
+    !interactive || (def?.isResponseReady?.(response) ?? true)
+
+  // For auto-graded types, evaluate on reveal. Correct -> suggest Good, else Again.
+  const autoResult =
+    revealed && current && def?.autoGrade
+      ? def.autoGrade(current.content, response)
+      : null
+  const suggested: Rating | undefined = autoResult
+    ? autoResult.correct
+      ? 3
+      : 1
+    : undefined
+
+  function grade(rating: Rating) {
+    // autoGraded = the user accepted the auto-suggested rating (vs overriding).
+    session.submitGrade(rating, suggested != null && rating === suggested)
+  }
+
+  // Keyboard: Space/Enter reveals (when a response is ready); 1–4 grade once
+  // revealed; U undoes.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (isComplete) return
       if (!revealed && (e.code === 'Space' || e.code === 'Enter')) {
+        if (!responseReady) return
         e.preventDefault()
         session.reveal()
       } else if (revealed && ['1', '2', '3', '4'].includes(e.key)) {
         e.preventDefault()
-        session.submitGrade(Number(e.key) as 1 | 2 | 3 | 4)
+        grade(Number(e.key) as Rating)
       } else if (e.key.toLowerCase() === 'u' && canUndo) {
         e.preventDefault()
         session.undoLast()
@@ -37,7 +62,8 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [revealed, isComplete, canUndo, session])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealed, isComplete, canUndo, responseReady, suggested, session])
 
   if (isComplete) {
     return (
@@ -109,16 +135,35 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
           <Button
             variant="secondary"
             className="mt-5 w-full"
+            disabled={!responseReady}
             onClick={() => session.reveal()}
           >
-            Show answer
+            {interactive ? 'Check answer' : 'Show answer'}
           </Button>
         ) : (
-          <GradeBar
-            card={current}
-            disabled={busy}
-            onGrade={(rating) => session.submitGrade(rating)}
-          />
+          <>
+            {autoResult && (
+              <div
+                className={cn(
+                  'mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
+                  autoResult.correct
+                    ? 'bg-green/10 text-green'
+                    : 'bg-red/10 text-red',
+                )}
+              >
+                {autoResult.correct ? 'Correct' : 'Incorrect'}
+                <span className="ml-1.5 font-normal text-muted">
+                  · auto-graded — override below if needed
+                </span>
+              </div>
+            )}
+            <GradeBar
+              card={current}
+              disabled={busy}
+              suggested={suggested}
+              onGrade={grade}
+            />
+          </>
         )}
       </div>
     </div>

@@ -37,4 +37,6 @@ export interface CardTypeDefinition<T extends CardType> {
     content: CardOfType<T>['content'],
     response: CardResponse,
   ) => { correct: boolean } | null
+  // For interactive types: is there enough of a response to check? (defaults true)
+  isResponseReady?: (response: CardResponse) => boolean
 }

@@ -3,6 +3,7 @@ import type { CardTypeDefinition } from './types'
 import { basicDefinition } from '../renderers/basic'
 import { codeReadingDefinition } from '../renderers/codeReading'
 import { bugFindingDefinition } from '../renderers/bugFinding'
+import { mcqDefinition } from '../renderers/mcq'
 
 // Registered card-type definitions. Partial while types are added across M3;
 // tightened to a full Record (compile-time exhaustiveness) at the end of M3.
@@ -10,6 +11,7 @@ const registry: Partial<{ [T in CardType]: CardTypeDefinition<T> }> = {
   basic: basicDefinition,
   codeReading: codeReadingDefinition,
   bugFinding: bugFindingDefinition,
+  mcq: mcqDefinition,
 }
 
 // The union-typed view of a definition. The single cast here is the one place

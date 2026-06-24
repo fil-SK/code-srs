@@ -193,3 +193,19 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - Added a **card-type picker** to the New Card editor (implemented types only), so the new
   types are creatable.
 - Build + lint + 15 tests pass. Next M3 (c): MCQ (first auto-graded type).
+
+### 2026-06-23 — M3 (c): MCQ + auto-grade flow
+- Added optional `isResponseReady(response)` to `CardTypeDefinition` (gates the Check
+  button for interactive types).
+- `renderers/mcq/`: Question (radio/checkbox select; shows correct/incorrect on reveal
+  with Check/X markers), Answer (explanation), Editor (prompt, multiple-answer toggle,
+  add/remove options with correct markers, explanation). `mcqDefinition` is interactive
+  with `autoGrade` (exact-set match) + `isResponseReady` (>=1 selected). Registered.
+- **Auto-grade flow in ReviewSession:** interactive cards show "Check answer" (disabled
+  until a response is ready); on reveal, `autoGrade` runs, a Correct/Incorrect banner
+  shows, and `GradeBar` pre-marks the suggested grade (Good if correct, else Again) with
+  a ✓ + ring. User can override any grade; ReviewLog.autoGraded = (chosen === suggested).
+  Self-graded types keep "Show answer" with no suggestion.
+- `mcq.test.ts`: 5 tests (single/multiple/empty autoGrade, isResponseReady, isComplete).
+  Suite now 20 tests, all green. Build + lint clean.
+- Next M3 (d): Ordering + Matching (interactive, auto-graded).

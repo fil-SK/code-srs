@@ -14,10 +14,12 @@ const BUTTONS: { rating: Rating; label: string; className: string }[] = [
 export function GradeBar({
   card,
   disabled,
+  suggested,
   onGrade,
 }: {
   card: Card
   disabled?: boolean
+  suggested?: Rating // auto-grade suggestion to highlight (user can still override)
   onGrade: (rating: Rating) => void
 }) {
   // Preview is computed once per card; "now" is fixed at render for stable labels.
@@ -41,11 +43,17 @@ export function GradeBar({
           disabled={disabled}
           onClick={() => onGrade(b.rating)}
           className={cn(
-            'rounded-[10px] border border-border bg-panel-2 px-2 py-3 text-center disabled:pointer-events-none disabled:opacity-50',
+            'rounded-[10px] border bg-panel-2 px-2 py-3 text-center disabled:pointer-events-none disabled:opacity-50',
             b.className,
+            suggested === b.rating
+              ? 'border-accent ring-1 ring-accent'
+              : 'border-border',
           )}
         >
-          <b className="block text-sm font-semibold">{b.label}</b>
+          <b className="block text-sm font-semibold">
+            {b.label}
+            {suggested === b.rating ? ' ✓' : ''}
+          </b>
           <small className="text-[11px] text-faint">{labels[b.rating]}</small>
         </button>
       ))}
