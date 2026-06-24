@@ -15,18 +15,7 @@ export function CardView({
   response: CardResponse
   setResponse: (response: CardResponse) => void
 }) {
-  const def = getCardDefinition(card.type)
-
-  if (!def) {
-    return (
-      <div className="text-sm text-muted">
-        This card type renders in a later M3 checkpoint. Reveal and self-grade
-        still work.
-      </div>
-    )
-  }
-
-  const { Question, Answer } = def
+  const { Question, Answer } = getCardDefinition(card.type)
 
   return (
     <>

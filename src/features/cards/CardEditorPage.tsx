@@ -7,11 +7,9 @@ import type { NewCardInput } from '@/domain/cards/factory'
 import { useCard, useCreateCard, useSaveCard } from '@/hooks/useCards'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
 import { cardTypeMeta } from './cardTypeMeta'
-import { getCardDefinition, isTypeImplemented } from './registry'
+import { getCardDefinition } from './registry'
 
-const IMPLEMENTED_TYPES = (Object.keys(cardTypeMeta) as CardType[]).filter(
-  isTypeImplemented,
-)
+const ALL_TYPES = Object.keys(cardTypeMeta) as CardType[]
 
 function parseTags(raw: string): string[] {
   return Array.from(
@@ -42,29 +40,27 @@ export function CardEditorPage() {
   const type: CardType = existing?.type ?? newType
   const def = getCardDefinition(type)
 
-  const [content, setContent] = useState<Card['content'] | null>(() =>
-    getCardDefinition('basic')?.emptyContent() ?? null,
+  const [content, setContent] = useState<Card['content']>(() =>
+    getCardDefinition('basic').emptyContent(),
   )
   const [tags, setTags] = useState('')
 
   useEffect(() => {
-    if (isEdit && existing && def) {
+    if (isEdit && existing) {
       setContent(existing.content)
       setTags(existing.tags.join(', '))
     }
-  }, [existing, def, isEdit])
+  }, [existing, isEdit])
 
   // Switching type for a new card resets the content to that type's blank shape.
   useEffect(() => {
-    if (!isEdit) setContent(getCardDefinition(newType)?.emptyContent() ?? null)
+    if (!isEdit) setContent(getCardDefinition(newType).emptyContent())
   }, [newType, isEdit])
 
-  const unsupported = isEdit && existing && !def
-  const canSave = !!def && !!content && def.isComplete(content)
+  const canSave = def.isComplete(content)
   const saving = createCard.isPending || saveCard.isPending || createDeck.isPending
 
   async function handleSave() {
-    if (!def || !content) return
     const parsedTags = parseTags(tags)
 
     if (isEdit && existing) {
@@ -96,25 +92,6 @@ export function CardEditorPage() {
     return <p className="text-sm text-muted">Loading…</p>
   }
 
-  if (unsupported) {
-    return (
-      <div className="rounded-card border border-dashed border-border bg-panel p-8">
-        <h2 className="text-base font-semibold">
-          Editing this card type comes in a later M3 checkpoint
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          This is a <code className="font-mono text-accent">{existing.type}</code>{' '}
-          card; its editor is not implemented yet.
-        </p>
-        <Button className="mt-4" onClick={() => navigate('/browse')}>
-          Back to Browse
-        </Button>
-      </div>
-    )
-  }
-
-  if (!def || !content) return null
-
   const Editor = def.Editor
 
   return (
@@ -134,7 +111,7 @@ export function CardEditorPage() {
               value={newType}
               onChange={(e) => setNewType(e.target.value as CardType)}
             >
-              {IMPLEMENTED_TYPES.map((t) => (
+              {ALL_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {cardTypeMeta[t].label}
                 </option>

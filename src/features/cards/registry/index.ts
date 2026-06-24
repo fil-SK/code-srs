@@ -6,28 +6,24 @@ import { bugFindingDefinition } from '../renderers/bugFinding'
 import { mcqDefinition } from '../renderers/mcq'
 import { orderingDefinition } from '../renderers/ordering'
 import { matchingDefinition } from '../renderers/matching'
+import { codeCompletionDefinition } from '../renderers/codeCompletion'
 
-// Registered card-type definitions. Partial while types are added across M3;
-// tightened to a full Record (compile-time exhaustiveness) at the end of M3.
-const registry: Partial<{ [T in CardType]: CardTypeDefinition<T> }> = {
+// All card-type definitions. The full Record type means adding a CardType
+// without registering it here is a compile error — the registry is exhaustive.
+const registry: { [T in CardType]: CardTypeDefinition<T> } = {
   basic: basicDefinition,
   codeReading: codeReadingDefinition,
   bugFinding: bugFindingDefinition,
   mcq: mcqDefinition,
   ordering: orderingDefinition,
   matching: matchingDefinition,
+  codeCompletion: codeCompletionDefinition,
 }
 
-// The union-typed view of a definition. The single cast here is the one place
-// the per-type generics are widened; callers stay type-safe against the union.
-export function getCardDefinition(
-  type: CardType,
-): CardTypeDefinition<CardType> | undefined {
-  return registry[type] as CardTypeDefinition<CardType> | undefined
-}
-
-export function isTypeImplemented(type: CardType): boolean {
-  return type in registry
+// Union-typed view of a definition. The single cast here widens the per-type
+// generics; callers stay type-safe against the union.
+export function getCardDefinition(type: CardType): CardTypeDefinition<CardType> {
+  return registry[type] as CardTypeDefinition<CardType>
 }
 
 export type { CardTypeDefinition } from './types'

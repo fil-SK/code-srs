@@ -223,3 +223,18 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - Registered both. Tests: ordering (5) + matching (added) → suite now 27, all green.
 - Build + lint clean. 6/7 types done. Next M3 (e): Code Completion (editable CodeMirror
   + normalized-match auto-grade), then (f) flip-to-reveal.
+
+### 2026-06-23 — M3 (e): Code Completion + full registry
+- Installed `@codemirror/commands`. `components/code/CodeEditor.tsx` (editable CM:
+  history, defaultKeymap + indentWithTab; uncontrolled after mount, remount via key) +
+  `LazyCodeEditor.tsx`.
+- `domain/grading/normalize.ts`: `normalizeCode` (whitespace/case opts) + `matchesAnySolution`.
+- `renderers/codeCompletion/`: Question shows read-only scaffold + editable answer (becomes
+  read-only CodeView on reveal); Answer shows solution(s) + explanation; Editor has scaffold,
+  multiple accepted solutions, validation mode (normalizedMatch | none) + whitespace/case
+  toggles, explanation. autoGrade returns null when mode=none (self-graded). 6 tests.
+- **Registry now a full `Record<CardType, …>`** — compile-time exhaustiveness; all 7 types
+  registered. Removed `isTypeImplemented`; `getCardDefinition` is total. Simplified CardView
+  (no fallback) and CardEditorPage (no unsupported branch; type picker lists all types).
+- Build + lint + 33 tests pass. CodeEditor is its own lazy 24kB chunk. ✅ all 7 types done.
+- Next M3 (f): flip-to-reveal animation, then M3 wrap-up.
