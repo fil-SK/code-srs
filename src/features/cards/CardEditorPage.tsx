@@ -44,13 +44,20 @@ export function CardEditorPage() {
     getCardDefinition('basic').emptyContent(),
   )
   const [tags, setTags] = useState('')
+  const [deckId, setDeckId] = useState('')
 
   useEffect(() => {
     if (isEdit && existing) {
       setContent(existing.content)
       setTags(existing.tags.join(', '))
+      setDeckId(existing.deckId)
     }
   }, [existing, isEdit])
+
+  // Default a new card to the first deck once decks load.
+  useEffect(() => {
+    if (!isEdit && !deckId && decks?.length) setDeckId(decks[0].id)
+  }, [decks, isEdit, deckId])
 
   // Switching type for a new card resets the content to that type's blank shape.
   useEffect(() => {
@@ -63,23 +70,26 @@ export function CardEditorPage() {
   async function handleSave() {
     const parsedTags = parseTags(tags)
 
+    // Ensure a target deck exists (first card with no decks → auto Inbox).
+    let targetDeck = deckId
+    if (!targetDeck) {
+      const deck = await createDeck.mutateAsync({
+        name: 'Inbox',
+        description: 'Default deck for new cards',
+      })
+      targetDeck = deck.id
+    }
+
     if (isEdit && existing) {
       await saveCard.mutateAsync({
         ...existing,
+        deckId: targetDeck,
         tags: parsedTags,
         content,
       } as Card)
     } else {
-      let deckId = decks?.[0]?.id
-      if (!deckId) {
-        const deck = await createDeck.mutateAsync({
-          name: 'Inbox',
-          description: 'Default deck for new cards',
-        })
-        deckId = deck.id
-      }
       await createCard.mutateAsync({
-        deckId,
+        deckId: targetDeck,
         tags: parsedTags,
         type,
         content,
@@ -121,6 +131,26 @@ export function CardEditorPage() {
         )}
 
         <Editor content={content} onChange={setContent} />
+
+        {decks && decks.length > 0 ? (
+          <Field label="Deck">
+            <select
+              className={selectClass}
+              value={deckId}
+              onChange={(e) => setDeckId(e.target.value)}
+            >
+              {decks.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        ) : (
+          <p className="text-xs text-muted">
+            No decks yet — an “Inbox” deck will be created on save.
+          </p>
+        )}
 
         <Field label="Tags (comma-separated)">
           <input

@@ -262,3 +262,14 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   dimmed with a badge; excluded from the review queue.
 - Counts ("X of N shown"), empty state, and no-match state.
 - Build + lint + 33 tests pass. Next M4 (b): deck management + deck selector in editor.
+
+### 2026-06-23 — M4 (b): deck management + deck selector (M4 complete)
+- Real `DashboardPage`: 3 stat cards (due today, total cards, decks), "Study N due" CTA,
+  and a Decks section. Per-deck total/due counts derived client-side from all-cards +
+  due-cards queries. Create (prompt), rename (prompt), delete (blocked if deck non-empty,
+  else confirm). Empty state.
+- `CardEditorPage`: added a Deck `<select>` (new + edit, so cards can be moved between
+  decks); defaults a new card to the first deck; keeps the auto-"Inbox" fallback when no
+  decks exist.
+- Build + lint + 33 tests pass. ✅ **M4 complete** (search/filters/suspend/delete + deck
+  management). Next: M5 (draft inbox / quick capture).
