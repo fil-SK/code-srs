@@ -23,6 +23,15 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 
 ## Log
 
+### 2026-06-24 — Fixes during dogfooding
+- **fix:** New-card editor crashed when changing card type (e.g. → MCQ):
+  `Cannot read properties of undefined (reading 'trim')`. Cause: `newType` updated
+  synchronously while `content` was reset in a `useEffect` (runs after render), so for one
+  render `def` (new type) and `content` (old type's shape) mismatched, and the type's
+  `isComplete`/Editor read missing fields. Fix: update type + content together in a
+  `changeType()` handler (and in the draft-prefill effect); removed the content-reset
+  effect. Build + lint + 46 tests pass.
+
 ### 2026-06-23 — M0: project scaffold
 - Vite 8 + React 19 + TypeScript 6 project initialized (template `react-ts`).
 - Linting via `oxlint` (Vite's current default, replaces ESLint).

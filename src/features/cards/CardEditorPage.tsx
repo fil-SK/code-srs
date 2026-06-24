@@ -63,11 +63,13 @@ export function CardEditorPage() {
     }
   }, [existing, isEdit])
 
-  // Prefill from a draft being converted.
+  // Prefill from a draft being converted (type + content set together).
   useEffect(() => {
     if (!isEdit && draft) {
+      const t = draft.intendedType ?? 'basic'
       setSeedText(draft.rawText)
-      setNewType(draft.intendedType ?? 'basic')
+      setNewType(t)
+      setContent(seedContent(t, draft.rawText))
       if (draft.intendedDeckId) setDeckId(draft.intendedDeckId)
     }
   }, [draft, isEdit])
@@ -77,10 +79,13 @@ export function CardEditorPage() {
     if (!isEdit && !deckId && decks?.length) setDeckId(decks[0].id)
   }, [decks, isEdit, deckId])
 
-  // Switching type for a new card resets content (seeding draft text if present).
-  useEffect(() => {
-    if (!isEdit) setContent(seedContent(newType, seedText))
-  }, [newType, isEdit, seedText])
+  // Change type for a new card: update the type and reset content TOGETHER so
+  // they never render out of sync. (A mismatched type/content pair crashes the
+  // type-specific isComplete and Editor — e.g. mcq.isComplete on basic content.)
+  function changeType(t: CardType) {
+    setNewType(t)
+    setContent(seedContent(t, seedText))
+  }
 
   const canSave = def.isComplete(content)
   const saving = createCard.isPending || saveCard.isPending || createDeck.isPending
@@ -138,7 +143,7 @@ export function CardEditorPage() {
             <select
               className={selectClass}
               value={newType}
-              onChange={(e) => setNewType(e.target.value as CardType)}
+              onChange={(e) => changeType(e.target.value as CardType)}
             >
               {ALL_TYPES.map((t) => (
                 <option key={t} value={t}>
