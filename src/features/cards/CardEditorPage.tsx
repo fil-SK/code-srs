@@ -13,6 +13,13 @@ import { getCardDefinition } from './registry'
 
 const ALL_TYPES = Object.keys(cardTypeMeta) as CardType[]
 
+// type + content travel together so a card type's Editor/isComplete never see a
+// mismatched content shape (which would crash, e.g. mcq reading content.prompt).
+interface EditorState {
+  type: CardType
+  content: Card['content']
+}
+
 function parseTags(raw: string): string[] {
   return Array.from(
     new Set(
@@ -25,8 +32,7 @@ function parseTags(raw: string): string[] {
 }
 
 // Edits/creates a card via the registry's per-type Editor. The page owns the
-// envelope (deck, tags, type); content editing is delegated to the type.
-// New cards are Basic for now — a type picker arrives later in M3.
+// envelope (deck, tags); content editing is delegated to the type's Editor.
 export function CardEditorPage() {
   const { id } = useParams()
   const isEdit = !!id
@@ -43,33 +49,30 @@ export function CardEditorPage() {
   const createDeck = useCreateDeck()
   const deleteDraft = useDeleteDraft()
 
-  const [newType, setNewType] = useState<CardType>('basic')
-  const type: CardType = existing?.type ?? newType
-  const def = getCardDefinition(type)
-
-  const [content, setContent] = useState<Card['content']>(() =>
-    getCardDefinition('basic').emptyContent(),
+  // For new cards we can seed immediately; edit cards hydrate once loaded (null
+  // until then), so type/content are always a consistent pair.
+  const [editor, setEditor] = useState<EditorState | null>(() =>
+    isEdit
+      ? null
+      : { type: 'basic', content: getCardDefinition('basic').emptyContent() },
   )
   const [tags, setTags] = useState('')
   const [deckId, setDeckId] = useState('')
-  // Free text seeded into the primary field when converting a draft.
-  const [seedText, setSeedText] = useState('')
 
+  // Hydrate from an existing card (edit mode).
   useEffect(() => {
     if (isEdit && existing) {
-      setContent(existing.content)
+      setEditor({ type: existing.type, content: existing.content })
       setTags(existing.tags.join(', '))
       setDeckId(existing.deckId)
     }
   }, [existing, isEdit])
 
-  // Prefill from a draft being converted (type + content set together).
+  // Prefill from a draft being converted (new mode).
   useEffect(() => {
     if (!isEdit && draft) {
       const t = draft.intendedType ?? 'basic'
-      setSeedText(draft.rawText)
-      setNewType(t)
-      setContent(seedContent(t, draft.rawText))
+      setEditor({ type: t, content: seedContent(t, draft.rawText) })
       if (draft.intendedDeckId) setDeckId(draft.intendedDeckId)
     }
   }, [draft, isEdit])
@@ -79,18 +82,18 @@ export function CardEditorPage() {
     if (!isEdit && !deckId && decks?.length) setDeckId(decks[0].id)
   }, [decks, isEdit, deckId])
 
-  // Change type for a new card: update the type and reset content TOGETHER so
-  // they never render out of sync. (A mismatched type/content pair crashes the
-  // type-specific isComplete and Editor — e.g. mcq.isComplete on basic content.)
   function changeType(t: CardType) {
-    setNewType(t)
-    setContent(seedContent(t, seedText))
+    setEditor({ type: t, content: getCardDefinition(t).emptyContent() })
   }
 
-  const canSave = def.isComplete(content)
+  function setContent(content: Card['content']) {
+    setEditor((e) => (e ? { ...e, content } : e))
+  }
+
   const saving = createCard.isPending || saveCard.isPending || createDeck.isPending
 
   async function handleSave() {
+    if (!editor) return
     const parsedTags = parseTags(tags)
 
     // Ensure a target deck exists (first card with no decks → auto Inbox).
@@ -108,14 +111,14 @@ export function CardEditorPage() {
         ...existing,
         deckId: targetDeck,
         tags: parsedTags,
-        content,
+        content: editor.content,
       } as Card)
     } else {
       await createCard.mutateAsync({
         deckId: targetDeck,
         tags: parsedTags,
-        type,
-        content,
+        type: editor.type,
+        content: editor.content,
       } as NewCardInput)
       if (draftId) await deleteDraft.mutateAsync(draftId)
     }
@@ -125,15 +128,30 @@ export function CardEditorPage() {
   if (isEdit && isLoading) {
     return <p className="text-sm text-muted">Loading…</p>
   }
+  if (isEdit && !existing) {
+    return (
+      <div className="rounded-card border border-dashed border-border bg-panel p-8">
+        <h2 className="text-base font-semibold">Card not found</h2>
+        <Button className="mt-4" onClick={() => navigate('/browse')}>
+          Back to Browse
+        </Button>
+      </div>
+    )
+  }
+  if (!editor) {
+    return <p className="text-sm text-muted">Loading…</p>
+  }
 
+  const def = getCardDefinition(editor.type)
   const Editor = def.Editor
+  const canSave = def.isComplete(editor.content)
 
   return (
     <div className="mx-auto max-w-2xl">
       <h2 className="mb-5 text-lg font-semibold tracking-tight">
         {isEdit ? 'Edit card' : 'New card'}{' '}
         <span className="text-sm font-normal text-faint">
-          · {cardTypeMeta[type].label}
+          · {cardTypeMeta[editor.type].label}
         </span>
       </h2>
 
@@ -142,7 +160,7 @@ export function CardEditorPage() {
           <Field label="Card type">
             <select
               className={selectClass}
-              value={newType}
+              value={editor.type}
               onChange={(e) => changeType(e.target.value as CardType)}
             >
               {ALL_TYPES.map((t) => (
@@ -154,7 +172,7 @@ export function CardEditorPage() {
           </Field>
         )}
 
-        <Editor content={content} onChange={setContent} />
+        <Editor content={editor.content} onChange={setContent} />
 
         {decks && decks.length > 0 ? (
           <Field label="Deck">

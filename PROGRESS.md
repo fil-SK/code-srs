@@ -24,13 +24,17 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 ## Log
 
 ### 2026-06-24 — Fixes during dogfooding
-- **fix:** New-card editor crashed when changing card type (e.g. → MCQ):
-  `Cannot read properties of undefined (reading 'trim')`. Cause: `newType` updated
-  synchronously while `content` was reset in a `useEffect` (runs after render), so for one
-  render `def` (new type) and `content` (old type's shape) mismatched, and the type's
-  `isComplete`/Editor read missing fields. Fix: update type + content together in a
-  `changeType()` handler (and in the draft-prefill effect); removed the content-reset
-  effect. Build + lint + 46 tests pass.
+- **fix:** Editor crashed whenever the active card `type` and `content` rendered out of
+  sync — `Cannot read properties of undefined`. Two reports: (1) changing a new card's type
+  to MCQ; (2) opening a Code Completion card from Browse to edit. Root cause (both): `def`
+  was derived from a synchronously-updated type while `content` was set in a `useEffect`
+  (runs after render), so for one render a type's `isComplete`/Editor saw the wrong content
+  shape. **Robust fix:** unified `type` + `content` into a single atomic `editor` state
+  ({type, content}) that always updates together — new cards seed it immediately, edit cards
+  hydrate once loaded (null → Loading until then). Added a "Card not found" guard. This
+  removes the entire mismatch class. Build + lint + 46 tests pass.
+  - Follow-up worth doing: this is exactly what a component render test (deferred jsdom
+    suite) would catch — note when picking up the component-tests queue item.
 
 ### 2026-06-23 — M0: project scaffold
 - Vite 8 + React 19 + TypeScript 6 project initialized (template `react-ts`).
