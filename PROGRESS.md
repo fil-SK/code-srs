@@ -238,3 +238,17 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   (no fallback) and CardEditorPage (no unsupported branch; type picker lists all types).
 - Build + lint + 33 tests pass. CodeEditor is its own lazy 24kB chunk. ✅ all 7 types done.
 - Next M3 (f): flip-to-reveal animation, then M3 wrap-up.
+
+### 2026-06-23 — M3 (f): reveal animations (M3 complete)
+- Added `reveal?: 'flip' | 'slide'` to `CardTypeDefinition`; `basic` uses `flip`, all others
+  default to `slide`.
+- `components/ui/FlipCard.tsx` + CSS in index.css: JS-free 3D flip via grid overlap (both
+  faces share a cell, container sizes to the taller face — no height measuring). `prefers-
+  reduced-motion` disables transitions.
+- Slide/fade `reveal-in` keyframe applied to the answer block (CardView) and the slide-mode
+  banner/GradeBar.
+- ReviewSession branches: flip cards show Question (front, tap/Space to reveal) → Answer +
+  GradeBar (back); slide cards keep the stacked reveal. Code-heavy + interactive cards stay
+  on slide (flip is janky for tall content), per the design note.
+- Build + lint + 33 tests pass. ✅ **M3 complete** — all 7 card types, auto-grade flow, and
+  reveal animations done. Next: M4 (decks, tags, search, browse polish + card delete).

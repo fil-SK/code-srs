@@ -27,6 +27,8 @@ export interface EditorProps<T extends CardType> {
 export interface CardTypeDefinition<T extends CardType> {
   type: T
   interactive: boolean // requires a response before reveal (MCQ, ordering, matching)
+  // Reveal animation: 'flip' (3D) for short cards, 'slide' (default) for tall/code/interactive.
+  reveal?: 'flip' | 'slide'
   emptyContent: () => CardOfType<T>['content']
   isComplete: (content: CardOfType<T>['content']) => boolean
   Question: ComponentType<QuestionProps<T>>

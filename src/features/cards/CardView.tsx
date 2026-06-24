@@ -26,7 +26,7 @@ export function CardView({
         setResponse={setResponse}
       />
       {revealed && (
-        <div className="mt-5 border-t border-dashed border-border pt-4">
+        <div className="reveal-in mt-5 border-t border-dashed border-border pt-4">
           <Answer content={card.content} response={response} />
         </div>
       )}

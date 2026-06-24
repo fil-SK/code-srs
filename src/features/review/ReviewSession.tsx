@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Undo2 } from 'lucide-react'
 import type { Card, Rating } from '@/types'
 import { Button } from '@/components/ui/Button'
+import { FlipCard } from '@/components/ui/FlipCard'
 import { cn } from '@/lib/cn'
 import { CardTypeBadge } from '@/features/cards/CardTypeBadge'
 import { CardView } from '@/features/cards/CardView'
@@ -93,6 +94,10 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
     ? (session.reviewedCount / session.total) * 100
     : 0
 
+  const cardDef = getCardDefinition(current.type)
+  const useFlip = (cardDef.reveal ?? 'slide') === 'flip'
+  const { Question, Answer } = cardDef
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-1 h-1.5 overflow-hidden rounded-full bg-panel-2">
@@ -125,45 +130,81 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
           ))}
         </div>
 
-        <CardView
-          card={current}
-          revealed={revealed}
-          response={response}
-          setResponse={setResponse}
-        />
-
-        {!revealed ? (
-          <Button
-            variant="secondary"
-            className="mt-5 w-full"
-            disabled={!responseReady}
-            onClick={() => session.reveal()}
-          >
-            {interactive ? 'Check answer' : 'Show answer'}
-          </Button>
+        {useFlip ? (
+          <FlipCard
+            flipped={revealed}
+            front={
+              <button
+                type="button"
+                onClick={() => session.reveal()}
+                className="block w-full cursor-pointer text-left"
+              >
+                <Question
+                  content={current.content}
+                  revealed={false}
+                  response={response}
+                  setResponse={setResponse}
+                />
+                <div className="mt-6 text-center text-xs font-medium text-faint">
+                  Tap or press Space to reveal
+                </div>
+              </button>
+            }
+            back={
+              <div>
+                <Answer content={current.content} response={response} />
+                <GradeBar
+                  card={current}
+                  disabled={busy}
+                  suggested={suggested}
+                  onGrade={grade}
+                />
+              </div>
+            }
+          />
         ) : (
           <>
-            {autoResult && (
-              <div
-                className={cn(
-                  'mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
-                  autoResult.correct
-                    ? 'bg-green/10 text-green'
-                    : 'bg-red/10 text-red',
-                )}
+            <CardView
+              card={current}
+              revealed={revealed}
+              response={response}
+              setResponse={setResponse}
+            />
+
+            {!revealed ? (
+              <Button
+                variant="secondary"
+                className="mt-5 w-full"
+                disabled={!responseReady}
+                onClick={() => session.reveal()}
               >
-                {autoResult.correct ? 'Correct' : 'Incorrect'}
-                <span className="ml-1.5 font-normal text-muted">
-                  · auto-graded — override below if needed
-                </span>
+                {interactive ? 'Check answer' : 'Show answer'}
+              </Button>
+            ) : (
+              <div className="reveal-in">
+                {autoResult && (
+                  <div
+                    className={cn(
+                      'mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
+                      autoResult.correct
+                        ? 'bg-green/10 text-green'
+                        : 'bg-red/10 text-red',
+                    )}
+                  >
+                    {autoResult.correct ? 'Correct' : 'Incorrect'}
+                    <span className="ml-1.5 font-normal text-muted">
+                      · auto-graded — override below if needed
+                    </span>
+                  </div>
+                )}
+                <GradeBar
+                  card={current}
+                  disabled={busy}
+                  suggested={suggested}
+                  onGrade={grade}
+                />
               </div>
             )}
-            <GradeBar
-              card={current}
-              disabled={busy}
-              suggested={suggested}
-              onGrade={grade}
-            />
           </>
         )}
       </div>

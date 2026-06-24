@@ -89,3 +89,58 @@ body {
 ::selection {
   background: var(--accent-soft);
 }
+
+/* ---------- Reveal animations ---------- */
+
+/* 3D flip via grid overlap: both faces share one grid cell, so the container
+   sizes to the taller face — no JS height measuring. backface-visibility hides
+   the face turned away. Used for short self-graded cards. */
+.flip {
+  display: grid;
+  perspective: 1200px;
+}
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.flip-front {
+  transform: rotateY(0deg);
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+.flip.is-flipped .flip-front {
+  transform: rotateY(180deg);
+  pointer-events: none;
+}
+.flip.is-flipped .flip-back {
+  transform: rotateY(360deg);
+}
+.flip:not(.is-flipped) .flip-back {
+  pointer-events: none;
+}
+
+/* Slide/fade reveal for taller or interactive cards. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.reveal-in {
+  animation: reveal-in 0.25s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-face {
+    transition: none;
+  }
+  .reveal-in {
+    animation: none;
+  }
+}
