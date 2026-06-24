@@ -299,3 +299,15 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   status feedback. Round-trip integration test (export→clear→import, merge upsert). 40 tests.
 - PWA offline was set up in M0 (Workbox precache); verify via `npm run preview` offline.
 - Build + lint + 40 tests pass. ✅ **M6 complete**. Next: M7 (stats + dark-mode/a11y polish).
+
+### 2026-06-23 — M7: stats + polish (M7 complete)
+- `domain/stats/computeStats.ts` (pure): from review logs + cards → totalReviews,
+  reviewsLast30, reviewsPerDay (14, oldest-first), retention (mature review/relearning,
+  rating>=2, last 30d), streak (consecutive days, 1-day grace), forecast (next 7 days,
+  overdue→today, skips suspended). 6 tests.
+- `useReviewLogs` (reviews.all, key `reviews/all`); grade/undo now also invalidate it.
+- `StatsPage`: stat cards (streak, retention, total) + reviews/day bar chart + 7-day due
+  forecast. Wired to `useReviewLogs` + all-cards query.
+- Polish: global `:focus-visible` keyboard focus ring (a11y).
+- Build + lint + 46 tests pass. ✅ **M7 complete** — single-user app is feature-complete.
+  Remaining: M8 (Supabase, optional) and the deferred deploy.

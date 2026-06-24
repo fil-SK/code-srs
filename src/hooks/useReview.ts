@@ -1,10 +1,14 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Card, ID, Rating } from '@/types'
 import { getRepository } from '@/data'
 import { buildReviewLog, reviewState } from '@/domain/scheduling/scheduler'
 import { qk } from './queryKeys'
 
 const repo = getRepository()
+
+export function useReviewLogs() {
+  return useQuery({ queryKey: qk.reviewsAll, queryFn: () => repo.reviews.all() })
+}
 
 export interface GradeInput {
   card: Card
@@ -33,7 +37,10 @@ export function useGradeCard() {
       await repo.reviews.append(log)
       return { log }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.cards })
+      qc.invalidateQueries({ queryKey: qk.reviewsAll })
+    },
   })
 }
 
@@ -50,6 +57,9 @@ export function useUndoGrade() {
       await repo.cards.put(card)
       await repo.reviews.delete(logId)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.cards })
+      qc.invalidateQueries({ queryKey: qk.reviewsAll })
+    },
   })
 }
