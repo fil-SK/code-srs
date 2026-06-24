@@ -29,6 +29,11 @@ export function useReviewSession(initialQueue: Card[]) {
     setRevealed(true)
   }
 
+  // Flip back to the question without grading (self-graded flip cards).
+  function flipBack() {
+    setRevealed(false)
+  }
+
   function goTo(nextIndex: number, nextRevealed: boolean) {
     setIndex(nextIndex)
     setRevealed(nextRevealed)
@@ -66,6 +71,7 @@ export function useReviewSession(initialQueue: Card[]) {
     busy,
     canUndo: undoStack.length > 0,
     reveal,
+    flipBack,
     submitGrade,
     undoLast,
   }

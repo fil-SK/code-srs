@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Undo2 } from 'lucide-react'
+import { RotateCcw, Undo2 } from 'lucide-react'
 import type { Card, Rating } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { FlipCard } from '@/components/ui/FlipCard'
@@ -25,6 +25,7 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
 
   const def = current ? getCardDefinition(current.type) : undefined
   const interactive = def?.interactive ?? false
+  const useFlip = (def?.reveal ?? 'slide') === 'flip'
   const responseReady =
     !interactive ||
     (current ? (def?.isResponseReady?.(response, current.content) ?? true) : true)
@@ -50,10 +51,19 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (isComplete) return
-      if (!revealed && (e.code === 'Space' || e.code === 'Enter')) {
-        if (!responseReady) return
+      if (e.code === 'Space') {
+        // Toggle: reveal, or flip back to the question (flip cards).
         e.preventDefault()
-        session.reveal()
+        if (!revealed) {
+          if (responseReady) session.reveal()
+        } else if (useFlip) {
+          session.flipBack()
+        }
+      } else if (!revealed && e.code === 'Enter') {
+        if (responseReady) {
+          e.preventDefault()
+          session.reveal()
+        }
       } else if (revealed && ['1', '2', '3', '4'].includes(e.key)) {
         e.preventDefault()
         grade(Number(e.key) as Rating)
@@ -65,7 +75,7 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealed, isComplete, canUndo, responseReady, suggested, session])
+  }, [revealed, isComplete, canUndo, responseReady, suggested, useFlip, session])
 
   if (isComplete) {
     return (
@@ -95,11 +105,25 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
     : 0
 
   const cardDef = getCardDefinition(current.type)
-  const useFlip = (cardDef.reveal ?? 'slide') === 'flip'
   const { Question, Answer } = cardDef
 
+  const tagEls = current.tags.map((tag) => (
+    <span key={tag} className="font-mono text-[11.5px] text-blue">
+      #{tag}
+    </span>
+  ))
+  const header = (
+    <div className="mb-4 flex items-center gap-2">
+      <CardTypeBadge type={current.type} />
+      {tagEls}
+    </div>
+  )
+
+  const faceClass =
+    'rounded-2xl border border-border bg-panel p-7 shadow-[var(--shadow)] min-h-[17rem] flex flex-col'
+
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-3xl">
       <div className="mb-1 h-1.5 overflow-hidden rounded-full bg-panel-2">
         <div
           className="h-full rounded-full bg-accent transition-all"
@@ -120,94 +144,98 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
         </button>
       </div>
 
-      <div className="rounded-2xl border border-border bg-panel p-6 shadow-[var(--shadow)]">
-        <div className="mb-3.5 flex items-center gap-2">
-          <CardTypeBadge type={current.type} />
-          {current.tags.map((tag) => (
-            <span key={tag} className="font-mono text-[11.5px] text-blue">
-              #{tag}
-            </span>
-          ))}
-        </div>
-
-        {useFlip ? (
-          <FlipCard
-            flipped={revealed}
-            front={
-              <button
-                type="button"
-                onClick={() => session.reveal()}
-                className="block w-full cursor-pointer text-left"
-              >
+      {useFlip ? (
+        <FlipCard
+          flipped={revealed}
+          faceClassName={faceClass}
+          onFrontClick={() => session.reveal()}
+          front={
+            <>
+              {header}
+              <div className="flex flex-1 flex-col justify-center">
                 <Question
                   content={current.content}
                   revealed={false}
                   response={response}
                   setResponse={setResponse}
                 />
-                <div className="mt-6 text-center text-xs font-medium text-faint">
-                  Tap or press Space to reveal
-                </div>
-              </button>
-            }
-            back={
-              <div>
+              </div>
+              <div className="mt-6 text-center text-xs font-medium text-faint">
+                Tap or press Space to reveal
+              </div>
+            </>
+          }
+          back={
+            <>
+              <div className="mb-4 flex items-center gap-2">
+                <CardTypeBadge type={current.type} />
+                {tagEls}
+                <button
+                  type="button"
+                  onClick={() => session.flipBack()}
+                  className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-text"
+                >
+                  <RotateCcw size={13} /> Flip back
+                </button>
+              </div>
+              <div className="flex-1">
                 <Answer content={current.content} response={response} />
-                <GradeBar
-                  card={current}
-                  disabled={busy}
-                  suggested={suggested}
-                  onGrade={grade}
-                />
               </div>
-            }
+              <GradeBar
+                card={current}
+                disabled={busy}
+                suggested={suggested}
+                onGrade={grade}
+              />
+            </>
+          }
+        />
+      ) : (
+        <div className="rounded-2xl border border-border bg-panel p-7 shadow-[var(--shadow)]">
+          {header}
+          <CardView
+            card={current}
+            revealed={revealed}
+            response={response}
+            setResponse={setResponse}
           />
-        ) : (
-          <>
-            <CardView
-              card={current}
-              revealed={revealed}
-              response={response}
-              setResponse={setResponse}
-            />
 
-            {!revealed ? (
-              <Button
-                variant="secondary"
-                className="mt-5 w-full"
-                disabled={!responseReady}
-                onClick={() => session.reveal()}
-              >
-                {interactive ? 'Check answer' : 'Show answer'}
-              </Button>
-            ) : (
-              <div className="reveal-in">
-                {autoResult && (
-                  <div
-                    className={cn(
-                      'mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
-                      autoResult.correct
-                        ? 'bg-green/10 text-green'
-                        : 'bg-red/10 text-red',
-                    )}
-                  >
-                    {autoResult.correct ? 'Correct' : 'Incorrect'}
-                    <span className="ml-1.5 font-normal text-muted">
-                      · auto-graded — override below if needed
-                    </span>
-                  </div>
-                )}
-                <GradeBar
-                  card={current}
-                  disabled={busy}
-                  suggested={suggested}
-                  onGrade={grade}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </div>
+          {!revealed ? (
+            <Button
+              variant="secondary"
+              className="mt-5 w-full"
+              disabled={!responseReady}
+              onClick={() => session.reveal()}
+            >
+              {interactive ? 'Check answer' : 'Show answer'}
+            </Button>
+          ) : (
+            <div className="reveal-in">
+              {autoResult && (
+                <div
+                  className={cn(
+                    'mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
+                    autoResult.correct
+                      ? 'bg-green/10 text-green'
+                      : 'bg-red/10 text-red',
+                  )}
+                >
+                  {autoResult.correct ? 'Correct' : 'Incorrect'}
+                  <span className="ml-1.5 font-normal text-muted">
+                    · auto-graded — override below if needed
+                  </span>
+                </div>
+              )}
+              <GradeBar
+                card={current}
+                disabled={busy}
+                suggested={suggested}
+                onGrade={grade}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -104,12 +104,14 @@ body {
    the face turned away. Used for short self-graded cards. */
 .flip {
   display: grid;
-  perspective: 1200px;
+  perspective: 2000px;
 }
 .flip-face {
   grid-area: 1 / 1;
   backface-visibility: hidden;
-  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+  /* Smooth ease-out with a hair of overshoot for a tactile flip. */
+  transition: transform 0.55s cubic-bezier(0.34, 1.32, 0.5, 1);
 }
 .flip-front {
   transform: rotateY(0deg);
