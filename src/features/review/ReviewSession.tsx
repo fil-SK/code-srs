@@ -25,7 +25,8 @@ export function ReviewSession({ cards }: { cards: Card[] }) {
   const def = current ? getCardDefinition(current.type) : undefined
   const interactive = def?.interactive ?? false
   const responseReady =
-    !interactive || (def?.isResponseReady?.(response) ?? true)
+    !interactive ||
+    (current ? (def?.isResponseReady?.(response, current.content) ?? true) : true)
 
   // For auto-graded types, evaluate on reveal. Correct -> suggest Good, else Again.
   const autoResult =

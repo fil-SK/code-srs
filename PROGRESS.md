@@ -209,3 +209,17 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - `mcq.test.ts`: 5 tests (single/multiple/empty autoGrade, isResponseReady, isComplete).
   Suite now 20 tests, all green. Build + lint clean.
 - Next M3 (d): Ordering + Matching (interactive, auto-graded).
+
+### 2026-06-23 — M3 (d): Ordering + Matching
+- `lib/shuffle.ts` (Fisher–Yates). Extended `isResponseReady` signature to also receive
+  `content` (Matching needs to know all lefts are assigned); existing MCQ fn still valid
+  (fewer params). ReviewSession passes `current.content`.
+- `renderers/ordering/`: items stored in correct order, presented shuffled (stable per
+  card); reorder via up/down controls; reveal marks each position green/red; Answer shows
+  the canonical order. autoGrade = exact order match. Editor reorders with up/down.
+- `renderers/matching/`: left items fixed, right options shuffled in a per-row select;
+  reveal marks rows; Answer lists correct pairs. autoGrade = every left maps to its own
+  pair; isResponseReady requires all assigned. Editor manages left↔right pairs.
+- Registered both. Tests: ordering (5) + matching (added) → suite now 27, all green.
+- Build + lint clean. 6/7 types done. Next M3 (e): Code Completion (editable CodeMirror
+  + normalized-match auto-grade), then (f) flip-to-reveal.
