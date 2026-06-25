@@ -44,6 +44,30 @@ export function descendantIds(node: DeckNode): ID[] {
   return ids
 }
 
+// Ids of `rootId` and all its descendants, computed directly from flat decks
+// (no tree needed). Cycle-safe via the `seen` set.
+export function subtreeIds(decks: Deck[], rootId: ID): ID[] {
+  const childrenByParent = new Map<ID, ID[]>()
+  for (const d of decks) {
+    if (!d.parentId || d.parentId === d.id) continue
+    const list = childrenByParent.get(d.parentId) ?? []
+    list.push(d.id)
+    childrenByParent.set(d.parentId, list)
+  }
+
+  const ids: ID[] = []
+  const seen = new Set<ID>()
+  const stack = [rootId]
+  while (stack.length) {
+    const id = stack.pop()!
+    if (seen.has(id)) continue
+    seen.add(id)
+    ids.push(id)
+    for (const childId of childrenByParent.get(id) ?? []) stack.push(childId)
+  }
+  return ids
+}
+
 export interface FlatDeck {
   deck: Deck
   depth: number

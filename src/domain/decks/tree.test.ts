@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Deck } from '@/types'
-import { buildDeckTree, descendantIds, flattenDeckTree } from './tree'
+import { buildDeckTree, descendantIds, flattenDeckTree, subtreeIds } from './tree'
 
 const deck = (id: string, name: string, parentId?: string): Deck => ({
   id,
@@ -50,6 +50,25 @@ describe('descendantIds', () => {
       deck('threads', 'Threads', 'proc'),
     ])
     expect(descendantIds(tree[0]).sort()).toEqual(['os', 'proc', 'threads'])
+  })
+})
+
+describe('subtreeIds', () => {
+  const decks = [
+    deck('os', 'OS'),
+    deck('proc', 'Processes', 'os'),
+    deck('threads', 'Threads', 'proc'),
+    deck('algo', 'Algorithms'),
+  ]
+
+  it('returns the node and all descendants', () => {
+    expect(subtreeIds(decks, 'os').sort()).toEqual(['os', 'proc', 'threads'])
+    expect(subtreeIds(decks, 'proc').sort()).toEqual(['proc', 'threads'])
+  })
+
+  it('returns just the leaf for a leaf node', () => {
+    expect(subtreeIds(decks, 'threads')).toEqual(['threads'])
+    expect(subtreeIds(decks, 'algo')).toEqual(['algo'])
   })
 })
 

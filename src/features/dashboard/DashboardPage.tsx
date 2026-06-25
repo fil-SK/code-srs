@@ -5,6 +5,7 @@ import {
   ChevronRight,
   FolderPlus,
   Pencil,
+  Play,
   Plus,
   Trash2,
 } from 'lucide-react'
@@ -205,6 +206,16 @@ function DeckRow({
           </div>
         </div>
 
+        {counts.due > 0 && (
+          <Link
+            to={`/review?deck=${node.deck.id}`}
+            title="Study this deck and its subdecks"
+            aria-label="Study this deck"
+            className="grid h-8 w-8 flex-none place-items-center rounded-lg text-muted hover:bg-accent-soft hover:text-accent"
+          >
+            <Play size={15} />
+          </Link>
+        )}
         <RowButton title="New subdeck" onClick={() => onNewSub(node.deck.id)}>
           <FolderPlus size={15} />
         </RowButton>

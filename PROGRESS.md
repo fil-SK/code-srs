@@ -43,6 +43,17 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   New-card default deck also uses tree order. Build + lint + 51 tests pass.
 - Remaining: (3) Study a subtree.
 
+### 2026-06-24 — Nested decks — checkpoint 3: study a subtree (feature complete)
+- `domain/decks/tree.ts`: added `subtreeIds(decks, rootId)` (flat, cycle-safe) + 2 tests.
+- `ReviewPage`: reads `?deck=<id>`; when present, studies that deck + all descendants
+  (filters due cards to the subtree id set) and shows a "Studying X and its subdecks ·
+  all decks" header. Session key includes the deck so switching scope resets it.
+- Dashboard: each node with due cards gets a ▶ Study link → `/review?deck=<id>`.
+- Build + lint + 53 tests pass. ✅ **Nested decks feature complete** (tree UI + path picker +
+  subtree study).
+- Still TODO (small): extend the AI import prompt to document deck `parentId` so generated
+  files can build a hierarchy on import.
+
 ### 2026-06-24 — Fixes during dogfooding
 - **fix:** Editor crashed whenever the active card `type` and `content` rendered out of
   sync — `Cannot read properties of undefined`. Two reports: (1) changing a new card's type
