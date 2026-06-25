@@ -23,6 +23,20 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 
 ## Log
 
+### 2026-06-24 — Nested decks (deck tree) — checkpoint 1: Dashboard tree
+- Design approved: arbitrary-depth grouping via the existing `Deck.parentId` (one entity,
+  no separate Section). Any node can hold cards and/or subdecks. Defaults: deleting a
+  non-empty node is blocked; reparenting deferred.
+- `domain/decks/tree.ts` (pure): `buildDeckTree` (forest from parentId; missing/self parent
+  → root; cycle-safe), `descendantIds`, `flattenDeckTree` (display order + full path). 5 tests.
+- `DashboardPage`: renders the deck tree — collapse/expand, indentation, **subtree-rolled-up**
+  card/due counts per node, and per-node actions: New subdeck (parentId), rename, delete
+  (blocked if it has subdecks or own cards). Top-level "New deck" creates a root.
+- Build + lint + 51 tests pass.
+- Remaining for this feature: (2) editor deck picker showing the full path; (3) "Study a
+  subtree" (review a node + all descendants, with the review route accepting a deck).
+  Also TODO: extend the AI import prompt to allow deck `parentId` for hierarchy-on-import.
+
 ### 2026-06-24 — Fixes during dogfooding
 - **fix:** Editor crashed whenever the active card `type` and `content` rendered out of
   sync — `Cannot read properties of undefined`. Two reports: (1) changing a new card's type
