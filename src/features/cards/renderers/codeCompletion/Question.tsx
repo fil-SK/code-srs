@@ -7,6 +7,7 @@ export function CodeCompletionQuestion({
   response,
   setResponse,
   revealed,
+  readOnly,
 }: QuestionProps<'codeCompletion'>) {
   const answer = (response as string | undefined) ?? ''
   const lang = content.scaffold.language
@@ -24,6 +25,10 @@ export function CodeCompletionQuestion({
         </div>
         {revealed ? (
           <LazyCodeView code={answer || '(no answer)'} language={lang} />
+        ) : readOnly ? (
+          <div className="rounded-[10px] border border-dashed border-border bg-code-bg p-4 text-xs text-faint">
+            Flip to reveal the solution.
+          </div>
         ) : (
           <LazyCodeEditor value={answer} language={lang} onChange={setResponse} />
         )}

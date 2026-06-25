@@ -9,11 +9,13 @@ export function CardView({
   revealed,
   response,
   setResponse,
+  readOnly,
 }: {
   card: Card
   revealed: boolean
   response: CardResponse
   setResponse: (response: CardResponse) => void
+  readOnly?: boolean
 }) {
   const { Question, Answer } = getCardDefinition(card.type)
 
@@ -24,6 +26,7 @@ export function CardView({
         revealed={revealed}
         response={response}
         setResponse={setResponse}
+        readOnly={readOnly}
       />
       {revealed && (
         <div className="reveal-in mt-5 border-t border-dashed border-border pt-4">

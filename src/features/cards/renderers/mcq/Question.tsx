@@ -7,11 +7,13 @@ export function McqQuestion({
   response,
   setResponse,
   revealed,
+  readOnly,
 }: QuestionProps<'mcq'>) {
   const selected = (response as string[] | undefined) ?? []
+  const locked = revealed || readOnly
 
   function toggle(id: string) {
-    if (revealed) return
+    if (locked) return
     if (content.multiple) {
       setResponse(
         selected.includes(id)
@@ -40,13 +42,15 @@ export function McqQuestion({
                 : 'border-border opacity-60'
             : isSel
               ? 'border-accent bg-accent-soft'
-              : 'border-border hover:border-accent'
+              : readOnly
+                ? 'border-border'
+                : 'border-border hover:border-accent'
 
           return (
             <button
               key={opt.id}
               type="button"
-              disabled={revealed}
+              disabled={locked}
               onClick={() => toggle(opt.id)}
               className={cn(
                 'flex w-full items-center gap-3 rounded-[10px] border px-3.5 py-3 text-left text-sm',

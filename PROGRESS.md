@@ -23,6 +23,18 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 
 ## Log
 
+### 2026-06-24 — Preview read-only fix + drag-and-drop ordering
+- **fix:** In Preview the interactive controls looked clickable but were dead (no-op
+  setResponse). Added `readOnly?` to `QuestionProps` + `CardView`; interactive renderers
+  honor it: ordering hides drag/arrows, matching disables selects, mcq disables options
+  (no hover), codeCompletion shows "flip to reveal" instead of an editor. Preview passes
+  `readOnly`.
+- **feat (UX):** Ordering study UI now uses **drag-and-drop** (installed `@dnd-kit/core`
+  + `/sortable` + `/utilities`) instead of up/down arrows — drag rows (grip affordance),
+  touch + keyboard accessible. Reveal/preview render a static marked list. Editor
+  (authoring the correct order) keeps arrows. Main bundle +~24kB gz. autoGrade unchanged.
+- Build + lint + 58 tests pass.
+
 ### 2026-06-24 — Nested decks (deck tree) — checkpoint 1: Dashboard tree
 - Design approved: arbitrary-depth grouping via the existing `Deck.parentId` (one entity,
   no separate Section). Any node can hold cards and/or subdecks. Defaults: deleting a

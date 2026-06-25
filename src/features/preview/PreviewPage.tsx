@@ -150,6 +150,7 @@ export function PreviewPage() {
             revealed={revealed}
             response={response}
             setResponse={noop}
+            readOnly
           />
           {!revealed && (
             <Button

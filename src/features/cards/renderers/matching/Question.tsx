@@ -11,6 +11,7 @@ export function MatchingQuestion({
   response,
   setResponse,
   revealed,
+  readOnly,
 }: QuestionProps<'matching'>) {
   const assign = (response as Record<string, string> | undefined) ?? {}
 
@@ -50,7 +51,7 @@ export function MatchingQuestion({
               <span className="text-faint">→</span>
               <select
                 className={cn(selectClass, 'max-w-[52%]')}
-                disabled={revealed}
+                disabled={revealed || readOnly}
                 value={chosen ?? ''}
                 onChange={(e) => setMatch(pair.id, e.target.value)}
               >

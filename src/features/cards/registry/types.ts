@@ -10,6 +10,8 @@ export interface QuestionProps<T extends CardType> {
   revealed: boolean
   response: CardResponse
   setResponse: (response: CardResponse) => void
+  // Preview/browse mode: disable all interaction (no selecting/reordering/typing).
+  readOnly?: boolean
 }
 
 export interface AnswerProps<T extends CardType> {

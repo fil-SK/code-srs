@@ -1,14 +1,63 @@
 import { useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { GripVertical } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { QuestionProps } from '../../registry/types'
+
+function SortableItem({
+  id,
+  index,
+  text,
+}: {
+  id: string
+  index: number
+  text: string
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id })
+  const style = { transform: CSS.Transform.toString(transform), transition }
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={cn(
+        'flex cursor-grab touch-none select-none items-center gap-3 rounded-[10px] border border-border bg-panel px-3 py-2.5 text-sm',
+        isDragging && 'opacity-80 shadow-lg ring-1 ring-accent',
+      )}
+    >
+      <GripVertical size={16} className="flex-none text-faint" />
+      <span className="w-5 font-mono text-xs text-faint">{index + 1}.</span>
+      <span className="flex-1">{text}</span>
+    </li>
+  )
+}
 
 export function OrderingQuestion({
   content,
   response,
   setResponse,
   revealed,
+  readOnly,
 }: QuestionProps<'ordering'>) {
   const itemById = useMemo(
     () => new Map(content.items.map((i) => [i.id, i])),
@@ -26,14 +75,20 @@ export function OrderingQuestion({
   }, [response, shuffled, setResponse])
 
   const order = (response as string[] | undefined) ?? shuffled
+  const draggable = !revealed && !readOnly
 
-  function move(index: number, dir: -1 | 1) {
-    if (revealed) return
-    const j = index + dir
-    if (j < 0 || j >= order.length) return
-    const next = [...order]
-    ;[next[index], next[j]] = [next[j], next[index]]
-    setResponse(next)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e
+    if (over && active.id !== over.id) {
+      const from = order.indexOf(active.id as string)
+      const to = order.indexOf(over.id as string)
+      setResponse(arrayMove(order, from, to))
+    }
   }
 
   return (
@@ -41,50 +96,54 @@ export function OrderingQuestion({
       <div className="text-[15px] font-semibold leading-snug">
         {content.prompt}
       </div>
-      <ol className="space-y-2">
-        {order.map((id, idx) => {
-          const item = itemById.get(id)
-          const placedRight = revealed && correctOrder[idx] === id
-          return (
-            <li
-              key={id}
-              className={cn(
-                'flex items-center gap-3 rounded-[10px] border px-3 py-2.5 text-sm',
-                revealed
-                  ? placedRight
-                    ? 'border-green bg-green/10'
-                    : 'border-red bg-red/10'
-                  : 'border-border',
-              )}
-            >
-              <span className="w-5 font-mono text-xs text-faint">{idx + 1}.</span>
-              <span className="flex-1">{item?.text}</span>
-              {!revealed && (
-                <span className="flex flex-col gap-0.5">
-                  <button
-                    type="button"
-                    onClick={() => move(idx, -1)}
-                    disabled={idx === 0}
-                    aria-label="Move up"
-                    className="text-muted hover:text-text disabled:opacity-30"
-                  >
-                    <ChevronUp size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => move(idx, 1)}
-                    disabled={idx === order.length - 1}
-                    aria-label="Move down"
-                    className="text-muted hover:text-text disabled:opacity-30"
-                  >
-                    <ChevronDown size={16} />
-                  </button>
+
+      {draggable ? (
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={onDragEnd}
+          >
+            <SortableContext items={order} strategy={verticalListSortingStrategy}>
+              <ul className="space-y-2">
+                {order.map((id, idx) => (
+                  <SortableItem
+                    key={id}
+                    id={id}
+                    index={idx}
+                    text={itemById.get(id)?.text ?? ''}
+                  />
+                ))}
+              </ul>
+            </SortableContext>
+          </DndContext>
+          <p className="text-xs text-faint">Drag the rows to reorder.</p>
+        </>
+      ) : (
+        <ol className="space-y-2">
+          {order.map((id, idx) => {
+            const placedRight = revealed && correctOrder[idx] === id
+            return (
+              <li
+                key={id}
+                className={cn(
+                  'flex items-center gap-3 rounded-[10px] border px-3 py-2.5 text-sm',
+                  revealed
+                    ? placedRight
+                      ? 'border-green bg-green/10'
+                      : 'border-red bg-red/10'
+                    : 'border-border',
+                )}
+              >
+                <span className="w-5 font-mono text-xs text-faint">
+                  {idx + 1}.
                 </span>
-              )}
-            </li>
-          )
-        })}
-      </ol>
+                <span className="flex-1">{itemById.get(id)?.text}</span>
+              </li>
+            )
+          })}
+        </ol>
+      )}
     </div>
   )
 }
