@@ -37,6 +37,12 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
   subtree" (review a node + all descendants, with the review route accepting a deck).
   Also TODO: extend the AI import prompt to allow deck `parentId` for hierarchy-on-import.
 
+### 2026-06-24 — Nested decks — checkpoint 2: path-aware deck picker
+- `CardEditorPage` deck `<select>` now lists decks via `flattenDeckTree(buildDeckTree(...))`,
+  labeling each option with its full path (e.g. "OS / Processes / Threads") in tree order.
+  New-card default deck also uses tree order. Build + lint + 51 tests pass.
+- Remaining: (3) Study a subtree.
+
 ### 2026-06-24 — Fixes during dogfooding
 - **fix:** Editor crashed whenever the active card `type` and `content` rendered out of
   sync — `Cannot read properties of undefined`. Two reports: (1) changing a new card's type

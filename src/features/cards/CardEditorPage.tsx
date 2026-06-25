@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
+import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
 import type { NewCardInput } from '@/domain/cards/factory'
 import { useCard, useCreateCard, useSaveCard } from '@/hooks/useCards'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
@@ -59,6 +60,12 @@ export function CardEditorPage() {
   const [tags, setTags] = useState('')
   const [deckId, setDeckId] = useState('')
 
+  // Decks flattened in tree order, each labeled with its full path (OS / Processes / …).
+  const flatDecks = useMemo(
+    () => flattenDeckTree(buildDeckTree(decks ?? [])),
+    [decks],
+  )
+
   // Hydrate from an existing card (edit mode).
   useEffect(() => {
     if (isEdit && existing) {
@@ -77,10 +84,10 @@ export function CardEditorPage() {
     }
   }, [draft, isEdit])
 
-  // Default a new card to the first deck once decks load.
+  // Default a new card to the first deck (tree order) once decks load.
   useEffect(() => {
-    if (!isEdit && !deckId && decks?.length) setDeckId(decks[0].id)
-  }, [decks, isEdit, deckId])
+    if (!isEdit && !deckId && flatDecks.length) setDeckId(flatDecks[0].deck.id)
+  }, [flatDecks, isEdit, deckId])
 
   function changeType(t: CardType) {
     setEditor({ type: t, content: getCardDefinition(t).emptyContent() })
@@ -174,16 +181,16 @@ export function CardEditorPage() {
 
         <Editor content={editor.content} onChange={setContent} />
 
-        {decks && decks.length > 0 ? (
+        {flatDecks.length > 0 ? (
           <Field label="Deck">
             <select
               className={selectClass}
               value={deckId}
               onChange={(e) => setDeckId(e.target.value)}
             >
-              {decks.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
+              {flatDecks.map((f) => (
+                <option key={f.deck.id} value={f.deck.id}>
+                  {f.path}
                 </option>
               ))}
             </select>
