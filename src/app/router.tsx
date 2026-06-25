@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
+import { PreviewPage } from '@/features/preview/PreviewPage'
 import { BrowsePage } from '@/features/cards/BrowsePage'
 import { CardEditorPage } from '@/features/cards/CardEditorPage'
 import { DraftsPage } from '@/features/drafts/DraftsPage'
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'review', element: <ReviewPage /> },
+      { path: 'preview', element: <PreviewPage /> },
       { path: 'browse', element: <BrowsePage /> },
       { path: 'cards/new', element: <CardEditorPage /> },
       { path: 'cards/:id/edit', element: <CardEditorPage /> },

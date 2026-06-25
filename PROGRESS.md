@@ -52,7 +52,20 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 - Build + lint + 53 tests pass. ✅ **Nested decks feature complete** (tree UI + path picker +
   subtree study).
 - Still TODO (small): extend the AI import prompt to document deck `parentId` so generated
-  files can build a hierarchy on import.
+  files can build a hierarchy on import. (DONE 2026-06-24 — prompt updated with nesting.)
+
+### 2026-06-24 — Preview mode (browse a deck without scheduling)
+- `features/cards/correctResponse.ts`: maps a card to its "fully correct" response so
+  interactive types reveal their answer in preview (mcq→correct ids, ordering→canonical
+  order, matching→identity map, codeCompletion→first solution, self-graded→undefined). 5 tests.
+- `features/preview/PreviewPage.tsx` at route `/preview?deck=<id>`: browse a deck + its
+  subdecks' cards one by one (sorted by createdAt), flip/reveal to see the answer, Prev/Next.
+  Read-only — NO grading, NO review logs, NO scheduler impact (uses CardView + FlipCard with
+  a no-op setResponse; reveal sets response to the correct answer). Keyboard: ←/→ navigate,
+  Space flips. Empty state.
+- Dashboard: each node with cards gets a 📖 "Browse cards" link → `/preview?deck=<id>`
+  (alongside the ▶ Study link).
+- Build + lint + 58 tests pass.
 
 ### 2026-06-24 — Fixes during dogfooding
 - **fix:** Editor crashed whenever the active card `type` and `content` rendered out of

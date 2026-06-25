@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
+  BookOpen,
   ChevronDown,
   ChevronRight,
   FolderPlus,
@@ -206,6 +207,16 @@ function DeckRow({
           </div>
         </div>
 
+        {counts.cards > 0 && (
+          <Link
+            to={`/preview?deck=${node.deck.id}`}
+            title="Browse cards (no scheduling)"
+            aria-label="Browse cards"
+            className="grid h-8 w-8 flex-none place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"
+          >
+            <BookOpen size={15} />
+          </Link>
+        )}
         {counts.due > 0 && (
           <Link
             to={`/review?deck=${node.deck.id}`}

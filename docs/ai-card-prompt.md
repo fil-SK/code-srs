@@ -37,15 +37,31 @@ import, so any wrong field name, missing field, or broken id reference will cras
 - "drafts" and "reviewLogs" must be present and empty: [].
 
 ## Deck (group the cards)
-Create one deck (or a few) and put the cards in it.
+Create one or more decks and put the cards in them.
 {
   "id": "<unique id, e.g. deck-os-001>",
   "name": "Operating Systems",
+  "parentId": "<optional: id of another deck in this file>",
   "createdAt": 1750000000000,
   "updatedAt": 1750000000000
 }
 - Every card's "deckId" MUST equal a deck "id" in this file.
 - To later ADD more cards to the SAME deck, reuse the SAME deck "id".
+
+### Nesting decks (build a hierarchy)
+Decks form a tree of ANY depth via "parentId". Omit "parentId" for a top-level
+deck; set it to another deck's "id" to nest underneath. Cards may attach to ANY
+deck (a parent "section" or a leaf). Example: Operating Systems → Processes →
+Threads / Scheduling, with cards on the leaves:
+"decks": [
+  { "id": "os",     "name": "Operating Systems", "createdAt": 1750000000000, "updatedAt": 1750000000000 },
+  { "id": "proc",   "name": "Processes", "parentId": "os",   "createdAt": 1750000000000, "updatedAt": 1750000000000 },
+  { "id": "threads","name": "Threads",   "parentId": "proc", "createdAt": 1750000000000, "updatedAt": 1750000000000 },
+  { "id": "sched",  "name": "Scheduling","parentId": "proc", "createdAt": 1750000000000, "updatedAt": 1750000000000 }
+]
+- Prefer putting cards on the leaf decks (e.g. "threads", "sched"); studying a
+  parent reviews it plus everything nested under it.
+- Every "parentId" must reference a deck "id" present in THIS file.
 
 ## ID rules
 - "id" on decks and cards must be GLOBALLY UNIQUE strings. Use UUID-style values, e.g.
@@ -156,6 +172,8 @@ Aim for a mix of types. Default to "basic" when unsure.
 
 ## Final checks before you output
 - Every card.deckId matches a deck.id in the file.
+- Every deck.parentId (if present) matches another deck.id in the file.
+- For a broad topic, organize decks into a sensible nested hierarchy via parentId.
 - Every card has a unique id and the exact scheduling block.
 - mcq.correct ids all exist in mcq.options.
 - ordering.items are in the correct order.
