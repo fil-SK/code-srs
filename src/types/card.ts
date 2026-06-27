@@ -8,6 +8,7 @@ export interface CardBase {
   tags: string[]
   createdAt: Millis
   updatedAt: Millis
+  order?: number // manual position within a deck (for browsing); review ignores it
   suspended: boolean // excluded from the queue without deleting
   scheduling: SchedulingState
 }

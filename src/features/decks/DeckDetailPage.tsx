@@ -1,13 +1,79 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { BookOpen, Play, Plus } from 'lucide-react'
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { BookOpen, GripVertical, Play, Plus } from 'lucide-react'
 import type { Card } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
-import { useDeleteCard, useSaveCard, useSearchCards } from '@/hooks/useCards'
+import {
+  useDeleteCard,
+  useReorderCards,
+  useSaveCard,
+  useSearchCards,
+} from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
 import { CardRow } from '@/features/cards/CardRow'
 import { getCardTitle } from '@/features/cards/cardTypeMeta'
+
+const byOrder = (a: Card, b: Card) =>
+  (a.order ?? a.createdAt) - (b.order ?? b.createdAt)
+
+// A CardRow made draggable: the grip handle carries the drag listeners and the
+// row container gets the sortable ref/transform.
+function SortableCardRow({
+  card,
+  onToggleSuspend,
+  onDelete,
+}: {
+  card: Card
+  onToggleSuspend: (card: Card) => void
+  onDelete: (card: Card) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: card.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    ...(isDragging ? { position: 'relative' as const, zIndex: 10 } : {}),
+  }
+  const handle = (
+    <button
+      type="button"
+      aria-label="Drag to reorder"
+      className="ml-1.5 grid h-8 w-6 flex-none cursor-grab touch-none place-items-center rounded text-faint hover:text-text"
+      {...attributes}
+      {...listeners}
+    >
+      <GripVertical size={16} />
+    </button>
+  )
+  return (
+    <CardRow
+      card={card}
+      onToggleSuspend={onToggleSuspend}
+      onDelete={onDelete}
+      leading={handle}
+      containerRef={setNodeRef}
+      style={style}
+    />
+  )
+}
 
 // Open a single deck: its cards as a list, with the same per-card actions as
 // Browse (preview / edit / suspend / delete), scoped to this deck only.
@@ -21,11 +87,31 @@ export function DeckDetailPage() {
     includeSuspended: showSuspended,
   })
 
-  // Chronological order (how they were added). Manual reordering lands next.
-  const cards = useMemo(
-    () => [...(cardsQuery.data ?? [])].sort((a, b) => a.createdAt - b.createdAt),
+  // Cards in their manual order (falls back to creation order). Held in local
+  // state so a drag reorders instantly; it re-syncs whenever the query changes.
+  const sorted = useMemo(
+    () => [...(cardsQuery.data ?? [])].sort(byOrder),
     [cardsQuery.data],
   )
+  const [cards, setCards] = useState<Card[]>(sorted)
+  useEffect(() => setCards(sorted), [sorted])
+
+  const reorder = useReorderCards()
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const from = cards.findIndex((c) => c.id === active.id)
+    const to = cards.findIndex((c) => c.id === over.id)
+    if (from === -1 || to === -1) return
+    const next = arrayMove(cards, from, to)
+    setCards(next)
+    reorder.mutate(next)
+  }
 
   const deckPath = useMemo(() => {
     const flat = flattenDeckTree(buildDeckTree(decks.data ?? []))
@@ -99,6 +185,9 @@ export function DeckDetailPage() {
           {cardsQuery.isLoading
             ? 'Loading…'
             : `${cards.length} card${cards.length === 1 ? '' : 's'}`}
+          {cards.length > 1 && (
+            <span className="text-faint"> · drag the handle to reorder</span>
+          )}
         </span>
         <label className="flex cursor-pointer items-center gap-1.5">
           <input
@@ -119,16 +208,27 @@ export function DeckDetailPage() {
         </div>
       )}
 
-      <div className="space-y-2.5">
-        {cards.map((card) => (
-          <CardRow
-            key={card.id}
-            card={card}
-            onToggleSuspend={toggleSuspend}
-            onDelete={remove}
-          />
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+      >
+        <SortableContext
+          items={cards.map((c) => c.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-2.5">
+            {cards.map((card) => (
+              <SortableCardRow
+                key={card.id}
+                card={card}
+                onToggleSuspend={toggleSuspend}
+                onDelete={remove}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 }

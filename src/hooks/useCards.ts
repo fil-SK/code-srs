@@ -61,3 +61,17 @@ export function useDeleteCard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
   })
 }
+
+// Persist a new manual order for a list of cards (e.g. one deck's cards after a
+// drag). Assigns sequential positions and preserves every other field,
+// including updatedAt, so reordering is not treated as an edit.
+export function useReorderCards() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (cards: Card[]) => {
+      const ordered = cards.map((c, i) => ({ ...c, order: i }))
+      await repo.cards.bulkPut(ordered)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
+  })
+}

@@ -37,7 +37,9 @@ export function PreviewPage() {
     // browse the whole library or a deck subtree.
     if (cardParam) return list.filter((c) => c.id === cardParam)
     const scoped = scope ? list.filter((c) => scope.ids.has(c.deckId)) : list
-    return [...scoped].sort((a, b) => a.createdAt - b.createdAt)
+    return [...scoped].sort(
+      (a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt),
+    )
   }, [allCards.data, scope, cardParam])
 
   // The back link points wherever the user came from.
