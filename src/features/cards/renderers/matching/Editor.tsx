@@ -2,9 +2,10 @@ import { Plus, X } from 'lucide-react'
 import type { MatchingContent } from '@/types'
 import { newId } from '@/lib/id'
 import { Button } from '@/components/ui/Button'
-import { Field, fieldClass } from '@/components/ui/Field'
+import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
 import type { EditorProps } from '../../registry/types'
+import { fixedValues, isFixed, type Col } from './columns'
 
 export function MatchingEditor({
   content,
@@ -26,7 +27,115 @@ export function MatchingEditor({
     update({ headers: { ...content.headers, [col]: value } })
   }
 
+  function setColumnOptions(col: Col, values: string[] | undefined) {
+    const options = { ...content.options }
+    if (values === undefined) delete options[col]
+    else options[col] = values
+    update({ options: Object.keys(options).length ? options : undefined })
+  }
+
   const triple = Boolean(content.triple)
+
+  // Per-column "fixed dropdown list" editor.
+  function columnOptions(col: Col, label: string) {
+    const values = content.options?.[col]
+    const fixed = isFixed(content, col)
+    return (
+      <div className="rounded-[9px] border border-border p-3">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={fixed}
+            onChange={(e) =>
+              setColumnOptions(col, e.target.checked ? ['', ''] : undefined)
+            }
+          />
+          <span className="font-medium">{label}</span>
+          <span className="text-muted">— pick from a fixed list</span>
+        </label>
+        {fixed && values && (
+          <div className="mt-2 space-y-2">
+            {values.map((v, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  className={fieldClass}
+                  value={v}
+                  onChange={(e) =>
+                    setColumnOptions(
+                      col,
+                      values.map((x, j) => (j === i ? e.target.value : x)),
+                    )
+                  }
+                  placeholder="Option value (e.g. Yes)"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setColumnOptions(
+                      col,
+                      values.filter((_, j) => j !== i),
+                    )
+                  }
+                  disabled={values.length <= 2}
+                  className={cn(
+                    'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-border text-muted',
+                    values.length <= 2
+                      ? 'opacity-40'
+                      : 'hover:border-red hover:text-red',
+                  )}
+                  aria-label="Remove option"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            ))}
+            <Button
+              variant="ghost"
+              onClick={() => setColumnOptions(col, [...values, ''])}
+            >
+              <Plus size={14} /> Add option
+            </Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // A row's cell for an answer column: a dropdown when the column is fixed
+  // (pick the correct value), else a free-text input.
+  function answerCell(
+    pair: MatchingContent['pairs'][number],
+    col: Col,
+    placeholder: string,
+  ) {
+    const value = col === 'right' ? pair.right : (pair.third ?? '')
+    if (isFixed(content, col)) {
+      return (
+        <select
+          className={selectClass}
+          value={value}
+          onChange={(e) => setPair(pair.id, col, e.target.value)}
+        >
+          <option value="" disabled>
+            Choose…
+          </option>
+          {fixedValues(content, col).map((v) => (
+            <option key={v} value={v}>
+              {v}
+            </option>
+          ))}
+        </select>
+      )
+    }
+    return (
+      <input
+        className={fieldClass}
+        value={value}
+        onChange={(e) => setPair(pair.id, col, e.target.value)}
+        placeholder={placeholder}
+      />
+    )
+  }
 
   return (
     <>
@@ -84,6 +193,18 @@ export function MatchingEditor({
 
       <div className="space-y-2">
         <span className="block text-xs font-semibold uppercase tracking-wide text-muted">
+          Answer dropdowns
+        </span>
+        {columnOptions('right', triple ? 'Middle column' : 'Right column')}
+        {triple && columnOptions('third', 'Right column')}
+        <p className="text-xs text-faint">
+          Turn a column on to share a fixed list of answers (e.g. Yes / No)
+          across rows. Off means each row’s answers are matched uniquely.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-muted">
           {triple ? 'Rows (left → middle → right)' : 'Pairs (left ↔ right)'}
         </span>
         {content.pairs.map((pair) => (
@@ -95,21 +216,11 @@ export function MatchingEditor({
               placeholder="Concept"
             />
             <span className="text-faint">→</span>
-            <input
-              className={fieldClass}
-              value={pair.right}
-              onChange={(e) => setPair(pair.id, 'right', e.target.value)}
-              placeholder="Match"
-            />
+            {answerCell(pair, 'right', 'Match')}
             {triple && (
               <>
                 <span className="text-faint">→</span>
-                <input
-                  className={fieldClass}
-                  value={pair.third ?? ''}
-                  onChange={(e) => setPair(pair.id, 'third', e.target.value)}
-                  placeholder="Second match"
-                />
+                {answerCell(pair, 'third', 'Second match')}
               </>
             )}
             <button

@@ -83,6 +83,11 @@ export interface MatchingContent {
   pairs: MatchingPair[] // left<->right (and <->third when triple) is the truth
   triple?: boolean // 3-part matching: each row also matches a third value
   headers?: { left?: string; right?: string; third?: string } // optional column titles
+  // When a column has a defined option list, its dropdown uses those fixed,
+  // shared values and is graded by value equality (so several rows can share an
+  // answer like Yes/No). Otherwise the column uses unique per-row matching:
+  // options are the row values, graded by pairing.
+  options?: { right?: string[]; third?: string[] }
 }
 
 // ---- The discriminated union ----

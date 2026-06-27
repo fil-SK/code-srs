@@ -58,6 +58,57 @@ describe('matching isComplete', () => {
   })
 })
 
+describe('matching fixed-option columns (dropdown matching)', () => {
+  // Right column is a shared Yes/No list; third column is unique matching.
+  const fixed: MatchingContent = {
+    prompt: 'p',
+    triple: true,
+    options: { right: ['Yes', 'No'] },
+    pairs: [
+      { id: 'a', left: 'A', right: 'Yes', third: 'a3' },
+      { id: 'b', left: 'B', right: 'No', third: 'b3' },
+      { id: 'c', left: 'C', right: 'Yes', third: 'c3' }, // shares "Yes" with a
+    ],
+  }
+  const allRight = {
+    a: 'Yes',
+    b: 'No',
+    c: 'Yes',
+    [thirdKey('a')]: 'a',
+    [thirdKey('b')]: 'b',
+    [thirdKey('c')]: 'c',
+  }
+
+  it('grades a fixed column by value, so rows can share an answer', () => {
+    expect(matchingDefinition.autoGrade!(fixed, allRight)?.correct).toBe(true)
+    expect(
+      matchingDefinition.autoGrade!(fixed, { ...allRight, a: 'No' })?.correct,
+    ).toBe(false)
+  })
+
+  it('still grades the unique (third) column by pairing', () => {
+    expect(
+      matchingDefinition.autoGrade!(fixed, { ...allRight, [thirdKey('a')]: 'b' })
+        ?.correct,
+    ).toBe(false)
+  })
+
+  it('isComplete needs 2+ option values, each row picking from them', () => {
+    expect(matchingDefinition.isComplete(fixed)).toBe(true)
+    // a row value not in the option list
+    expect(
+      matchingDefinition.isComplete({
+        ...fixed,
+        pairs: [{ ...fixed.pairs[0], right: 'Maybe' }, ...fixed.pairs.slice(1)],
+      }),
+    ).toBe(false)
+    // fewer than two option values
+    expect(
+      matchingDefinition.isComplete({ ...fixed, options: { right: ['Yes'] } }),
+    ).toBe(false)
+  })
+})
+
 describe('matching 3-part', () => {
   const allRight = {
     x: 'x',

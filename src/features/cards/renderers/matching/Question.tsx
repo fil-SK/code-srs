@@ -4,12 +4,18 @@ import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { QuestionProps } from '../../registry/types'
-import { thirdKey } from './keys'
+import {
+  colKey,
+  correctTarget,
+  fixedValues,
+  isFixed,
+  type Col,
+} from './columns'
 
 type Option = { id: string; text: string }
 
 // One match dropdown. On reveal it borders green/red by whether the chosen
-// option belongs to this row.
+// option is the correct one for this row.
 function MatchSelect({
   value,
   options,
@@ -47,9 +53,10 @@ function MatchSelect({
   )
 }
 
-// response maps each row's key -> the chosen option id (which is itself a pair
-// id). A match is correct when those ids are equal. The right column uses the
-// bare pair id as its key; the optional third column uses thirdKey(pairId).
+// response maps each row's column key -> the chosen option id. In unique
+// matching the option id is a pair id (correct when it equals this row's pair);
+// in fixed-dropdown mode the option id is the value itself (correct when it
+// equals this row's value, so several rows can share an answer).
 export function MatchingQuestion({
   content,
   response,
@@ -60,24 +67,32 @@ export function MatchingQuestion({
   const assign = (response as Record<string, string> | undefined) ?? {}
   const triple = Boolean(content.triple)
 
-  // Shuffled options per column (stable per card).
-  const rightOptions = useMemo(
-    () => shuffle(content.pairs.map((p) => ({ id: p.id, text: p.right }))),
-    [content.pairs],
-  )
-  const thirdOptions = useMemo(
-    () => shuffle(content.pairs.map((p) => ({ id: p.id, text: p.third ?? '' }))),
-    [content.pairs],
-  )
+  // Options per column: a shared fixed list (author order) or the shuffled row
+  // values (unique matching).
+  const optionsFor = useMemo(() => {
+    const build = (col: Col): Option[] =>
+      isFixed(content, col)
+        ? fixedValues(content, col).map((v) => ({ id: v, text: v }))
+        : shuffle(
+            content.pairs.map((p) => ({
+              id: p.id,
+              text: col === 'right' ? p.right : (p.third ?? ''),
+            })),
+          )
+    return { right: build('right'), third: build('third') }
+  }, [content])
 
   function choose(key: string, value: string) {
     if (revealed) return
     setResponse({ ...assign, [key]: value })
   }
 
-  function stateFor(chosen: string | undefined, pairId: string) {
+  function stateFor(col: Col, pair: (typeof content.pairs)[number]) {
     if (!revealed) return 'none' as const
-    return chosen === pairId ? ('correct' as const) : ('wrong' as const)
+    const chosen = assign[colKey(col, pair.id)]
+    return chosen === correctTarget(content, col, pair)
+      ? ('correct' as const)
+      : ('wrong' as const)
   }
 
   const headers = content.headers
@@ -106,13 +121,10 @@ export function MatchingQuestion({
           </div>
         )}
         {content.pairs.map((pair) => {
-          const tKey = thirdKey(pair.id)
-          const rChosen = assign[pair.id]
-          const tChosen = assign[tKey]
           const rowOk =
             revealed &&
-            rChosen === pair.id &&
-            (!triple || tChosen === pair.id)
+            stateFor('right', pair) === 'correct' &&
+            (!triple || stateFor('third', pair) === 'correct')
 
           return (
             <div
@@ -131,21 +143,21 @@ export function MatchingQuestion({
               </span>
               <span className="text-faint">→</span>
               <MatchSelect
-                value={rChosen}
-                options={rightOptions}
+                value={assign[colKey('right', pair.id)]}
+                options={optionsFor.right}
                 disabled={revealed || Boolean(readOnly)}
-                state={stateFor(rChosen, pair.id)}
-                onChange={(v) => choose(pair.id, v)}
+                state={stateFor('right', pair)}
+                onChange={(v) => choose(colKey('right', pair.id), v)}
               />
               {triple && (
                 <>
                   <span className="text-faint">→</span>
                   <MatchSelect
-                    value={tChosen}
-                    options={thirdOptions}
+                    value={assign[colKey('third', pair.id)]}
+                    options={optionsFor.third}
                     disabled={revealed || Boolean(readOnly)}
-                    state={stateFor(tChosen, pair.id)}
-                    onChange={(v) => choose(tKey, v)}
+                    state={stateFor('third', pair)}
+                    onChange={(v) => choose(colKey('third', pair.id), v)}
                   />
                 </>
               )}
