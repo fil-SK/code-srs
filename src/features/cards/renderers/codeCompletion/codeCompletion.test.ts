@@ -56,4 +56,17 @@ describe('codeCompletion isComplete', () => {
     ).toBe(false)
     expect(codeCompletionDefinition.isComplete(content({ solutions: [''] }))).toBe(false)
   })
+
+  it('accepts a prompt instead of a scaffold (type-the-answer card)', () => {
+    const promptOnly = content({
+      prompt: 'How do you reverse a list in Python?',
+      scaffold: { language: 'python', code: '' },
+      solutions: ['lst[::-1]'],
+    })
+    expect(codeCompletionDefinition.isComplete(promptOnly)).toBe(true)
+    // still needs a filled solution
+    expect(
+      codeCompletionDefinition.isComplete({ ...promptOnly, solutions: [''] }),
+    ).toBe(false)
+  })
 })

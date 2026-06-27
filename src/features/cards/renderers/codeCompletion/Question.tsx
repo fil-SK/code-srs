@@ -11,13 +11,21 @@ export function CodeCompletionQuestion({
 }: QuestionProps<'codeCompletion'>) {
   const answer = (response as string | undefined) ?? ''
   const lang = content.scaffold.language
+  const hasPrompt = Boolean(content.prompt?.trim())
+  const hasScaffold = Boolean(content.scaffold.code.trim())
 
   return (
     <div className="space-y-3">
-      <div className="text-sm font-semibold text-muted">
-        Complete the missing code:
-      </div>
-      <LazyCodeView code={content.scaffold.code} language={lang} />
+      {hasPrompt ? (
+        <div className="text-[15px] font-semibold leading-snug">
+          {content.prompt}
+        </div>
+      ) : (
+        <div className="text-sm font-semibold text-muted">
+          Complete the missing code:
+        </div>
+      )}
+      {hasScaffold && <LazyCodeView code={content.scaffold.code} language={lang} />}
 
       <div>
         <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">

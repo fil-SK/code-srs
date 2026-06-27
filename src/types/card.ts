@@ -41,7 +41,8 @@ export interface CodeReadingContent {
 export type CodeValidationMode = 'none' | 'normalizedMatch' // 'run' deferred
 
 export interface CodeCompletionContent {
-  scaffold: CodeBlock // code with a blank region/marker
+  prompt?: string // optional prose question shown above the answer box
+  scaffold: CodeBlock // code with a blank region/marker; may be empty
   solutions: string[] // accepted answers for auto-check
   validation: {
     mode: CodeValidationMode

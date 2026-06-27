@@ -28,6 +28,7 @@ export function getCardTitle(card: Card): string {
     case 'codeReading':
       return firstLine(card.content.question)
     case 'codeCompletion':
+      if (card.content.prompt?.trim()) return firstLine(card.content.prompt)
       return card.content.explanation
         ? firstLine(card.content.explanation)
         : 'Code completion'

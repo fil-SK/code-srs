@@ -24,8 +24,18 @@ export function CodeCompletionEditor({
 
   return (
     <>
+      <Field label="Question / prompt (optional)">
+        <textarea
+          className={fieldClass}
+          rows={2}
+          value={content.prompt ?? ''}
+          onChange={(e) => update({ prompt: e.target.value })}
+          placeholder="e.g. How do you reverse a list in Python?"
+        />
+      </Field>
+
       <CodeBlockField
-        label="Scaffold (mark the blank, e.g. /* ??? */)"
+        label="Scaffold (optional — leave empty for a plain question)"
         value={content.scaffold}
         onChange={(scaffold) => update({ scaffold })}
       />
