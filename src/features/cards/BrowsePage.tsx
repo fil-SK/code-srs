@@ -5,7 +5,14 @@ import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
-import { useDeleteCard, useSaveCard, useSearchCards } from '@/hooks/useCards'
+import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
+import {
+  useDeleteCard,
+  useMoveCard,
+  useSaveCard,
+  useSearchCards,
+} from '@/hooks/useCards'
+import { useDecks } from '@/hooks/useDecks'
 import { CardRow } from './CardRow'
 import { cardTypeMeta, getCardTitle } from './cardTypeMeta'
 
@@ -33,8 +40,15 @@ export function BrowsePage() {
     includeSuspended: showSuspended,
   })
 
+  const decks = useDecks()
+  const flatDecks = useMemo(
+    () => flattenDeckTree(buildDeckTree(decks.data ?? [])),
+    [decks.data],
+  )
+
   const saveCard = useSaveCard()
   const deleteCard = useDeleteCard()
+  const moveCard = useMoveCard()
 
   function toggleTag(tag: string) {
     setTags((prev) =>
@@ -139,6 +153,8 @@ export function BrowsePage() {
             card={card}
             onToggleSuspend={toggleSuspend}
             onDelete={remove}
+            decks={flatDecks}
+            onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
           />
         ))}
       </div>

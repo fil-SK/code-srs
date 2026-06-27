@@ -21,9 +21,15 @@ import { BookOpen, GripVertical, Play, Plus, Settings } from 'lucide-react'
 import type { Card, Deck } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
-import { buildDeckTree, flattenDeckTree, subtreeIds } from '@/domain/decks/tree'
+import {
+  buildDeckTree,
+  flattenDeckTree,
+  subtreeIds,
+  type FlatDeck,
+} from '@/domain/decks/tree'
 import {
   useDeleteCard,
+  useMoveCard,
   useReorderCards,
   useSaveCard,
   useSearchCards,
@@ -41,10 +47,14 @@ function SortableCardRow({
   card,
   onToggleSuspend,
   onDelete,
+  decks,
+  onMove,
 }: {
   card: Card
   onToggleSuspend: (card: Card) => void
   onDelete: (card: Card) => void
+  decks: FlatDeck[]
+  onMove: (card: Card, deckId: string) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: card.id })
@@ -69,6 +79,8 @@ function SortableCardRow({
       card={card}
       onToggleSuspend={onToggleSuspend}
       onDelete={onDelete}
+      decks={decks}
+      onMove={onMove}
       leading={handle}
       containerRef={setNodeRef}
       style={style}
@@ -189,13 +201,18 @@ export function DeckDetailPage() {
     reorder.mutate(next)
   }
 
-  const deckPath = useMemo(() => {
-    const flat = flattenDeckTree(buildDeckTree(decks.data ?? []))
-    return flat.find((d) => d.deck.id === id)?.path
-  }, [decks.data, id])
+  const flatDecks = useMemo(
+    () => flattenDeckTree(buildDeckTree(decks.data ?? [])),
+    [decks.data],
+  )
+  const deckPath = useMemo(
+    () => flatDecks.find((d) => d.deck.id === id)?.path,
+    [flatDecks, id],
+  )
 
   const saveCard = useSaveCard()
   const deleteCard = useDeleteCard()
+  const moveCard = useMoveCard()
 
   function toggleSuspend(card: Card) {
     saveCard.mutate({ ...card, suspended: !card.suspended })
@@ -314,6 +331,8 @@ export function DeckDetailPage() {
                 card={card}
                 onToggleSuspend={toggleSuspend}
                 onDelete={remove}
+                decks={flatDecks}
+                onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
               />
             ))}
           </div>

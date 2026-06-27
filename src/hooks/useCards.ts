@@ -62,6 +62,19 @@ export function useDeleteCard() {
   })
 }
 
+// Move a card to another deck. Drops its manual order so it lands in creation
+// order within the target deck (the user can reorder there afterwards).
+export function useMoveCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ card, deckId }: { card: Card; deckId: ID }) => {
+      const { order: _order, ...rest } = card
+      await repo.cards.put({ ...rest, deckId, updatedAt: Date.now() })
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
+  })
+}
+
 // Persist a new manual order for a list of cards (e.g. one deck's cards after a
 // drag). Assigns sequential positions and preserves every other field,
 // including updatedAt, so reordering is not treated as an edit.
