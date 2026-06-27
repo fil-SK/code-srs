@@ -20,6 +20,7 @@ const faceClass =
 export function PreviewPage() {
   const [params] = useSearchParams()
   const deckParam = params.get('deck')
+  const cardParam = params.get('card')
   const decks = useDecks()
   const allCards = useSearchCards({ includeSuspended: true })
 
@@ -32,9 +33,17 @@ export function PreviewPage() {
 
   const cards = useMemo(() => {
     const list = allCards.data ?? []
+    // Single-card mode (opened from Browse) shows just that card; otherwise
+    // browse the whole library or a deck subtree.
+    if (cardParam) return list.filter((c) => c.id === cardParam)
     const scoped = scope ? list.filter((c) => scope.ids.has(c.deckId)) : list
     return [...scoped].sort((a, b) => a.createdAt - b.createdAt)
-  }, [allCards.data, scope])
+  }, [allCards.data, scope, cardParam])
+
+  // The back link points wherever the user came from.
+  const back = cardParam
+    ? { to: '/browse', label: '← Cards' }
+    : { to: '/', label: '← Decks' }
 
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -42,7 +51,7 @@ export function PreviewPage() {
   useEffect(() => {
     setIndex(0)
     setRevealed(false)
-  }, [deckParam])
+  }, [deckParam, cardParam])
 
   const safeIndex = Math.min(index, Math.max(0, cards.length - 1))
   const current = cards[safeIndex]
@@ -73,12 +82,20 @@ export function PreviewPage() {
   if (cards.length === 0 || !current) {
     return (
       <div className="mx-auto max-w-md rounded-card border border-dashed border-border bg-panel p-10 text-center">
-        <div className="text-lg font-semibold">No cards here</div>
+        <div className="text-lg font-semibold">
+          {cardParam ? 'Card not found' : 'No cards here'}
+        </div>
         <p className="mt-2 text-sm text-muted">
-          {scope ? `“${scope.name}” has no cards yet.` : 'No cards to browse yet.'}
+          {cardParam
+            ? 'That card could not be loaded.'
+            : scope
+              ? `“${scope.name}” has no cards yet.`
+              : 'No cards to browse yet.'}
         </p>
-        <Link to="/" className="mt-4 inline-block">
-          <Button variant="primary">Back to decks</Button>
+        <Link to={back.to} className="mt-4 inline-block">
+          <Button variant="primary">
+            {cardParam ? 'Back to cards' : 'Back to decks'}
+          </Button>
         </Link>
       </div>
     )
@@ -103,11 +120,18 @@ export function PreviewPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between text-xs text-muted">
-        <Link to="/" className="hover:text-text">
-          ← Decks
+        <Link to={back.to} className="hover:text-text">
+          {back.label}
         </Link>
         <span>
-          {scope ? `${scope.name} · ` : ''}Card {safeIndex + 1} of {cards.length}
+          {cardParam ? (
+            'Single card'
+          ) : (
+            <>
+              {scope ? `${scope.name} · ` : ''}Card {safeIndex + 1} of{' '}
+              {cards.length}
+            </>
+          )}
           <span className="text-faint"> · preview, no scheduling</span>
         </span>
       </div>
@@ -165,19 +189,36 @@ export function PreviewPage() {
       )}
 
       <div className="mt-4 flex items-center justify-between">
-        <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
-          <ChevronLeft size={16} /> Prev
-        </Button>
-        <button
-          type="button"
-          onClick={() => setRevealed((r) => !r)}
-          className="text-sm font-semibold text-accent hover:underline"
-        >
-          {revealed ? 'Show question' : 'Flip to answer'}
-        </button>
-        <Button onClick={() => go(1)} disabled={safeIndex === cards.length - 1}>
-          Next <ChevronRight size={16} />
-        </Button>
+        {cardParam ? (
+          <div className="flex-1 text-center">
+            <button
+              type="button"
+              onClick={() => setRevealed((r) => !r)}
+              className="text-sm font-semibold text-accent hover:underline"
+            >
+              {revealed ? 'Show question' : 'Flip to answer'}
+            </button>
+          </div>
+        ) : (
+          <>
+            <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
+              <ChevronLeft size={16} /> Prev
+            </Button>
+            <button
+              type="button"
+              onClick={() => setRevealed((r) => !r)}
+              className="text-sm font-semibold text-accent hover:underline"
+            >
+              {revealed ? 'Show question' : 'Flip to answer'}
+            </button>
+            <Button
+              onClick={() => go(1)}
+              disabled={safeIndex === cards.length - 1}
+            >
+              Next <ChevronRight size={16} />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   )

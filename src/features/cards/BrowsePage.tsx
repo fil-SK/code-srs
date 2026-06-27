@@ -1,6 +1,6 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye, EyeOff, Plus, Search, Trash2 } from 'lucide-react'
+import { BookOpen, Eye, EyeOff, Plus, Search, Trash2 } from 'lucide-react'
 import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
@@ -167,6 +167,14 @@ export function BrowsePage() {
               </div>
             </Link>
 
+            <Link
+              to={`/preview?card=${card.id}`}
+              title="Preview"
+              aria-label="Preview card"
+              className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"
+            >
+              <BookOpen size={16} />
+            </Link>
             <button
               type="button"
               onClick={() => toggleSuspend(card)}

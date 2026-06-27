@@ -11,5 +11,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     setupFiles: ['./src/test/setup.ts'],
+    // Force the local Dexie backend in tests regardless of a developer's
+    // .env.local, so the suite stays hermetic (no network / Supabase).
+    env: {
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_ANON_KEY: '',
+    },
   },
 })
