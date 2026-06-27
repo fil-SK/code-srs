@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
-import { Download, Upload } from 'lucide-react'
+import { Download, LogOut, Upload } from 'lucide-react'
 import { useTheme } from '@/app/theme'
+import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { exportBackup, type ImportMode } from '@/data/backup'
+import { isSupabaseConfigured } from '@/data/supabase/client'
 import { parseBackup, serializeBackup } from '@/domain/io/backup'
 import { downloadText } from '@/lib/download'
 import { useImportBackup } from '@/hooks/useBackup'
@@ -24,6 +26,7 @@ function Section({
 
 export function SettingsPage() {
   const { theme, toggle } = useTheme()
+  const { email, signOut } = useAuth()
   const importBackup = useImportBackup()
   const fileRef = useRef<HTMLInputElement>(null)
   const [mode, setMode] = useState<ImportMode>('merge')
@@ -62,6 +65,18 @@ export function SettingsPage() {
 
   return (
     <div className="max-w-2xl space-y-4">
+      {isSupabaseConfigured && (
+        <Section title="Account">
+          <p className="mb-3 text-sm text-muted">
+            Signed in as <span className="font-semibold text-text">{email}</span>.
+            Your cards sync to your Supabase project.
+          </p>
+          <Button onClick={signOut}>
+            <LogOut size={15} /> Sign out
+          </Button>
+        </Section>
+      )}
+
       <Section title="Appearance">
         <p className="mb-3 text-sm text-muted">
           Currently {theme} mode. Defaults to dark.

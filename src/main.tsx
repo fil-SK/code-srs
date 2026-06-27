@@ -4,11 +4,14 @@ import { RouterProvider } from 'react-router-dom'
 import './index.css'
 import { Providers } from '@/app/providers'
 import { router } from '@/app/router'
+import { AuthGate } from '@/auth/AuthGate'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Providers>
-      <RouterProvider router={router} />
+      <AuthGate>
+        <RouterProvider router={router} />
+      </AuthGate>
     </Providers>
   </StrictMode>,
 )

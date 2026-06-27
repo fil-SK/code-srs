@@ -23,6 +23,26 @@ for the architecture and [mockup.html](./mockup.html) for the visual reference.
 
 ## Log
 
+### 2026-06-27 — M8 cloud backend (Supabase) — checkpoint 2: repository + auth
+- **feat:** `SupabaseRepository` implements the same `Repository` interface as Dexie.
+  Each table stores the full entity in a `data` jsonb column; generated columns
+  (`due`, `suspended`, `card_id`, `reviewed_at`) back the hot queries; text/tag/type
+  filtering stays in memory, identical to Dexie, so both backends return the same results.
+- **feat:** `getRepository()` auto-selects Supabase when `VITE_SUPABASE_*` env is present,
+  else falls back to local Dexie (dev works with no setup).
+- **feat (auth):** single-user magic-link sign-in — `AuthProvider` (session tracking),
+  `LoginPage` (signInWithOtp), `AuthGate` (gates the app only when Supabase is configured).
+  Sign-out + signed-in email added to Settings.
+- Build + lint + 58 tests pass. Main bundle ~795kB (gz 236kB); supabase-js added ~200kB raw.
+
+### 2026-06-27 — M8 cloud backend (Supabase) — checkpoint 1: scaffolding
+- Decision: move off browser-only IndexedDB to a real DB. Chose **Supabase** (Postgres,
+  free tier, built-in auth, no backend server) — online-first now, offline sync deferred.
+  Repository pattern makes it a contained swap.
+- **chore:** installed `@supabase/supabase-js`; added `supabase/schema.sql` (one table per
+  entity, jsonb `data` + generated columns + RLS), lazily-created client gated on env,
+  `.env.local.example`. No behavior change until env is set.
+
 ### 2026-06-24 — Preview read-only fix + drag-and-drop ordering
 - **fix:** In Preview the interactive controls looked clickable but were dead (no-op
   setResponse). Added `readOnly?` to `QuestionProps` + `CardView`; interactive renderers
