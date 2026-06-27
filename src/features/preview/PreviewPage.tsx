@@ -3,10 +3,11 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { FlipCard } from '@/components/ui/FlipCard'
+import { cn } from '@/lib/cn'
 import { CardTypeBadge } from '@/features/cards/CardTypeBadge'
 import { CardView } from '@/features/cards/CardView'
-import { correctResponse } from '@/features/cards/correctResponse'
 import { getCardDefinition } from '@/features/cards/registry'
+import type { CardResponse } from '@/features/cards/registry/types'
 import { subtreeIds } from '@/domain/decks/tree'
 import { useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
@@ -15,8 +16,18 @@ const noop = () => {}
 const faceClass =
   'rounded-2xl border border-border bg-panel p-7 shadow-[var(--shadow)] min-h-[17rem] flex flex-col'
 
-// Browse a deck's cards (and its subdecks') one by one, flipping to see the
-// answer. Read-only: no grading, no review logs, no scheduling impact.
+// Don't let card shortcuts (arrows / space) fire while typing in an input,
+// select, or the code editor.
+function isEditingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null
+  return Boolean(
+    el?.closest('input, textarea, select, [contenteditable="true"], .cm-editor'),
+  )
+}
+
+// Browse a deck's cards (and its subdecks') one by one. You can attempt the
+// interactive cards (MCQ, completion, ordering, matching) and reveal how you
+// did, but nothing is recorded: no grading, no review logs, no scheduling.
 export function PreviewPage() {
   const [params] = useSearchParams()
   const deckParam = params.get('deck')
@@ -49,39 +60,59 @@ export function PreviewPage() {
 
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
+  const [response, setResponse] = useState<CardResponse>(undefined)
 
   useEffect(() => {
     setIndex(0)
     setRevealed(false)
+    setResponse(undefined)
   }, [deckParam, cardParam])
 
   const safeIndex = Math.min(index, Math.max(0, cards.length - 1))
   const current = cards[safeIndex]
 
+  const def = current ? getCardDefinition(current.type) : undefined
+  const interactive = def?.interactive ?? false
+  const useFlip = (def?.reveal ?? 'slide') === 'flip'
+  const responseReady =
+    !interactive ||
+    (current ? (def?.isResponseReady?.(response, current.content) ?? true) : true)
+  const autoResult =
+    revealed && current && def?.autoGrade
+      ? def.autoGrade(current.content, response)
+      : null
+
   function go(delta: number) {
     setIndex(() => Math.min(cards.length - 1, Math.max(0, safeIndex + delta)))
     setRevealed(false)
+    setResponse(undefined)
+  }
+
+  function reveal() {
+    if (responseReady) setRevealed(true)
   }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (isEditingTarget(e.target)) return
       if (e.key === 'ArrowRight') go(1)
       else if (e.key === 'ArrowLeft') go(-1)
       else if (e.code === 'Space') {
         e.preventDefault()
-        setRevealed((r) => !r)
+        if (revealed) setRevealed(false)
+        else reveal()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cards.length, safeIndex])
+  }, [cards.length, safeIndex, revealed, responseReady])
 
   if (allCards.isLoading || (deckParam && decks.isLoading)) {
     return <p className="text-sm text-muted">Loading…</p>
   }
 
-  if (cards.length === 0 || !current) {
+  if (cards.length === 0 || !current || !def) {
     return (
       <div className="mx-auto max-w-md rounded-card border border-dashed border-border bg-panel p-10 text-center">
         <div className="text-lg font-semibold">
@@ -103,10 +134,7 @@ export function PreviewPage() {
     )
   }
 
-  const def = getCardDefinition(current.type)
-  const useFlip = (def.reveal ?? 'slide') === 'flip'
   const { Question, Answer } = def
-  const response = revealed ? correctResponse(current) : undefined
 
   const header = (
     <div className="mb-4 flex items-center gap-2">
@@ -175,17 +203,34 @@ export function PreviewPage() {
             card={current}
             revealed={revealed}
             response={response}
-            setResponse={noop}
-            readOnly
+            setResponse={setResponse}
           />
-          {!revealed && (
+
+          {!revealed ? (
             <Button
               variant="secondary"
               className="mt-5 w-full"
-              onClick={() => setRevealed(true)}
+              disabled={!responseReady}
+              onClick={reveal}
             >
-              Show answer
+              {interactive ? 'Check answer' : 'Show answer'}
             </Button>
+          ) : (
+            autoResult && (
+              <div
+                className={cn(
+                  'reveal-in mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
+                  autoResult.correct
+                    ? 'bg-green/10 text-green'
+                    : 'bg-red/10 text-red',
+                )}
+              >
+                {autoResult.correct ? 'Correct' : 'Incorrect'}
+                <span className="ml-1.5 font-normal text-muted">
+                  · preview, nothing recorded
+                </span>
+              </div>
+            )
           )}
         </div>
       )}
@@ -193,26 +238,26 @@ export function PreviewPage() {
       <div className="mt-4 flex items-center justify-between">
         {cardParam ? (
           <div className="flex-1 text-center">
-            <button
-              type="button"
-              onClick={() => setRevealed((r) => !r)}
-              className="text-sm font-semibold text-accent hover:underline"
-            >
-              {revealed ? 'Show question' : 'Flip to answer'}
-            </button>
+            <RevealToggle
+              revealed={revealed}
+              useFlip={useFlip}
+              interactive={interactive}
+              onShowQuestion={() => setRevealed(false)}
+              onReveal={reveal}
+            />
           </div>
         ) : (
           <>
             <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
               <ChevronLeft size={16} /> Prev
             </Button>
-            <button
-              type="button"
-              onClick={() => setRevealed((r) => !r)}
-              className="text-sm font-semibold text-accent hover:underline"
-            >
-              {revealed ? 'Show question' : 'Flip to answer'}
-            </button>
+            <RevealToggle
+              revealed={revealed}
+              useFlip={useFlip}
+              interactive={interactive}
+              onShowQuestion={() => setRevealed(false)}
+              onReveal={reveal}
+            />
             <Button
               onClick={() => go(1)}
               disabled={safeIndex === cards.length - 1}
@@ -223,5 +268,50 @@ export function PreviewPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Bottom-center control: flip back to the question after revealing, or (for
+// flip cards) reveal. For interactive cards the in-card "Check answer" button
+// is the primary reveal, so this just hints before revealing.
+function RevealToggle({
+  revealed,
+  useFlip,
+  interactive,
+  onShowQuestion,
+  onReveal,
+}: {
+  revealed: boolean
+  useFlip: boolean
+  interactive: boolean
+  onShowQuestion: () => void
+  onReveal: () => void
+}) {
+  if (revealed) {
+    return (
+      <button
+        type="button"
+        onClick={onShowQuestion}
+        className="text-sm font-semibold text-accent hover:underline"
+      >
+        Show question
+      </button>
+    )
+  }
+  if (useFlip) {
+    return (
+      <button
+        type="button"
+        onClick={onReveal}
+        className="text-sm font-semibold text-accent hover:underline"
+      >
+        Flip to answer
+      </button>
+    )
+  }
+  return (
+    <span className="text-xs text-faint">
+      {interactive ? 'Answer, then Check' : 'Show the answer above'}
+    </span>
   )
 }
