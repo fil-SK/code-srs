@@ -80,6 +80,11 @@ export function MatchingQuestion({
     return chosen === pairId ? ('correct' as const) : ('wrong' as const)
   }
 
+  const headers = content.headers
+  const showHeaders = Boolean(
+    headers?.left || headers?.right || (triple && headers?.third),
+  )
+
   return (
     <div className="space-y-3">
       <RichText
@@ -87,6 +92,19 @@ export function MatchingQuestion({
         className="text-[15px] font-semibold leading-snug"
       />
       <div className="space-y-2">
+        {showHeaders && (
+          <div className="flex flex-wrap items-center gap-2.5 px-3 text-sm font-bold">
+            <span className="min-w-[35%] flex-1">{headers?.left}</span>
+            <span className="invisible">→</span>
+            <span className="min-w-0 flex-1">{headers?.right}</span>
+            {triple && (
+              <>
+                <span className="invisible">→</span>
+                <span className="min-w-0 flex-1">{headers?.third}</span>
+              </>
+            )}
+          </div>
+        )}
         {content.pairs.map((pair) => {
           const tKey = thirdKey(pair.id)
           const rChosen = assign[pair.id]

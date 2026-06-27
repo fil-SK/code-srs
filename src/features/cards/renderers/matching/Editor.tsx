@@ -22,6 +22,10 @@ export function MatchingEditor({
     })
   }
 
+  function setHeader(col: 'left' | 'right' | 'third', value: string) {
+    update({ headers: { ...content.headers, [col]: value } })
+  }
+
   const triple = Boolean(content.triple)
 
   return (
@@ -44,6 +48,39 @@ export function MatchingEditor({
         />
         Three-part matching (left → middle → right)
       </label>
+
+      <div className="space-y-2">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-muted">
+          Column headers (optional)
+        </span>
+        <div className="flex items-center gap-2">
+          <input
+            className={fieldClass}
+            value={content.headers?.left ?? ''}
+            onChange={(e) => setHeader('left', e.target.value)}
+            placeholder="Left header"
+          />
+          <span className="text-faint">→</span>
+          <input
+            className={fieldClass}
+            value={content.headers?.right ?? ''}
+            onChange={(e) => setHeader('right', e.target.value)}
+            placeholder="Right header"
+          />
+          {triple && (
+            <>
+              <span className="text-faint">→</span>
+              <input
+                className={fieldClass}
+                value={content.headers?.third ?? ''}
+                onChange={(e) => setHeader('third', e.target.value)}
+                placeholder="Third header"
+              />
+            </>
+          )}
+          <span className="h-9 w-9 flex-none" />
+        </div>
+      </div>
 
       <div className="space-y-2">
         <span className="block text-xs font-semibold uppercase tracking-wide text-muted">

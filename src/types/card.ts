@@ -82,6 +82,7 @@ export interface MatchingContent {
   prompt: string
   pairs: MatchingPair[] // left<->right (and <->third when triple) is the truth
   triple?: boolean // 3-part matching: each row also matches a third value
+  headers?: { left?: string; right?: string; third?: string } // optional column titles
 }
 
 // ---- The discriminated union ----
