@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { DeckDetailPage } from '@/features/decks/DeckDetailPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
 import { PreviewPage } from '@/features/preview/PreviewPage'
 import { BrowsePage } from '@/features/cards/BrowsePage'
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: 'decks/:id', element: <DeckDetailPage /> },
       { path: 'review', element: <ReviewPage /> },
       { path: 'preview', element: <PreviewPage /> },
       { path: 'browse', element: <BrowsePage /> },

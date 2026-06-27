@@ -1,12 +1,12 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Eye, EyeOff, Plus, Search, Trash2 } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import type { Card, CardType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
 import { useDeleteCard, useSaveCard, useSearchCards } from '@/hooks/useCards'
-import { CardTypeBadge } from './CardTypeBadge'
+import { CardRow } from './CardRow'
 import { cardTypeMeta, getCardTitle } from './cardTypeMeta'
 
 const ALL_TYPES = Object.keys(cardTypeMeta) as CardType[]
@@ -134,66 +134,12 @@ export function BrowsePage() {
 
       <div className="space-y-2.5">
         {cards?.map((card) => (
-          <div
+          <CardRow
             key={card.id}
-            className={cn(
-              'flex items-center gap-3 rounded-[10px] border border-border bg-panel pr-2',
-              card.suspended && 'opacity-55',
-            )}
-          >
-            <Link
-              to={`/cards/${card.id}/edit`}
-              className="flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3 hover:text-accent"
-            >
-              <CardTypeBadge type={card.type} />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold">
-                  {getCardTitle(card)}
-                  {card.suspended && (
-                    <span className="ml-2 rounded bg-panel-2 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-faint">
-                      Suspended
-                    </span>
-                  )}
-                </div>
-                {card.tags.length > 0 && (
-                  <div className="mt-0.5 flex flex-wrap gap-2 text-xs text-blue">
-                    {card.tags.map((tag) => (
-                      <span key={tag} className="font-mono">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Link>
-
-            <Link
-              to={`/preview?card=${card.id}`}
-              title="Preview"
-              aria-label="Preview card"
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"
-            >
-              <BookOpen size={16} />
-            </Link>
-            <button
-              type="button"
-              onClick={() => toggleSuspend(card)}
-              title={card.suspended ? 'Unsuspend' : 'Suspend'}
-              aria-label={card.suspended ? 'Unsuspend card' : 'Suspend card'}
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"
-            >
-              {card.suspended ? <Eye size={16} /> : <EyeOff size={16} />}
-            </button>
-            <button
-              type="button"
-              onClick={() => remove(card)}
-              title="Delete"
-              aria-label="Delete card"
-              className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-red/10 hover:text-red"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+            card={card}
+            onToggleSuspend={toggleSuspend}
+            onDelete={remove}
+          />
         ))}
       </div>
     </div>

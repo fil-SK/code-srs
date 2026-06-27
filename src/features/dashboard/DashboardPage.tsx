@@ -198,7 +198,12 @@ function DeckRow({
         )}
 
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold">{node.deck.name}</div>
+          <Link
+            to={`/decks/${node.deck.id}`}
+            className="block truncate text-sm font-semibold hover:text-accent"
+          >
+            {node.deck.name}
+          </Link>
           <div className="text-xs text-faint">
             {counts.cards} card{counts.cards === 1 ? '' : 's'}
             {counts.due > 0 && (

@@ -41,6 +41,7 @@ export function CardEditorPage() {
 
   const [searchParams] = useSearchParams()
   const draftId = isEdit ? null : searchParams.get('draft')
+  const presetDeck = isEdit ? null : searchParams.get('deck')
 
   const { data: existing, isLoading } = useCard(id)
   const { data: draft } = useDraft(draftId)
@@ -84,10 +85,16 @@ export function CardEditorPage() {
     }
   }, [draft, isEdit])
 
-  // Default a new card to the first deck (tree order) once decks load.
+  // Default a new card's deck: the one we were opened from (?deck=), else the
+  // first deck in tree order, once decks load.
   useEffect(() => {
-    if (!isEdit && !deckId && flatDecks.length) setDeckId(flatDecks[0].deck.id)
-  }, [flatDecks, isEdit, deckId])
+    if (isEdit || deckId || !flatDecks.length) return
+    const preset =
+      presetDeck && flatDecks.some((f) => f.deck.id === presetDeck)
+        ? presetDeck
+        : flatDecks[0].deck.id
+    setDeckId(preset)
+  }, [flatDecks, isEdit, deckId, presetDeck])
 
   function changeType(t: CardType) {
     setEditor({ type: t, content: getCardDefinition(t).emptyContent() })
@@ -129,7 +136,9 @@ export function CardEditorPage() {
       } as NewCardInput)
       if (draftId) await deleteDraft.mutateAsync(draftId)
     }
-    navigate(draftId ? '/drafts' : '/browse')
+    navigate(
+      draftId ? '/drafts' : presetDeck ? `/decks/${presetDeck}` : '/browse',
+    )
   }
 
   if (isEdit && isLoading) {
