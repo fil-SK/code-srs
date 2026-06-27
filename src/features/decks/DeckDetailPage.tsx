@@ -17,17 +17,18 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { BookOpen, GripVertical, Play, Plus } from 'lucide-react'
-import type { Card } from '@/types'
+import { BookOpen, GripVertical, Play, Plus, Settings } from 'lucide-react'
+import type { Card, Deck } from '@/types'
 import { Button } from '@/components/ui/Button'
-import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
+import { Field, fieldClass, selectClass } from '@/components/ui/Field'
+import { buildDeckTree, flattenDeckTree, subtreeIds } from '@/domain/decks/tree'
 import {
   useDeleteCard,
   useReorderCards,
   useSaveCard,
   useSearchCards,
 } from '@/hooks/useCards'
-import { useDecks } from '@/hooks/useDecks'
+import { useDecks, useSaveDeck } from '@/hooks/useDecks'
 import { CardRow } from '@/features/cards/CardRow'
 import { getCardTitle } from '@/features/cards/cardTypeMeta'
 
@@ -75,12 +76,87 @@ function SortableCardRow({
   )
 }
 
+// Edit a deck's name, description, and parent. The parent list excludes the
+// deck itself and its descendants, so a move can never create a cycle. Setting
+// the parent to "Top level" promotes it; moving a deck carries its subtree.
+function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
+  const save = useSaveDeck()
+  const [name, setName] = useState(deck.name)
+  const [description, setDescription] = useState(deck.description ?? '')
+  const [parentId, setParentId] = useState(deck.parentId ?? '')
+
+  const parentOptions = useMemo(() => {
+    const forbidden = new Set(subtreeIds(decks, deck.id))
+    return flattenDeckTree(buildDeckTree(decks)).filter(
+      (f) => !forbidden.has(f.deck.id),
+    )
+  }, [decks, deck.id])
+
+  const dirty =
+    name.trim() !== deck.name ||
+    description.trim() !== (deck.description ?? '') ||
+    (parentId || undefined) !== deck.parentId
+
+  function handleSave() {
+    if (!name.trim()) return
+    save.mutate({
+      ...deck,
+      name: name.trim(),
+      description: description.trim() || undefined,
+      parentId: parentId || undefined,
+    })
+  }
+
+  return (
+    <div className="mb-4 space-y-4 rounded-card border border-border bg-panel p-5">
+      <Field label="Name">
+        <input
+          className={fieldClass}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </Field>
+      <Field label="Description (optional)">
+        <textarea
+          className={fieldClass}
+          rows={2}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="What this deck covers…"
+        />
+      </Field>
+      <Field label="Parent deck">
+        <select
+          className={selectClass}
+          value={parentId}
+          onChange={(e) => setParentId(e.target.value)}
+        >
+          <option value="">Top level (no parent)</option>
+          {parentOptions.map((f) => (
+            <option key={f.deck.id} value={f.deck.id}>
+              {f.path}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Button
+        variant="primary"
+        onClick={handleSave}
+        disabled={!dirty || !name.trim() || save.isPending}
+      >
+        {save.isPending ? 'Saving…' : 'Save deck'}
+      </Button>
+    </div>
+  )
+}
+
 // Open a single deck: its cards as a list, with the same per-card actions as
 // Browse (preview / edit / suspend / delete), scoped to this deck only.
 export function DeckDetailPage() {
   const { id } = useParams<{ id: string }>()
   const decks = useDecks()
   const [showSuspended, setShowSuspended] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const cardsQuery = useSearchCards({
     deckId: id,
@@ -156,8 +232,18 @@ export function DeckDetailPage() {
           {deckPath && deckPath.includes(' / ') && (
             <div className="truncate text-xs text-faint">{deckPath}</div>
           )}
+          {deck?.description && (
+            <div className="mt-0.5 text-sm text-muted">{deck.description}</div>
+          )}
         </div>
         <div className="flex flex-none items-center gap-2">
+          <Button
+            variant={settingsOpen ? 'secondary' : 'ghost'}
+            onClick={() => setSettingsOpen((o) => !o)}
+            aria-expanded={settingsOpen}
+          >
+            <Settings size={15} /> Deck settings
+          </Button>
           {cards.length > 0 && (
             <>
               <Link to={`/preview?deck=${id}`}>
@@ -179,6 +265,10 @@ export function DeckDetailPage() {
           </Link>
         </div>
       </div>
+
+      {settingsOpen && deck && (
+        <DeckSettings deck={deck} decks={decks.data ?? []} />
+      )}
 
       <div className="mb-4 flex items-center justify-between text-xs text-muted">
         <span>
