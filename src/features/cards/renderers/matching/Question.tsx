@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { selectClass } from '@/components/ui/Field'
+import { RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { QuestionProps } from '../../registry/types'
@@ -28,9 +29,10 @@ export function MatchingQuestion({
 
   return (
     <div className="space-y-3">
-      <div className="text-[15px] font-semibold leading-snug">
-        {content.prompt}
-      </div>
+      <RichText
+        text={content.prompt}
+        className="text-[15px] font-semibold leading-snug"
+      />
       <div className="space-y-2">
         {content.pairs.map((pair) => {
           const chosen = assign[pair.id]

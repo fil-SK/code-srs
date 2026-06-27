@@ -1,4 +1,5 @@
 import { Check, X } from 'lucide-react'
+import { RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { QuestionProps } from '../../registry/types'
 
@@ -27,9 +28,10 @@ export function McqQuestion({
 
   return (
     <div className="space-y-3">
-      <div className="text-[15px] font-semibold leading-snug">
-        {content.prompt}
-      </div>
+      <RichText
+        text={content.prompt}
+        className="text-[15px] font-semibold leading-snug"
+      />
       <div className="space-y-2">
         {content.options.map((opt) => {
           const isSel = selected.includes(opt.id)

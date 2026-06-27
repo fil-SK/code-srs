@@ -1,5 +1,6 @@
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { LazyCodeEditor } from '@/components/code/LazyCodeEditor'
+import { RichText } from '@/components/text/RichText'
 import type { QuestionProps } from '../../registry/types'
 
 export function CodeCompletionQuestion({
@@ -17,9 +18,10 @@ export function CodeCompletionQuestion({
   return (
     <div className="space-y-3">
       {hasPrompt ? (
-        <div className="text-[15px] font-semibold leading-snug">
-          {content.prompt}
-        </div>
+        <RichText
+          text={content.prompt ?? ''}
+          className="text-[15px] font-semibold leading-snug"
+        />
       ) : (
         <div className="text-sm font-semibold text-muted">
           Complete the missing code:

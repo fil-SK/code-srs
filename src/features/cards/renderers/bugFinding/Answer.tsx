@@ -1,3 +1,4 @@
+import { RichText } from '@/components/text/RichText'
 import type { AnswerProps } from '../../registry/types'
 
 export function BugFindingAnswer({ content }: AnswerProps<'bugFinding'>) {
@@ -6,9 +7,7 @@ export function BugFindingAnswer({ content }: AnswerProps<'bugFinding'>) {
       <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         Explanation
       </div>
-      <div className="whitespace-pre-wrap text-sm leading-relaxed">
-        {content.explanation}
-      </div>
+      <RichText text={content.explanation} className="text-sm leading-relaxed" />
     </>
   )
 }

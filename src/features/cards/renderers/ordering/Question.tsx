@@ -17,6 +17,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
+import { RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { QuestionProps } from '../../registry/types'
@@ -93,9 +94,10 @@ export function OrderingQuestion({
 
   return (
     <div className="space-y-3">
-      <div className="text-[15px] font-semibold leading-snug">
-        {content.prompt}
-      </div>
+      <RichText
+        text={content.prompt}
+        className="text-[15px] font-semibold leading-snug"
+      />
 
       {draggable ? (
         <>

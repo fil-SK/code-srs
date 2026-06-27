@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Lightbulb } from 'lucide-react'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
+import { RichText } from '@/components/text/RichText'
 import type { QuestionProps } from '../../registry/types'
 
 export function BugFindingQuestion({ content }: QuestionProps<'bugFinding'>) {
@@ -8,9 +9,10 @@ export function BugFindingQuestion({ content }: QuestionProps<'bugFinding'>) {
 
   return (
     <div className="space-y-4">
-      <div className="text-[15px] font-semibold leading-snug">
-        {content.question?.trim() || 'Find the bug'}
-      </div>
+      <RichText
+        text={content.question?.trim() || 'Find the bug'}
+        className="text-[15px] font-semibold leading-snug"
+      />
       <LazyCodeView code={content.code.code} language={content.code.language} />
 
       {content.bugHint?.trim() &&

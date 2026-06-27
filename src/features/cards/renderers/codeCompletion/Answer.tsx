@@ -1,4 +1,5 @@
 import { LazyCodeView } from '@/components/code/LazyCodeView'
+import { RichText } from '@/components/text/RichText'
 import type { AnswerProps } from '../../registry/types'
 
 export function CodeCompletionAnswer({ content }: AnswerProps<'codeCompletion'>) {
@@ -18,9 +19,10 @@ export function CodeCompletionAnswer({ content }: AnswerProps<'codeCompletion'>)
         </div>
       )}
       {content.explanation?.trim() && (
-        <div className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
-          {content.explanation}
-        </div>
+        <RichText
+          text={content.explanation}
+          className="mt-3 text-sm leading-relaxed"
+        />
       )}
     </>
   )
