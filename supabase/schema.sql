@@ -62,10 +62,24 @@ alter table public.drafts      enable row level security;
 alter table public.review_logs enable row level security;
 
 create policy "own rows" on public.cards
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own rows" on public.decks
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own rows" on public.drafts
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own rows" on public.review_logs
-  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+  for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ---------------------------------------------------------------------------
+-- Table privileges. RLS decides *which rows*; these grants decide whether the
+-- role may touch the table at all. Without them every request 403s before RLS
+-- runs. Only signed-in users get access (anon is intentionally left out).
+-- ---------------------------------------------------------------------------
+grant usage on schema public to authenticated;
+grant select, insert, update, delete
+  on public.cards, public.decks, public.drafts, public.review_logs
+  to authenticated;
