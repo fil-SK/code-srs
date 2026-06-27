@@ -60,6 +60,13 @@ function inline(text: string, key: string): ReactNode[] {
   })
 }
 
+// Inline-only variant for short labels (MCQ options, list items): renders
+// `code`, **bold**, and *italic* with no block/fenced handling and no wrapping
+// element, so it drops straight into a <span>, <li>, or <button>.
+export function InlineText({ text }: { text: string }) {
+  return <>{inline(text, 'il')}</>
+}
+
 // Renders a card text field with light markdown. `className` carries the field's
 // own typography (size/weight); it applies to the prose, not to code blocks.
 export function RichText({

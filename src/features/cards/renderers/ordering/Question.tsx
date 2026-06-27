@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical } from 'lucide-react'
-import { RichText } from '@/components/text/RichText'
+import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { QuestionProps } from '../../registry/types'
@@ -48,7 +48,9 @@ function SortableItem({
     >
       <GripVertical size={16} className="flex-none text-faint" />
       <span className="w-5 font-mono text-xs text-faint">{index + 1}.</span>
-      <span className="flex-1">{text}</span>
+      <span className="flex-1">
+        <InlineText text={text} />
+      </span>
     </li>
   )
 }
@@ -140,7 +142,9 @@ export function OrderingQuestion({
                 <span className="w-5 font-mono text-xs text-faint">
                   {idx + 1}.
                 </span>
-                <span className="flex-1">{itemById.get(id)?.text}</span>
+                <span className="flex-1">
+                  <InlineText text={itemById.get(id)?.text ?? ''} />
+                </span>
               </li>
             )
           })}

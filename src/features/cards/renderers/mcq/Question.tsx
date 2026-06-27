@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-react'
-import { RichText } from '@/components/text/RichText'
+import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { QuestionProps } from '../../registry/types'
 
@@ -74,7 +74,9 @@ export function McqQuestion({
                   <Check size={12} />
                 ) : null}
               </span>
-              <span>{opt.text}</span>
+              <span>
+                <InlineText text={opt.text} />
+              </span>
             </button>
           )
         })}

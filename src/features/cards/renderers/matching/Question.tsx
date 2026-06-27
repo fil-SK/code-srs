@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { selectClass } from '@/components/ui/Field'
-import { RichText } from '@/components/text/RichText'
+import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { QuestionProps } from '../../registry/types'
@@ -49,7 +49,9 @@ export function MatchingQuestion({
                   : 'border-border',
               )}
             >
-              <span className="flex-1 text-sm font-medium">{pair.left}</span>
+              <span className="flex-1 text-sm font-medium">
+                <InlineText text={pair.left} />
+              </span>
               <span className="text-faint">→</span>
               <select
                 className={cn(selectClass, 'max-w-[52%]')}
