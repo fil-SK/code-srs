@@ -75,11 +75,13 @@ export interface MatchingPair {
   id: ID
   left: string
   right: string
+  third?: string // optional third column, used when content.triple is set
 }
 
 export interface MatchingContent {
   prompt: string
-  pairs: MatchingPair[] // left<->right is the truth
+  pairs: MatchingPair[] // left<->right (and <->third when triple) is the truth
+  triple?: boolean // 3-part matching: each row also matches a third value
 }
 
 // ---- The discriminated union ----

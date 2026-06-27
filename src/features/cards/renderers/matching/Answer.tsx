@@ -1,3 +1,4 @@
+import { InlineText } from '@/components/text/RichText'
 import type { AnswerProps } from '../../registry/types'
 
 export function MatchingAnswer({ content }: AnswerProps<'matching'>) {
@@ -9,9 +10,17 @@ export function MatchingAnswer({ content }: AnswerProps<'matching'>) {
       <ul className="space-y-1 text-sm leading-relaxed">
         {content.pairs.map((pair) => (
           <li key={pair.id}>
-            <span className="font-medium">{pair.left}</span>
+            <span className="font-medium">
+              <InlineText text={pair.left} />
+            </span>
             <span className="text-faint"> → </span>
-            {pair.right}
+            <InlineText text={pair.right} />
+            {content.triple && pair.third && (
+              <>
+                <span className="text-faint"> → </span>
+                <InlineText text={pair.third} />
+              </>
+            )}
           </li>
         ))}
       </ul>

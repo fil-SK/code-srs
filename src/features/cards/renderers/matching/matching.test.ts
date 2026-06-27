@@ -1,12 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import type { MatchingContent } from '@/types'
 import { matchingDefinition } from './index'
+import { thirdKey } from './keys'
 
 const content: MatchingContent = {
   prompt: 'match',
   pairs: [
     { id: 'x', left: 'A', right: 'a' },
     { id: 'y', left: 'B', right: 'b' },
+  ],
+}
+
+const triple: MatchingContent = {
+  prompt: 'match',
+  triple: true,
+  pairs: [
+    { id: 'x', left: 'A', right: 'a', third: 'a2' },
+    { id: 'y', left: 'B', right: 'b', third: 'b2' },
   ],
 }
 
@@ -42,6 +52,47 @@ describe('matching isComplete', () => {
         pairs: [
           { id: 'x', left: 'A', right: '' },
           { id: 'y', left: 'B', right: 'b' },
+        ],
+      }),
+    ).toBe(false)
+  })
+})
+
+describe('matching 3-part', () => {
+  const allRight = {
+    x: 'x',
+    y: 'y',
+    [thirdKey('x')]: 'x',
+    [thirdKey('y')]: 'y',
+  }
+
+  it('grades both columns; both must belong to the row', () => {
+    expect(matchingDefinition.autoGrade!(triple, allRight)?.correct).toBe(true)
+    expect(
+      matchingDefinition.autoGrade!(triple, { ...allRight, [thirdKey('x')]: 'y' })
+        ?.correct,
+    ).toBe(false)
+  })
+
+  it('a 2-part response ignores a wrong/absent third column', () => {
+    expect(matchingDefinition.autoGrade!(content, allRight)?.correct).toBe(true)
+  })
+
+  it('isResponseReady requires both columns when triple', () => {
+    expect(matchingDefinition.isResponseReady!({ x: 'x', y: 'y' }, triple)).toBe(
+      false,
+    )
+    expect(matchingDefinition.isResponseReady!(allRight, triple)).toBe(true)
+  })
+
+  it('isComplete requires a third on every row when triple', () => {
+    expect(matchingDefinition.isComplete(triple)).toBe(true)
+    expect(
+      matchingDefinition.isComplete({
+        ...triple,
+        pairs: [
+          { id: 'x', left: 'A', right: 'a' }, // no third
+          { id: 'y', left: 'B', right: 'b', third: 'b2' },
         ],
       }),
     ).toBe(false)

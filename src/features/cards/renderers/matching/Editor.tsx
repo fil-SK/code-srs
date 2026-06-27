@@ -14,13 +14,15 @@ export function MatchingEditor({
     onChange({ ...content, ...patch })
   }
 
-  function setPair(id: string, side: 'left' | 'right', value: string) {
+  function setPair(id: string, side: 'left' | 'right' | 'third', value: string) {
     update({
       pairs: content.pairs.map((p) =>
         p.id === id ? { ...p, [side]: value } : p,
       ),
     })
   }
+
+  const triple = Boolean(content.triple)
 
   return (
     <>
@@ -34,9 +36,18 @@ export function MatchingEditor({
         />
       </Field>
 
+      <label className="flex items-center gap-2 text-sm text-muted">
+        <input
+          type="checkbox"
+          checked={triple}
+          onChange={(e) => update({ triple: e.target.checked })}
+        />
+        Three-part matching (left → middle → right)
+      </label>
+
       <div className="space-y-2">
         <span className="block text-xs font-semibold uppercase tracking-wide text-muted">
-          Pairs (left ↔ right)
+          {triple ? 'Rows (left → middle → right)' : 'Pairs (left ↔ right)'}
         </span>
         {content.pairs.map((pair) => (
           <div key={pair.id} className="flex items-center gap-2">
@@ -53,6 +64,17 @@ export function MatchingEditor({
               onChange={(e) => setPair(pair.id, 'right', e.target.value)}
               placeholder="Match"
             />
+            {triple && (
+              <>
+                <span className="text-faint">→</span>
+                <input
+                  className={fieldClass}
+                  value={pair.third ?? ''}
+                  onChange={(e) => setPair(pair.id, 'third', e.target.value)}
+                  placeholder="Second match"
+                />
+              </>
+            )}
             <button
               type="button"
               onClick={() =>
