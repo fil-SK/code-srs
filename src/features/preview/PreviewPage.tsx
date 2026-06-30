@@ -32,6 +32,7 @@ export function PreviewPage() {
   const [params] = useSearchParams()
   const deckParam = params.get('deck')
   const cardParam = params.get('card')
+  const fromParam = params.get('from')
   const decks = useDecks()
   const allCards = useSearchCards({ includeSuspended: true })
 
@@ -53,10 +54,20 @@ export function PreviewPage() {
     )
   }, [allCards.data, scope, cardParam])
 
-  // The back link points wherever the user came from.
-  const back = cardParam
-    ? { to: '/browse', label: '← Cards' }
-    : { to: '/', label: '← Decks' }
+  // The back link returns to where the user came from (the `from` param), with
+  // sensible defaults: a single card → the deck it belongs to here is unknown,
+  // so Browse; a deck flip-through → that deck's page.
+  const backTo =
+    fromParam ||
+    (deckParam ? `/decks/${deckParam}` : cardParam ? '/browse' : '/decks')
+  const back = {
+    to: backTo,
+    label: backTo.startsWith('/decks/')
+      ? '← Deck'
+      : backTo === '/browse'
+        ? '← Cards'
+        : '← Decks',
+  }
 
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
@@ -84,6 +95,14 @@ export function PreviewPage() {
 
   function go(delta: number) {
     setIndex(() => Math.min(cards.length - 1, Math.max(0, safeIndex + delta)))
+    setRevealed(false)
+    setResponse(undefined)
+  }
+
+  // Jump to a 0-based card index (from the "Card N of M" input).
+  function jumpTo(target: number) {
+    if (!Number.isFinite(target)) return
+    setIndex(Math.min(cards.length - 1, Math.max(0, target)))
     setRevealed(false)
     setResponse(undefined)
   }
@@ -153,13 +172,22 @@ export function PreviewPage() {
         <Link to={back.to} className="hover:text-text">
           {back.label}
         </Link>
-        <span>
+        <span className="flex items-center gap-1">
           {cardParam ? (
             'Single card'
           ) : (
             <>
-              {scope ? `${scope.name} · ` : ''}Card {safeIndex + 1} of{' '}
-              {cards.length}
+              {scope ? `${scope.name} · ` : ''}Card{' '}
+              <input
+                type="number"
+                min={1}
+                max={cards.length}
+                value={safeIndex + 1}
+                onChange={(e) => jumpTo(Number(e.target.value) - 1)}
+                aria-label="Jump to card number"
+                className="w-12 rounded border border-border bg-panel-2 px-1 py-0.5 text-center text-text [appearance:textfield]"
+              />{' '}
+              of {cards.length}
             </>
           )}
           <span className="text-faint"> · preview, no scheduling</span>

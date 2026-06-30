@@ -263,7 +263,7 @@ export function DeckDetailPage() {
           </Button>
           {cards.length > 0 && (
             <>
-              <Link to={`/preview?deck=${id}`}>
+              <Link to={`/preview?deck=${id}&from=/decks/${id}`}>
                 <Button variant="secondary">
                   <BookOpen size={15} /> Flip through
                 </Button>

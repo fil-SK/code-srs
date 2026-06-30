@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactNode, type Ref } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { BookOpen, Eye, EyeOff, FolderInput, Trash2 } from 'lucide-react'
 import type { Card } from '@/types'
 import type { FlatDeck } from '@/domain/decks/tree'
@@ -90,6 +90,7 @@ export function CardRow({
   containerRef?: Ref<HTMLDivElement>
   style?: CSSProperties
 }) {
+  const { pathname } = useLocation()
   return (
     <div
       ref={containerRef}
@@ -127,7 +128,7 @@ export function CardRow({
       </Link>
 
       <Link
-        to={`/preview?card=${card.id}`}
+        to={`/preview?card=${card.id}&from=${encodeURIComponent(pathname)}`}
         title="Preview"
         aria-label="Preview card"
         className="grid h-8 w-8 flex-none place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"

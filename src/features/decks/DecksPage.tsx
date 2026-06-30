@@ -199,7 +199,7 @@ function DeckRow({
 
         {counts.cards > 0 && (
           <Link
-            to={`/preview?deck=${node.deck.id}`}
+            to={`/preview?deck=${node.deck.id}&from=/decks`}
             title="Browse cards (no scheduling)"
             aria-label="Browse cards"
             className="grid h-8 w-8 flex-none place-items-center rounded-lg text-muted hover:bg-panel-2 hover:text-text"
