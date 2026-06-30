@@ -143,11 +143,15 @@ export function MatchingEditor({
       <Field label="Prompt">
         <textarea
           className={fieldClass}
-          rows={2}
+          rows={4}
           value={content.prompt}
           onChange={(e) => update({ prompt: e.target.value })}
-          placeholder="Match each STL container to its lookup complexity."
+          placeholder={'Match each STL container to its lookup complexity.\n\n```cpp\nstd::unordered_map<int,int> m;\n```'}
         />
+        <p className="mt-1 text-xs text-faint">
+          Supports markdown — inline `code`, **bold**, *italic*, and fenced
+          ```code``` blocks.
+        </p>
       </Field>
 
       <label className="flex items-center gap-2 text-sm text-muted">
