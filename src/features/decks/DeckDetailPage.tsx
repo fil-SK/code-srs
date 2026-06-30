@@ -27,6 +27,7 @@ import {
   subtreeIds,
   type FlatDeck,
 } from '@/domain/decks/tree'
+import { DECK_LANGUAGES, languageLabel } from '@/domain/decks/languages'
 import {
   useDeleteCard,
   useMoveCard,
@@ -96,6 +97,7 @@ function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
   const [name, setName] = useState(deck.name)
   const [description, setDescription] = useState(deck.description ?? '')
   const [parentId, setParentId] = useState(deck.parentId ?? '')
+  const [language, setLanguage] = useState(deck.language ?? '')
 
   const parentOptions = useMemo(() => {
     const forbidden = new Set(subtreeIds(decks, deck.id))
@@ -107,7 +109,8 @@ function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
   const dirty =
     name.trim() !== deck.name ||
     description.trim() !== (deck.description ?? '') ||
-    (parentId || undefined) !== deck.parentId
+    (parentId || undefined) !== deck.parentId ||
+    (language || undefined) !== deck.language
 
   function handleSave() {
     if (!name.trim()) return
@@ -116,6 +119,7 @@ function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
       name: name.trim(),
       description: description.trim() || undefined,
       parentId: parentId || undefined,
+      language: language || undefined,
     })
   }
 
@@ -147,6 +151,20 @@ function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
           {parentOptions.map((f) => (
             <option key={f.deck.id} value={f.deck.id}>
               {f.path}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Language">
+        <select
+          className={selectClass}
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <option value="">Unspecified</option>
+          {DECK_LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label}
             </option>
           ))}
         </select>
@@ -245,7 +263,14 @@ export function DeckDetailPage() {
 
       <div className="mb-5 mt-2 flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold">{deck?.name ?? 'Deck'}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="truncate text-xl font-bold">{deck?.name ?? 'Deck'}</h1>
+            {deck?.language && (
+              <span className="flex-none rounded-full bg-panel-2 px-2 py-0.5 text-[11px] font-semibold text-muted">
+                {languageLabel(deck.language)}
+              </span>
+            )}
+          </div>
           {deckPath && deckPath.includes(' / ') && (
             <div className="truncate text-xs text-faint">{deckPath}</div>
           )}

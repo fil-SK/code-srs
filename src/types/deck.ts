@@ -5,6 +5,7 @@ export interface Deck {
   name: string
   description?: string
   parentId?: ID // optional nesting
+  language?: string // language code of the deck's cards (see domain/decks/languages)
   createdAt: Millis
   updatedAt: Millis
 }

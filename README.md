@@ -18,7 +18,8 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **FSRS scheduling** (via `ts-fsrs`) with a 4-button self-grade bar and auto-grading where it makes sense.
 - **Nested decks** of arbitrary depth, with drag-and-drop **card reordering**, deck **reparenting**, and **move-card-between-decks**.
 - **Light markdown** in every card: inline `` `code` ``, **bold**, *italic*, and fenced ```code``` blocks rendered with real syntax highlighting.
-- **Browse, deck detail, and flip-through Preview** modes — review without affecting scheduling.
+- **Decks tab, per-deck view, Browse, and an interactive Preview** — try cards (answer + check yourself) with no scheduling impact.
+- **Optional Explanation** on every card type, shown on reveal.
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
 - **Stats**: streak, retention, reviews per day, and a due-forecast.
 - **Import / Export** your whole collection as JSON.
@@ -41,9 +42,11 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 Notable variants:
 
-- **MCQ** prompts support fenced code blocks, so you can ask "what does this print?" with a real snippet, and options can themselves be inline code. Toggle **multiple correct answers** for "select all that apply."
+- **MCQ** prompts support fenced code blocks, so you can ask "what does this print?" with a real snippet, and options can themselves be inline code. Toggle **multiple correct answers**, which shows a "Select all that apply" hint to the learner.
 - **Code Completion** can be a classic "fill the blank in this scaffold" card, **or** a plain prose question with an empty scaffold ("How do you reverse a list in Python?" → type `lst[::-1]`). Accepts multiple solutions with whitespace/case normalization.
-- **Matching** supports an optional **third column** (3-part matching: `A → B → C`) and optional **bold column headers**.
+- **Matching** supports an optional **third column** (3-part: `A → B → C`), optional **bold column headers**, and per-column **fixed-option ("dropdown") columns** — a column can share one value list (e.g. Yes/No) graded by value, so rows can repeat answers. Rows are reshuffled each open so the answer pattern can't be memorized by position.
+
+Every type also has an **optional Explanation** rendered on reveal, all prose fields accept the markdown above, and you can **change a card's type while editing** (it resets the content).
 
 Grading model: interactive types (MCQ, completion, ordering, matching) **auto-decide** pass/fail, then you can still override on the grade bar. Self-graded types (basic, code reading, bug finding) flip to reveal and you rate yourself **Again / Hard / Good / Easy**.
 
@@ -51,11 +54,12 @@ Grading model: interactive types (MCQ, completion, ordering, matching) **auto-de
 
 ## Using the app
 
-- **Dashboard** — your deck tree with due/total counts. Click a deck **name** to open it; use ▶ to study and 📖 to flip through.
+- **Dashboard** — a greeting and an overview: due / total / deck counts, plus quick "Study due" and "Manage decks" actions.
+- **Decks** — the deck tree: create, nest to any depth, rename, delete, reparent, and open a deck. Click a deck **name** to open it; ▶ studies it, 📖 flips through it. Sidebar/bottom-nav badges show live due and draft counts.
 - **Deck page** (`/decks/:id`) — the deck's cards as a list. **Drag the handle** to reorder, open **Deck settings** to rename/describe/**reparent** the deck, and use each row's actions to **preview / edit / move / suspend / delete** a card.
 - **Review** — the due queue. Reveal, grade, undo. Order is driven by FSRS, independent of any manual card order.
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.
-- **Preview** — flip through a deck (or a single card) with **no scheduling impact**. Great for casual recall.
+- **Preview** — try cards with **no scheduling impact**: answer the interactive ones and **Check** to see if you were right, flip the self-graded ones, and **jump to any card by number**. Nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
 - **Stats** — streak, retention, reviews/day, and upcoming load.
 - **Settings** — theme, JSON import/export, and (in cloud mode) your account / sign-out.
