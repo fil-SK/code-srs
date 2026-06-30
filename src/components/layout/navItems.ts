@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  FolderTree,
   Play,
   LayoutGrid,
   Inbox,
@@ -27,7 +28,15 @@ export const navItems: NavItem[] = [
     short: 'Home',
     icon: LayoutDashboard,
     title: 'Dashboard',
-    sub: 'Your decks and what is due',
+    sub: 'An overview of what is due',
+  },
+  {
+    to: '/decks',
+    label: 'Decks',
+    short: 'Decks',
+    icon: FolderTree,
+    title: 'Decks',
+    sub: 'Organize decks and their cards',
   },
   {
     to: '/review',

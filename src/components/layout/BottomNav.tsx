@@ -3,7 +3,7 @@ import { navItems } from './navItems'
 import { cn } from '@/lib/cn'
 
 // Mobile-only bottom navigation. Settings is reachable from the topbar/menu, so
-// it is omitted here to keep the bar to five primary destinations.
+// it is omitted here to keep the bar to the primary destinations.
 const bottomItems = navItems.filter((item) => item.to !== '/settings')
 
 export function BottomNav() {
