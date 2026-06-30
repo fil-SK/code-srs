@@ -109,6 +109,48 @@ describe('matching fixed-option columns (dropdown matching)', () => {
   })
 })
 
+describe('matching fixed options on BOTH columns', () => {
+  const both: MatchingContent = {
+    prompt: 'p',
+    triple: true,
+    options: { right: ['Yes', 'No'], third: ['A', 'B'] },
+    pairs: [
+      { id: 'x', left: 'X', right: 'Yes', third: 'A' },
+      { id: 'y', left: 'Y', right: 'No', third: 'B' },
+      { id: 'z', left: 'Z', right: 'Yes', third: 'B' }, // shares values both ways
+    ],
+  }
+  const ok = {
+    x: 'Yes',
+    y: 'No',
+    z: 'Yes',
+    [thirdKey('x')]: 'A',
+    [thirdKey('y')]: 'B',
+    [thirdKey('z')]: 'B',
+  }
+
+  it('grades both fixed columns by value', () => {
+    expect(matchingDefinition.autoGrade!(both, ok)?.correct).toBe(true)
+    expect(
+      matchingDefinition.autoGrade!(both, { ...ok, [thirdKey('x')]: 'B' })
+        ?.correct,
+    ).toBe(false)
+    expect(matchingDefinition.autoGrade!(both, { ...ok, x: 'No' })?.correct).toBe(
+      false,
+    )
+  })
+
+  it('isComplete checks both option lists and row membership', () => {
+    expect(matchingDefinition.isComplete(both)).toBe(true)
+    expect(
+      matchingDefinition.isComplete({
+        ...both,
+        options: { right: ['Yes', 'No'], third: ['A'] }, // third needs 2+
+      }),
+    ).toBe(false)
+  })
+})
+
 describe('matching 3-part', () => {
   const allRight = {
     x: 'x',
