@@ -230,7 +230,7 @@ export function DeckDetailPage() {
     return (
       <div className="mx-auto max-w-md rounded-card border border-dashed border-border bg-panel p-10 text-center">
         <div className="text-lg font-semibold">Deck not found</div>
-        <Link to="/" className="mt-4 inline-block">
+        <Link to="/decks" className="mt-4 inline-block">
           <Button variant="primary">Back to decks</Button>
         </Link>
       </div>
@@ -239,7 +239,7 @@ export function DeckDetailPage() {
 
   return (
     <div>
-      <Link to="/" className="text-xs text-muted hover:text-text">
+      <Link to="/decks" className="text-xs text-muted hover:text-text">
         ← Decks
       </Link>
 

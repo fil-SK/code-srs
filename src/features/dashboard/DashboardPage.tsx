@@ -1,12 +1,20 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { FolderTree, Play } from 'lucide-react'
+import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
 
+function firstName(email: string | undefined): string | null {
+  if (!email) return null
+  const handle = email.split('@')[0].split(/[._-]/)[0]
+  return handle ? handle.charAt(0).toUpperCase() + handle.slice(1) : null
+}
+
 export function DashboardPage() {
   const now = useMemo(() => Date.now(), [])
+  const { email } = useAuth()
   const decks = useDecks()
   const allCards = useSearchCards({ includeSuspended: true })
   const dueCards = useDueCards({ now })
@@ -14,8 +22,23 @@ export function DashboardPage() {
   const totalDue = dueCards.data?.length ?? 0
   const totalCards = allCards.data?.length ?? 0
 
+  const name = firstName(email)
+  const subline =
+    totalDue > 0
+      ? `You have ${totalDue} card${totalDue === 1 ? '' : 's'} due — let's go through them.`
+      : totalCards > 0
+        ? "You're all caught up. Nice work."
+        : "Let's add your first cards and start learning."
+
   return (
     <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">
+          Hello{name ? `, ${name}` : ''} 👋
+        </h1>
+        <p className="mt-1 text-sm text-muted">{subline}</p>
+      </div>
+
       <div className="grid grid-cols-3 gap-4">
         <Stat label="Due today" value={totalDue} hint="ready to review" />
         <Stat label="Cards" value={totalCards} hint="across all decks" />
