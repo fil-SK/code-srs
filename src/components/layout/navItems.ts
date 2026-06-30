@@ -14,13 +14,12 @@ export interface NavItem {
   label: string // sidebar label
   short: string // mobile bottom-nav label
   icon: LucideIcon
-  badge?: number // placeholder counts until wired to data (M2+)
   title: string // topbar heading
   sub: string // topbar subtitle
 }
 
 // Single source of truth for navigation, shared by Sidebar, BottomNav, and the
-// topbar title lookup. Badge numbers are placeholders for now.
+// topbar title lookup. Live badge counts come from useNavBadges, keyed by route.
 export const navItems: NavItem[] = [
   {
     to: '/',
@@ -43,7 +42,6 @@ export const navItems: NavItem[] = [
     label: 'Review',
     short: 'Review',
     icon: Play,
-    badge: 24,
     title: 'Review',
     sub: 'Self-grade or auto-grade · FSRS scheduling',
   },
@@ -60,7 +58,6 @@ export const navItems: NavItem[] = [
     label: 'Drafts',
     short: 'Drafts',
     icon: Inbox,
-    badge: 3,
     title: 'Drafts',
     sub: 'Capture now, shape into cards later',
   },

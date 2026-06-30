@@ -1,8 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { navItems } from './navItems'
+import { useNavBadges } from './useNavBadges'
 import { cn } from '@/lib/cn'
 
 export function Sidebar() {
+  const badges = useNavBadges()
+
   return (
     <aside className="sticky top-0 hidden h-screen flex-col gap-1.5 border-r border-border bg-bg-elev p-3.5 md:flex">
       <div className="flex items-center gap-2.5 px-2.5 pb-4 pt-2">
@@ -34,9 +37,9 @@ export function Sidebar() {
           >
             <item.icon size={18} className="shrink-0 opacity-90" />
             <span>{item.label}</span>
-            {item.badge ? (
+            {badges[item.to] ? (
               <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
-                {item.badge}
+                {badges[item.to]}
               </span>
             ) : null}
           </NavLink>

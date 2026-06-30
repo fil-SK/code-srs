@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { navItems } from './navItems'
+import { useNavBadges } from './useNavBadges'
 import { cn } from '@/lib/cn'
 
 // Mobile-only bottom navigation. Settings is reachable from the topbar/menu, so
@@ -7,6 +8,8 @@ import { cn } from '@/lib/cn'
 const bottomItems = navItems.filter((item) => item.to !== '/settings')
 
 export function BottomNav() {
+  const badges = useNavBadges()
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t border-border bg-bg-elev p-2 md:hidden">
       {bottomItems.map((item) => (
@@ -23,9 +26,9 @@ export function BottomNav() {
         >
           <item.icon size={20} />
           <span>{item.short}</span>
-          {item.badge ? (
+          {badges[item.to] ? (
             <span className="absolute right-1 top-0 rounded-full bg-accent px-1.5 text-[9px] font-semibold text-white">
-              {item.badge}
+              {badges[item.to]}
             </span>
           ) : null}
         </NavLink>
