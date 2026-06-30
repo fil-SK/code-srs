@@ -1,6 +1,7 @@
 import { CodeBlockField } from '@/components/code/CodeBlockField'
 import { Field, fieldClass } from '@/components/ui/Field'
 import type { EditorProps } from '../../registry/types'
+import { ExplanationField } from '../Explanation'
 
 export function CodeReadingEditor({
   content,
@@ -30,6 +31,10 @@ export function CodeReadingEditor({
           placeholder="Both operands and the result must share the same integer type…"
         />
       </Field>
+      <ExplanationField
+        value={content.explanation}
+        onChange={(explanation) => onChange({ ...content, explanation })}
+      />
     </>
   )
 }

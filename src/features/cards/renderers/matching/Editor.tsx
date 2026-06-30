@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
 import type { EditorProps } from '../../registry/types'
+import { ExplanationField } from '../Explanation'
 import { fixedValues, isFixed, type Col } from './columns'
 
 export function MatchingEditor({
@@ -252,6 +253,11 @@ export function MatchingEditor({
           <Plus size={14} /> Add pair
         </Button>
       </div>
+
+      <ExplanationField
+        value={content.explanation}
+        onChange={(explanation) => update({ explanation })}
+      />
     </>
   )
 }

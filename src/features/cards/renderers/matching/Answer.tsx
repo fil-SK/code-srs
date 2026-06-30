@@ -1,5 +1,6 @@
 import { InlineText } from '@/components/text/RichText'
 import type { AnswerProps } from '../../registry/types'
+import { ExplanationView } from '../Explanation'
 
 export function MatchingAnswer({ content }: AnswerProps<'matching'>) {
   return (
@@ -24,6 +25,7 @@ export function MatchingAnswer({ content }: AnswerProps<'matching'>) {
           </li>
         ))}
       </ul>
+      <ExplanationView text={content.explanation} />
     </>
   )
 }

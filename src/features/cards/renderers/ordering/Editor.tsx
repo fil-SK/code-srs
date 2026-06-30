@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, fieldClass } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
 import type { EditorProps } from '../../registry/types'
+import { ExplanationField } from '../Explanation'
 
 // Items are stored in the correct order; this editor's list order IS that order.
 export function OrderingEditor({
@@ -100,6 +101,11 @@ export function OrderingEditor({
           <Plus size={14} /> Add step
         </Button>
       </div>
+
+      <ExplanationField
+        value={content.explanation}
+        onChange={(explanation) => update({ explanation })}
+      />
     </>
   )
 }

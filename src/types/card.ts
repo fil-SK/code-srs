@@ -18,6 +18,7 @@ export interface CardBase {
 export interface BasicContent {
   front: string // markdown (may embed code fences)
   back: string
+  explanation?: string
 }
 
 export interface McqOption {
@@ -37,6 +38,7 @@ export interface CodeReadingContent {
   code: CodeBlock
   question: string
   answer: string // markdown, revealed
+  explanation?: string
 }
 
 export type CodeValidationMode = 'none' | 'normalizedMatch' // 'run' deferred
@@ -69,6 +71,7 @@ export interface OrderingItem {
 export interface OrderingContent {
   prompt: string
   items: OrderingItem[] // stored in CORRECT order; presented shuffled
+  explanation?: string
 }
 
 export interface MatchingPair {
@@ -88,6 +91,7 @@ export interface MatchingContent {
   // answer like Yes/No). Otherwise the column uses unique per-row matching:
   // options are the row values, graded by pairing.
   options?: { right?: string[]; third?: string[] }
+  explanation?: string
 }
 
 // ---- The discriminated union ----

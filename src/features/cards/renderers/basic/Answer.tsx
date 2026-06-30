@@ -1,5 +1,6 @@
 import { RichText } from '@/components/text/RichText'
 import type { AnswerProps } from '../../registry/types'
+import { ExplanationView } from '../Explanation'
 
 export function BasicAnswer({ content }: AnswerProps<'basic'>) {
   return (
@@ -8,6 +9,7 @@ export function BasicAnswer({ content }: AnswerProps<'basic'>) {
         Answer
       </div>
       <RichText text={content.back} className="text-sm leading-relaxed" />
+      <ExplanationView text={content.explanation} />
     </>
   )
 }

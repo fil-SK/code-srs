@@ -1,5 +1,6 @@
 import { Field, fieldClass } from '@/components/ui/Field'
 import type { EditorProps } from '../../registry/types'
+import { ExplanationField } from '../Explanation'
 
 export function BasicEditor({ content, onChange }: EditorProps<'basic'>) {
   return (
@@ -22,6 +23,10 @@ export function BasicEditor({ content, onChange }: EditorProps<'basic'>) {
           placeholder="Static Single Assignment: each variable is assigned exactly once…"
         />
       </Field>
+      <ExplanationField
+        value={content.explanation}
+        onChange={(explanation) => onChange({ ...content, explanation })}
+      />
     </>
   )
 }
