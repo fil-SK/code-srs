@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react'
+import { Check, ListChecks, X } from 'lucide-react'
 import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { QuestionProps } from '../../registry/types'
@@ -32,6 +32,11 @@ export function McqQuestion({
         text={content.prompt}
         className="text-[15px] font-semibold leading-snug"
       />
+      {content.multiple && (
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">
+          <ListChecks size={13} /> Select all that apply
+        </div>
+      )}
       <div className="space-y-2">
         {content.options.map((opt) => {
           const isSel = selected.includes(opt.id)
