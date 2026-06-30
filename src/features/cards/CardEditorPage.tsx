@@ -97,6 +97,15 @@ export function CardEditorPage() {
   }, [flatDecks, isEdit, deckId, presetDeck])
 
   function changeType(t: CardType) {
+    if (!editor || t === editor.type) return
+    // Types have different content shapes, so switching starts fresh. Confirm
+    // when editing so an existing card isn't wiped by an accidental change.
+    if (
+      isEdit &&
+      !window.confirm("Changing the card type resets this card's content. Continue?")
+    ) {
+      return
+    }
     setEditor({ type: t, content: getCardDefinition(t).emptyContent() })
   }
 
@@ -125,6 +134,7 @@ export function CardEditorPage() {
         ...existing,
         deckId: targetDeck,
         tags: parsedTags,
+        type: editor.type,
         content: editor.content,
       } as Card)
     } else {
@@ -172,21 +182,24 @@ export function CardEditorPage() {
       </h2>
 
       <div className="space-y-4 rounded-card border border-border bg-panel p-6">
-        {!isEdit && (
-          <Field label="Card type">
-            <select
-              className={selectClass}
-              value={editor.type}
-              onChange={(e) => changeType(e.target.value as CardType)}
-            >
-              {ALL_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {cardTypeMeta[t].label}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
+        <Field label="Card type">
+          <select
+            className={selectClass}
+            value={editor.type}
+            onChange={(e) => changeType(e.target.value as CardType)}
+          >
+            {ALL_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {cardTypeMeta[t].label}
+              </option>
+            ))}
+          </select>
+          {isEdit && (
+            <p className="mt-1 text-xs text-faint">
+              Changing the type resets this card's content.
+            </p>
+          )}
+        </Field>
 
         <Editor content={editor.content} onChange={setContent} />
 
