@@ -82,6 +82,11 @@ export function MatchingQuestion({
     return { right: build('right'), third: build('third') }
   }, [content])
 
+  // Display the rows in a random order (stable per open) so the answer pattern
+  // can't be memorized by position. Grading is keyed by pair id, so this does
+  // not affect correctness.
+  const displayPairs = useMemo(() => shuffle(content.pairs), [content])
+
   function choose(key: string, value: string) {
     if (revealed) return
     setResponse({ ...assign, [key]: value })
@@ -120,7 +125,7 @@ export function MatchingQuestion({
             )}
           </div>
         )}
-        {content.pairs.map((pair) => {
+        {displayPairs.map((pair) => {
           const rowOk =
             revealed &&
             stateFor('right', pair) === 'correct' &&
