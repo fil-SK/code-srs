@@ -1,7 +1,10 @@
 import { lazy, Suspense } from 'react'
+import { importWithReload } from '@/lib/lazyWithRetry'
 
 const CodeEditor = lazy(() =>
-  import('./CodeEditor').then((m) => ({ default: m.CodeEditor })),
+  importWithReload(() =>
+    import('./CodeEditor').then((m) => ({ default: m.CodeEditor })),
+  ),
 )
 
 export function LazyCodeEditor(props: {

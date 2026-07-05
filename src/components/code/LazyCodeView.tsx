@@ -1,10 +1,11 @@
 import { lazy, Suspense } from 'react'
+import { importWithReload } from '@/lib/lazyWithRetry'
 
 // CodeMirror + language grammars are heavy, so load them on demand: this keeps
 // them out of the initial bundle and in a chunk fetched the first time a code
-// card is shown.
+// card is shown. importWithReload recovers from a stale chunk after a deploy.
 const CodeView = lazy(() =>
-  import('./CodeView').then((m) => ({ default: m.CodeView })),
+  importWithReload(() => import('./CodeView').then((m) => ({ default: m.CodeView }))),
 )
 
 export function LazyCodeView(props: { code: string; language: string }) {

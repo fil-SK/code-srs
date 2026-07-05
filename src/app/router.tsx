@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
+import { RouteError } from './RouteError'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { DecksPage } from '@/features/decks/DecksPage'
 import { DeckDetailPage } from '@/features/decks/DeckDetailPage'
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'decks', element: <DecksPage /> },
