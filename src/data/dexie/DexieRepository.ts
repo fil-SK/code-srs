@@ -1,5 +1,5 @@
 import type { Table } from 'dexie'
-import type { Card, Deck, Draft, ID, Millis, ReviewLog } from '@/types'
+import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
 import { searchableText } from '@/domain/search/searchableText'
 import type {
   CardQuery,
@@ -105,11 +105,13 @@ export class DexieRepository implements Repository {
   readonly decks: CrudRepo<Deck>
   readonly drafts: CrudRepo<Draft>
   readonly reviews: ReviewRepo
+  readonly roadmaps: CrudRepo<Roadmap>
 
   constructor(db: AppDB = defaultDb) {
     this.cards = createCardRepo(db)
     this.decks = crud(db.decks)
     this.drafts = crud(db.drafts)
     this.reviews = createReviewRepo(db)
+    this.roadmaps = crud(db.roadmaps)
   }
 }

@@ -83,3 +83,24 @@ grant usage on schema public to authenticated;
 grant select, insert, update, delete
   on public.cards, public.decks, public.drafts, public.review_logs
   to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Roadmaps (learning-order graphs whose nodes reference decks). Added after the
+-- initial schema; this whole block is a self-contained migration you can paste
+-- and run on an existing database. Table + RLS + policy + grant, same pattern
+-- as every other entity. The grant is what keeps it from 403ing.
+-- ---------------------------------------------------------------------------
+create table if not exists public.roadmaps (
+  id      text primary key,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  data    jsonb not null
+);
+
+alter table public.roadmaps enable row level security;
+
+drop policy if exists "own rows" on public.roadmaps;
+create policy "own rows" on public.roadmaps
+  for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+grant select, insert, update, delete on public.roadmaps to authenticated;

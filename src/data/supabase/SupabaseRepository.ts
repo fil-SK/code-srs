@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Card, Deck, Draft, ID, Millis, ReviewLog } from '@/types'
+import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
 import { searchableText } from '@/domain/search/searchableText'
 import type {
   CardQuery,
@@ -172,11 +172,13 @@ export class SupabaseRepository implements Repository {
   readonly decks: CrudRepo<Deck>
   readonly drafts: CrudRepo<Draft>
   readonly reviews: ReviewRepo
+  readonly roadmaps: CrudRepo<Roadmap>
 
   constructor(sb: SupabaseClient = getSupabase()) {
     this.cards = createCardRepo(sb)
     this.decks = crud<Deck>(sb, 'decks')
     this.drafts = crud<Draft>(sb, 'drafts')
     this.reviews = createReviewRepo(sb)
+    this.roadmaps = crud<Roadmap>(sb, 'roadmaps')
   }
 }

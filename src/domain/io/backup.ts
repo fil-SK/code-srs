@@ -1,4 +1,4 @@
-import type { Card, Deck, Draft, ReviewLog } from '@/types'
+import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
 
 export const BACKUP_VERSION = 1
 
@@ -7,6 +7,7 @@ export interface BackupData {
   decks: Deck[]
   drafts: Draft[]
   reviewLogs: ReviewLog[]
+  roadmaps?: Roadmap[] // added later; optional so older backups still import
 }
 
 export interface BackupFile {

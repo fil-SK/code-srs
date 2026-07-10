@@ -4,6 +4,8 @@ import { RouteError } from './RouteError'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { DecksPage } from '@/features/decks/DecksPage'
 import { DeckDetailPage } from '@/features/decks/DeckDetailPage'
+import { RoadmapsPage } from '@/features/roadmaps/RoadmapsPage'
+import { RoadmapEditorPage } from '@/features/roadmaps/RoadmapEditorPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
 import { PreviewPage } from '@/features/preview/PreviewPage'
 import { BrowsePage } from '@/features/cards/BrowsePage'
@@ -21,6 +23,8 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'decks', element: <DecksPage /> },
       { path: 'decks/:id', element: <DeckDetailPage /> },
+      { path: 'roadmaps', element: <RoadmapsPage /> },
+      { path: 'roadmaps/:id', element: <RoadmapEditorPage /> },
       { path: 'review', element: <ReviewPage /> },
       { path: 'preview', element: <PreviewPage /> },
       { path: 'browse', element: <BrowsePage /> },

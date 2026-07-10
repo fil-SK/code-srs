@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   FolderTree,
+  Waypoints,
   Play,
   LayoutGrid,
   Inbox,
@@ -36,6 +37,14 @@ export const navItems: NavItem[] = [
     icon: FolderTree,
     title: 'Decks',
     sub: 'Organize decks and their cards',
+  },
+  {
+    to: '/roadmaps',
+    label: 'Roadmaps',
+    short: 'Roadmaps',
+    icon: Waypoints,
+    title: 'Roadmaps',
+    sub: 'Order decks into a learning path',
   },
   {
     to: '/review',

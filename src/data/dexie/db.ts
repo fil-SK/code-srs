@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { Card, Deck, Draft, ID, ReviewLog } from '@/types'
+import type { Card, Deck, Draft, ID, ReviewLog, Roadmap } from '@/types'
 
 // IndexedDB schema. Indexes are chosen for the app's read patterns:
 //   - cards by deck, type, tag (multi-entry), and due date (nested keypath)
@@ -11,6 +11,7 @@ export class AppDB extends Dexie {
   decks!: Table<Deck, ID>
   drafts!: Table<Draft, ID>
   reviewLogs!: Table<ReviewLog, ID>
+  roadmaps!: Table<Roadmap, ID>
 
   constructor() {
     super('code-srs')
@@ -19,6 +20,11 @@ export class AppDB extends Dexie {
       decks: 'id, parentId, name',
       drafts: 'id, createdAt',
       reviewLogs: 'id, cardId, reviewedAt',
+    })
+    // v2 adds roadmaps (learning-order graphs over decks). Dexie carries the
+    // existing stores forward; only the new table is declared.
+    this.version(2).stores({
+      roadmaps: 'id, title',
     })
   }
 }

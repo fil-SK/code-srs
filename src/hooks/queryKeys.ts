@@ -12,4 +12,6 @@ export const qk = {
   reviewsAll: ['reviews', 'all'] as const,
   drafts: ['drafts'] as const,
   draft: (id: ID) => ['drafts', 'byId', id] as const,
+  roadmaps: ['roadmaps'] as const,
+  roadmap: (id: ID) => ['roadmaps', 'byId', id] as const,
 }

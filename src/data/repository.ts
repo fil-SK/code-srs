@@ -6,6 +6,7 @@ import type {
   ID,
   Millis,
   ReviewLog,
+  Roadmap,
 } from '@/types'
 
 // Generic create-read-update-delete contract. `put` upserts (create or replace),
@@ -57,4 +58,5 @@ export interface Repository {
   decks: CrudRepo<Deck>
   drafts: CrudRepo<Draft>
   reviews: ReviewRepo
+  roadmaps: CrudRepo<Roadmap>
 }
