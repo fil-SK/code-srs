@@ -7,6 +7,7 @@ import { mcqDefinition } from '../renderers/mcq'
 import { orderingDefinition } from '../renderers/ordering'
 import { matchingDefinition } from '../renderers/matching'
 import { codeCompletionDefinition } from '../renderers/codeCompletion'
+import { storyDefinition } from '../renderers/story'
 
 // All card-type definitions. The full Record type means adding a CardType
 // without registering it here is a compile error — the registry is exhaustive.
@@ -18,6 +19,7 @@ const registry: { [T in CardType]: CardTypeDefinition<T> } = {
   ordering: orderingDefinition,
   matching: matchingDefinition,
   codeCompletion: codeCompletionDefinition,
+  story: storyDefinition,
 }
 
 // Union-typed view of a definition. The single cast here widens the per-type

@@ -10,6 +10,7 @@ export const cardTypeMeta: Record<CardType, { label: string; badgeClass: string 
     bugFinding: { label: 'Bug Finding', badgeClass: 'bg-red/15 text-red' },
     ordering: { label: 'Ordering', badgeClass: 'bg-blue/15 text-blue' },
     matching: { label: 'Matching', badgeClass: 'bg-green/15 text-green' },
+    story: { label: 'Story', badgeClass: 'bg-accent-soft text-accent' },
   }
 
 function firstLine(text: string): string {
@@ -38,6 +39,11 @@ export function getCardTitle(card: Card): string {
       return firstLine(card.content.prompt)
     case 'matching':
       return firstLine(card.content.prompt)
+    case 'story':
+      if (card.content.intro?.trim()) return firstLine(card.content.intro)
+      return card.content.steps[0]?.prompt
+        ? firstLine(card.content.steps[0].prompt)
+        : 'Story'
     default: {
       const _exhaustive: never = card
       return _exhaustive

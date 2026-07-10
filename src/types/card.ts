@@ -94,6 +94,23 @@ export interface MatchingContent {
   explanation?: string
 }
 
+export interface StoryStep {
+  id: ID
+  prompt: string // markdown question for this step
+  answer: string // markdown answer, revealed on demand
+  code?: CodeBlock // optional per-step code focus (e.g. specific lines)
+}
+
+export interface StoryContent {
+  intro?: string // optional framing prose shown above the context
+  code?: CodeBlock // shared code context, pinned while stepping
+  image?: string // shared image as a data URL, pinned while stepping
+  // Walked one step at a time. Reveal-only per step; the whole story earns one
+  // grade at the end (self-assessed, no auto-grading).
+  steps: StoryStep[]
+  explanation?: string // optional wrap-up shown with the final grade
+}
+
 // ---- The discriminated union ----
 
 export type Card =
@@ -104,6 +121,7 @@ export type Card =
   | (CardBase & { type: 'bugFinding'; content: BugFindingContent })
   | (CardBase & { type: 'ordering'; content: OrderingContent })
   | (CardBase & { type: 'matching'; content: MatchingContent })
+  | (CardBase & { type: 'story'; content: StoryContent })
 
 export type CardType = Card['type']
 

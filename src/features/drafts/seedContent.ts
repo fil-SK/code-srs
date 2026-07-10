@@ -8,6 +8,7 @@ import type {
   McqContent,
   MatchingContent,
   OrderingContent,
+  StoryContent,
 } from '@/types'
 import { getCardDefinition } from '@/features/cards/registry'
 
@@ -33,6 +34,8 @@ export function seedContent(type: CardType, text: string): Card['content'] {
       return { ...(base as MatchingContent), prompt: t }
     case 'codeCompletion':
       return { ...(base as CodeCompletionContent), explanation: t }
+    case 'story':
+      return { ...(base as StoryContent), intro: t }
     default:
       return base
   }

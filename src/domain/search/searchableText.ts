@@ -37,6 +37,13 @@ export function searchableText(card: Card): string {
       parts.push(card.content.prompt)
       for (const pair of card.content.pairs) parts.push(pair.left, pair.right)
       break
+    case 'story':
+      parts.push(card.content.intro ?? '', card.content.explanation ?? '')
+      parts.push(card.content.code?.code ?? '')
+      for (const step of card.content.steps) {
+        parts.push(step.prompt, step.answer, step.code?.code ?? '')
+      }
+      break
     default: {
       const _exhaustive: never = card
       return _exhaustive
