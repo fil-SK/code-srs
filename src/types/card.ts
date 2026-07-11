@@ -99,6 +99,7 @@ export interface StoryStep {
   prompt: string // markdown question for this step
   answer: string // markdown answer, revealed on demand
   code?: CodeBlock // optional per-step code focus (e.g. specific lines)
+  highlight?: string // line spec (e.g. "26-34, 40") emphasized in the shared code
 }
 
 export interface StoryContent {

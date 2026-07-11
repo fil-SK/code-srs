@@ -1,4 +1,5 @@
 import { LazyCodeView } from '@/components/code/LazyCodeView'
+import { parseLineRanges } from '@/components/code/lineRanges'
 import { RichText } from '@/components/text/RichText'
 import { Button } from '@/components/ui/Button'
 import type { StoryContent } from '@/types'
@@ -6,15 +7,26 @@ import type { QuestionProps } from '../../registry/types'
 import { readProgress } from './progress'
 
 // Shared context (intro + code + image) that stays pinned while the user walks
-// through the steps.
-function StoryContext({ content }: { content: StoryContent }) {
+// through the steps. highlightLines emphasizes the active step's focus range in
+// the shared code.
+function StoryContext({
+  content,
+  highlightLines,
+}: {
+  content: StoryContent
+  highlightLines?: number[]
+}) {
   return (
     <>
       {content.intro?.trim() && (
         <RichText text={content.intro} className="text-[15px] leading-relaxed" />
       )}
       {content.code?.code.trim() && (
-        <LazyCodeView code={content.code.code} language={content.code.language} />
+        <LazyCodeView
+          code={content.code.code}
+          language={content.code.language}
+          highlightLines={highlightLines}
+        />
       )}
       {content.image && (
         <img
@@ -53,6 +65,11 @@ export function StoryQuestion({
                 text={s.prompt}
                 className="mt-1 text-sm font-semibold leading-snug"
               />
+              {content.code?.code.trim() && s.highlight?.trim() && (
+                <div className="mt-1 text-xs font-medium text-accent">
+                  Focus on lines {s.highlight} in the shared code.
+                </div>
+              )}
               {s.code?.code.trim() && (
                 <div className="mt-2">
                   <LazyCodeView code={s.code.code} language={s.code.language} />
@@ -74,6 +91,11 @@ export function StoryQuestion({
   const step = steps[clamped]
   const isLast = clamped >= steps.length - 1
 
+  const hasSharedCode = Boolean(content.code?.code.trim())
+  const focus = step?.highlight?.trim()
+  const highlightLines =
+    hasSharedCode && focus ? parseLineRanges(focus) : undefined
+
   function reveal() {
     setResponse({ index: clamped, revealed: true })
   }
@@ -86,7 +108,7 @@ export function StoryQuestion({
 
   return (
     <div className="space-y-4">
-      <StoryContext content={content} />
+      <StoryContext content={content} highlightLines={highlightLines} />
 
       <div className="flex items-center justify-between text-xs text-muted">
         <span>
@@ -102,6 +124,11 @@ export function StoryQuestion({
       {step?.code?.code.trim() && (
         <LazyCodeView code={step.code.code} language={step.code.language} />
       )}
+      {highlightLines?.length ? (
+        <div className="text-xs font-medium text-accent">
+          Focus on lines {focus} in the code above.
+        </div>
+      ) : null}
       <RichText
         text={step?.prompt ?? ''}
         className="text-[15px] font-semibold leading-snug"

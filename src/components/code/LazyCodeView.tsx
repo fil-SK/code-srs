@@ -8,7 +8,11 @@ const CodeView = lazy(() =>
   importWithReload(() => import('./CodeView').then((m) => ({ default: m.CodeView }))),
 )
 
-export function LazyCodeView(props: { code: string; language: string }) {
+export function LazyCodeView(props: {
+  code: string
+  language: string
+  highlightLines?: number[]
+}) {
   return (
     <Suspense
       fallback={

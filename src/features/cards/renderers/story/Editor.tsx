@@ -192,6 +192,15 @@ export function StoryEditor({ content, onChange }: EditorProps<'story'>) {
               placeholder="The answer revealed for this step."
             />
 
+            {content.code?.code.trim() && (
+              <input
+                className={`${fieldClass} mt-2`}
+                value={step.highlight ?? ''}
+                onChange={(e) => setStep(step.id, { highlight: e.target.value })}
+                placeholder="Highlight lines in the shared code, e.g. 26-34, 40"
+              />
+            )}
+
             <label className="mt-2 flex items-center gap-2 text-xs text-muted">
               <input
                 type="checkbox"
