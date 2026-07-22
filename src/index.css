@@ -68,6 +68,159 @@
   --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
 
   --radius-card: 12px;
+
+  /* ---------- Itera design-preview tokens (additive; see .itera-scope below) ----------
+     New itera-prefixed utilities (bg-itera-surface, text-itera-ink, rounded-itera-card,
+     etc.) so /design-preview/* can be styled without touching any utility above. */
+  --color-itera-canvas: var(--itera-canvas);
+  --color-itera-surface: var(--itera-surface);
+  --color-itera-surface-subtle: var(--itera-surface-subtle);
+  --color-itera-ink: var(--itera-ink);
+  --color-itera-ink-brand: var(--itera-ink-brand);
+  --color-itera-muted: var(--itera-muted);
+  --color-itera-muted-light: var(--itera-muted-light);
+  --color-itera-border: var(--itera-border);
+  --color-itera-border-strong: var(--itera-border-strong);
+  --color-itera-accent: var(--itera-accent);
+  --color-itera-accent-hover: var(--itera-accent-hover);
+  --color-itera-accent-active: var(--itera-accent-active);
+  --color-itera-accent-soft: var(--itera-accent-soft);
+  --color-itera-accent-softer: var(--itera-accent-softer);
+  --color-itera-navy: var(--itera-navy);
+  --color-itera-navy-soft: var(--itera-navy-soft);
+  --color-itera-selection-soft: var(--itera-selection-soft);
+  --color-itera-selection-border: var(--itera-selection-border);
+  --color-itera-success: var(--itera-success);
+  --color-itera-success-soft: var(--itera-success-soft);
+  --color-itera-error: var(--itera-error);
+  --color-itera-error-soft: var(--itera-error-soft);
+  --color-itera-warning: var(--itera-warning);
+  --color-itera-warning-soft: var(--itera-warning-soft);
+
+  --font-itera-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-itera-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-itera-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+
+  --radius-itera-code: 8px;
+  --radius-itera-control: 9px;
+  --radius-itera-card: 14px;
+  --radius-itera-dialog: 16px;
+  --radius-itera-pill: 999px;
+}
+
+/* Itera redesign — namespaced design tokens (docs/itera-claude-master-spec.md §4-5).
+   Scoped entirely under .itera-scope, applied only by PreviewShell
+   (src/features/design-preview/PreviewShell.tsx). Defines a distinct --itera-*
+   custom-property namespace so nothing here can collide with the tokens above,
+   and additionally re-points the *existing* semantic var names (--bg, --panel,
+   --accent, ...) locally within this scope only, so reused production
+   components (FlipCard, RichText, CodeView) render on-brand automatically with
+   zero edits to them — the global :root/[data-theme] rules above are untouched,
+   so production is unaffected outside an element carrying this class.
+   --code-bg IS included below (unlike an earlier draft of this file): CodeView
+   also picks its syntax-highlight *palette* (light vs oneDark) from the live
+   ThemeContext, not from a CSS var, so overriding --code-bg alone would leave
+   a dark-palette code block on a light background under the app's default
+   theme. Fixed at the root by ForceLightTheme
+   (src/features/design-preview/ForceLightTheme.tsx), which locally overrides
+   ThemeContext to 'light' for every design-preview subtree, so the palette and
+   this background always agree. Only light values are defined here; spec §36
+   defers dark mode for the MVP. */
+.itera-scope {
+  --itera-navy: #1e293b;
+  --itera-orange: #ff6902;
+
+  --itera-canvas: #f6f7f9;
+  --itera-surface: #ffffff;
+  --itera-surface-subtle: #f9fafb;
+  --itera-ink: #172033;
+  --itera-ink-brand: #1e293b;
+  --itera-muted: #64748b;
+  --itera-muted-light: #94a3b8;
+  --itera-border: #e3e7ed;
+  --itera-border-strong: #cbd3de;
+
+  --itera-accent: #ff6902;
+  --itera-accent-hover: #ea5f00;
+  --itera-accent-active: #d95700;
+  --itera-accent-soft: #fff2e8;
+  --itera-accent-softer: #fff8f3;
+
+  --itera-navy-soft: #eef2f7;
+  --itera-selection-soft: #f2f6fc;
+  --itera-selection-border: #9cb4db;
+
+  --itera-success: #15803d;
+  --itera-success-soft: #ecfdf3;
+  --itera-error: #c2413a;
+  --itera-error-soft: #fef2f2;
+  --itera-warning: #b45309;
+  --itera-warning-soft: #fff7ed;
+
+  --itera-shadow-card:
+    0 12px 30px rgba(23, 32, 51, 0.08), 0 2px 6px rgba(23, 32, 51, 0.05);
+  --itera-shadow-float: 0 18px 50px rgba(23, 32, 51, 0.12);
+
+  /* Scoped re-point of the legacy semantic names (see comment above). */
+  --bg: var(--itera-canvas);
+  --bg-elev: var(--itera-surface);
+  --panel: var(--itera-surface);
+  --panel-2: var(--itera-surface-subtle);
+  --border: var(--itera-border);
+  --text: var(--itera-ink);
+  --muted: var(--itera-muted);
+  --faint: var(--itera-muted-light);
+  --accent: var(--itera-accent);
+  --accent-soft: var(--itera-accent-soft);
+  --shadow: var(--itera-shadow-card);
+  --code-bg: var(--itera-surface-subtle);
+
+  display: block;
+  background: var(--itera-canvas);
+  color: var(--itera-ink);
+  font-family: var(--font-itera-sans);
+}
+
+/* Itera's own flip primitive (src/features/reviewV2/components/FlipCard.tsx).
+   A namespaced duplicate of the .flip mechanism below — same grid-overlap
+   sizing (both faces share one grid cell, so the container sizes to the
+   taller face), same backface-visibility/reduced-motion handling — kept under
+   distinct .itera-flip* class names so this never touches, depends on, or is
+   affected by anything production's .flip/FlipCard also styles. The wrapper
+   component additionally makes the front face a real, keyboard-operable
+   button (role, tabIndex, Enter/Space, focus-visible ring, aria-hidden on the
+   inactive face) — see that file for why. */
+.itera-flip {
+  display: grid;
+  perspective: 2000px;
+}
+.itera-flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 0.55s cubic-bezier(0.34, 1.32, 0.5, 1);
+}
+.itera-flip-front {
+  transform: rotateY(0deg);
+}
+.itera-flip-back {
+  transform: rotateY(180deg);
+}
+.itera-flip.is-flipped .itera-flip-front {
+  transform: rotateY(180deg);
+  pointer-events: none;
+}
+.itera-flip.is-flipped .itera-flip-back {
+  transform: rotateY(360deg);
+}
+.itera-flip:not(.is-flipped) .itera-flip-back {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itera-flip-face {
+    transition: none;
+  }
 }
 
 /* ---------- Base ---------- */

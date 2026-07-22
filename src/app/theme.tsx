@@ -17,7 +17,15 @@ interface ThemeContextValue {
   toggle: () => void
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null)
+// Exported so a subtree can locally override the active theme (e.g. the
+// itera design-preview routes, which are light-only for now and need
+// CodeView's syntax-highlight palette to match regardless of the app's global
+// dark/light setting) without touching document.documentElement or
+// localStorage — see src/features/design-preview/ForceLightTheme.tsx. This
+// export is purely additive; every existing consumer still goes through
+// useTheme()/ThemeProvider exactly as before.
+// eslint-disable-next-line react-refresh/only-export-components
+export const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 function getInitialTheme(): Theme {
   try {

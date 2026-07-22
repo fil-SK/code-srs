@@ -13,6 +13,7 @@ import { CardEditorPage } from '@/features/cards/CardEditorPage'
 import { DraftsPage } from '@/features/drafts/DraftsPage'
 import { StatsPage } from '@/features/stats/StatsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { RecallPreviewPage } from '@/features/design-preview/review-recall/RecallPreviewPage'
 
 export const router = createBrowserRouter([
   {
@@ -34,5 +35,13 @@ export const router = createBrowserRouter([
       { path: 'stats', element: <StatsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
+  },
+  // Design-preview routes are a structurally separate top-level entry, not
+  // children of AppShell — chrome-free by construction, not by hiding
+  // AppShell's chrome with CSS. See docs/itera-redesign-plan.md Phase B.
+  {
+    path: 'design-preview',
+    errorElement: <RouteError />,
+    children: [{ path: 'review/recall', element: <RecallPreviewPage /> }],
   },
 ])

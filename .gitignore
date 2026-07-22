@@ -13,11 +13,24 @@ dist-ssr
 dev-dist
 *.local
 
+# Env files — *.local above already catches .env.local itself, but not
+# variants like a manual backup copy. Keep .env.local.example tracked (it's
+# the committed template); everything else with real values stays out.
+.env
+.env.*
+!.env.local.example
+
+# Build / test / deploy artifacts
+*.tsbuildinfo
+coverage
+.vercel
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj

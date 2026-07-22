@@ -1,0 +1,160 @@
+# Itera — Migration Plan
+
+Concrete data migration path from the current 8-card-type, unified-Deck model to the spec's 6-interaction-type, Collection/Deck-split model. Covers both storage backends (Dexie in every user's browser; Supabase in production) — they must move in lockstep or they will silently diverge.
+
+**Revised after a correction pass** — see `itera-decisions.md` D14–D16 for what changed and why. The headline change: only the old-Card-payload adaptation (§1) is allowed to run lazily on read. CardState extraction and the Collection/Deck split are explicit, run-once, reportable, reversible migrations, defined by the shared contract in §0.
+
+## 0. Shared migration-runner contract
+
+Every migration in this plan **except** §1 (Card payload adaptation — see §3 for why that one is different) must conform to this contract before it is implemented. This is a specification for the migration modules referenced in §4 and §6, not code that exists yet.
+
+```ts
+interface MigrationReport {
+  beforeCounts: Record<string, number> // e.g. { decks: 42, cards: 310 }
+  afterCounts: Record<string, number>
+  changed: string[]   // ids actually touched (empty on a dry run)
+  skipped: string[]   // ids already in the target shape — proves idempotence
+  orphans: string[]   // ids that would be/were left unreachable
+  duplicates: string[] // ids that would be/were duplicated
+  warnings: string[]  // ambiguous cases the migration had to make a call on
+}
+
+interface MigrationRunner {
+  // No writes. Deterministic: same input data always produces the same report.
+  dryRun(): Promise<MigrationReport>
+  // Performs the writes described by dryRun(). Idempotent: running apply()
+  // twice in a row produces the same end state, and the second run's report
+  // shows everything as `skipped`, nothing as `changed`.
+  apply(): Promise<MigrationReport>
+  // Human-readable instructions for restoring pre-migration state, referencing
+  // the `Settings -> Export JSON` backup taken immediately before apply().
+  rollbackInstructions(): string
+}
+```
+
+Requirements this implies:
+- **Dry run before apply, always**, and the dry run's report is reviewed by a human before `apply()` runs against real data.
+- **Idempotent** — re-running `apply()` (e.g. after a partial failure) must not duplicate or corrupt anything; already-migrated entities are detected and skipped.
+- **Deterministic** — no randomness, no wall-clock-dependent branching, so the same input always yields the same output and the dry-run report is trustworthy.
+- **Orphan and duplicate detection** are first-class outputs of the report, not something inferred after the fact.
+- **Rollback** is always "restore from the pre-migration `Settings → Export JSON` backup," which already exists and works today — no new export tooling is required, only the discipline of taking one immediately before `apply()`.
+
+## 1. Card type migration (8 → 6) — the one migration allowed to run lazily on read
+
+Mapping (spec §33.2, applied to this codebase's actual type names in `src/types/card.ts`):
+
+| Old `type` | New `interaction.type` | `authoringPreset` | Notes |
+|---|---|---|---|
+| `basic` | `recall` | `standard` | `front`→`prompt`, `back`→`answer`, `explanation`→`explanation` (unchanged) |
+| `codeReading` | `recall` | `code_reading` | `code`+`question` fold into `prompt` as a fenced block + text; `answer` unchanged |
+| `bugFinding` | `recall` | `find_the_bug` | `code`+`question` fold into `prompt`; `bugHint` becomes `tip` (new field — see §3); `explanation` (required today) becomes the `answer` |
+| `mcq` | `multiple_choice` | — | `options`/`correct`/`multiple` map directly to `options[].correct`/`selectionMode` |
+| `codeCompletion` | `write_code` | — | `scaffold` → `starterCode`; `solutions` → `acceptedAnswers`; `validation.{ignoreWhitespace,caseSensitive}` map directly to `comparison.*` |
+| `ordering` | `ordering` | — | `items` map directly; already stored in correct order, matches `correctOrder` |
+| `matching` | `matching` | — | `pairs`/`triple`/`options` map to `columns`/`relationships`, preserving 3-part and fixed-option-column capability — see §5, locked per `itera-decisions.md` D13 |
+| `story` | `walkthrough` | — | `intro`+`code`+`image` → `scenario`+`code`+`image`; `steps[]` map to `steps[]`; `highlight` (line spec string) → `focus: Array<{startLine, endLine}>` (multiple ranges, preserved — see §5, locked per D13) |
+
+Every old type's optional `explanation` field maps to the new `explanation` field (post-answer) — **not** to `tip`. Tip is a genuinely new, currently-unpopulated field; no existing content is auto-assigned into it (per spec §33.4 — `bugFinding.bugHint` is the one exception, since it already is a pre-answer hint).
+
+**Status:** implemented and tested. `src/domain/migration/cardMigration.ts` (`migrateCard`) covers all 8 old types; `cardMigration.test.ts` has 11 passing tests. Still needed (see §9): an explicit idempotence test, a real-export smoke test, and the v1→v2 backup auto-import test once `BACKUP_VERSION` bumps.
+
+## 2. Schema versioning
+
+- Bump `BACKUP_VERSION` in `src/domain/io/backup.ts` from `1` to `2` once the v2 `CardV2`/`Deck`/`Collection` types are wired into the app (not yet — only the types and the pure migrator exist so far).
+- Add `schemaVersion` to each `Card` (already present on `CardV2`; the current v1 `Card` has no per-entity version, only the backup-envelope version). Cards without a `schemaVersion` are treated as `1` (implicit) and run through `migrateCard` on read.
+- `parseBackup()` already rejects `obj.version > BACKUP_VERSION` with a friendly error — this guard stays unchanged. Add the mirror-image behavior: a v1 backup imports successfully into a v2 app (auto-migrated via `migrateCard`, not rejected). See the required test in §9.
+
+## 3. Why only §1 is lazy-on-read
+
+`migrateCard` runs on old Card content read from storage and returns the new shape, with no mandatory one-shot rewrite. This is safe **specifically because** it is a pure content reshape: it doesn't change which row an entity lives in, doesn't touch cross-entity references (`deckId` stays a `deckId`), and doesn't touch any indexed/generated column. A card's identity, ownership, and relationships are untouched — only how its own `content`/`type` fields are shaped.
+
+**This does not generalize to CardState extraction (§4) or the Collection/Deck split (§6).** Both of those change either where data lives (CardState moves to a new table/store) or what an entity *is* (a Deck becomes a Collection, or stays a Deck) — including references other entities hold to it. An on-read shim for either would mean the app runs, silently and indefinitely, on a mix of migrated and unmigrated entities with no report of which is which, no detectable idempotence, and no way to know when it's safe to remove the old shape. That is a materially different risk profile from §1, which is why §4 and §6 use the explicit contract in §0 instead.
+
+## 4. Card/CardState separation
+
+Currently `Card.scheduling: SchedulingState` (see `src/types/card.ts`, `CardBase`). This is `itera-redesign-plan.md` Phase D. Steps (each independently deployable and reversible):
+
+1. **Additive schema.** A versioned migration file (§8) adds a `card_states` table (Supabase) / `cardStates` store (Dexie), keyed by `cardId`, holding the current `SchedulingState` shape. Nothing existing changes.
+2. **Backfill.** A `MigrationRunner` (§0) that writes one `CardState` row per existing `Card`, copied from `card.scheduling`. Dry run first; the report's `beforeCounts`/`afterCounts` prove every card got exactly one row, and `orphans` proves none were missed.
+3. **Dual-write.** `createCard` (`src/domain/cards/factory.ts`) and `useGradeCard`/`useUndoGrade` (`src/hooks/useReview.ts`) write to **both** `Card.scheduling` and the new `CardState` row, via the `ReviewService` boundary (`itera-redesign-plan.md` Phase E). Reads still come from `Card.scheduling` — nothing observable changes.
+4. **Parity verification.** Compare every `Card.scheduling` against its `CardState` row over a real observation period; they must never diverge under dual-write. This is where the golden/invariant FSRS tests from §9 matter — without them, "parity" only proves the two write paths agree with each other, not that either is correct.
+5. **Read cutover.** Once parity holds, reads (`getDue()` in both backends, and everywhere else that reads `card.scheduling`) switch to `CardState`. Writes to `Card.scheduling` continue (now redundant, but harmless) until cleanup.
+6. **Cleanup — a later release, not this phase.** Only after read cutover has been live and stable for a real observation period does `scheduling` get removed from `Card` and dual-write stop.
+
+Rollback at any point before step 5 ships: stop before that step: `card_states` is purely additive and can be dropped with zero data loss, since `Card.scheduling` was never stopped. After step 5 ships, rollback is reverting the read to `Card.scheduling` (which dual-write has kept current).
+
+## 5. Locked: richer functionality is preserved, not downgraded
+
+Per `itera-decisions.md` D13, explicitly locked by the product owner (not a default-absent-objection):
+
+- **Walkthrough supports multiple highlighted line ranges** (`WalkthroughStep.focus: Array<{startLine, endLine}>` in `src/types/cardV2.ts`), not the spec's illustrative single-range shape. A highlight spec like `"26-34, 40"` converts to `[{startLine:26,endLine:34},{startLine:40,endLine:40}]` with no loss.
+- **Matching preserves its existing 3-part and fixed-option-column capability.** `MatchingInteraction` uses a general `columns: MatchingColumn[]` / `relationships: Array<Record<string,ID>>` shape (already implemented in `src/types/cardV2.ts` and `src/domain/migration/cardMigration.ts`) rather than the spec's fixed two-column `sources`/`targets` example. Fixed columns (shared value list, graded by value equality) and the third column both migrate without modification.
+- **The data model may be more general than the initial MVP UI.** Phase E's Matching UI can ship a simpler two-column presentation first if that's the right sequencing call for the redesign, but the *data* it operates on already supports the richer shape — nothing about the UI's rollout order requires downgrading what's stored.
+- **`bugFinding.explanation` is required today** (unlike every other type's optional `explanation`) and semantically serves as the answer, not a post-answer aside. It maps to `interaction.answer`, and the migrated Recall card has no `explanation` populated unless authored later — expected, not a bug.
+
+## 6. Deck → Collection + Deck split
+
+`itera-redesign-plan.md` Phase G. **No remedy for any ambiguous case is designed before the preflight report proves it occurs** (`itera-decisions.md` D15) — this corrects the previous version of this document, which proposed auto-creating a "General" deck speculatively.
+
+### 6.1 Preflight report (required, reviewed by a human, before any migration code runs)
+
+Read-only queries against real data (Supabase `decks`/`cards` tables, or the Dexie equivalent client-side), producing counts and, where relevant, the actual affected IDs:
+
+1. **Decks with children** — `parentId` chains where a deck has at least one child deck. These become Collections.
+2. **Decks with both children and directly-attached Cards** — the one case the ontology can't represent directly (a Collection can't hold Cards). Report the exact decks and how many cards each has, not just a total count.
+3. **Broken parent references** — a deck's `parentId` points at a deck that doesn't exist.
+4. **Cycles** — a deck is its own ancestor through some chain of `parentId`s. (`src/domain/decks/tree.ts` already treats these as roots rather than looping; the report should surface them explicitly rather than silently absorbing them.)
+5. **Cards referencing a missing Deck** — `card.deckId` doesn't resolve to any existing deck.
+6. **Roadmap nodes whose Deck would change identity** — every `RoadmapNode.deckId` where that deck is about to become a Collection (case 1), meaning the roadmap node's reference becomes semantically invalid post-split. This is the trigger for hiding/retiring the affected Roadmap UI per `itera-decisions.md` D11 — it does not trigger any change to Roadmap data itself.
+
+Only after this report is produced and reviewed does a remedy for case 2 get designed — and only if case 2's count is nonzero. Whatever the remedy (an explicitly-named holding deck, manual reassignment prompted to the user, or something else decided at that point), **it is not optional to preserve every card** — zero cards may be lost or duplicated, full stop.
+
+### 6.2 The migration itself
+
+1. Every Deck with children (case 1 above) becomes a Collection.
+2. Every leaf Deck (no children) stays a Deck; if its parent became a Collection, that's its `collectionId`; if it has no ancestor worth preserving, it goes to the root of "Unfiled."
+3. Case 2 decks are handled per whatever the preflight report justified — implemented as its own reviewable step, not folded silently into step 1/2.
+4. Multi-level Collection nesting is directly supported by reusing `src/domain/decks/tree.ts`'s existing cycle-safe algorithms against the new `Collection` type — no new algorithm needed, only a new type parameter.
+5. Conforms to the §0 contract: dry run first, idempotent, reported, rollback via pre-migration export.
+
+### 6.3 Roadmaps
+
+Per `itera-decisions.md` D11: Roadmap data (the `Roadmap` type, both backends' repo methods, the Supabase `roadmaps` table, backup inclusion) is **not touched** by this migration. Only the UI route may be hidden, and only for roadmaps the preflight report (§6.1 item 6) actually flags as affected.
+
+## 7. Backward compatibility / rollback strategy
+
+- **Export a full backup before any migration in §4 or §6 touches production** (`Settings → Export JSON` — already exists, no new tooling needed).
+- Ship schema changes as **additive** first (new tables/columns, old shape still readable) for a real observation period before removing old fields/tables. Applies to both §4 and §6.
+- Because both backends store entities as opaque JSON blobs, adding fields is never destructive — only removing them is, and removal is always the last, separately-decided step (§4 step 6, cleanup).
+- The immutable `ReviewLog`/`ReviewEvent` history is never touched by either the CardState or Collection/Deck migration (only `Card.scheduling`'s storage location and `Deck`'s shape change) — review history is not at risk even in a bad migration.
+
+## 8. Supabase-specific process — versioned migration files, not ad hoc dashboard edits
+
+Per `itera-decisions.md` D16. Every schema change ships as a new file under `supabase/migrations/`, e.g. `0001_card_states.sql`, `0002_collections.sql` — sequential, self-contained, checked into the repo. Each file includes:
+
+```sql
+-- 0001_card_states.sql
+create table if not exists public.<table> (...);
+create index if not exists ... on public.<table> (...);
+alter table public.<table> enable row level security;
+create policy "own rows" on public.<table> for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+grant select, insert, update, delete on public.<table> to authenticated;
+
+-- Rollback:
+--   drop table if exists public.<table>;
+-- Safe only while nothing reads from this table yet (i.e. before the
+-- corresponding read-cutover step ships).
+```
+
+Missing the final `grant` is the exact bug that caused a production 403 earlier in this project (Postgres denies the table before RLS runs) — every new migration file re-checks this. `supabase/schema.sql` may still be updated afterward as a consolidated reference, but the migration files, not dashboard edits, are the source of truth for what changed and when. No migration files exist yet — none of this has shipped.
+
+## 9. Required test coverage
+
+Minimum bar before the corresponding phase is considered complete:
+
+- **Card payload migration (§1, Phase C):** every old type migrates without throwing (done, 11 tests); migration is idempotent (calling `migrateCard` on the same input twice produces deep-equal output — not yet an explicit test); a real exported v1 backup migrates every card without throwing (not yet written); v1 backup auto-imports into a v2 app once `BACKUP_VERSION` bumps (not yet written, blocked on the bump); unknown future schema versions are still rejected safely (already true today for `parseBackup`'s `version > BACKUP_VERSION` check — needs a test once v2 exists to confirm it still holds).
+- **CardState extraction (§4, Phase D):** backfill preserves scheduling state exactly (before/after equality per card, not just counts); due queries (`getDue()`, both backends) return the identical set of cards before and after read cutover on the same dataset; Review undo remains correct under dual-write.
+- **Collection/Deck split (§6, Phase G):** entity and Card counts are conserved (report's before/after counts match reality); dry run output matches what `apply()` actually does; re-running `apply()` is a no-op (idempotence).
+- **FSRS wrapper (`scheduler.ts`):** golden/invariant tests against known ts-fsrs reference values and multi-review sequences (repeated Again → relearning transition, long histories) — the current `scheduler.test.ts` covers single-review behavior only. Required before Phase D's parity verification step relies on the wrapper as a fully verified boundary, not just "reviewed with no defects found" (see the audit's corrected FSRS section).
+- **Export/import round-trip:** a v2 export re-imports into a v2 app byte-for-byte equivalent (modulo `exportedAt`).
