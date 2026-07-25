@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { Card, ID, Rating } from '@/types'
+import type { Card, ID, Rating, ReviewLog, SchedulingState } from '@/types'
 import { getRepository } from '@/data'
 import { buildReviewLog, reviewState } from '@/domain/scheduling/scheduler'
 import { qk } from './queryKeys'
@@ -36,6 +36,33 @@ export function useGradeCard() {
       await repo.cards.put({ ...card, scheduling: after, updatedAt: now })
       await repo.reviews.append(log)
       return { log }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: qk.cards })
+      qc.invalidateQueries({ queryKey: qk.reviewsAll })
+    },
+  })
+}
+
+export interface PersistReviewResultInput {
+  card: Card // the original v1 card; only `scheduling`/`updatedAt` change
+  after: SchedulingState
+  log: ReviewLog
+}
+
+// Persists a v2 Review shell's already-computed grading result onto the real
+// v1 Card.scheduling — the CardState split (Phase D) hasn't landed yet, so
+// this is still the only place scheduling is written. Takes `{after, log}`
+// rather than recomputing them (reviewService.submit already calls the same
+// reviewState/buildReviewLog `useGradeCard` calls below), so the v1 and v2
+// Review paths can't silently compute divergent results — this hook only
+// ever writes what reviewService already decided. See itera-decisions.md.
+export function usePersistReviewResult() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ card, after, log }: PersistReviewResultInput) => {
+      await repo.cards.put({ ...card, scheduling: after, updatedAt: Date.now() })
+      await repo.reviews.append(log)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.cards })

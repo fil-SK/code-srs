@@ -1,0 +1,153 @@
+import { useEffect, useMemo } from 'react'
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { InlineText, RichText } from '@/components/text/RichText'
+import { cn } from '@/lib/cn'
+import { shuffle } from '@/lib/shuffle'
+import { gradeOrdering } from '@/domain/grading/ordering'
+import type { ID } from '@/types/common'
+import { InteractionLabel } from '../../components/InteractionLabel'
+import type { InteractionViewProps } from '../types'
+import { OrderingRow } from './OrderingRow'
+
+export function OrderingView({
+  card,
+  phase,
+  response,
+  setResponse,
+  onPrimaryAction,
+  responseReady,
+}: InteractionViewProps<'ordering'>) {
+  const { interaction } = card
+  const itemById = useMemo(
+    () => new Map(interaction.items.map((i) => [i.id, i])),
+    [interaction],
+  )
+  // randomize: false still needs an order that isn't a giveaway (items are
+  // stored in correct order) - a stable id sort is deterministic (same
+  // scramble every time this card is shown) without spelling out the answer.
+  const initialOrder = useMemo(() => {
+    const ids = interaction.items.map((i) => i.id)
+    return interaction.randomize ? shuffle(ids) : [...ids].sort()
+  }, [interaction])
+
+  useEffect(() => {
+    if (response === undefined) setResponse(initialOrder)
+    // Mount-only seed, same convention as Write Code's starter-code effect.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const order = (response as ID[] | undefined) ?? initialOrder
+  const locked = phase.kind !== 'presenting'
+  const showFeedback =
+    phase.kind === 'feedback' || phase.kind === 'rating' || phase.kind === 'transitioning'
+  const grade = showFeedback ? gradeOrdering(interaction, order) : null
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+
+  function move(index: number, direction: -1 | 1) {
+    const to = index + direction
+    if (to < 0 || to >= order.length) return // clean no-op at the boundary
+    const next = [...order]
+    const [item] = next.splice(index, 1)
+    next.splice(to, 0, item)
+    setResponse(next)
+  }
+
+  function onDragEnd(e: DragEndEvent) {
+    if (locked) return
+    const { active, over } = e
+    if (over && active.id !== over.id) {
+      const from = order.indexOf(active.id as string)
+      const to = order.indexOf(over.id as string)
+      setResponse(arrayMove(order, from, to))
+    }
+  }
+
+  return (
+    <div>
+      <InteractionLabel text="Ordering" />
+      <RichText
+        text={card.prompt.value}
+        className="mt-3 text-lg font-semibold leading-snug text-itera-ink-brand"
+      />
+      {!locked && (
+        <p className="mt-1 text-xs font-medium text-itera-muted">
+          Drag to reorder, or use the up/down controls.
+        </p>
+      )}
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={order} strategy={verticalListSortingStrategy}>
+          <ol className="mt-4 space-y-2">
+            {order.map((id, idx) => {
+              const item = itemById.get(id)
+              const cell = grade?.positions.find((p) => p.itemId === id)
+              return (
+                <OrderingRow
+                  key={id}
+                  id={id}
+                  index={idx}
+                  total={order.length}
+                  content={item?.content.value ?? ''}
+                  locked={locked}
+                  showFeedback={Boolean(grade)}
+                  correct={cell?.correct ?? false}
+                  expectedIndex={cell?.correctIndex ?? idx}
+                  onMoveUp={() => move(idx, -1)}
+                  onMoveDown={() => move(idx, 1)}
+                />
+              )
+            })}
+          </ol>
+        </SortableContext>
+      </DndContext>
+
+      {phase.kind === 'presenting' && (
+        <button
+          type="button"
+          onClick={onPrimaryAction}
+          disabled={!responseReady}
+          className="mt-4 rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+        >
+          Submit answer
+        </button>
+      )}
+
+      {grade && (
+        <div
+          className={cn(
+            'mt-4 rounded-itera-control px-3.5 py-2.5 text-sm font-semibold',
+            grade.correct
+              ? 'bg-itera-success-soft text-itera-success'
+              : 'bg-itera-error-soft text-itera-error',
+          )}
+        >
+          {grade.correct ? 'Correct' : `${Math.round(grade.score * 100)}% in the right position`}
+        </div>
+      )}
+
+      {grade && !grade.correct && (
+        <div className="mt-3 rounded-itera-control border border-dashed border-itera-border px-3.5 py-2.5">
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-itera-muted">
+            Correct order
+          </div>
+          <ol className="space-y-1 text-sm text-itera-ink">
+            {interaction.correctOrder.map((id, i) => (
+              <li key={id}>
+                {i + 1}. <InlineText text={itemById.get(id)?.content.value ?? ''} />
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </div>
+  )
+}

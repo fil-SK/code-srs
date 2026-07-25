@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { subtreeIds } from '@/domain/decks/tree'
 import { useDueCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
-import { ReviewSession } from './ReviewSession'
+import { ReviewSessionV2 } from './ReviewSessionV2'
 
 export function ReviewPage() {
   const [params] = useSearchParams()
@@ -68,7 +68,7 @@ export function ReviewPage() {
           </Link>
         </div>
       )}
-      <ReviewSession key={`${deckParam ?? 'all'}-${cards.length}`} cards={cards} />
+      <ReviewSessionV2 key={`${deckParam ?? 'all'}-${cards.length}`} cards={cards} />
     </div>
   )
 }

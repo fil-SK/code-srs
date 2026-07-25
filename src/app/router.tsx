@@ -13,7 +13,13 @@ import { CardEditorPage } from '@/features/cards/CardEditorPage'
 import { DraftsPage } from '@/features/drafts/DraftsPage'
 import { StatsPage } from '@/features/stats/StatsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { DesignPreviewIndex } from '@/features/design-preview/DesignPreviewIndex'
 import { RecallPreviewPage } from '@/features/design-preview/review-recall/RecallPreviewPage'
+import { MultipleChoicePreviewPage } from '@/features/design-preview/review-multiple-choice/MultipleChoicePreviewPage'
+import { WriteCodePreviewPage } from '@/features/design-preview/review-write-code/WriteCodePreviewPage'
+import { OrderingPreviewPage } from '@/features/design-preview/review-ordering/OrderingPreviewPage'
+import { MatchingPreviewPage } from '@/features/design-preview/review-matching/MatchingPreviewPage'
+import { WalkthroughPreviewPage } from '@/features/design-preview/review-walkthrough/WalkthroughPreviewPage'
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +48,14 @@ export const router = createBrowserRouter([
   {
     path: 'design-preview',
     errorElement: <RouteError />,
-    children: [{ path: 'review/recall', element: <RecallPreviewPage /> }],
+    children: [
+      { index: true, element: <DesignPreviewIndex /> },
+      { path: 'review/recall', element: <RecallPreviewPage /> },
+      { path: 'review/multiple-choice', element: <MultipleChoicePreviewPage /> },
+      { path: 'review/write-code', element: <WriteCodePreviewPage /> },
+      { path: 'review/ordering', element: <OrderingPreviewPage /> },
+      { path: 'review/matching', element: <MatchingPreviewPage /> },
+      { path: 'review/walkthrough', element: <WalkthroughPreviewPage /> },
+    ],
   },
 ])

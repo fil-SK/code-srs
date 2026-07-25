@@ -1,5 +1,23 @@
 @import 'tailwindcss';
 
+/* Self-hosted webfonts (@fontsource — bundled by Vite, no CDN request at
+   runtime), so this local-first PWA actually renders the fonts its own CSS
+   below has always declared, works offline once cached, and never depends on
+   an external font service being reachable.
+   Note: @font-face registration is global by nature (it can't be scoped to
+   .itera-scope), so loading Inter/JetBrains Mono here also fixes production's
+   --font-sans/--font-mono, which have referenced these same font names since
+   before this redesign and were silently falling back to system-ui the whole
+   time — this is a pre-existing bug fix, not a redesign decision. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/inter-tight/600.css';
+@import '@fontsource/inter-tight/700.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
 /* Dark mode driven by [data-theme="dark"] on <html>, not prefers-color-scheme,
    so the in-app toggle controls it. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
