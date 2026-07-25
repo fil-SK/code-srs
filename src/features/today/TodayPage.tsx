@@ -31,7 +31,7 @@ export function TodayPage() {
           <SuggestedSessionHero />
           <ContinueLearningList />
         </div>
-        <div className="space-y-5">
+        <div className="space-y-5 lg:mt-[26px]">
           <MomentumPanel />
           <PaceChart />
         </div>
