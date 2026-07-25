@@ -23,8 +23,15 @@ import iteraSymbolMask from '@/assets/itera-symbol-mask.png'
 // "nearly parallel" stack) for visible asymmetry. Percentages are relative
 // to the front card's own box (the wrapper has no padding, so its content
 // box equals the front card's rendered size), which keeps proportions
-// consistent at every breakpoint without separate mobile numbers. Cards are
-// numbered front-to-back as the product owner refers to them (#1 = front):
+// consistent at every breakpoint without separate mobile numbers — it's
+// also why the vertical-only height trim below (desktop vertical padding
+// 46px->32px, two internal gaps tightened 4px each) needed no changes to
+// any rear layer's own left/top/width/height/rotate/translateX: shrinking
+// the front card's rendered height automatically shrinks every
+// percentage-sized rear layer with it. The wrapper's mt/mb were scaled down
+// to match (mt 65->59, mb 44->40); mr (92, horizontal) was left untouched
+// per "preserve the approved horizontal composition." Cards are numbered
+// front-to-back as the product owner refers to them (#1 = front):
 //   #2 (navy #243652): starts at card #1's exact box (same position, same
 //     size, unrotated), then translateX(35px) translateY(-20px) and
 //     rotate(3.5deg) — a single move-and-twist, not an independently-sized
@@ -63,7 +70,7 @@ function IteraSymbolWatermark() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute right-6 -bottom-[58px] h-[330px] w-[330px] select-none"
+      className="pointer-events-none absolute right-6 -bottom-[45px] h-[260px] w-[260px] select-none"
       style={{
         opacity: 0.055,
         background: 'rgba(255,255,255,0.95)',
@@ -95,10 +102,41 @@ export function SuggestedSessionHero({
     return () => cancelAnimationFrame(raf)
   }, [mounted])
 
+  // The four layers reveal on a stagger (0/50/90/140ms delays below) so
+  // they visibly cascade in on first mount. That per-layer delay must NOT
+  // carry over into the hover-zoom transition below, or the four cards
+  // visibly zoom at different moments instead of as one object. `settled`
+  // flips once, shortly after the longest reveal transition (140ms delay +
+  // 300ms duration) would have finished, and forces every layer's delay to
+  // 0ms from then on — so hover always fires all four in perfect sync.
+  const [settled, setSettled] = useState(false)
+  useEffect(() => {
+    if (!mounted) return
+    const t = setTimeout(() => setSettled(true), 480)
+    return () => clearTimeout(t)
+  }, [mounted])
+  const revealDelay = (staggerMs: number) => (settled ? '0ms' : mounted ? `${staggerMs}ms` : '0ms')
+
+  // Hover-driven zoom is tracked in JS (not CSS group-hover) and baked into
+  // each layer's literal `transform` string alongside its rotate/translate,
+  // rather than expressed as separate Tailwind scale/rotate utility classes.
+  // Those utilities compose transform via CSS custom properties, and a
+  // `transition: transform` on a custom-property-driven transform doesn't
+  // reliably interpolate — it was measured snapping instantly despite a
+  // correct transition-duration. A literal inline `transform` string (the
+  // same mechanism the mount-in reveal already used, which does animate
+  // correctly) sidesteps that.
+  const [hovered, setHovered] = useState(false)
+  const hoverScale = (base: number) => (!mounted ? base : hovered ? 1.02 : 1)
+
   const revealBase = 'transition-[opacity,transform] duration-300 ease-out'
 
   return (
-    <div className="group relative mt-[65px] mr-[92px] mb-[44px]">
+    <div
+      className="relative mt-[59px] mr-[92px] mb-[12px]"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {/* card #4 — pale, furthest back. Nudged further right (was 11.6%)
           and darkened toward a visible gray (was #F1F3F6, blended almost
           into the page canvas) so it actually reads as its own layer.
@@ -115,7 +153,7 @@ export function SuggestedSessionHero({
           top: '4.1%',
           width: '99.2%',
           height: '82.9%',
-          transform: `rotate(0.15deg) scale(${mounted ? 1 : 0.97})`,
+          transform: `rotate(0.15deg) scale(${hoverScale(0.97)})`,
           opacity: mounted ? 1 : 0,
         }}
       />
@@ -131,9 +169,9 @@ export function SuggestedSessionHero({
           top: '-2.1%',
           width: '100%',
           height: '92.4%',
-          transform: `rotate(-5deg) scale(${mounted ? 1 : 0.97})`,
+          transform: `rotate(-5deg) scale(${hoverScale(0.97)})`,
           opacity: mounted ? 1 : 0,
-          transitionDelay: mounted ? '50ms' : '0ms',
+          transitionDelay: revealDelay(50),
         }}
       />
       {/* card #2 — navy. Starts at the exact same box as card #1 (same
@@ -154,9 +192,9 @@ export function SuggestedSessionHero({
           top: '0%',
           width: '100%',
           height: '100%',
-          transform: `translateX(35px) translateY(-20px) rotate(3.5deg) scale(${mounted ? 1 : 0.97})`,
+          transform: `translateX(35px) translateY(-20px) rotate(3.5deg) scale(${hoverScale(0.97)})`,
           opacity: mounted ? 1 : 0,
-          transitionDelay: mounted ? '90ms' : '0ms',
+          transitionDelay: revealDelay(90),
         }}
       />
 
@@ -166,17 +204,20 @@ export function SuggestedSessionHero({
           nudge shared with card #2) so it reads as placed above the stack,
           and a constant 5px right of the wrapper's origin (shared with
           card #2's extra 5px, so the pair's relative alignment is
-          unchanged). */}
+          unchanged). Hover no longer lifts just this card — all four
+          layers zoom in together by the same small scale factor, so the
+          whole stack comes into focus as one object. */}
       <div
         className={cn(
-          'relative z-10 translate-x-[5px] overflow-hidden rounded-[21px] border border-white/[0.08] px-7 py-8 sm:min-h-[340px] sm:px-[50px] sm:py-[46px]',
+          'relative z-10 overflow-hidden rounded-[21px] border border-white/[0.08] px-7 py-8 sm:min-h-[310px] sm:px-[50px] sm:py-[32px]',
           'shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_34px_rgba(15,23,42,0.16),0_3px_8px_rgba(15,23,42,0.08)]',
-          'transition-[opacity,transform] duration-300 ease-out group-hover:-translate-y-[31px]',
-          mounted ? '-translate-y-[28px] opacity-100' : '-translate-y-[12px] opacity-0',
+          'transition-[opacity,transform] duration-300 ease-out',
+          mounted ? 'opacity-100' : 'opacity-0',
         )}
         style={{
           background: 'linear-gradient(118deg, #1E293B 0%, #1C2A40 58%, #18243A 100%)',
-          transitionDelay: mounted ? '140ms' : '0ms',
+          transform: `translateX(5px) translateY(${mounted ? -28 : -12}px) scale(${hoverScale(1)})`,
+          transitionDelay: revealDelay(140),
         }}
       >
         <IteraSymbolWatermark />
@@ -195,11 +236,11 @@ export function SuggestedSessionHero({
             Approximately {estimatedMinutes} minutes
           </div>
 
-          <div className="mt-6 border-t border-[rgba(255,255,255,0.12)]" />
+          <div className="mt-5 border-t border-[rgba(255,255,255,0.12)]" />
 
           <div className="mt-[22px] text-[16px] font-medium text-[#F8FAFC]/85">{topics.join(' · ')}</div>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <Link
               to="/review"
               className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[9px] bg-[#FF6902] px-7 text-[16px] font-semibold text-white shadow-[0_8px_18px_rgba(255,105,2,0.22)] transition-all duration-150 ease-out hover:-translate-y-px hover:bg-[#F66200] hover:shadow-[0_10px_22px_rgba(255,105,2,0.25)] motion-reduce:transition-none"

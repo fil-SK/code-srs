@@ -26,9 +26,7 @@ export function TodayShell({ children }: { children: ReactNode }) {
       <header className="border-b border-itera-border bg-itera-surface px-4 py-3 sm:px-6">
         <div className="mx-auto flex max-w-[1280px] items-center gap-6">
           <div className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-itera-control bg-itera-navy font-mono text-sm font-bold text-white">
-              {'{}'}
-            </div>
+            <img src="/itera-logo.png" alt="" className="h-[42px] w-[42px]" />
             <span className="font-itera-display text-lg font-bold tracking-tight text-itera-ink-brand">
               Itera
             </span>
@@ -59,9 +57,6 @@ export function TodayShell({ children }: { children: ReactNode }) {
           <div className="hidden items-center gap-2 rounded-itera-control border border-itera-border bg-itera-surface-subtle px-3 py-1.5 text-sm text-itera-muted sm:flex">
             <Search size={15} />
             <span>Search</span>
-            <kbd className="ml-2 rounded-[4px] border border-itera-border-strong bg-itera-surface px-1.5 py-0.5 font-mono text-[10px]">
-              ⌘K
-            </kbd>
           </div>
 
           <button

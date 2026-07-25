@@ -46,11 +46,11 @@ function MomentumRow({
 // skill's guidance even though the numbers themselves are illustrative.
 export function MomentumPanel() {
   return (
-    <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
+    <div className="flex min-h-[345px] flex-col rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
       <div className="text-xs font-bold uppercase tracking-wide text-itera-muted">
         Momentum
       </div>
-      <div className="mt-1 divide-y divide-itera-border">
+      <div className="mt-1 flex flex-1 flex-col justify-between divide-y divide-itera-border">
         <MomentumRow icon={Flame} label="7-day streak" value="7 days" />
         <MomentumRow
           icon={TrendingUp}

@@ -2,11 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## What this is
+
+code-srs ("Itera" mid-rebrand, see below) is a personal, code-first spaced-repetition app for learning software engineering, CS, compilers, and C++ — code is a first-class concept (syntax-highlighted snippets, complete/debug-the-code cards, auto-graded typed answers), scheduled with FSRS. It runs as an installable, offline-capable PWA against local IndexedDB by default, with an optional Supabase cloud-sync backend.
+
 ## Commands
 
 ```bash
 npm run dev             # Vite dev server (default http://localhost:5173)
 npm run build           # tsc -b (typecheck) then vite build -> dist/
+npm run preview         # serve the production build locally
 npm run lint            # oxlint (config in .oxlintrc.json)
 npm run test            # vitest run (single pass)
 npm run test:watch      # vitest watch mode
@@ -63,6 +68,7 @@ Full detail on all of the above lives in `docs/itera-decisions.md` (append-only 
 - `IteraSurface` wraps `ForceLightTheme`, which locally overrides `ThemeContext` (exported from `src/app/theme.tsx` for exactly this purpose) to a static `'light'` value for a subtree, without touching `document.documentElement` or `localStorage`. Needed because `CodeView` picks its syntax-highlight palette from live theme context, not a CSS var, and the redesign is light-only for now — this now applies to production Review too, not just previews.
 - Production's `src/components/ui/FlipCard.tsx` has a known gap (no keyboard/ARIA support) that was deliberately **not** fixed in place — `reviewV2`'s `FlipCard` is a separate, correctly-accessible replacement used everywhere v2 renders (including production Review now). Whether to eventually fix the shared one or keep both is an open call, tracked in the decision log.
 - `Repository.cardStates` (`CardState`, keyed by `cardId` not `id`) — Phase D's additive, dual-written scheduling store (Dexie `version(3)`; Supabase `card_states`, unverified against a live database — see `itera-decisions.md` D42). Every write path (`useGradeCard`, `useUndoGrade`, `usePersistReviewResult`, `useCreateCard`, `useSaveCard`, `useDeleteCard`) writes both `Card.scheduling` and the matching `CardState` row. **Nothing reads from it yet** — `Card.scheduling` is still the sole source of truth for `getDue()` and everywhere else, until a later, separate read-cutover step.
+- `TodayPage.tsx`'s layout is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, collapsing to one stacked column below ~980px), not Tailwind grid utilities — Tailwind has no grid-area utility, so the grid container and each child's `gridArea` are inline `style`, and a `useIsWideToday()` hook (`matchMedia`) drives the breakpoint since 980px isn't a default Tailwind one. This is what keeps Continue Learning and Today's Pace top-aligned to each other regardless of Hero/Momentum's height. `SuggestedSessionHero.tsx` is a bespoke, extensively product-tuned 4-layer stacked-card component (one front content card + three rear decorative layers, each positioned as a percentage of the front card's own box, plus a real-logo-derived watermark) — its exact offsets/rotations/colors came from many rounds of pixel-measured product feedback; change them only when asked, not incidentally while touching nearby code.
 
 ### Other cross-cutting pieces
 
@@ -78,6 +84,7 @@ Full detail on all of the above lives in `docs/itera-decisions.md` (append-only 
 - **Dexie schema changes need a `version()` bump** in `src/data/dexie/db.ts` (declare only the new/changed stores; existing ones carry forward).
 - **Stale chunk after deploy:** hashed lazy chunks (CodeMirror) 404 on old tabs after a redeploy. `src/lib/lazyWithRetry.ts` (`importWithReload`) and `src/app/RouteError.tsx` reload once to recover; keep lazy `import()`s wrapped.
 - The new Supabase **publishable** key (`sb_publishable_…`) is the value for `VITE_SUPABASE_ANON_KEY`; the secret key must never reach the frontend.
+- **A CSS `transition` on `transform` doesn't reliably animate when that transform is composed from Tailwind utility classes** (`scale-*`, `rotate-*`, `translate-*`, including `group-hover:` variants) — those utilities each write a separate CSS custom property that a shared rule combines into the final `transform`, and transitioning that composed value was measured snapping instantly in Chromium despite a correct `transition-duration`. For anything whose transform must visually animate (e.g. a hover zoom), compute it as one literal `style.transform` string in JS instead (see `SuggestedSessionHero.tsx`).
 
 ## Conventions
 
