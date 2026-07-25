@@ -133,11 +133,13 @@ Status legend: not started unless noted. As of this revision: Phase A complete. 
 **Depends on:** Phase G (the migration must have run and been verified against real data before the UI that assumes the new ontology ships) and Phase F (the "Add Card" action needs Create/Edit built against the new interaction types).
 **Acceptance:** every Collection/Deck in the migrated data renders correctly with zero cards lost (verified against Phase G's report); the new global shell replaces the old one for every route that moves in this phase; Roadmaps' route is either still reachable under the old shell (if Phase G found no invalidated references) or explicitly hidden per the corrected default (if it did) — not silently broken.
 
-## Phase I — Today
+## Phase I — Today (visual shell shipped early with placeholder content; product logic still unbuilt)
+
+**Status (2026-07-23):** `src/features/today/TodayPage.tsx` exists and renders at `/`, replacing `DashboardPage.tsx` — but built as part of the whole-app visual pass aside above, ahead of Phase H, with a Today-only top-nav shell (not the whole-app shell swap this phase originally specified) and entirely placeholder content. None of the following exist yet: a suggested-session algorithm, streak/momentum tracking, weekly-goal/milestone concepts, or a real pace/projection computation. Continue Learning's rows are static, not sourced from `useDueCards`. See `itera-decisions.md` D50-D54.
 
 **Files:** `src/features/today/TodayPage.tsx` (new, replaces `DashboardPage.tsx`) — suggested-session hero, Momentum, Continue Learning, per spec §12.
-**Depends on:** Phase E (Start Session launches the new Review shell), Phase H (Continue Learning rows need the new Deck model and the new global shell to render inside).
-**Acceptance:** a new user with zero content sees the empty-state variant (§12.5), not blank analytics.
+**Depends on:** Phase E (Start Session launches the new Review shell), Phase H (Continue Learning rows need the new Deck model and the new global shell to render inside) — the shipped version above bypassed this dependency for the visual shell only, real data wiring still needs it.
+**Acceptance (not yet met):** a new user with zero content sees the empty-state variant (§12.5), not blank analytics; every number on the page is real, not illustrative.
 
 ## Phase J — Progress
 
@@ -168,6 +170,8 @@ Status legend: not started unless noted. As of this revision: Phase A complete. 
 ## Aside — whole-app visual pass (2026-07-23, not a phase, does not change this sequence)
 
 Separately from the phase sequence below, the product owner asked for the *entire* app to visually reskin to Itera now, rather than waiting for Phase H's real IA rebuild (Library/Deck/global-shell) to reach every page. This does **not** replace or reorder Phases F–M — it's a parallel, visual-only pass: `AppShell.tsx` now wraps every existing v1 page in `IteraSurface` (`.itera-scope` + light-only `ForceLightTheme`), so Dashboard/Decks/Deck Detail/Roadmaps/Browse/Card Editor/Drafts/Stats/Settings all render with Itera colors automatically (see `itera-decisions.md` D45-D49), while keeping today's data model, page structure, IA, and behavior completely unchanged. When Phase H eventually ships the real Library/Deck rebuild and new global shell, it replaces this pass's shell/reskin for the routes it covers — this pass is not meant to be permanent scaffolding, just to get the whole app into the new visual language quickly. Dark mode is off app-wide until an Itera dark palette is designed (Itera's tokens are light-only per spec §36); the toggle is unrendered, not deleted.
+
+**Today (`/`, `src/features/today/`) also shipped this same day, ahead of its documented Phase I position** (which in this plan depends on Phase H's new shell + Phase E). Built directly from a reference mockup the product owner supplied, with its own top-nav shell scoped to just this one route — not the whole-app shell swap Phase H still owns. Content is placeholder/illustrative (no streak, weekly-goal, milestone, or suggested-session logic exists yet); see `itera-decisions.md` D50-D54. This does not mean Phase I is "done" — the real product logic behind every number on this page is still entirely unbuilt, and Phase I's formal acceptance criteria (§ below) are unmet.
 
 ## Phase order summary
 

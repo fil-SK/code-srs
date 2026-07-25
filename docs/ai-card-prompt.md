@@ -19,8 +19,11 @@ import, so any wrong field name, missing field, or broken id reference will cras
 - Output ONLY the JSON, in one ```json code block. No prose before or after.
 - Valid JSON: double quotes, no trailing commas, no comments.
 - Multi-line text (code, prose) uses real "\n" escapes inside JSON strings.
-- Treat all text fields as PLAIN TEXT (markdown is not rendered yet). Put code in the
-  dedicated code fields / code card types, not in markdown fences.
+- Prose fields support light markdown: `` `inline code` ``, **bold**, *italic*, and fenced
+  ```code``` blocks (with a language tag) get real syntax highlighting. Underscores are
+  NOT emphasis markers (so `snake_case` renders literally) — only single/double asterisks
+  are. Prefer the dedicated code fields / code card types for substantial snippets; use
+  fenced blocks in prose fields for short inline examples.
 
 ## Top-level envelope (exactly this shape)
 {
@@ -90,7 +93,7 @@ Threads / Scheduling, with cards on the leaves:
   "content": { ...shape depends on type... }
 }
 
-## The 7 card types and their "content" shapes
+## The 8 card types and their "content" shapes
 
 1) "basic" — question/answer, self-graded.
    "content": { "front": "Question text", "back": "Answer text" }
@@ -156,6 +159,31 @@ Threads / Scheduling, with cards on the leaves:
    }
    - The correct match is left<->right WITHIN the same pair object. Provide 3–6 pairs.
 
+8) "story" — a multi-step walkthrough over shared context (e.g. tracing code execution
+   line by line); self-graded once at the end.
+   "content": {
+     "intro": "Trace what this function returns for foo(3, 4).",   // optional
+     "code": { "language": "cpp", "code": "int foo(int a, int b) {\n  ...\n}" },  // optional, shared
+     "steps": [
+       {
+         "id": "s1",
+         "prompt": "What is `a` after line 2?",
+         "answer": "3, unchanged from the argument.",
+         "highlight": "2"          // optional line spec into the shared "code", e.g. "2" or "4-6, 9"
+       },
+       {
+         "id": "s2",
+         "prompt": "What does the loop on lines 4-6 compute?",
+         "answer": "The running sum of a and b.",
+         "highlight": "4-6"
+       }
+     ],
+     "explanation": "Optional wrap-up shown after the last step."
+   }
+   - Each step reveals its own answer; the whole card gets ONE self-graded rating at the end.
+   - Use "story" for anything that needs several sequential reveal-only beats over one shared
+     piece of code/context — not for a single question ("codeReading" instead).
+
 ## Allowed "language" values for code fields
 "cpp", "python", "javascript", "typescript", "rust", "text"
 (Use "text" for pseudocode or anything else.)
@@ -168,6 +196,7 @@ Threads / Scheduling, with cards on the leaves:
 - "spot the defect" → "bugFinding".
 - Sequences/pipelines/steps → "ordering".
 - Term↔definition / concept↔property → "matching".
+- Multi-step trace/walkthrough over one shared piece of code → "story".
 Aim for a mix of types. Default to "basic" when unsure.
 
 ## Final checks before you output

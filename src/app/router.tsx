@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { RouteError } from './RouteError'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { TodayPage } from '@/features/today/TodayPage'
 import { DecksPage } from '@/features/decks/DecksPage'
 import { DeckDetailPage } from '@/features/decks/DeckDetailPage'
 import { RoadmapsPage } from '@/features/roadmaps/RoadmapsPage'
@@ -22,12 +22,22 @@ import { MatchingPreviewPage } from '@/features/design-preview/review-matching/M
 import { WalkthroughPreviewPage } from '@/features/design-preview/review-walkthrough/WalkthroughPreviewPage'
 
 export const router = createBrowserRouter([
+  // Today owns '/' as its own structurally separate top-level route (its own
+  // top-nav shell, not AppShell's sidebar — see docs/itera-decisions.md) —
+  // same "chrome-free/different-chrome by construction" pattern as
+  // design-preview below, not a page nested under AppShell.
   {
     path: '/',
+    element: <TodayPage />,
+    errorElement: <RouteError />,
+  },
+  // AppShell is a pathless layout route (no `path`): its children's routes
+  // resolve exactly as before ('/decks', '/review', ...) with no URL change,
+  // while '/' itself now belongs to Today above, not this shell.
+  {
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <DashboardPage /> },
       { path: 'decks', element: <DecksPage /> },
       { path: 'decks/:id', element: <DeckDetailPage /> },
       { path: 'roadmaps', element: <RoadmapsPage /> },

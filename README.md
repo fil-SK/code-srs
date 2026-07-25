@@ -14,7 +14,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Highlights
 
-- **7 focused card types**, several with code-aware variants (see below).
+- **8 focused card types**, several with code-aware variants (see below).
 - **FSRS scheduling** (via `ts-fsrs`) with a 4-button self-grade bar and auto-grading where it makes sense.
 - **Nested decks** of arbitrary depth, with drag-and-drop **card reordering**, deck **reparenting**, and **move-card-between-decks**.
 - **Light markdown** in every card: inline `` `code` ``, **bold**, *italic*, and fenced ```code``` blocks rendered with real syntax highlighting.
@@ -39,6 +39,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 | **Bug Finding** | Spotting defects | Read code (optional hint), flip to reveal explanation |
 | **Ordering** | Correct sequence/steps | Drag items into order, auto-graded |
 | **Matching** | Associating concepts | Match columns via dropdowns, auto-graded |
+| **Story** | Multi-step scenarios (e.g. tracing code execution) | Walk through steps one at a time, reveal each, self-grade at the end |
 
 Notable variants:
 
@@ -177,7 +178,7 @@ supabase/      schema.sql for cloud setup
 docs/          ai-card-prompt.md
 ```
 
-See [`DESIGN.md`](DESIGN.md) for the architecture and [`PROGRESS.md`](PROGRESS.md) for the build log.
+See [`CLAUDE.md`](CLAUDE.md) for the architecture and [`docs/`](docs/) for the in-progress Itera redesign's plan and decision log.
 
 ---
 

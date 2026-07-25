@@ -24,10 +24,10 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   {
     to: '/',
-    label: 'Dashboard',
-    short: 'Home',
+    label: 'Today',
+    short: 'Today',
     icon: LayoutDashboard,
-    title: 'Dashboard',
+    title: 'Today',
     sub: 'An overview of what is due',
   },
   {

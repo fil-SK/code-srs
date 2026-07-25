@@ -56,7 +56,7 @@ Mapping (spec §33.2, applied to this codebase's actual type names in `src/types
 
 Every old type's optional `explanation` field maps to the new `explanation` field (post-answer) — **not** to `tip`. Tip is a genuinely new, currently-unpopulated field; no existing content is auto-assigned into it (per spec §33.4 — `bugFinding.bugHint` is the one exception, since it already is a pre-answer hint).
 
-**Status:** implemented and tested. `src/domain/migration/cardMigration.ts` (`migrateCard`) covers all 8 old types; `cardMigration.test.ts` has 11 passing tests. Still needed (see §9): an explicit idempotence test, a real-export smoke test, and the v1→v2 backup auto-import test once `BACKUP_VERSION` bumps.
+**Status:** implemented and tested. `src/domain/migration/cardMigration.ts` (`migrateCard`) covers all 8 old types; `cardMigration.test.ts` has 12 passing tests, including an explicit idempotence test (added since this section was first written). Still needed (see §9): a real-export smoke test and the v1→v2 backup auto-import test once `BACKUP_VERSION` bumps.
 
 ## 2. Schema versioning
 
@@ -71,6 +71,8 @@ Every old type's optional `explanation` field maps to the new `explanation` fiel
 **This does not generalize to CardState extraction (§4) or the Collection/Deck split (§6).** Both of those change either where data lives (CardState moves to a new table/store) or what an entity *is* (a Deck becomes a Collection, or stays a Deck) — including references other entities hold to it. An on-read shim for either would mean the app runs, silently and indefinitely, on a mix of migrated and unmigrated entities with no report of which is which, no detectable idempotence, and no way to know when it's safe to remove the old shape. That is a materially different risk profile from §1, which is why §4 and §6 use the explicit contract in §0 instead.
 
 ## 4. Card/CardState separation
+
+**Status (2026-07-23): steps 1-3 shipped.** Additive Dexie/Supabase `CardState` schema, a tested backfill (`src/domain/migration/cardStateBackfill.ts`), and dual-write from every write path are live — see `itera-redesign-plan.md` Phase D's status block and `itera-decisions.md` D38-D44 for exactly what shipped and what's still open (steps 4-6: parity verification, read cutover, cleanup). The steps below are the original plan and remain accurate as written; only the status has changed, not the design.
 
 Currently `Card.scheduling: SchedulingState` (see `src/types/card.ts`, `CardBase`). This is `itera-redesign-plan.md` Phase D. Steps (each independently deployable and reversible):
 
