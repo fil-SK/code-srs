@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from '@/data/supabase/client'
 import { parseBackup, serializeBackup } from '@/domain/io/backup'
 import { downloadText } from '@/lib/download'
 import { useImportBackup } from '@/hooks/useBackup'
+import { CardStateMigrationSection } from './CardStateMigrationSection'
 
 function Section({
   title,
@@ -147,6 +148,10 @@ export function SettingsPage() {
             {status.text}
           </p>
         )}
+      </Section>
+
+      <Section title="Card scheduling migration (Phase D)">
+        <CardStateMigrationSection />
       </Section>
     </div>
   )
