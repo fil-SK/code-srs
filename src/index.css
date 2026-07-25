@@ -127,23 +127,25 @@
 }
 
 /* Itera redesign — namespaced design tokens (docs/itera-claude-master-spec.md §4-5).
-   Scoped entirely under .itera-scope, applied only by PreviewShell
-   (src/features/design-preview/PreviewShell.tsx). Defines a distinct --itera-*
+   Applied via the .itera-scope class, now wrapping the *whole app*
+   (AppShell, via IteraSurface — src/features/reviewV2/components/IteraSurface.tsx),
+   not just /design-preview/* and Review. Defines a distinct --itera-*
    custom-property namespace so nothing here can collide with the tokens above,
    and additionally re-points the *existing* semantic var names (--bg, --panel,
-   --accent, ...) locally within this scope only, so reused production
-   components (FlipCard, RichText, CodeView) render on-brand automatically with
-   zero edits to them — the global :root/[data-theme] rules above are untouched,
-   so production is unaffected outside an element carrying this class.
+   --accent, --green, --amber, --red, --blue, ...) locally within this scope
+   only, so every existing v1 component renders on-brand automatically with
+   zero edits to it — the global :root/[data-theme] rules above are untouched,
+   so nothing outside an element carrying this class is affected.
    --code-bg IS included below (unlike an earlier draft of this file): CodeView
    also picks its syntax-highlight *palette* (light vs oneDark) from the live
    ThemeContext, not from a CSS var, so overriding --code-bg alone would leave
-   a dark-palette code block on a light background under the app's default
-   theme. Fixed at the root by ForceLightTheme
-   (src/features/design-preview/ForceLightTheme.tsx), which locally overrides
-   ThemeContext to 'light' for every design-preview subtree, so the palette and
-   this background always agree. Only light values are defined here; spec §36
-   defers dark mode for the MVP. */
+   a dark-palette code block on a light background. Fixed at the root by
+   ForceLightTheme (src/features/reviewV2/components/ForceLightTheme.tsx,
+   composed into IteraSurface), which locally overrides ThemeContext to
+   'light' for the whole app, so the palette and this background always
+   agree. Only light values are defined here; spec §36 defers dark mode for
+   the MVP — the app-wide dark/light toggle is temporarily unrendered while
+   this is true (see docs/itera-decisions.md). */
 .itera-scope {
   --itera-navy: #1e293b;
   --itera-orange: #ff6902;
@@ -192,6 +194,15 @@
   --accent-soft: var(--itera-accent-soft);
   --shadow: var(--itera-shadow-card);
   --code-bg: var(--itera-surface-subtle);
+  /* Status colors (tags, due badges, correct/incorrect banners in v1
+     components) - re-pointed too, now that .itera-scope wraps the whole app
+     (not just Review), so these don't stay the old literal hues. --blue has
+     no itera equivalent token (informational, not success/warning/error) so
+     it lands on the accent-adjacent active shade instead. */
+  --green: var(--itera-success);
+  --amber: var(--itera-warning);
+  --red: var(--itera-error);
+  --blue: var(--itera-accent-active);
 
   display: block;
   background: var(--itera-canvas);

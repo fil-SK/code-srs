@@ -9,11 +9,11 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 hidden h-screen flex-col gap-1.5 border-r border-border bg-bg-elev p-3.5 md:flex">
       <div className="flex items-center gap-2.5 px-2.5 pb-4 pt-2">
-        <div className="grid h-[30px] w-[30px] place-items-center rounded-[9px] bg-accent font-mono text-[15px] font-bold text-white">
+        <div className="grid h-[30px] w-[30px] place-items-center rounded-itera-control bg-accent font-mono text-[15px] font-bold text-white">
           {'{}'}
         </div>
         <div className="leading-tight">
-          <div className="text-[15.5px] font-semibold tracking-tight">
+          <div className="font-itera-display text-[15.5px] font-semibold tracking-tight">
             code-srs
           </div>
           <div className="font-mono text-[11px] text-faint">learn by recall</div>
@@ -28,17 +28,20 @@ export function Sidebar() {
             end={item.to === '/'}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-[9px] px-2.5 py-2.5 text-sm font-medium',
+                // Spec 4.4 (LOCKED): orange marks the active destination as a
+                // thin branded marker, not a bold fill — a left accent bar
+                // plus a light tint, not a solid/heavy background.
+                'flex items-center gap-3 rounded-itera-control border-l-2 px-2.5 py-2.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-accent-soft text-text'
-                  : 'text-muted hover:bg-panel hover:text-text',
+                  ? 'border-l-accent bg-accent-soft text-text'
+                  : 'border-l-transparent text-muted hover:bg-panel hover:text-text',
               )
             }
           >
             <item.icon size={18} className="shrink-0 opacity-90" />
             <span>{item.label}</span>
             {badges[item.to] ? (
-              <span className="ml-auto rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
+              <span className="ml-auto rounded-itera-pill bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
                 {badges[item.to]}
               </span>
             ) : null}

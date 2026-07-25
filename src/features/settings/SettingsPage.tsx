@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { Download, LogOut, Upload } from 'lucide-react'
-import { useTheme } from '@/app/theme'
 import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { exportBackup, type ImportMode } from '@/data/backup'
@@ -26,7 +25,6 @@ function Section({
 }
 
 export function SettingsPage() {
-  const { theme, toggle } = useTheme()
   const { email, signOut } = useAuth()
   const importBackup = useImportBackup()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -79,10 +77,10 @@ export function SettingsPage() {
       )}
 
       <Section title="Appearance">
-        <p className="mb-3 text-sm text-muted">
-          Currently {theme} mode. Defaults to dark.
+        <p className="text-sm text-muted">
+          Light mode only for now — the Itera redesign doesn't have a dark palette yet
+          (docs/itera-decisions.md). The dark/light toggle will come back once one exists.
         </p>
-        <Button onClick={toggle}>Switch to {theme === 'dark' ? 'light' : 'dark'} mode</Button>
       </Section>
 
       <Section title="Scheduler (FSRS)">

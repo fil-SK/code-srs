@@ -165,6 +165,10 @@ Status legend: not started unless noted. As of this revision: Phase A complete. 
 - **Roadmap disposition, final call:** if Roadmaps was hidden/retired in Phase H, decide here (as a separate, explicit, non-default decision — see `itera-decisions.md`) whether it is reintroduced against the new `Deck` entity, left retired indefinitely, or — only with separate explicit approval — actually deleted. The default established in this correction pass is **preserve, do not delete**; nothing in this plan changes that default automatically.
 - `docs/itera-decisions.md` reconciled against what actually shipped.
 
+## Aside — whole-app visual pass (2026-07-23, not a phase, does not change this sequence)
+
+Separately from the phase sequence below, the product owner asked for the *entire* app to visually reskin to Itera now, rather than waiting for Phase H's real IA rebuild (Library/Deck/global-shell) to reach every page. This does **not** replace or reorder Phases F–M — it's a parallel, visual-only pass: `AppShell.tsx` now wraps every existing v1 page in `IteraSurface` (`.itera-scope` + light-only `ForceLightTheme`), so Dashboard/Decks/Deck Detail/Roadmaps/Browse/Card Editor/Drafts/Stats/Settings all render with Itera colors automatically (see `itera-decisions.md` D45-D49), while keeping today's data model, page structure, IA, and behavior completely unchanged. When Phase H eventually ships the real Library/Deck rebuild and new global shell, it replaces this pass's shell/reskin for the routes it covers — this pass is not meant to be permanent scaffolding, just to get the whole app into the new visual language quickly. Dark mode is off app-wide until an Itera dark palette is designed (Itera's tokens are light-only per spec §36); the toggle is unrendered, not deleted.
+
 ## Phase order summary
 
 A → B, C (parallel, both additive) → D, E (parallel, meeting at the `ReviewService` boundary) → F → G (preflight can start anytime after A) → H → I, J (parallel) → K → L → M.

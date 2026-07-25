@@ -19,7 +19,7 @@ export function BottomNav() {
           end={item.to === '/'}
           className={({ isActive }) =>
             cn(
-              'relative flex flex-col items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[10px] font-medium',
+              'relative flex flex-col items-center gap-0.5 rounded-itera-control px-2.5 py-1.5 text-[10px] font-medium transition-colors',
               isActive ? 'text-accent' : 'text-muted',
             )
           }
@@ -27,7 +27,7 @@ export function BottomNav() {
           <item.icon size={20} />
           <span>{item.short}</span>
           {badges[item.to] ? (
-            <span className="absolute right-1 top-0 rounded-full bg-accent px-1.5 text-[9px] font-semibold text-white">
+            <span className="absolute right-1 top-0 rounded-itera-pill bg-accent px-1.5 text-[9px] font-semibold text-white">
               {badges[item.to]}
             </span>
           ) : null}
