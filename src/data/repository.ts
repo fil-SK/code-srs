@@ -8,6 +8,7 @@ import type {
   ReviewLog,
   Roadmap,
 } from '@/types'
+import type { CardState } from '@/types/cardV2'
 
 // Generic create-read-update-delete contract. `put` upserts (create or replace),
 // which maps cleanly onto both Dexie and Supabase. Timestamp bookkeeping lives in
@@ -59,4 +60,10 @@ export interface Repository {
   drafts: CrudRepo<Draft>
   reviews: ReviewRepo
   roadmaps: CrudRepo<Roadmap>
+  // Itera redesign Phase D (docs/itera-migration-plan.md §4): additive,
+  // dual-written alongside Card.scheduling — CrudRepo's `id` parameter is
+  // CardState's `cardId` (its natural key; the type has no separate `id`).
+  // Nothing reads from this yet — Card.scheduling stays the source of truth
+  // until a later, separate read-cutover step.
+  cardStates: CrudRepo<CardState>
 }

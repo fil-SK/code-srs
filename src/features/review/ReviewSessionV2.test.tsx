@@ -45,6 +45,7 @@ describe('ReviewSessionV2', () => {
     const repo = getRepository()
     await repo.cards.clear()
     await repo.reviews.clear()
+    await repo.cardStates.clear()
   })
 
   afterEach(() => cleanup())
@@ -72,6 +73,12 @@ describe('ReviewSessionV2', () => {
     // The card's own content is untouched by the v2 round-trip — only scheduling moved.
     const stored = await repo.cards.getById(basicCard.id)
     expect(stored?.content).toEqual(basicCard.content)
+
+    // Phase D dual-write: the CardState row must mirror Card.scheduling exactly.
+    const cardState = await repo.cardStates.getById(basicCard.id)
+    expect(cardState?.reps).toBe(stored?.scheduling.reps)
+    expect(cardState?.due).toBe(stored?.scheduling.due)
+    expect(cardState?.suspended).toBe(false)
   })
 
   it('shows the completion screen after the last card, and Undo restores the pre-grade state', async () => {
@@ -93,5 +100,11 @@ describe('ReviewSessionV2', () => {
     })
     const logs = await repo.reviews.all()
     expect(logs.some((l) => l.cardId === basicCard.id)).toBe(false)
+
+    // Undo must restore CardState too, not just Card.scheduling (Phase D
+    // requires undo stay correct under dual-write).
+    const cardState = await repo.cardStates.getById(basicCard.id)
+    expect(cardState?.reps).toBe(0)
+    expect(cardState?.due).toBe(basicCard.scheduling.due)
   })
 })

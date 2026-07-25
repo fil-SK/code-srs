@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Card, ID, Rating, ReviewLog, SchedulingState } from '@/types'
 import { getRepository } from '@/data'
 import { buildReviewLog, reviewState } from '@/domain/scheduling/scheduler'
+import { cardStateFromCard } from '@/domain/scheduling/cardState'
 import { qk } from './queryKeys'
 
 const repo = getRepository()
@@ -33,7 +34,9 @@ export function useGradeCard() {
         durationMs,
         now,
       })
-      await repo.cards.put({ ...card, scheduling: after, updatedAt: now })
+      const graded = { ...card, scheduling: after, updatedAt: now }
+      await repo.cards.put(graded)
+      await repo.cardStates.put(cardStateFromCard(graded)) // dual-write, Phase D
       await repo.reviews.append(log)
       return { log }
     },
@@ -51,17 +54,19 @@ export interface PersistReviewResultInput {
 }
 
 // Persists a v2 Review shell's already-computed grading result onto the real
-// v1 Card.scheduling — the CardState split (Phase D) hasn't landed yet, so
-// this is still the only place scheduling is written. Takes `{after, log}`
-// rather than recomputing them (reviewService.submit already calls the same
-// reviewState/buildReviewLog `useGradeCard` calls below), so the v1 and v2
+// v1 Card.scheduling (still the source of truth — CardState's read cutover,
+// Phase D step 5, hasn't happened). Takes `{after, log}` rather than
+// recomputing them (reviewService.submit already calls the same
+// reviewState/buildReviewLog `useGradeCard` calls above), so the v1 and v2
 // Review paths can't silently compute divergent results — this hook only
 // ever writes what reviewService already decided. See itera-decisions.md.
 export function usePersistReviewResult() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ card, after, log }: PersistReviewResultInput) => {
-      await repo.cards.put({ ...card, scheduling: after, updatedAt: Date.now() })
+      const graded = { ...card, scheduling: after, updatedAt: Date.now() }
+      await repo.cards.put(graded)
+      await repo.cardStates.put(cardStateFromCard(graded)) // dual-write, Phase D
       await repo.reviews.append(log)
     },
     onSuccess: () => {
@@ -76,12 +81,16 @@ export interface UndoInput {
   logId: ID
 }
 
-// Reverse the most recent grade: restore the original card and remove its log.
+// Reverse the most recent grade: restore the original card and remove its
+// log. CardState is restored to match — dual-write means undo must stay
+// correct under it too (docs/itera-migration-plan.md §9), not just the
+// forward grading path.
 export function useUndoGrade() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ card, logId }: UndoInput) => {
       await repo.cards.put(card)
+      await repo.cardStates.put(cardStateFromCard(card)) // dual-write, Phase D
       await repo.reviews.delete(logId)
     },
     onSuccess: () => {

@@ -1,4 +1,5 @@
 import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
+import type { CardState } from '@/types/cardV2'
 
 export const BACKUP_VERSION = 1
 
@@ -8,6 +9,9 @@ export interface BackupData {
   drafts: Draft[]
   reviewLogs: ReviewLog[]
   roadmaps?: Roadmap[] // added later; optional so older backups still import
+  // Itera Phase D (CardState extraction) — additive, dual-written alongside
+  // Card.scheduling, optional for the same reason as roadmaps above.
+  cardStates?: CardState[]
 }
 
 export interface BackupFile {

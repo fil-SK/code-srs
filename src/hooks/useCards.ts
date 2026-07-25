@@ -3,6 +3,7 @@ import type { Card, ID } from '@/types'
 import type { CardQuery, DueQuery } from '@/data/repository'
 import { getRepository } from '@/data'
 import { createCard, type NewCardInput } from '@/domain/cards/factory'
+import { cardStateFromCard } from '@/domain/scheduling/cardState'
 import { qk } from './queryKeys'
 
 const repo = getRepository()
@@ -35,17 +36,23 @@ export function useCreateCard() {
     mutationFn: async (input: NewCardInput) => {
       const card = createCard(input)
       await repo.cards.put(card)
+      await repo.cardStates.put(cardStateFromCard(card)) // dual-write, Phase D
       return card
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
   })
 }
 
+// Also used to toggle `suspended` (see BrowsePage/DeckDetailPage) — dual-write
+// unconditionally rather than trying to detect which fields changed;
+// rewriting CardState with unchanged values is harmless and idempotent.
 export function useSaveCard() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (card: Card) => {
-      await repo.cards.put({ ...card, updatedAt: Date.now() })
+      const saved = { ...card, updatedAt: Date.now() }
+      await repo.cards.put(saved)
+      await repo.cardStates.put(cardStateFromCard(saved)) // dual-write, Phase D
     },
     onSuccess: (_data, card) => {
       qc.invalidateQueries({ queryKey: qk.cards })
@@ -57,7 +64,10 @@ export function useSaveCard() {
 export function useDeleteCard() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: ID) => repo.cards.delete(id),
+    mutationFn: async (id: ID) => {
+      await repo.cards.delete(id)
+      await repo.cardStates.delete(id) // avoid an orphaned CardState row
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
   })
 }

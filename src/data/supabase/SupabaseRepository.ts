@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
+import type { CardState } from '@/types/cardV2'
 import { searchableText } from '@/domain/search/searchableText'
 import type {
   CardQuery,
@@ -165,6 +166,48 @@ function createReviewRepo(sb: SupabaseClient): ReviewRepo {
   }
 }
 
+// CardState's natural key is `cardId`, not `id` (see cardV2.ts), so the
+// generic `crud<T extends {id: ID}>` helper above doesn't fit — bespoke,
+// same as createCardRepo/createReviewRepo already are for their own reasons.
+function createCardStateRepo(sb: SupabaseClient): CrudRepo<CardState> {
+  return {
+    async getAll() {
+      const { data, error } = await sb.from('card_states').select('data')
+      if (error) throw error
+      return unwrap<CardState>(data)
+    },
+    async getById(cardId) {
+      const { data, error } = await sb
+        .from('card_states')
+        .select('data')
+        .eq('card_id', cardId)
+        .maybeSingle()
+      if (error) throw error
+      return (data as Row<CardState> | null)?.data
+    },
+    async put(entity) {
+      const { error } = await sb
+        .from('card_states')
+        .upsert({ card_id: entity.cardId, data: entity })
+      if (error) throw error
+    },
+    async bulkPut(entities) {
+      if (entities.length === 0) return
+      const rows = entities.map((e) => ({ card_id: e.cardId, data: e }))
+      const { error } = await sb.from('card_states').upsert(rows)
+      if (error) throw error
+    },
+    async delete(cardId) {
+      const { error } = await sb.from('card_states').delete().eq('card_id', cardId)
+      if (error) throw error
+    },
+    async clear() {
+      const { error } = await sb.from('card_states').delete().neq('card_id', '')
+      if (error) throw error
+    },
+  }
+}
+
 // Supabase-backed implementation of the storage seam. Same surface as
 // DexieRepository, so the rest of the app is unaware which one is active.
 export class SupabaseRepository implements Repository {
@@ -173,6 +216,7 @@ export class SupabaseRepository implements Repository {
   readonly drafts: CrudRepo<Draft>
   readonly reviews: ReviewRepo
   readonly roadmaps: CrudRepo<Roadmap>
+  readonly cardStates: CrudRepo<CardState>
 
   constructor(sb: SupabaseClient = getSupabase()) {
     this.cards = createCardRepo(sb)
@@ -180,5 +224,6 @@ export class SupabaseRepository implements Repository {
     this.drafts = crud<Draft>(sb, 'drafts')
     this.reviews = createReviewRepo(sb)
     this.roadmaps = crud<Roadmap>(sb, 'roadmaps')
+    this.cardStates = createCardStateRepo(sb)
   }
 }

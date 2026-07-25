@@ -14,6 +14,7 @@ beforeEach(async () => {
     db.decks.clear(),
     db.drafts.clear(),
     db.reviewLogs.clear(),
+    db.cardStates.clear(),
   ])
 })
 
@@ -162,5 +163,47 @@ describe('DexieRepository — reviews', () => {
     await repo.reviews.append(entry)
     await repo.reviews.delete(entry.id)
     expect(await repo.reviews.forCard('c1')).toHaveLength(0)
+  })
+})
+
+describe('DexieRepository — cardStates (Phase D, keyed by cardId not id)', () => {
+  it('upserts and reads back by cardId', async () => {
+    const state = {
+      cardId: 'card-1',
+      due: 5_000,
+      state: 'review' as const,
+      stability: 3,
+      difficulty: 4,
+      elapsedDays: 1,
+      scheduledDays: 2,
+      learningSteps: 0,
+      reps: 2,
+      lapses: 0,
+      suspended: false,
+    }
+    await repo.cardStates.put(state)
+    expect(await repo.cardStates.getById('card-1')).toEqual(state)
+
+    await repo.cardStates.put({ ...state, reps: 3 })
+    expect((await repo.cardStates.getById('card-1'))?.reps).toBe(3)
+    expect(await repo.cardStates.getAll()).toHaveLength(1)
+  })
+
+  it('removes on delete', async () => {
+    await repo.cardStates.put({
+      cardId: 'card-2',
+      due: 0,
+      state: 'new',
+      stability: 0,
+      difficulty: 0,
+      elapsedDays: 0,
+      scheduledDays: 0,
+      learningSteps: 0,
+      reps: 0,
+      lapses: 0,
+      suspended: false,
+    })
+    await repo.cardStates.delete('card-2')
+    expect(await repo.cardStates.getById('card-2')).toBeUndefined()
   })
 })

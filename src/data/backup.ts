@@ -6,14 +6,15 @@ export type ImportMode = 'merge' | 'replace'
 // Gather everything into a backup envelope.
 export async function exportBackup(): Promise<BackupFile> {
   const repo = getRepository()
-  const [cards, decks, drafts, reviewLogs, roadmaps] = await Promise.all([
+  const [cards, decks, drafts, reviewLogs, roadmaps, cardStates] = await Promise.all([
     repo.cards.getAll(),
     repo.decks.getAll(),
     repo.drafts.getAll(),
     repo.reviews.all(),
     repo.roadmaps.getAll(),
+    repo.cardStates.getAll(),
   ])
-  return buildBackup({ cards, decks, drafts, reviewLogs, roadmaps })
+  return buildBackup({ cards, decks, drafts, reviewLogs, roadmaps, cardStates })
 }
 
 // Write a backup into storage. 'replace' wipes existing data first; 'merge'
@@ -31,6 +32,7 @@ export async function importBackup(
       repo.drafts.clear(),
       repo.reviews.clear(),
       repo.roadmaps.clear(),
+      repo.cardStates.clear(),
     ])
   }
 
@@ -40,5 +42,6 @@ export async function importBackup(
     repo.drafts.bulkPut(backup.data.drafts),
     repo.reviews.bulkPut(backup.data.reviewLogs),
     repo.roadmaps.bulkPut(backup.data.roadmaps ?? []),
+    repo.cardStates.bulkPut(backup.data.cardStates ?? []),
   ])
 }

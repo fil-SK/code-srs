@@ -51,7 +51,9 @@ Status legend: not started unless noted. As of this revision: Phase A complete. 
 **Depends on:** nothing blocking (additive types + a pure function).
 **Acceptance:** met. Every v1 card type migrates through `migrateCard` without throwing; the registry's exhaustive switch in `src/features/cards/registry/index.ts` is untouched; 12 tests pass; typecheck/lint/build all pass.
 
-## Phase D — CardState extraction and rollout (new dedicated phase)
+## Phase D — CardState extraction and rollout (steps 1–3 of 6 shipped)
+
+**Status (2026-07-23):** steps 1–3 shipped — additive Dexie (`version(3)`, `cardStates` store) and Supabase (`supabase/migrations/0001_card_states.sql`, `schema.sql`) schema; a tested `MigrationRunner` backfill (`src/domain/migration/cardStateBackfill.ts`); dual-write wired into every write path (`useGradeCard`, `useUndoGrade`, `usePersistReviewResult`, `useCreateCard`, `useSaveCard`, `useDeleteCard`). Reads are **not** cut over — `Card.scheduling` stays the sole source of truth. The backfill has not been run against real data yet (a human-reviewed action, left for the product owner). The Supabase side is implemented but unverified against a live database (no project currently exists — see `itera-decisions.md` D37/D42). See D38-D43 for the material decisions.
 
 **Goal:** separate scheduling state from card content (spec §7.6) as a real, explicit, reportable, reversible migration — not a side effect of the Review rewrite. This phase can run **in parallel with** Phase E; see the dependency note at the end of Phase E for exactly how they meet.
 
@@ -70,9 +72,9 @@ Status legend: not started unless noted. As of this revision: Phase A complete. 
 **Depends on:** nothing from Phase B/C is required to *start* schema/backfill work (steps 1–2); the `ReviewService` boundary needed for dual-write (step 3) is introduced by Phase E, so steps 3–5 depend on Phase E having landed at least that boundary.
 **Acceptance:** the runner contract's dry-run/apply/report cycle works and has been exercised against a real backup-derived dataset; parity holds for a defined observation window; read cutover ships with a working rollback path; no card's scheduling state changes value at any step (only its storage location does).
 
-## Phase E — Review foundation (all 6 interactions built; not yet production-integrated)
+## Phase E — Review foundation (all 6 interactions built and production-integrated)
 
-**Status (2026-07-23):** shell built and shipped — `ReviewSessionScreen`, `reviewPhaseReducer`, `ReviewTopBar`, `reviewService.ts`, the `InteractionDefinition` registry (`src/features/reviewV2/`). All six interaction types (Recall, Multiple Choice, Write Code, Ordering, Matching, Walkthrough) are real, registered interactions, each with a `/design-preview/review/*` route. See `itera-decisions.md` D25-D34 for the material decisions from this milestone, and the PR reports for full file lists. Not yet wired into production Review — that's the next milestone (production integration: shared components, a dispatcher, no big-bang rewrite).
+**Status (2026-07-23):** shell built and shipped — `ReviewSessionScreen`, `reviewPhaseReducer`, `ReviewTopBar`, `reviewService.ts`, the `InteractionDefinition` registry (`src/features/reviewV2/`). All six interaction types (Recall, Multiple Choice, Write Code, Ordering, Matching, Walkthrough) are real, registered interactions, each with a `/design-preview/review/*` route. **The live `/review` route now renders through this shell too** (`ReviewSessionV2`, `src/features/review/`): every due v1 `Card` is migrated on read and graded through the same components the design previews use, persisting back to `Card.scheduling`. v1's `ReviewSession`/`useReviewSession` remain in the tree, unreferenced. See `itera-decisions.md` D25-D37 for the material decisions from this milestone and the PR reports for full file lists.
 
 **Goal:** replace the Review shell and the six interaction renderers, reusing `useReviewSession.ts`'s state machine (sound, keep) but rebuilding the presentation layer around an explicit phase reducer (spec §30.3), and introducing the `ReviewService` boundary spec §9.5 requires.
 

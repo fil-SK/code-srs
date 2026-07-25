@@ -14,4 +14,5 @@ export const qk = {
   draft: (id: ID) => ['drafts', 'byId', id] as const,
   roadmaps: ['roadmaps'] as const,
   roadmap: (id: ID) => ['roadmaps', 'byId', id] as const,
+  cardStates: ['cardStates'] as const,
 }

@@ -104,3 +104,28 @@ create policy "own rows" on public.roadmaps
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 grant select, insert, update, delete on public.roadmaps to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- CardState (Itera redesign Phase D — CardState extraction, dual-written
+-- alongside Card.scheduling, not yet read from anywhere). Added after the
+-- initial schema; this whole block is a self-contained migration you can
+-- paste and run on an existing database — same as supabase/migrations/
+-- 0001_card_states.sql. Keyed by `card_id` (CardState's own natural key),
+-- not `id` — see itera-decisions.md.
+-- ---------------------------------------------------------------------------
+create table if not exists public.card_states (
+  card_id text primary key references public.cards (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  data    jsonb not null
+);
+
+create index if not exists card_states_user_idx on public.card_states (user_id);
+
+alter table public.card_states enable row level security;
+
+drop policy if exists "own rows" on public.card_states;
+create policy "own rows" on public.card_states
+  for all to authenticated
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+grant select, insert, update, delete on public.card_states to authenticated;
