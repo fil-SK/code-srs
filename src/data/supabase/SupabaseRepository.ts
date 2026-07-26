@@ -128,6 +128,9 @@ function cardV2SearchableText(card: CardV2Record): string {
   if (card.interaction.type === 'multiple_choice') {
     parts.push(...card.interaction.options.map((o) => o.content.value))
   }
+  if (card.interaction.type === 'write_code') {
+    parts.push(...card.interaction.acceptedAnswers)
+  }
   return parts.filter(Boolean).join(' ').toLowerCase()
 }
 
