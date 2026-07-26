@@ -81,6 +81,7 @@ export interface Repository {
   reviews: ReviewRepo
   roadmaps: CrudRepo<Roadmap>
   cardStates: CrudRepo<CardState> // CrudRepo's `id` param is CardState.cardId, its natural key
+  cardsV2: CardV2Repo // real, persisted CardV2 storage (Phase F) — see "Card creation" below
 }
 ```
 
@@ -111,6 +112,7 @@ this.version(1).stores({
 })
 this.version(2).stores({ roadmaps: 'id, title' })
 this.version(3).stores({ cardStates: 'cardId' })
+this.version(4).stores({ cardsV2: 'id, deckId, *tags, scheduling.due' })
 ```
 
 Each `version()` call declares only new/changed stores — Dexie carries the rest forward. `*tags` is a multi-entry index; `scheduling.due` is a nested-keypath index letting `getDue()` query `db.cards.where('scheduling.due').belowOrEqual(now)` directly. Booleans (`suspended`) aren't indexed — IndexedDB can't index them — so suspension is filtered in memory.
@@ -141,6 +143,9 @@ export const qk = {
   roadmaps: ['roadmaps'],
   roadmap: (id) => ['roadmaps', 'byId', id],
   cardStates: ['cardStates'], // reserved, nothing reads CardState yet
+  cardsV2: ['cardsV2'],
+  cardV2: (id) => ['cardsV2', 'byId', id],
+  cardsV2Search: (query) => ['cardsV2', 'search', query],
 }
 ```
 
@@ -154,6 +159,7 @@ Parameterized keys (`cardsDue`, `cardsSearch`) embed the query object itself, so
 | `useReview.ts` | `useReviewLogs`, `useGradeCard`, `usePersistReviewResult`, `useUndoGrade` | The grading write path — see "Scheduling" below. |
 | `useRoadmaps.ts` | `useRoadmaps`, `useRoadmap`, `useCreateRoadmap`, `useSaveRoadmap`, `useDeleteRoadmap` | `useSaveRoadmap` is the **only** hook using `qc.setQueryData` for an optimistic write, alongside invalidation. |
 | `useBackup.ts` | `useImportBackup` | `onSuccess: () => qc.invalidateQueries()` with no key filter — appropriate after a bulk multi-entity replace/merge. |
+| `useCardsV2.ts` | `useCardV2`, `useSearchCardsV2`, `useCreateCardV2`, `useSaveCardV2`, `useDeleteCardV2`, `useSaveRecallCard` | Plain CRUD over `CardV2Repo`, plus `useSaveRecallCard` — a thin wrapper around the pure `src/domain/cardsV2/saveRecallCard.ts` (unit-tested directly against a repository), which is the one place a legacy v1 card gets migrated to a `CardV2Record` on save. |
 
 Conventions observed across all of them: query keys always go through `qk`, never inlined; every mutation is a thin async function calling 1+ repo methods directly (no separate service layer for plain CRUD); `onSuccess` invalidates the coarse list key and, where relevant, the specific item key.
 
@@ -169,10 +175,11 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 | **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized) |
 | **Roadmap** | `src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
 | **CardState** (v2, Phase D) | `src/types/cardV2.ts` | `CrudRepo<CardState>` (keyed by `cardId`) | `cardStates` (v3) | `card_states` (unverified against a live DB — see D42) | `src/domain/scheduling/cardState.ts`: `cardStateFromCard`, `cardStatesEqual` |
+| **CardV2Record** (v2, Phase F) | `src/types/cardV2.ts` | `CardV2Repo` (`getDue`/`search` + CRUD) | `cardsV2` (v4) | `cards_v2` (+ generated `deck_id`, `due`, `suspended` — same shape as `cards`; unverified against a live DB) | — (flat, filtered by deck/tag; no tree needed) |
 
 Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
 
-**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 1`, still 1 despite `CardV2` existing): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?, cardStates?}}`. `roadmaps`/`cardStates` are optional so older backups still import. `parseBackup()` rejects a version newer than the app supports and validates the four required arrays are actually arrays.
+**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 1`, still 1 despite `CardV2` existing): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?, cardStates?, cardsV2?}}`. `roadmaps`/`cardStates`/`cardsV2` are optional so older backups still import. `parseBackup()` rejects a version newer than the app supports and validates the four required arrays are actually arrays.
 
 ---
 
@@ -220,7 +227,7 @@ The Browse filter and editor type picker both derive from `cardTypeMeta`, so the
 `src/app/router.tsx` uses `createBrowserRouter` with **three structurally separate top-level entries** (not one nested tree):
 
 1. `{ path: '/', element: <TodayPage /> }` — Today owns `/` outright, with its own top-nav shell (`TodayShell`), not `AppShell`'s sidebar.
-2. `{ element: <AppShell />, children: [...] }` — a **pathless layout route** (no `path` key), so children resolve at the top level with unchanged URLs: `decks`, `decks/:id`, `roadmaps`, `roadmaps/:id`, `review`, `preview`, `browse`, `cards/new`, `cards/:id/edit`, `drafts`, `stats`, `settings`.
+2. `{ element: <AppShell />, children: [...] }` — a **pathless layout route** (no `path` key), so children resolve at the top level with unchanged URLs: `decks`, `decks/:id`, `decks/:deckId/cards/new` (Phase F chooser + Recall editor), `roadmaps`, `roadmaps/:id`, `review`, `preview`, `browse`, `cards/new`, `cards/:id/edit` (branches between the new Recall editor and the old `CardEditorPage` — see "Card creation" below), `cards/:id/study` (Phase F Recall review preview — the Deck row's primary click target), `drafts`, `stats`, `settings`.
 3. `{ path: 'design-preview', children: [...] }` — a separate top-level entry (not nested in `AppShell`), one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library-empty`, `library/:deckId` (the Phase H preview slice, fixture-driven — see [`docs/itera-redesign-plan.md`](itera-redesign-plan.md) Phase H status).
 
 `AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` (Sidebar + sticky header with a "Study now" CTA + `<Outlet/>` + BottomNav) — this is the mechanism by which every v1 page picks up the Itera visual system automatically, since they already use the shared semantic Tailwind classes `.itera-scope` re-points. `ThemeToggle` is deliberately not rendered (light-only for now).
@@ -310,9 +317,24 @@ interface InteractionDefinition<T extends InteractionType> {
 |---|---|---|
 | Components per type | 3 (`Question`, `Answer`, `Editor`) | 1 (`View`, receives the current `ReviewPhase`) — a self-graded flip needs one continuous element across reveal; swapping components at that boundary would break the flip animation |
 | Registry shape | full `Record` — missing type is a compile error | `Partial<Record>` — missing type throws at runtime ("so a future 7th type fails loudly instead of silently rendering nothing") |
-| Editor / authoring | yes (`Editor` component, `emptyContent`) | none yet — v2 has no authoring UI; authoring still happens against v1 `Card`s, migrated lazily on read |
+| Editor / authoring | yes (`Editor` component, `emptyContent`) | Recall only, as of Phase F (`src/features/cardsV2/`) — see "Card creation" below. The other five types have no editor yet; authoring for them still happens against v1 `Card`s. |
 | Auto-grade result | `{correct: boolean} \| null` | `ObjectiveResult = {correct: boolean, score?: number}` — partial credit |
 | Keyed on | `CardType` (8 values, 1:1 with content shape) | `InteractionType` (6 values) — decoupled from the card envelope; `prompt`/`tip`/`explanation` live on `CardV2` itself, not embedded per-type content |
+
+### Card creation (Phase F, Recall only)
+
+`src/features/cardsV2/` is where the v2 authoring UI lives, built against `CardV2Record` (`src/types/cardV2.ts`) — `CardV2` plus its own embedded `suspended`/`scheduling`/`order`, the same envelope shape v1 `CardBase` uses, backed by the real `cardsV2` repository member above. This is a deliberate, separate store from `CardState` (the Phase D dual-write target) — `CardV2Record`'s scheduling is never read from or written to `cardStates`, so authoring a Recall card doesn't touch or advance that migration.
+
+- `CardTypeChooser.tsx` — all six interaction tiles; only Recall is enabled (`ENABLED` array), the rest render muted with a "Coming soon" caption.
+- `RecallEditorShell.tsx` — the shared editor/preview shell: `RecallFields.tsx` (prompt/answer/tip/explanation/preset) + Deck/Tags on the left, `RecallLivePreview.tsx` on the right — which renders the *actual* `ReviewSessionScreen`/`recallDefinition`, not a mockup, keyed on the authoring preset so typing doesn't reset an in-progress flip. Desktop: two-pane grid. Below `useIsWideEditor`'s ~980px breakpoint: Editor/Preview tabs.
+- `src/domain/cardsV2/recallForm.ts` — pure conversions between the editor's plain-string `RecallFormState` and: a throwaway preview `CardV2`, a persisted `CardV2Record`, and (via `legacyCardToForm`, wrapping `migrateCard`) a legacy v1 card being hydrated for edit.
+- `src/domain/cardsV2/saveRecallCard.ts` — the single save path (unit-tested directly against a repository, independent of the `useSaveRecallCard` hook that wraps it), covering three targets: `new` (fresh `CardV2Record`), `v2` (update in place, same id/scheduling), and `v1` (the **legacy cutover** — builds a `CardV2Record` reusing the original v1 card's `id`/`createdAt`/`scheduling`/`suspended` so `ReviewLog` history keeps resolving, writes it to `cardsV2`, then deletes the superseded `cards` row and its `cardStates` mirror).
+- `CardEditEntry.tsx` (the element at `cards/:id/edit`) — branches: a `CardV2Record`, or a v1 `basic`/`codeReading`/`bugFinding` card, opens `RecallEditorShell`; any other v1 type falls through to the untouched `CardEditorPage`. Legacy cards only migrate to `CardV2Record` when actually edited-and-saved this way — not in bulk.
+- `CardStudyPreviewPage.tsx` (`cards/:id/study`) — the Deck row's primary click target: the same non-committing `ReviewSessionScreen` embedding as the editor's live preview, seeded from the real record but a fresh scheduling baseline.
+- `CardRowV2.tsx` — the compact Deck-page row, rendered by `DeckDetailPage.tsx` alongside the existing v1 `CardRow` list (two row styles intentionally coexist, same as the two nav shells). The row body opens the study preview directly; an inline Edit (pencil) button and an overflow menu (Duplicate/Move/Suspend/Delete, the last two using a local `MovePopover`) live on the row itself — there is no separate read-only detail/overview screen (`CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow, all of which now live one level up; see `itera-decisions.md`).
+- `shared/{StatusBadge,format,interactionTypeMeta,InteractionTypeBadge,OverflowMenu}.tsx` — the first four promoted out of `design-preview/library-shared/` once a real consumer needed them (they were already built against real `SchedulingStateKind`/`InteractionType`, not fixture types); `OverflowMenu` is a new shared primitive, since two independent ad hoc kebab-menu implementations already existed in the codebase before this one.
+
+**Known gap:** `CardV2Record`s aren't in the global due queue yet (`useDueCards`/`ReviewPage` only read v1 `cards`) — real, scheduling-affecting review of a `CardV2Record` isn't wired up; only the non-committing editor preview and "Study this Card" exist so far.
 
 ---
 

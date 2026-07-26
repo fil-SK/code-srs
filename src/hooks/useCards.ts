@@ -11,7 +11,11 @@ const repo = getRepository()
 export function useCard(id: ID | undefined) {
   return useQuery({
     queryKey: qk.card(id ?? ''),
-    queryFn: () => repo.cards.getById(id as ID),
+    // TanStack Query v5 treats a query function returning `undefined` as a
+    // bug (logs "Query data cannot be undefined") — `null` is the correct
+    // "not found" value. Matters now that CardEditEntry routinely probes
+    // this alongside useCardV2 for ids that only exist in one store.
+    queryFn: async () => (await repo.cards.getById(id as ID)) ?? null,
     enabled: !!id,
   })
 }

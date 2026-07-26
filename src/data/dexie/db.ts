@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { Card, Deck, Draft, ID, ReviewLog, Roadmap } from '@/types'
-import type { CardState } from '@/types/cardV2'
+import type { CardState, CardV2Record } from '@/types/cardV2'
 
 // IndexedDB schema. Indexes are chosen for the app's read patterns:
 //   - cards by deck, type, tag (multi-entry), and due date (nested keypath)
@@ -14,6 +14,7 @@ export class AppDB extends Dexie {
   reviewLogs!: Table<ReviewLog, ID>
   roadmaps!: Table<Roadmap, ID>
   cardStates!: Table<CardState, ID>
+  cardsV2!: Table<CardV2Record, ID>
 
   constructor() {
     super('code-srs')
@@ -35,6 +36,13 @@ export class AppDB extends Dexie {
     // roadmaps are untouched and nothing reads from this store yet.
     this.version(3).stores({
       cardStates: 'cardId',
+    })
+    // v4 adds cardsV2 (Itera redesign Phase F — Create/Edit): real, persisted
+    // CardV2 storage for cards authored/edited through the new Recall editor.
+    // Independent of cardStates — embeds its own `scheduling`, not dual-
+    // written there. Existing stores are untouched.
+    this.version(4).stores({
+      cardsV2: 'id, deckId, *tags, scheduling.due',
     })
   }
 }

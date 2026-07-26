@@ -35,9 +35,11 @@ import {
   useSaveCard,
   useSearchCards,
 } from '@/hooks/useCards'
+import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import { useDecks, useSaveDeck } from '@/hooks/useDecks'
 import { CardRow } from '@/features/cards/CardRow'
 import { getCardTitle } from '@/features/cards/cardTypeMeta'
+import { CardRowV2 } from '@/features/cardsV2/CardRowV2'
 
 const byOrder = (a: Card, b: Card) =>
   (a.order ?? a.createdAt) - (b.order ?? b.createdAt)
@@ -192,6 +194,21 @@ export function DeckDetailPage() {
     deckId: id,
     includeSuspended: showSuspended,
   })
+  // CardV2Records (Itera Phase F) render alongside the v1 list below via
+  // CardRowV2, not interleaved into the same drag-reorder set — reordering
+  // stays v1-only for now (see docs/itera-decisions.md).
+  const cardsV2Query = useSearchCardsV2({
+    deckId: id,
+    includeSuspended: showSuspended,
+  })
+  const now = useMemo(() => Date.now(), [])
+  const v2Cards = useMemo(
+    () =>
+      [...(cardsV2Query.data ?? [])].sort(
+        (a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt),
+      ),
+    [cardsV2Query.data],
+  )
 
   // Cards in their manual order (falls back to creation order). Held in local
   // state so a drag reorders instantly; it re-syncs whenever the query changes.
@@ -286,7 +303,7 @@ export function DeckDetailPage() {
           >
             <Settings size={15} /> Deck settings
           </Button>
-          {cards.length > 0 && (
+          {(cards.length > 0 || v2Cards.length > 0) && (
             <>
               <Link to={`/preview?deck=${id}&from=/decks/${id}`}>
                 <Button variant="secondary">
@@ -300,7 +317,7 @@ export function DeckDetailPage() {
               </Link>
             </>
           )}
-          <Link to={`/cards/new?deck=${id}`}>
+          <Link to={`/decks/${id}/cards/new`}>
             <Button variant="primary">
               <Plus size={15} /> New card
             </Button>
@@ -314,9 +331,11 @@ export function DeckDetailPage() {
 
       <div className="mb-4 flex items-center justify-between text-xs text-muted">
         <span>
-          {cardsQuery.isLoading
+          {cardsQuery.isLoading || cardsV2Query.isLoading
             ? 'Loading…'
-            : `${cards.length} card${cards.length === 1 ? '' : 's'}`}
+            : `${cards.length + v2Cards.length} card${
+                cards.length + v2Cards.length === 1 ? '' : 's'
+              }`}
           {cards.length > 1 && (
             <span className="text-faint"> · drag the handle to reorder</span>
           )}
@@ -331,12 +350,23 @@ export function DeckDetailPage() {
         </label>
       </div>
 
-      {!cardsQuery.isLoading && cards.length === 0 && (
-        <div className="rounded-card border border-dashed border-border bg-panel p-10 text-center">
-          <p className="text-sm text-muted">No cards in this deck yet.</p>
-          <Link to={`/cards/new?deck=${id}`} className="mt-3 inline-block">
-            <Button variant="primary">Add a card</Button>
-          </Link>
+      {!cardsQuery.isLoading &&
+        !cardsV2Query.isLoading &&
+        cards.length === 0 &&
+        v2Cards.length === 0 && (
+          <div className="rounded-card border border-dashed border-border bg-panel p-10 text-center">
+            <p className="text-sm text-muted">No cards in this deck yet.</p>
+            <Link to={`/decks/${id}/cards/new`} className="mt-3 inline-block">
+              <Button variant="primary">Add a card</Button>
+            </Link>
+          </div>
+        )}
+
+      {v2Cards.length > 0 && (
+        <div className="mb-2.5 space-y-2.5">
+          {v2Cards.map((card) => (
+            <CardRowV2 key={card.id} card={card} now={now} />
+          ))}
         </div>
       )}
 

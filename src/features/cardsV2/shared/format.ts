@@ -1,4 +1,6 @@
-// Small formatting helpers shared by both Library preview screens.
+// Small formatting helpers for CardV2 due/last-studied display. Promoted out
+// of design-preview/library-shared once the real Deck page needed them too
+// (see docs/itera-decisions.md).
 
 export function formatLastStudied(ms: number | undefined, now: number): string {
   if (ms == null) return 'Never'

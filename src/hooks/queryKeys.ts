@@ -1,4 +1,4 @@
-import type { CardQuery, DueQuery } from '@/data/repository'
+import type { CardQuery, CardV2Query, DueQuery } from '@/data/repository'
 import type { ID } from '@/types'
 
 // Centralized query keys so invalidation stays consistent across hooks.
@@ -15,4 +15,7 @@ export const qk = {
   roadmaps: ['roadmaps'] as const,
   roadmap: (id: ID) => ['roadmaps', 'byId', id] as const,
   cardStates: ['cardStates'] as const,
+  cardsV2: ['cardsV2'] as const,
+  cardV2: (id: ID) => ['cardsV2', 'byId', id] as const,
+  cardsV2Search: (query: CardV2Query) => ['cardsV2', 'search', query] as const,
 }

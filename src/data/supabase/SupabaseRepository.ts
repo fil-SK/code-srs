@@ -1,10 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
-import type { CardState } from '@/types/cardV2'
+import type { CardState, CardV2Record } from '@/types/cardV2'
 import { searchableText } from '@/domain/search/searchableText'
 import type {
   CardQuery,
   CardRepo,
+  CardV2DueQuery,
+  CardV2Query,
+  CardV2Repo,
   CrudRepo,
   DueQuery,
   Repository,
@@ -118,6 +121,55 @@ function createCardRepo(sb: SupabaseClient): CardRepo {
   }
 }
 
+// Mirrors DexieRepository's cardV2SearchableText — CardV2Record's interaction
+// union only has one member today (recall), so no exhaustive per-type switch.
+function cardV2SearchableText(card: CardV2Record): string {
+  const parts = [card.prompt.value, card.tip?.value, card.explanation?.value]
+  if (card.interaction.type === 'recall') parts.push(card.interaction.answer.value)
+  return parts.filter(Boolean).join(' ').toLowerCase()
+}
+
+function createCardV2Repo(sb: SupabaseClient): CardV2Repo {
+  const base = crud<CardV2Record>(sb, 'cards_v2')
+  return {
+    ...base,
+
+    async getDue({ now, deckId, tags, limit }: CardV2DueQuery): Promise<CardV2Record[]> {
+      const { data, error } = await sb
+        .from('cards_v2')
+        .select('data')
+        .eq('suspended', false)
+        .lte('due', now)
+      if (error) throw error
+
+      let cards = unwrap<CardV2Record>(data)
+      if (deckId) cards = cards.filter((c) => c.deckId === deckId)
+      if (tags?.length)
+        cards = cards.filter((c) => tags.some((t) => c.tags.includes(t)))
+
+      cards.sort((a, b) => a.scheduling.due - b.scheduling.due)
+      return limit ? cards.slice(0, limit) : cards
+    },
+
+    async search({ text, deckId, tags, includeSuspended }: CardV2Query): Promise<CardV2Record[]> {
+      const { data, error } = await sb.from('cards_v2').select('data')
+      if (error) throw error
+      let cards = unwrap<CardV2Record>(data)
+
+      if (!includeSuspended) cards = cards.filter((c) => !c.suspended)
+      if (deckId) cards = cards.filter((c) => c.deckId === deckId)
+      if (tags?.length)
+        cards = cards.filter((c) => tags.some((t) => c.tags.includes(t)))
+      if (text) {
+        const q = text.toLowerCase()
+        cards = cards.filter((c) => cardV2SearchableText(c).includes(q))
+      }
+
+      return cards.sort((a, b) => b.updatedAt - a.updatedAt)
+    },
+  }
+}
+
 function createReviewRepo(sb: SupabaseClient): ReviewRepo {
   return {
     async append(log: ReviewLog) {
@@ -217,6 +269,7 @@ export class SupabaseRepository implements Repository {
   readonly reviews: ReviewRepo
   readonly roadmaps: CrudRepo<Roadmap>
   readonly cardStates: CrudRepo<CardState>
+  readonly cardsV2: CardV2Repo
 
   constructor(sb: SupabaseClient = getSupabase()) {
     this.cards = createCardRepo(sb)
@@ -225,5 +278,6 @@ export class SupabaseRepository implements Repository {
     this.reviews = createReviewRepo(sb)
     this.roadmaps = crud<Roadmap>(sb, 'roadmaps')
     this.cardStates = createCardStateRepo(sb)
+    this.cardsV2 = createCardV2Repo(sb)
   }
 }

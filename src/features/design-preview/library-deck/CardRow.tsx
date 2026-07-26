@@ -1,9 +1,9 @@
 import { MoreVertical } from 'lucide-react'
 import type { LibraryCard } from '../library-shared/fixtures'
-import { InteractionTypeTile } from '../library-shared/InteractionTypeBadge'
-import { interactionLabel } from '../library-shared/interactionTypeMeta'
-import { StatusBadge } from '../library-shared/StatusBadge'
-import { formatDue } from '../library-shared/format'
+import { InteractionTypeTile } from '@/features/cardsV2/shared/InteractionTypeBadge'
+import { interactionLabel } from '@/features/cardsV2/shared/interactionTypeMeta'
+import { StatusBadge } from '@/features/cardsV2/shared/StatusBadge'
+import { formatDue } from '@/features/cardsV2/shared/format'
 import { cn } from '@/lib/cn'
 
 // min-w guards the 1fr card column from being crushed to near-zero by the

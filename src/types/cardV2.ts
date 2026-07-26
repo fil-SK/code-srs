@@ -1,5 +1,5 @@
 import type { ID, Millis } from './common'
-import type { SchedulingStateKind } from './review'
+import type { SchedulingState, SchedulingStateKind } from './review'
 
 // v2 card model, per docs/itera-claude-master-spec.md §8-9. Lives alongside the
 // current `Card` union (./card.ts) through the Phase C/D migration; nothing in
@@ -150,6 +150,18 @@ export interface CardV2 {
   tags: string[]
   createdAt: Millis
   updatedAt: Millis
+}
+
+// ---- CardV2Record — the persisted form of CardV2 (Itera Phase F) ----
+// Embeds its own scheduling, mirroring how v1 CardBase embeds SchedulingState,
+// deliberately independent of the CardState extraction below: new CardV2-
+// authored cards never touch the cardStates dual-write store, so this doesn't
+// advance or interact with that (separate, still-in-progress) migration.
+
+export interface CardV2Record extends CardV2 {
+  suspended: boolean
+  scheduling: SchedulingState
+  order?: number // manual position within a deck; not yet wired to drag-reorder UI
 }
 
 // ---- CardState — scheduling, separated from content (spec §7.6, §9.2) ----

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { DeckMark } from '../library-shared/DeckMark'
 import { MeterBar } from '../library-shared/MeterBar'
-import { formatLastStudied } from '../library-shared/format'
+import { formatLastStudied } from '@/features/cardsV2/shared/format'
 import type { LibraryDeck } from '../library-shared/fixtures'
 import { OverflowMenu } from './OverflowMenu'
 import { cn } from '@/lib/cn'

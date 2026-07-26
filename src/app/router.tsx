@@ -10,6 +10,9 @@ import { ReviewPage } from '@/features/review/ReviewPage'
 import { PreviewPage } from '@/features/preview/PreviewPage'
 import { BrowsePage } from '@/features/cards/BrowsePage'
 import { CardEditorPage } from '@/features/cards/CardEditorPage'
+import { CardCreatePage } from '@/features/cardsV2/CardCreatePage'
+import { CardEditEntry } from '@/features/cardsV2/CardEditEntry'
+import { CardStudyPreviewPage } from '@/features/cardsV2/CardStudyPreviewPage'
 import { DraftsPage } from '@/features/drafts/DraftsPage'
 import { StatsPage } from '@/features/stats/StatsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
@@ -42,13 +45,15 @@ export const router = createBrowserRouter([
     children: [
       { path: 'decks', element: <DecksPage /> },
       { path: 'decks/:id', element: <DeckDetailPage /> },
+      { path: 'decks/:deckId/cards/new', element: <CardCreatePage /> },
       { path: 'roadmaps', element: <RoadmapsPage /> },
       { path: 'roadmaps/:id', element: <RoadmapEditorPage /> },
       { path: 'review', element: <ReviewPage /> },
       { path: 'preview', element: <PreviewPage /> },
       { path: 'browse', element: <BrowsePage /> },
       { path: 'cards/new', element: <CardEditorPage /> },
-      { path: 'cards/:id/edit', element: <CardEditorPage /> },
+      { path: 'cards/:id/edit', element: <CardEditEntry /> },
+      { path: 'cards/:id/study', element: <CardStudyPreviewPage /> },
       { path: 'drafts', element: <DraftsPage /> },
       { path: 'stats', element: <StatsPage /> },
       { path: 'settings', element: <SettingsPage /> },

@@ -3,7 +3,8 @@ import { cn } from '@/lib/cn'
 
 // Renders the real state/suspended split (SchedulingState/CardState) rather
 // than a flattened fictional enum — suspension is orthogonal to scheduling
-// state, not a fifth state value.
+// state, not a fifth state value. Promoted out of design-preview/library-shared
+// once the real Deck page needed it too (see docs/itera-decisions.md).
 const STATE_META: Record<SchedulingStateKind, { label: string; dotClass: string }> = {
   new: { label: 'New', dotClass: 'bg-blue-500' },
   learning: { label: 'Learning', dotClass: 'bg-amber-500' },
