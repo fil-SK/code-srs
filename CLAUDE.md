@@ -28,6 +28,8 @@ Tests are colocated as `*.test.ts`/`*.test.tsx` next to the code they cover. The
 
 React 19 + Vite 8 + TypeScript, Tailwind v4, React Router 7 (`createBrowserRouter`), TanStack Query 5 for all data access, installable PWA (`vite-plugin-pwa`, `registerType: 'autoUpdate'`). Path alias `@` -> `src`.
 
+For full reference detail this file intentionally keeps terse — exact color tokens, complete hook/registry tables, a route-by-route feature-status matrix — see `docs/architecture.md`, `docs/design-system.md`, and `docs/features.md` (indexed in `docs/README.md`).
+
 ### Storage seam (the most important abstraction)
 
 The entire app depends on one interface, `Repository` in `src/data/repository.ts`, and never knows which backend is live. `getRepository()` in `src/data/index.ts` picks:
@@ -93,3 +95,4 @@ Full detail on all of the above lives in `docs/itera-decisions.md` (append-only 
 - oxlint enforces `react-hooks/exhaustive-deps`; when intentionally omitting a dep, use a stable serialized key and an `// eslint-disable-next-line react-hooks/exhaustive-deps` (see `CodeView`, `ReviewSession`).
 - Backup files (`src/domain/io/backup.ts`) are versioned; new entity arrays are added **optional** so older backups still import.
 - `docs/itera-decisions.md` is **append-only**: never edit a past entry's substance in place. If a decision is superseded, add a new dated entry that says so and cross-references the old one (strikethrough the old text if needed for clarity) — don't rewrite history.
+- **When a change reaches finalized state** (a feature is implemented, a design/behavior change is settled — not a WIP/exploratory edit), update the relevant documentation in the same pass: `docs/architecture.md`/`docs/design-system.md`/`docs/features.md` for what they cover, `README.md` for user-facing changes, and `docs/itera-decisions.md`/`docs/itera-redesign-plan.md` for redesign-scoped work. Don't leave docs describing the pre-change state once the change is done.

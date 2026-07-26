@@ -182,6 +182,16 @@ See [`CLAUDE.md`](CLAUDE.md) for the architecture and [`docs/`](docs/) for the i
 
 ---
 
+## Developer documentation
+
+For a full technical reference beyond this README — exact color tokens, the complete storage/hooks/registry architecture, and a route-by-route feature status table — see [`docs/README.md`](docs/README.md), the index for:
+
+- [`docs/architecture.md`](docs/architecture.md) — storage seam, data hooks, card-type registries, routing, scheduling, migration.
+- [`docs/design-system.md`](docs/design-system.md) — colors, typography, spacing, icon conventions, shared UI components.
+- [`docs/features.md`](docs/features.md) — current feature/page inventory, v1 vs. Itera redesign.
+
+---
+
 ## License
 
 Personal project — no license specified. If you'd like to reuse it, open an issue.

@@ -4,13 +4,7 @@ import { SuggestedSessionHero } from './SuggestedSessionHero'
 import { MomentumPanel } from './MomentumPanel'
 import { ContinueLearningList } from './ContinueLearningList'
 import { PaceChart } from './PaceChart'
-
-function greeting(): string {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning.'
-  if (hour < 18) return 'Good afternoon.'
-  return 'Good evening.'
-}
+import { pickDashboardMessage } from './greetings'
 
 // True 2-col/2-row CSS grid with named areas ("hero momentum" / "continue
 // pace"), not two independent flex columns — that's what makes Continue
@@ -47,13 +41,15 @@ function useIsWideToday(): boolean {
 // the decisions log for exactly what's real versus illustrative.
 export function TodayPage() {
   const isWide = useIsWideToday()
+  // Picked once per mount, not per render — see greetings.ts.
+  const [message] = useState(() => pickDashboardMessage())
 
   return (
     <TodayShell>
       <h1 className="font-itera-display text-3xl font-bold tracking-tight text-itera-ink-brand">
-        {greeting()}
+        {message.mainText}
       </h1>
-      <p className="mt-1 text-itera-muted">Build a little momentum today.</p>
+      <p className="mt-1 text-itera-muted">{message.subtext}</p>
 
       <div
         className="mt-6"

@@ -20,6 +20,8 @@ import { WriteCodePreviewPage } from '@/features/design-preview/review-write-cod
 import { OrderingPreviewPage } from '@/features/design-preview/review-ordering/OrderingPreviewPage'
 import { MatchingPreviewPage } from '@/features/design-preview/review-matching/MatchingPreviewPage'
 import { WalkthroughPreviewPage } from '@/features/design-preview/review-walkthrough/WalkthroughPreviewPage'
+import { LibraryBrowserPreviewPage } from '@/features/design-preview/library-browser/LibraryBrowserPreviewPage'
+import { LibraryDeckPreviewPage } from '@/features/design-preview/library-deck/LibraryDeckPreviewPage'
 
 export const router = createBrowserRouter([
   // Today owns '/' as its own structurally separate top-level route (its own
@@ -66,6 +68,8 @@ export const router = createBrowserRouter([
       { path: 'review/ordering', element: <OrderingPreviewPage /> },
       { path: 'review/matching', element: <MatchingPreviewPage /> },
       { path: 'review/walkthrough', element: <WalkthroughPreviewPage /> },
+      { path: 'library', element: <LibraryBrowserPreviewPage /> },
+      { path: 'library/:deckId', element: <LibraryDeckPreviewPage /> },
     ],
   },
 ])

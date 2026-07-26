@@ -8,6 +8,8 @@ const ROUTES = [
   { path: '/design-preview/review/ordering', label: 'Ordering' },
   { path: '/design-preview/review/matching', label: 'Matching' },
   { path: '/design-preview/review/walkthrough', label: 'Walkthrough' },
+  { path: '/design-preview/library', label: 'Library browser' },
+  { path: '/design-preview/library/deck-declarations', label: 'Library — focused deck page' },
 ]
 
 export function DesignPreviewIndex() {
