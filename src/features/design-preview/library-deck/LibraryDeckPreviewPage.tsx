@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRight, LayoutList, Rows3, Search, Settings, Star, MoreHorizontal } from 'lucide-react'
 import { LibraryPreviewShell } from '../library-shared/LibraryPreviewShell'
 import type { LibrarySelection } from '../library-shared/CollectionNav'
+import { selectionToSearchParams } from '../library-shared/collectionTree'
 import { libraryCards, libraryCollections, libraryDecks, type LibraryCard } from '../library-shared/fixtures'
 import type { LibraryCollection } from '../library-shared/fixtures'
 import { DeckMark } from '../library-shared/DeckMark'
@@ -17,6 +18,15 @@ import { CardRow, CardTableHeader } from './CardRow'
 import { InsightsTab } from './InsightsTab'
 import type { InteractionType } from '@/types/cardV2'
 import type { SchedulingStateKind } from '@/types/review'
+
+// Carries the clicked selection back to the browser via the URL so clicking
+// a collection in the nav or breadcrumb lands scoped to it, instead of
+// always resetting to "All Decks" (see docs/itera-decisions.md).
+function libraryPath(selection: LibrarySelection): string {
+  const params = selectionToSearchParams(selection)
+  const query = params.toString()
+  return query ? `/design-preview/library?${query}` : '/design-preview/library'
+}
 
 function collectionPath(collections: LibraryCollection[], collectionId: string | undefined): LibraryCollection[] {
   if (!collectionId) return []
@@ -82,7 +92,7 @@ export function LibraryDeckPreviewPage() {
     ? { kind: 'collection', id: deck.collectionId }
     : { kind: 'unfiled' }
 
-  const handleSelect = () => navigate('/design-preview/library')
+  const handleSelect = (next: LibrarySelection) => navigate(libraryPath(next))
 
   if (!deck) {
     return (
@@ -127,7 +137,7 @@ export function LibraryDeckPreviewPage() {
             <ChevronRight size={13} />
             <button
               type="button"
-              onClick={() => navigate('/design-preview/library')}
+              onClick={() => navigate(libraryPath({ kind: 'collection', id: c.id }))}
               className="hover:text-itera-ink"
             >
               {c.name}

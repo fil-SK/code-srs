@@ -51,3 +51,33 @@ export function getSubtreeCollectionIds(collections: LibraryCollection[], rootId
   const node = find(tree)
   return node ? subtreeCollectionIds(node) : [rootId]
 }
+
+// Shared by the narrow-width drawer trigger and LibraryBrowserPreviewPage's
+// page heading — one implementation instead of two copies computing the same
+// label from a LibrarySelection.
+export function getSelectionLabel(
+  selection: LibrarySelection,
+  collections: LibraryCollection[],
+): string {
+  if (selection.kind === 'all') return 'All Decks'
+  if (selection.kind === 'unfiled') return 'Unfiled Decks'
+  return collections.find((c) => c.id === selection.id)?.name ?? 'All Decks'
+}
+
+// Round-trips a LibrarySelection through a URL query string so navigating
+// from the focused Deck page's Collection nav/breadcrumb back to the browser
+// can land pre-scoped to the collection that was actually clicked, instead
+// of always resetting to "All Decks".
+export function selectionToSearchParams(selection: LibrarySelection): URLSearchParams {
+  const params = new URLSearchParams()
+  if (selection.kind === 'unfiled') params.set('scope', 'unfiled')
+  else if (selection.kind === 'collection') params.set('collection', selection.id)
+  return params
+}
+
+export function selectionFromSearchParams(params: URLSearchParams): LibrarySelection {
+  const collectionId = params.get('collection')
+  if (collectionId) return { kind: 'collection', id: collectionId }
+  if (params.get('scope') === 'unfiled') return { kind: 'unfiled' }
+  return { kind: 'all' }
+}

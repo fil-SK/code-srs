@@ -1,12 +1,23 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { LibraryPreviewShell } from '../library-shared/LibraryPreviewShell'
 import type { LibrarySelection } from '../library-shared/CollectionNav'
-import { getSubtreeCollectionIds } from '../library-shared/collectionTree'
-import { libraryCollections, libraryDecks, type LibraryDeck } from '../library-shared/fixtures'
+import {
+  getSelectionLabel,
+  getSubtreeCollectionIds,
+  selectionFromSearchParams,
+} from '../library-shared/collectionTree'
+import {
+  libraryCollections as defaultLibraryCollections,
+  libraryDecks as defaultLibraryDecks,
+  type LibraryCollection,
+  type LibraryDeck,
+} from '../library-shared/fixtures'
 import { EmptyState } from '../library-shared/EmptyState'
 import { fieldClass, selectClass } from '@/components/ui/Field'
-import { DeckRow } from './DeckRow'
+import { DeckRow, DeckTableHeader } from './DeckRow'
+import { FilterMenu } from './FilterMenu'
 
 type SortKey = 'name' | 'due' | 'lastStudied' | 'cardCount'
 
@@ -24,24 +35,33 @@ function sortDecks(decks: LibraryDeck[], sort: SortKey): LibraryDeck[] {
   }
 }
 
-export function LibraryBrowserPreviewPage() {
+// collections/decks are optional so this same component can render the
+// "empty library" scenario (see the `library-empty` route) without a second
+// copy of the page — defaults are the normal fixture set.
+export function LibraryBrowserPreviewPage({
+  collections = defaultLibraryCollections,
+  decks = defaultLibraryDecks,
+}: {
+  collections?: LibraryCollection[]
+  decks?: LibraryDeck[]
+}) {
   const now = useMemo(() => Date.now(), [])
-  const [selection, setSelection] = useState<LibrarySelection>({ kind: 'all' })
+  const [searchParams] = useSearchParams()
+  const [selection, setSelection] = useState<LibrarySelection>(() =>
+    selectionFromSearchParams(searchParams),
+  )
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortKey>('name')
+  const [sort, setSort] = useState<SortKey>('lastStudied')
   const [dueOnly, setDueOnly] = useState(false)
 
-  const collectionName =
-    selection.kind === 'collection'
-      ? libraryCollections.find((c) => c.id === selection.id)?.name
-      : undefined
+  const scopeLabel = getSelectionLabel(selection, collections)
 
   const scoped = useMemo(() => {
-    if (selection.kind === 'all') return libraryDecks
-    if (selection.kind === 'unfiled') return libraryDecks.filter((d) => !d.collectionId)
-    const ids = getSubtreeCollectionIds(libraryCollections, selection.id)
-    return libraryDecks.filter((d) => d.collectionId && ids.includes(d.collectionId))
-  }, [selection])
+    if (selection.kind === 'all') return decks
+    if (selection.kind === 'unfiled') return decks.filter((d) => !d.collectionId)
+    const ids = getSubtreeCollectionIds(collections, selection.id)
+    return decks.filter((d) => d.collectionId && ids.includes(d.collectionId))
+  }, [collections, decks, selection])
 
   const filtered = useMemo(() => {
     let result = scoped
@@ -55,16 +75,8 @@ export function LibraryBrowserPreviewPage() {
     return sortDecks(result, sort)
   }, [scoped, search, sort, dueOnly])
 
-  const scopeLabel =
-    selection.kind === 'all' ? 'All Decks' : selection.kind === 'unfiled' ? 'Unfiled Decks' : collectionName
-
   return (
-    <LibraryPreviewShell
-      collections={libraryCollections}
-      decks={libraryDecks}
-      selection={selection}
-      onSelect={setSelection}
-    >
+    <LibraryPreviewShell collections={collections} decks={decks} selection={selection} onSelect={setSelection}>
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand">
           {scopeLabel}
@@ -90,28 +102,20 @@ export function LibraryBrowserPreviewPage() {
             className={`${fieldClass} pl-9`}
           />
         </div>
-        <label className="flex items-center gap-1.5 text-sm text-itera-muted">
-          <input
-            type="checkbox"
-            checked={dueOnly}
-            onChange={(e) => setDueOnly(e.target.checked)}
-            className="accent-itera-accent"
-          />
-          Due only
-        </label>
+        <FilterMenu dueOnly={dueOnly} onDueOnlyChange={setDueOnly} />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
           className={`${selectClass} w-auto`}
         >
+          <option value="lastStudied">Sort: Last studied</option>
           <option value="name">Sort: Name</option>
           <option value="due">Sort: Due count</option>
-          <option value="lastStudied">Sort: Last studied</option>
           <option value="cardCount">Sort: Card count</option>
         </select>
       </div>
 
-      {libraryDecks.length === 0 ? (
+      {decks.length === 0 ? (
         <EmptyState
           title="Your library is empty"
           description="Create your first deck to start building your collection."
@@ -144,10 +148,13 @@ export function LibraryBrowserPreviewPage() {
           description="No decks have been added to this collection yet."
         />
       ) : (
-        <div className="divide-y divide-itera-border rounded-itera-card border border-itera-border bg-itera-surface px-5">
-          {filtered.map((deck) => (
-            <DeckRow key={deck.id} deck={deck} now={now} />
-          ))}
+        <div className="overflow-x-auto rounded-itera-card border border-itera-border bg-itera-surface px-4">
+          <DeckTableHeader />
+          <div className="divide-y divide-itera-border">
+            {filtered.map((deck) => (
+              <DeckRow key={deck.id} deck={deck} now={now} />
+            ))}
+          </div>
         </div>
       )}
     </LibraryPreviewShell>

@@ -69,6 +69,7 @@ export const router = createBrowserRouter([
       { path: 'review/matching', element: <MatchingPreviewPage /> },
       { path: 'review/walkthrough', element: <WalkthroughPreviewPage /> },
       { path: 'library', element: <LibraryBrowserPreviewPage /> },
+      { path: 'library-empty', element: <LibraryBrowserPreviewPage collections={[]} decks={[]} /> },
       { path: 'library/:deckId', element: <LibraryDeckPreviewPage /> },
     ],
   },

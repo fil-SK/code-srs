@@ -177,6 +177,8 @@ Separately from the phase sequence below, the product owner asked for the *entir
 
 **Library (`/design-preview/library`, `/design-preview/library/:deckId`) shipped 2026-07-26, similarly ahead of its documented Phase H position** — a preview-only, fixture-driven slice for visual-direction approval, isolated under `src/features/design-preview/library-{shared,browser,deck}/`, not the real `LibraryPage`/`DeckPage`/global-shell rebuild Phase H still owns. See `itera-decisions.md` D55-D58 and the Phase H status block above.
 
+**Same day, a follow-up pass completed the Library browser against a newly supplied browse-view mockup** (`itera-mockups/webapp/all-decks.png` — D56 had noted no such mockup existed yet): a real Collection drill-down drawer at narrow widths replacing the flattened tab-row stand-in, `DeckRow` restructured into grid columns matching `CardRow`'s existing convention, an inert add-Collection stub, a compact Filter control, a demonstrable empty-library route, and a cross-page navigation fix so the Deck page's Collection nav/breadcrumb preserves the clicked scope. See `itera-decisions.md` D59-D63. This still does not reduce what Phase H must build for real — same caveat as above.
+
 ## Phase order summary
 
 A → B, C (parallel, both additive) → D, E (parallel, meeting at the `ReviewService` boundary) → F → G (preflight can start anytime after A) → H → I, J (parallel) → K → L → M.

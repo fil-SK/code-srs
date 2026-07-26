@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { LibraryTopNav } from './LibraryTopNav'
 import { CollectionNav, type LibrarySelection } from './CollectionNav'
+import { CollectionNavDrawer } from './CollectionNavDrawer'
 import type { LibraryCollection, LibraryDeck } from './fixtures'
 import { useIsWideLibrary } from './useIsWideLibrary'
 
@@ -11,8 +12,8 @@ import { useIsWideLibrary } from './useIsWideLibrary'
 // requirement #3 asks Library to reuse Today's shared shell, not just its
 // tokens. No "not part of the live app" banner (unlike PreviewShell) — product
 // call, not carried over here. Collapses Collection nav + content to a single
-// stacked column below ~880px (useIsWideLibrary), rendering the nav as a
-// horizontal scrollable row instead of the vertical tree at that width.
+// stacked column below ~880px (useIsWideLibrary), swapping the vertical tree
+// for CollectionNavDrawer's drill-down drawer at that width.
 export function LibraryPreviewShell({
   collections,
   decks,
@@ -45,12 +46,11 @@ export function LibraryPreviewShell({
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <CollectionNav
+            <CollectionNavDrawer
               collections={collections}
               decks={decks}
               selection={selection}
               onSelect={onSelect}
-              compact
             />
             <div className="min-w-0">{children}</div>
           </div>

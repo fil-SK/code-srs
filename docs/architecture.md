@@ -221,7 +221,7 @@ The Browse filter and editor type picker both derive from `cardTypeMeta`, so the
 
 1. `{ path: '/', element: <TodayPage /> }` — Today owns `/` outright, with its own top-nav shell (`TodayShell`), not `AppShell`'s sidebar.
 2. `{ element: <AppShell />, children: [...] }` — a **pathless layout route** (no `path` key), so children resolve at the top level with unchanged URLs: `decks`, `decks/:id`, `roadmaps`, `roadmaps/:id`, `review`, `preview`, `browse`, `cards/new`, `cards/:id/edit`, `drafts`, `stats`, `settings`.
-3. `{ path: 'design-preview', children: [...] }` — a separate top-level entry (not nested in `AppShell`), one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library/:deckId` (the Phase H preview slice, fixture-driven — see [`docs/itera-redesign-plan.md`](itera-redesign-plan.md) Phase H status).
+3. `{ path: 'design-preview', children: [...] }` — a separate top-level entry (not nested in `AppShell`), one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library-empty`, `library/:deckId` (the Phase H preview slice, fixture-driven — see [`docs/itera-redesign-plan.md`](itera-redesign-plan.md) Phase H status).
 
 `AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` (Sidebar + sticky header with a "Study now" CTA + `<Outlet/>` + BottomNav) — this is the mechanism by which every v1 page picks up the Itera visual system automatically, since they already use the shared semantic Tailwind classes `.itera-scope` re-points. `ThemeToggle` is deliberately not rendered (light-only for now).
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react'
 import type { LibraryCollection, LibraryDeck } from './fixtures'
 import {
   buildCollectionTree,
@@ -17,13 +17,11 @@ export function CollectionNav({
   decks,
   selection,
   onSelect,
-  compact = false,
 }: {
   collections: LibraryCollection[]
   decks: LibraryDeck[]
   selection: LibrarySelection
   onSelect: (selection: LibrarySelection) => void
-  compact?: boolean
 }) {
   const tree = useMemo(() => buildCollectionTree(collections), [collections])
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
@@ -38,56 +36,21 @@ export function CollectionNav({
     })
   }
 
-  if (compact) {
-    return (
-      <div className="flex items-center gap-4 overflow-x-auto border-b border-itera-border pb-2 text-sm">
-        <button
-          type="button"
-          onClick={() => onSelect({ kind: 'all' })}
-          className={cn(
-            'flex-none whitespace-nowrap border-b-2 pb-1 font-semibold',
-            selection.kind === 'all'
-              ? 'border-itera-accent text-itera-ink-brand'
-              : 'border-transparent text-itera-muted',
-          )}
-        >
-          All Decks
-        </button>
-        <button
-          type="button"
-          onClick={() => onSelect({ kind: 'unfiled' })}
-          className={cn(
-            'flex-none whitespace-nowrap border-b-2 pb-1 font-semibold',
-            selection.kind === 'unfiled'
-              ? 'border-itera-accent text-itera-ink-brand'
-              : 'border-transparent text-itera-muted',
-          )}
-        >
-          Unfiled Decks
-        </button>
-        {collections.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => onSelect({ kind: 'collection', id: c.id })}
-            className={cn(
-              'flex-none whitespace-nowrap border-b-2 pb-1',
-              selection.kind === 'collection' && selection.id === c.id
-                ? 'border-itera-accent font-semibold text-itera-ink-brand'
-                : 'border-transparent text-itera-muted',
-            )}
-          >
-            {c.name}
-          </button>
-        ))}
-      </div>
-    )
-  }
-
   return (
     <nav aria-label="Collections">
-      <div className="mb-1 px-1 text-xs font-bold uppercase tracking-wide text-itera-muted">
-        Collections
+      <div className="mb-1 flex items-center justify-between px-1">
+        <span className="text-xs font-bold uppercase tracking-wide text-itera-muted">Collections</span>
+        {/* Inert stub, same treatment as "New Deck" and OverflowMenu's
+            Rename/Move/Delete — Create/Import is out of scope for this
+            preview. Presence reverses D56's omission per an explicit new
+            ask; see docs/itera-decisions.md. */}
+        <button
+          type="button"
+          aria-label="Add collection"
+          className="grid h-5 w-5 place-items-center rounded-itera-control text-itera-muted hover:bg-itera-surface-subtle hover:text-itera-ink"
+        >
+          <Plus size={13} />
+        </button>
       </div>
 
       <button
