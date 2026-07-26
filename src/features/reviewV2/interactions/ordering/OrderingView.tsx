@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -46,6 +46,12 @@ export function OrderingView({
 
   const order = (response as ID[] | undefined) ?? initialOrder
   const locked = phase.kind !== 'presenting'
+  // Visible index numbers and button aria-labels change after a move, but
+  // that's not reliably announced by screen readers on its own - an
+  // aria-live region gives an explicit, unambiguous announcement of the new
+  // position (task requirement: "announce or expose the updated position
+  // accessibly").
+  const [announcement, setAnnouncement] = useState('')
   const showFeedback =
     phase.kind === 'feedback' || phase.kind === 'rating' || phase.kind === 'transitioning'
   const grade = showFeedback ? gradeOrdering(interaction, order) : null
@@ -56,9 +62,11 @@ export function OrderingView({
     const to = index + direction
     if (to < 0 || to >= order.length) return // clean no-op at the boundary
     const next = [...order]
-    const [item] = next.splice(index, 1)
-    next.splice(to, 0, item)
+    const [id] = next.splice(index, 1)
+    next.splice(to, 0, id)
     setResponse(next)
+    const label = itemById.get(id)?.content.value ?? ''
+    setAnnouncement(`${label} moved to position ${to + 1} of ${order.length}`)
   }
 
   function onDragEnd(e: DragEndEvent) {
@@ -68,6 +76,8 @@ export function OrderingView({
       const from = order.indexOf(active.id as string)
       const to = order.indexOf(over.id as string)
       setResponse(arrayMove(order, from, to))
+      const label = itemById.get(active.id as string)?.content.value ?? ''
+      setAnnouncement(`${label} moved to position ${to + 1} of ${order.length}`)
     }
   }
 
@@ -83,6 +93,9 @@ export function OrderingView({
           Drag to reorder, or use the up/down controls.
         </p>
       )}
+      <div aria-live="polite" className="sr-only">
+        {announcement}
+      </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={order} strategy={verticalListSortingStrategy}>

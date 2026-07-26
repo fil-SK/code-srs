@@ -4,14 +4,17 @@ import type { InteractionType } from '@/types/cardV2'
 import { emptyRecallForm } from '@/domain/cardsV2/recallForm'
 import { emptyMultipleChoiceForm } from '@/domain/cardsV2/multipleChoiceForm'
 import { emptyWriteCodeForm } from '@/domain/cardsV2/writeCodeForm'
+import { emptyOrderingForm } from '@/domain/cardsV2/orderingForm'
 import { CardTypeChooser } from './CardTypeChooser'
 import { RecallEditorShell } from './RecallEditorShell'
 import { MultipleChoiceEditorShell } from './MultipleChoiceEditorShell'
 import { WriteCodeEditorShell } from './WriteCodeEditorShell'
+import { OrderingEditorShell } from './OrderingEditorShell'
 
 // Route: decks/:deckId/cards/new. Spec §22.1's create flow as one continuous
 // screen: choose interaction -> author content -> preview -> save. Recall,
-// Multiple Choice, and Write Code are selectable today (see CardTypeChooser).
+// Multiple Choice, Write Code, and Ordering are selectable today (see
+// CardTypeChooser).
 export function CardCreatePage() {
   const { deckId } = useParams<{ deckId: string }>()
   const navigate = useNavigate()
@@ -48,6 +51,18 @@ export function CardCreatePage() {
       <WriteCodeEditorShell
         mode="create"
         initialForm={emptyWriteCodeForm(deckId)}
+        target={{ kind: 'new' }}
+        backTo={backTo}
+        onSaved={(record) => navigate(`/decks/${record.deckId}`)}
+      />
+    )
+  }
+
+  if (selectedType === 'ordering') {
+    return (
+      <OrderingEditorShell
+        mode="create"
+        initialForm={emptyOrderingForm(deckId)}
         target={{ kind: 'new' }}
         backTo={backTo}
         onSaved={(record) => navigate(`/decks/${record.deckId}`)}

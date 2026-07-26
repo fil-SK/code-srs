@@ -10,21 +10,28 @@ import {
   cardV2RecordToWriteCodeForm,
   legacyWriteCodeCardToForm,
 } from '@/domain/cardsV2/writeCodeForm'
+import {
+  cardV2RecordToOrderingForm,
+  legacyOrderingCardToForm,
+} from '@/domain/cardsV2/orderingForm'
 import { CardEditorPage } from '@/features/cards/CardEditorPage'
 import { RecallEditorShell } from './RecallEditorShell'
 import { MultipleChoiceEditorShell } from './MultipleChoiceEditorShell'
 import { WriteCodeEditorShell } from './WriteCodeEditorShell'
+import { OrderingEditorShell } from './OrderingEditorShell'
 
 const RECALL_SHAPED_V1_TYPES = new Set(['basic', 'codeReading', 'bugFinding'])
 
 // Route: cards/:id/edit. Branches between the new Recall/Multiple
-// Choice/Write Code editors and the untouched v1 registry editor, since both
-// still coexist during the transition (see docs/itera-decisions.md): a v1
-// basic/codeReading/bugFinding card opens the Recall editor, a v1 mcq card
-// opens the Multiple Choice editor, a v1 codeCompletion card opens the Write
-// Code editor (all three migrate to a CardV2Record on save); a CardV2Record
-// opens its matching editor directly by interaction type; anything else (the
-// remaining v1 types) falls through to the old CardEditorPage, unmodified.
+// Choice/Write Code/Ordering editors and the untouched v1 registry editor,
+// since both still coexist during the transition (see
+// docs/itera-decisions.md): a v1 basic/codeReading/bugFinding card opens the
+// Recall editor, a v1 mcq card opens the Multiple Choice editor, a v1
+// codeCompletion card opens the Write Code editor, a v1 ordering card opens
+// the Ordering editor (all four migrate to a CardV2Record on save); a
+// CardV2Record opens its matching editor directly by interaction type;
+// anything else (the remaining v1 types) falls through to the old
+// CardEditorPage, unmodified.
 export function CardEditEntry() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -106,6 +113,32 @@ export function CardEditEntry() {
       <WriteCodeEditorShell
         mode="edit"
         initialForm={cardV2RecordToWriteCodeForm(record)}
+        target={{ kind: 'v2', record }}
+        backTo={`/decks/${record.deckId}`}
+        onSaved={(saved) => navigate(`/decks/${saved.deckId}`)}
+      />
+    )
+  }
+
+  if (v1.data && v1.data.type === 'ordering') {
+    const card = v1.data
+    return (
+      <OrderingEditorShell
+        mode="edit"
+        initialForm={legacyOrderingCardToForm(card)}
+        target={{ kind: 'v1', card }}
+        backTo={`/decks/${card.deckId}`}
+        onSaved={(record) => navigate(`/decks/${record.deckId}`)}
+      />
+    )
+  }
+
+  if (v2.data && v2.data.interaction.type === 'ordering') {
+    const record = v2.data
+    return (
+      <OrderingEditorShell
+        mode="edit"
+        initialForm={cardV2RecordToOrderingForm(record)}
         target={{ kind: 'v2', record }}
         backTo={`/decks/${record.deckId}`}
         onSaved={(saved) => navigate(`/decks/${saved.deckId}`)}

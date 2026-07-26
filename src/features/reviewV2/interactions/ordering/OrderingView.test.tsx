@@ -108,4 +108,24 @@ describe('OrderingView', () => {
     expect(await screen.findByText('33% in the right position')).toBeTruthy()
     expect(labels()).toEqual(['First', 'Second', 'Third'])
   })
+
+  it('announces the moved item and its new position via an aria-live region', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    const moveDown = screen.getByRole('button', { name: 'Move item 1 down' })
+    await user.click(moveDown)
+
+    expect(await screen.findByText('First moved to position 2 of 3')).toBeTruthy()
+  })
+
+  it('does not announce anything for a no-op move at a boundary', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    const moveUp = screen.getByRole('button', { name: 'Move item 1 up' })
+    await user.click(moveUp)
+
+    expect(screen.queryByText(/moved to position/)).toBeNull()
+  })
 })
