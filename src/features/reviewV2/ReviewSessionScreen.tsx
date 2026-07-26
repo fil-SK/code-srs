@@ -14,7 +14,7 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
     target instanceof HTMLElement &&
     Boolean(
       target.closest(
-        'button, [role="button"], input, textarea, select, [contenteditable="true"], .cm-editor',
+        'button, [role="button"], [role="radio"], [role="checkbox"], input, textarea, select, [contenteditable="true"], .cm-editor',
       ),
     )
   )

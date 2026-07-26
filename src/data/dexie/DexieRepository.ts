@@ -81,12 +81,13 @@ function createCardRepo(db: AppDB): CardRepo {
   }
 }
 
-// Plain substring search over a CardV2Record's text fields. CardV2Record's
-// interaction union only has one member today (recall), so this doesn't need
-// the exhaustive per-type dispatch searchableText.ts uses for v1 Card.
+// Plain substring search over a CardV2Record's text fields.
 function cardV2SearchableText(card: CardV2Record): string {
   const parts = [card.prompt.value, card.tip?.value, card.explanation?.value]
   if (card.interaction.type === 'recall') parts.push(card.interaction.answer.value)
+  if (card.interaction.type === 'multiple_choice') {
+    parts.push(...card.interaction.options.map((o) => o.content.value))
+  }
   return parts.filter(Boolean).join(' ').toLowerCase()
 }
 

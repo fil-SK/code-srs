@@ -121,11 +121,13 @@ function createCardRepo(sb: SupabaseClient): CardRepo {
   }
 }
 
-// Mirrors DexieRepository's cardV2SearchableText — CardV2Record's interaction
-// union only has one member today (recall), so no exhaustive per-type switch.
+// Mirrors DexieRepository's cardV2SearchableText.
 function cardV2SearchableText(card: CardV2Record): string {
   const parts = [card.prompt.value, card.tip?.value, card.explanation?.value]
   if (card.interaction.type === 'recall') parts.push(card.interaction.answer.value)
+  if (card.interaction.type === 'multiple_choice') {
+    parts.push(...card.interaction.options.map((o) => o.content.value))
+  }
   return parts.filter(Boolean).join(' ').toLowerCase()
 }
 

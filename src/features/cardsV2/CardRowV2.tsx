@@ -122,7 +122,7 @@ export function CardRowV2({ card, now }: { card: CardV2Record; now: number }) {
         to={`/cards/${card.id}/study`}
         className="flex min-w-0 flex-1 items-center gap-3.5 px-4 py-3 hover:text-itera-accent"
       >
-        {card.interaction.type === 'recall' && <InteractionTypeTile type="recall" />}
+        <InteractionTypeTile type={card.interaction.type} />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold text-itera-ink-brand">
             {firstLine(card.prompt.value)}

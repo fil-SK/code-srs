@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn'
 // mockup); only Recall has an editor built, so the other five are visually
 // muted and non-interactive with a "Coming soon" cue rather than hidden —
 // this signals what's next without pretending they work.
-const ENABLED: InteractionType[] = ['recall']
+const ENABLED: InteractionType[] = ['recall', 'multiple_choice']
 
 export function CardTypeChooser({
   onSelect,

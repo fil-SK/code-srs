@@ -5,9 +5,15 @@ import { getRepository } from '@/data'
 import type { CardV2Record } from '@/types/cardV2'
 import type { RecallFormState } from '@/domain/cardsV2/recallForm'
 import { saveRecallCard, type SaveRecallCardTarget } from '@/domain/cardsV2/saveRecallCard'
+import type { MultipleChoiceFormState } from '@/domain/cardsV2/multipleChoiceForm'
+import {
+  saveMultipleChoiceCard,
+  type SaveMultipleChoiceCardTarget,
+} from '@/domain/cardsV2/saveMultipleChoiceCard'
 import { qk } from './queryKeys'
 
 export type { SaveRecallCardTarget } from '@/domain/cardsV2/saveRecallCard'
+export type { SaveMultipleChoiceCardTarget } from '@/domain/cardsV2/saveMultipleChoiceCard'
 
 const repo = getRepository()
 
@@ -75,6 +81,27 @@ export function useSaveRecallCard() {
       form: RecallFormState
       target: SaveRecallCardTarget
     }) => saveRecallCard(repo, form, target),
+    onSuccess: (record) => {
+      qc.invalidateQueries({ queryKey: qk.cardsV2 })
+      qc.invalidateQueries({ queryKey: qk.cardV2(record.id) })
+      qc.invalidateQueries({ queryKey: qk.cards })
+      qc.invalidateQueries({ queryKey: qk.card(record.id) })
+    },
+  })
+}
+
+// Thin useMutation wrapper around the pure saveMultipleChoiceCard (see
+// src/domain/cardsV2/saveMultipleChoiceCard.ts), mirroring useSaveRecallCard.
+export function useSaveMultipleChoiceCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      form,
+      target,
+    }: {
+      form: MultipleChoiceFormState
+      target: SaveMultipleChoiceCardTarget
+    }) => saveMultipleChoiceCard(repo, form, target),
     onSuccess: (record) => {
       qc.invalidateQueries({ queryKey: qk.cardsV2 })
       qc.invalidateQueries({ queryKey: qk.cardV2(record.id) })

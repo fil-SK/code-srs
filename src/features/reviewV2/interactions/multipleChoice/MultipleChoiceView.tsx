@@ -89,6 +89,18 @@ export function MultipleChoiceView({
                 stateClass,
               )}
             >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'flex h-4 w-4 flex-none items-center justify-center border transition-colors',
+                  interaction.selectionMode === 'multiple' ? 'rounded-[4px]' : 'rounded-full',
+                  isSelected
+                    ? 'border-itera-accent bg-itera-accent text-white'
+                    : 'border-itera-border-strong bg-itera-surface',
+                )}
+              >
+                {isSelected && <Check size={11} strokeWidth={3} />}
+              </span>
               <span className="flex-1 text-itera-ink">
                 <InlineText text={opt.content.value} />
               </span>

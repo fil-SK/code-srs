@@ -6,10 +6,13 @@ import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 
 // Route: cards/:id/study. The Deck-page row's primary click target — a
-// non-committing preview of the real Recall review experience (fresh
-// scheduling baseline, nothing persisted), not a real graded session. See
-// docs/itera-decisions.md for why this stays a preview rather than joining
-// the real due queue this milestone.
+// non-committing preview of the card's real Review experience, whatever its
+// interaction type (fresh scheduling baseline, nothing persisted), not a real
+// graded session. Also the closest thing to a "Card detail" view — there is
+// deliberately no separate read-only detail page (see docs/itera-decisions.md
+// D69); this preview plus the Deck row's inline Edit/overflow together are
+// the intended management surface. See docs/itera-decisions.md for why this
+// stays a preview rather than joining the real due queue this milestone.
 export function CardStudyPreviewPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -19,14 +22,14 @@ export function CardStudyPreviewPage() {
     return <p className="text-sm text-muted">Loading…</p>
   }
 
-  if (!card || card.interaction.type !== 'recall') return null
+  if (!card) return null
 
   return (
     <IteraSurface>
       <ReviewSessionScreen
         key={card.id}
         card={card}
-        definition={getInteractionDefinition('recall')}
+        definition={getInteractionDefinition(card.interaction.type)}
         current={1}
         total={1}
         onExit={() => navigate(`/decks/${card.deckId}`)}
