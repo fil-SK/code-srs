@@ -15,8 +15,10 @@ const ENABLED: InteractionType[] = [
 ]
 
 export function CardTypeChooser({
+  selected,
   onSelect,
 }: {
+  selected?: InteractionType | null
   onSelect: (type: InteractionType) => void
 }) {
   return (
@@ -29,6 +31,7 @@ export function CardTypeChooser({
           const meta = INTERACTION_META[type]
           const Icon = meta.icon
           const enabled = ENABLED.includes(type)
+          const isSelected = enabled && selected === type
           return (
             <button
               key={type}
@@ -38,11 +41,13 @@ export function CardTypeChooser({
               className={cn(
                 'flex flex-col items-center gap-2 rounded-itera-card border px-3 py-4 text-center transition-colors',
                 enabled
-                  ? 'border-itera-accent bg-itera-accent-softer text-itera-ink-brand hover:border-itera-accent-hover'
+                  ? isSelected
+                    ? 'border-itera-accent bg-itera-accent text-white shadow-sm'
+                    : 'border-itera-accent bg-itera-accent-softer text-itera-ink-brand hover:border-itera-accent-hover'
                   : 'cursor-not-allowed border-itera-border bg-itera-surface text-itera-muted opacity-60',
               )}
             >
-              <Icon size={20} className={enabled ? 'text-itera-accent' : 'text-itera-muted'} />
+              <Icon size={20} className={isSelected ? 'text-white' : enabled ? 'text-itera-accent' : 'text-itera-muted'} />
               <span className="text-sm font-semibold">{meta.label}</span>
               {!enabled && <span className="text-[11px] text-itera-muted">Coming soon</span>}
             </button>

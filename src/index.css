@@ -327,11 +327,27 @@ body {
   animation: reveal-in 0.25s ease both;
 }
 
+/* Card editor's slide-in preview drawer (CardEditorShell.tsx): width/opacity
+   animate together so revealing grows the visible slice left-to-right (the
+   box widens from its left edge while overflow-hidden clips the rest), and
+   hiding retracts right-to-left. The row's gap animates in step so the
+   editor pane doesn't jump when the drawer's width reaches zero. */
+.preview-drawer {
+  transition: width 0.3s ease, opacity 0.2s ease;
+}
+.preview-shell-row {
+  transition: gap 0.3s ease;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flip-face {
     transition: none;
   }
   .reveal-in {
     animation: none;
+  }
+  .preview-drawer,
+  .preview-shell-row {
+    transition: none;
   }
 }
