@@ -14,12 +14,15 @@ import type { WriteCodeFormState } from '@/domain/cardsV2/writeCodeForm'
 import { saveWriteCodeCard, type SaveWriteCodeCardTarget } from '@/domain/cardsV2/saveWriteCodeCard'
 import type { OrderingFormState } from '@/domain/cardsV2/orderingForm'
 import { saveOrderingCard, type SaveOrderingCardTarget } from '@/domain/cardsV2/saveOrderingCard'
+import type { MatchingFormState } from '@/domain/cardsV2/matchingForm'
+import { saveMatchingCard, type SaveMatchingCardTarget } from '@/domain/cardsV2/saveMatchingCard'
 import { qk } from './queryKeys'
 
 export type { SaveRecallCardTarget } from '@/domain/cardsV2/saveRecallCard'
 export type { SaveMultipleChoiceCardTarget } from '@/domain/cardsV2/saveMultipleChoiceCard'
 export type { SaveWriteCodeCardTarget } from '@/domain/cardsV2/saveWriteCodeCard'
 export type { SaveOrderingCardTarget } from '@/domain/cardsV2/saveOrderingCard'
+export type { SaveMatchingCardTarget } from '@/domain/cardsV2/saveMatchingCard'
 
 const repo = getRepository()
 
@@ -150,6 +153,27 @@ export function useSaveOrderingCard() {
       form: OrderingFormState
       target: SaveOrderingCardTarget
     }) => saveOrderingCard(repo, form, target),
+    onSuccess: (record) => {
+      qc.invalidateQueries({ queryKey: qk.cardsV2 })
+      qc.invalidateQueries({ queryKey: qk.cardV2(record.id) })
+      qc.invalidateQueries({ queryKey: qk.cards })
+      qc.invalidateQueries({ queryKey: qk.card(record.id) })
+    },
+  })
+}
+
+// Thin useMutation wrapper around the pure saveMatchingCard (see
+// src/domain/cardsV2/saveMatchingCard.ts), mirroring useSaveOrderingCard.
+export function useSaveMatchingCard() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      form,
+      target,
+    }: {
+      form: MatchingFormState
+      target: SaveMatchingCardTarget
+    }) => saveMatchingCard(repo, form, target),
     onSuccess: (record) => {
       qc.invalidateQueries({ queryKey: qk.cardsV2 })
       qc.invalidateQueries({ queryKey: qk.cardV2(record.id) })

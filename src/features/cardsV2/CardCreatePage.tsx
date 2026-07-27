@@ -5,16 +5,18 @@ import { emptyRecallForm } from '@/domain/cardsV2/recallForm'
 import { emptyMultipleChoiceForm } from '@/domain/cardsV2/multipleChoiceForm'
 import { emptyWriteCodeForm } from '@/domain/cardsV2/writeCodeForm'
 import { emptyOrderingForm } from '@/domain/cardsV2/orderingForm'
+import { emptyMatchingForm } from '@/domain/cardsV2/matchingForm'
 import { CardTypeChooser } from './CardTypeChooser'
 import { RecallEditorShell } from './RecallEditorShell'
 import { MultipleChoiceEditorShell } from './MultipleChoiceEditorShell'
 import { WriteCodeEditorShell } from './WriteCodeEditorShell'
 import { OrderingEditorShell } from './OrderingEditorShell'
+import { MatchingEditorShell } from './MatchingEditorShell'
 
 // Route: decks/:deckId/cards/new. Spec §22.1's create flow as one continuous
 // screen: choose interaction -> author content -> preview -> save. Recall,
-// Multiple Choice, Write Code, and Ordering are selectable today (see
-// CardTypeChooser).
+// Multiple Choice, Write Code, Ordering, and Matching are selectable today
+// (see CardTypeChooser).
 export function CardCreatePage() {
   const { deckId } = useParams<{ deckId: string }>()
   const navigate = useNavigate()
@@ -63,6 +65,18 @@ export function CardCreatePage() {
       <OrderingEditorShell
         mode="create"
         initialForm={emptyOrderingForm(deckId)}
+        target={{ kind: 'new' }}
+        backTo={backTo}
+        onSaved={(record) => navigate(`/decks/${record.deckId}`)}
+      />
+    )
+  }
+
+  if (selectedType === 'matching') {
+    return (
+      <MatchingEditorShell
+        mode="create"
+        initialForm={emptyMatchingForm(deckId)}
         target={{ kind: 'new' }}
         backTo={backTo}
         onSaved={(record) => navigate(`/decks/${record.deckId}`)}
