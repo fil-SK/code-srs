@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useState } from 'react'
 import type { Rating, SchedulingState } from '@/types'
 import type { CardInteraction, CardV2, InteractionType } from '@/types/cardV2'
+import { cn } from '@/lib/cn'
 import { reviewService, type SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { ReviewTopBar } from './components/ReviewTopBar'
 import { TipPanel } from './components/TipPanel'
@@ -72,6 +73,19 @@ export function ReviewSessionScreen<T extends InteractionType>({
   const [response, setResponse] = useState<InteractionResponse>(initialResponse)
   const [presentedAt] = useState(() => Date.now())
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
+
+  // Callers remount this whole component per card (key={card.id}), so a
+  // mount-only entrance animation naturally replays for every new card
+  // without any extra id-tracking - "drawing the next card off the deck"
+  // instead of the old card blinking straight to the new one. Starts in the
+  // CSS's rotated/offset/faded resting-off-stack pose and flips to `-active`
+  // one frame later so the browser actually transitions between the two
+  // states rather than starting already there.
+  const [entered, setEntered] = useState(false)
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   const responseReady = definition.interactive
     ? (definition.isResponseReady?.(response, card.interaction) ?? true)
@@ -183,32 +197,44 @@ export function ReviewSessionScreen<T extends InteractionType>({
         />
       )}
 
-      <definition.View
-        card={card}
-        phase={phase}
-        response={response}
-        setResponse={setResponse}
-        onPrimaryAction={primaryAction}
-        responseReady={responseReady}
-      />
-
-      {phase.kind === 'presenting' && <TipPanel text={card.tip?.value} />}
-
-      {showExplanation && <ExplanationPanel text={card.explanation?.value} />}
-
-      {showRating && !hideRating && (
-        <RatingControls
-          selected={selectedRating}
-          suggested={suggested}
-          disabled={phase.kind !== 'feedback'}
-          onRate={rate}
-          note={
-            phase.kind === 'transitioning'
-              ? 'Preview only — nothing recorded.'
-              : undefined
-          }
+      {/* The flashcard itself reads best at the same width as the card
+          editor's own column (CardEditorShell's EDITOR_COL, 42rem/max-w-2xl)
+          - noticeably narrower than the full session width the top bar
+          uses, matching the reference mockups (top bar spans edge to edge,
+          the card is a centered, narrower column below it). */}
+      <div
+        className={cn(
+          'itera-card-enter mx-auto max-w-2xl',
+          entered && 'itera-card-enter-active',
+        )}
+      >
+        <definition.View
+          card={card}
+          phase={phase}
+          response={response}
+          setResponse={setResponse}
+          onPrimaryAction={primaryAction}
+          responseReady={responseReady}
         />
-      )}
+
+        {phase.kind === 'presenting' && <TipPanel text={card.tip?.value} />}
+
+        {showExplanation && <ExplanationPanel text={card.explanation?.value} />}
+
+        {showRating && !hideRating && (
+          <RatingControls
+            selected={selectedRating}
+            suggested={suggested}
+            disabled={phase.kind !== 'feedback'}
+            onRate={rate}
+            note={
+              phase.kind === 'transitioning'
+                ? 'Preview only — nothing recorded.'
+                : undefined
+            }
+          />
+        )}
+      </div>
     </div>
   )
 }

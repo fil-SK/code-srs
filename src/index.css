@@ -258,6 +258,34 @@
   }
 }
 
+/* Next-card entrance (ReviewSessionScreen.tsx): replaces the old instant
+   remount-and-blink between cards with the next card visibly settling into
+   place, evoking the two-overlapping-rotated-cards "draw the next card off
+   the deck" motif (see itera-reveal-hint in the design inspiration set)
+   rather than a generic fade. `.itera-card-enter` is the off-stack resting
+   pose (rotated, offset, slightly scaled down, faded); `-active` is applied
+   one animation frame after mount so the browser actually transitions
+   between the two rather than starting already in the resting state. */
+.itera-card-enter {
+  transform: translateY(14px) scale(0.97) rotate(-2.5deg);
+  opacity: 0;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease-out;
+}
+.itera-card-enter-active {
+  transform: translateY(0) scale(1) rotate(0deg);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itera-card-enter {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+}
+
 /* ---------- Base ---------- */
 html {
   background: var(--bg);

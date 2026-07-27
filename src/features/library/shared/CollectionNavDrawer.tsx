@@ -11,11 +11,13 @@ export function CollectionNavDrawer({
   collections,
   decks,
   selection,
+  activeDeckId,
   onSelect,
 }: {
   collections: LibraryCollection[]
   decks: NavDeck[]
   selection: LibrarySelection
+  activeDeckId?: string
   onSelect: (selection: LibrarySelection) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -63,6 +65,7 @@ export function CollectionNavDrawer({
                 collections={collections}
                 decks={decks}
                 selection={selection}
+                activeDeckId={activeDeckId}
                 onSelect={(next) => {
                   onSelect(next)
                   setOpen(false)

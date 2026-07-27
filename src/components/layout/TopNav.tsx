@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Search } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useNavBadges } from './useNavBadges'
 import type { PrimaryNavLink } from './primaryNavLinks'
@@ -13,14 +12,16 @@ import type { PrimaryNavLink } from './primaryNavLinks'
 // without shrink-0, flex's default shrink:1 let the logo block compress
 // below its own content's width, which then visually overflowed into the
 // nav's box instead of the row just scrolling.
+//
+// No global Search or Create action here (product call: both are scoped
+// concepts - search within a Library, create a card within a deck - and
+// belong on the Library page, not floating in the shell with no context).
 export function TopNav({
   navLinks,
   rightSlot,
-  showSearch = true,
 }: {
   navLinks: PrimaryNavLink[]
   rightSlot?: ReactNode
-  showSearch?: boolean
 }) {
   const badges = useNavBadges()
 
@@ -60,13 +61,6 @@ export function TopNav({
         </nav>
 
         <div className="flex-1" />
-
-        {showSearch && (
-          <div className="hidden shrink-0 items-center gap-2 rounded-itera-control border border-itera-border bg-itera-surface-subtle px-3 py-1.5 text-sm text-itera-muted sm:flex">
-            <Search size={15} />
-            <span>Search</span>
-          </div>
-        )}
 
         {rightSlot}
       </div>

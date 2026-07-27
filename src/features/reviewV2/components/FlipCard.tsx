@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from 'react'
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 // Itera's flip primitive. NOT the shared src/components/ui/FlipCard.tsx —
@@ -21,6 +21,30 @@ import { cn } from '@/lib/cn'
 // focus-visible ring, aria-pressed, and aria-hidden on whichever face is
 // currently the "back" of the card so assistive tech doesn't see both faces'
 // text at once.
+//
+// Both faces are click/keyboard-activatable to flip (front -> back and back
+// -> front), so the card itself is always the thing you click, front or
+// back, rather than needing a separate "show question" control once flipped.
+// Four of the six interaction types now put real controls (buttons, a code
+// editor, option rows) inside the front face, so a click or Enter/Space
+// originating on one of those must NOT also bubble up and re-trigger the
+// face's own flip handler. `isOwnActivation` tells the two apart: it walks
+// up from the actual event target looking for the nearest interactive
+// element (same selector the Review shell's own isInteractiveTarget guard
+// uses); if that nearest interactive element is the face itself, the click
+// landed on plain content (prose, padding) and should flip the card. If it's
+// something nested and closer (a button, an option row, the code editor),
+// that control already handled the event itself and the face must not also
+// react to it.
+const INTERACTIVE_SELECTOR =
+  'button, [role="button"], [role="radio"], [role="checkbox"], input, textarea, select, [contenteditable="true"], .cm-editor'
+
+function isOwnActivation(target: EventTarget | null, face: HTMLElement): boolean {
+  if (!(target instanceof HTMLElement)) return true
+  const nearest = target.closest(INTERACTIVE_SELECTOR)
+  return nearest === null || nearest === face
+}
+
 export function FlipCard({
   front,
   back,
@@ -36,7 +60,13 @@ export function FlipCard({
   onFlip: () => void
   ariaLabel: string
 }) {
-  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+  function onFaceClick(e: MouseEvent<HTMLDivElement>) {
+    if (!isOwnActivation(e.target, e.currentTarget)) return
+    onFlip()
+  }
+
+  function onFaceKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (!isOwnActivation(e.target, e.currentTarget)) return
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       onFlip()
@@ -51,19 +81,27 @@ export function FlipCard({
         aria-pressed={flipped}
         aria-hidden={flipped}
         aria-label={ariaLabel}
-        onClick={flipped ? undefined : onFlip}
-        onKeyDown={flipped ? undefined : onKeyDown}
+        onClick={onFaceClick}
+        onKeyDown={onFaceKeyDown}
         className={cn(
-          'itera-flip-face itera-flip-front outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
-          !flipped && 'cursor-pointer',
+          'itera-flip-face itera-flip-front cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
           faceClassName,
         )}
       >
         {front}
       </div>
       <div
+        role="button"
+        tabIndex={flipped ? 0 : -1}
+        aria-pressed={flipped}
         aria-hidden={!flipped}
-        className={cn('itera-flip-face itera-flip-back', faceClassName)}
+        aria-label={ariaLabel}
+        onClick={onFaceClick}
+        onKeyDown={onFaceKeyDown}
+        className={cn(
+          'itera-flip-face itera-flip-back cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+          faceClassName,
+        )}
       >
         {back}
       </div>

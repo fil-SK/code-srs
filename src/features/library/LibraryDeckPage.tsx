@@ -17,13 +17,26 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { BookOpen, ChevronRight, GripVertical, Play, Plus, Settings } from 'lucide-react'
-import type { Card } from '@/types'
+import {
+  BookOpen,
+  CalendarClock,
+  ChevronRight,
+  Clock,
+  GripVertical,
+  Layers,
+  Play,
+  Plus,
+  Search,
+  Settings,
+} from 'lucide-react'
+import type { Card, SchedulingStateKind } from '@/types'
 import { Button } from '@/components/ui/Button'
+import { fieldClass, selectClass } from '@/components/ui/Field'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
 import { languageLabel } from '@/domain/decks/languages'
 import {
   useDeleteCard,
+  useDueCards,
   useMoveCard,
   useReorderCards,
   useSaveCard,
@@ -32,16 +45,22 @@ import {
 import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import { useDecks } from '@/hooks/useDecks'
 import { CardRow } from '@/features/cards/CardRow'
+import { cardTypeMeta } from '@/features/cards/cardTypeMeta'
 import { getCardTitle } from '@/features/cards/cardTypeMeta'
 import { CardRowV2 } from '@/features/cardsV2/CardRowV2'
+import { INTERACTION_META } from '@/features/cardsV2/shared/interactionTypeMeta'
+import { OverflowMenu } from '@/features/cardsV2/shared/OverflowMenu'
 import { DeckMark } from './shared/DeckMark'
 import { MasteryRing } from './shared/MasteryRing'
+import { MeterBar } from './shared/MeterBar'
 import { EmptyState } from './shared/EmptyState'
+import { LibraryShell } from './shared/LibraryShell'
 import { DeckSettings } from './DeckSettings'
 import { markLabelFor } from './deckMark'
 import {
   deriveCollections,
   collectionIdFor,
+  leafDecks,
   selectionToSearchParams,
   type LibraryCollection,
 } from './collectionTree'
@@ -49,6 +68,48 @@ import { computeDeckMetrics, metricsFor } from './deckMetrics'
 import { formatLastStudied } from '@/features/cardsV2/shared/format'
 
 const byOrder = (a: Card, b: Card) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt)
+const PAGE_SIZE = 10
+
+type SortKey = 'manual' | 'dueSoon' | 'name' | 'type' | 'status'
+type StatusFilter = 'all' | SchedulingStateKind | 'suspended'
+
+// One row's worth of the data the toolbar (search/type/status/sort) and
+// pagination need, regardless of whether it's a v1 Card or a CardV2Record -
+// the two rendering components (CardRow/CardRowV2) stay untouched, this is
+// only the metadata used to filter/sort/paginate before picking which of the
+// two components to render for a given id.
+interface RowMeta {
+  id: string
+  kind: 'v1' | 'v2'
+  title: string
+  typeLabel: string
+  state: SchedulingStateKind
+  suspended: boolean
+  due: number
+}
+
+function statusMatches(row: RowMeta, filter: StatusFilter): boolean {
+  if (filter === 'all') return !row.suspended
+  if (filter === 'suspended') return row.suspended
+  return !row.suspended && row.state === filter
+}
+
+function sortRows(rows: RowMeta[], sort: SortKey): RowMeta[] {
+  const copy = [...rows]
+  switch (sort) {
+    case 'dueSoon':
+      return copy.sort((a, b) => a.due - b.due)
+    case 'name':
+      return copy.sort((a, b) => a.title.localeCompare(b.title))
+    case 'type':
+      return copy.sort((a, b) => a.typeLabel.localeCompare(b.typeLabel))
+    case 'status':
+      return copy.sort((a, b) => a.state.localeCompare(b.state))
+    case 'manual':
+    default:
+      return copy
+  }
+}
 
 function collectionPath(collections: LibraryCollection[], collectionId: string | undefined): LibraryCollection[] {
   if (!collectionId) return []
@@ -110,6 +171,30 @@ function SortableCardRow({
   )
 }
 
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: typeof Layers
+  label: string
+  value: string
+  accent?: boolean
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon size={16} className={accent ? 'text-itera-accent' : 'text-itera-muted'} />
+      <div>
+        <div className={`font-itera-display text-lg font-bold ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}>
+          {value}
+        </div>
+        <div className="text-xs text-itera-muted">{label}</div>
+      </div>
+    </div>
+  )
+}
+
 // The focused Deck page (/decks/:id), promoted from design-preview's
 // library-deck preview into the real Library. A deck with children is
 // reachable here too (a "Collection" is UI-only — see collectionTree.ts) and
@@ -119,14 +204,15 @@ export function LibraryDeckPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const decksQuery = useDecks()
-  const [showSuspended, setShowSuspended] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [tab, setTab] = useState<'cards' | 'insights'>('cards')
   const now = useMemo(() => Date.now(), [])
 
-  const cardsQuery = useSearchCards({ deckId: id, includeSuspended: showSuspended })
-  const cardsV2Query = useSearchCardsV2({ deckId: id, includeSuspended: showSuspended })
+  const cardsQuery = useSearchCards({ deckId: id, includeSuspended: true })
+  const cardsV2Query = useSearchCardsV2({ deckId: id, includeSuspended: true })
   const allCards = useSearchCards({ includeSuspended: true })
   const allCardsV2 = useSearchCardsV2({ includeSuspended: true })
+  const dueCardsQuery = useDueCards({ now })
 
   const v2Cards = useMemo(
     () => [...(cardsV2Query.data ?? [])].sort((a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt)),
@@ -156,6 +242,7 @@ export function LibraryDeckPage() {
 
   const decks = decksQuery.data ?? []
   const collections = useMemo(() => deriveCollections(decksQuery.data ?? []), [decksQuery.data])
+  const leaves = useMemo(() => leafDecks(decksQuery.data ?? []), [decksQuery.data])
   const flatDecks = useMemo(
     () => flattenDeckTree(buildDeckTree(decksQuery.data ?? [])),
     [decksQuery.data],
@@ -181,9 +268,84 @@ export function LibraryDeckPage() {
     return map
   }, [allCardsV2.data])
   const metricsMap = useMemo(
-    () => computeDeckMetrics(allCards.data ?? [], [], v2CountByDeck),
-    [allCards.data, v2CountByDeck],
+    () => computeDeckMetrics(allCards.data ?? [], dueCardsQuery.data ?? [], v2CountByDeck),
+    [allCards.data, dueCardsQuery.data, v2CountByDeck],
   )
+
+  const navDecks = useMemo(
+    () =>
+      leaves.map((d) => ({
+        id: d.id,
+        name: d.name,
+        collectionId: collectionIdFor(d, collections),
+        cardCount: metricsFor(metricsMap, d.id).cardCount,
+      })),
+    [leaves, collections, metricsMap],
+  )
+
+  // Toolbar state (Cards tab only) - search/type/status/sort + pagination.
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [sort, setSort] = useState<SortKey>('manual')
+  const [page, setPage] = useState(1)
+  useEffect(() => setPage(1), [search, typeFilter, statusFilter, sort])
+
+  const v2ById = useMemo(() => new Map(v2Cards.map((c) => [c.id, c])), [v2Cards])
+  const v1ById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards])
+
+  const v2Meta: RowMeta[] = useMemo(
+    () =>
+      v2Cards.map((c) => ({
+        id: c.id,
+        kind: 'v2' as const,
+        title: c.prompt.value.split('\n')[0]?.trim() || '(untitled)',
+        typeLabel: INTERACTION_META[c.interaction.type].label,
+        state: c.scheduling.state,
+        suspended: c.suspended,
+        due: c.scheduling.due,
+      })),
+    [v2Cards],
+  )
+  const v1Meta: RowMeta[] = useMemo(
+    () =>
+      cards.map((c) => ({
+        id: c.id,
+        kind: 'v1' as const,
+        title: getCardTitle(c),
+        typeLabel: cardTypeMeta[c.type].label,
+        state: c.scheduling.state,
+        suspended: c.suspended,
+        due: c.scheduling.due,
+      })),
+    [cards],
+  )
+  const combinedMeta = useMemo(() => [...v2Meta, ...v1Meta], [v2Meta, v1Meta])
+  const typeOptions = useMemo(
+    () => Array.from(new Set(combinedMeta.map((r) => r.typeLabel))).sort(),
+    [combinedMeta],
+  )
+
+  const filtersActive = search.trim() !== '' || typeFilter !== 'all' || statusFilter !== 'all'
+  const paginating = filtersActive || sort !== 'manual'
+
+  const filteredMeta = useMemo(() => {
+    let result = combinedMeta
+    if (typeFilter !== 'all') result = result.filter((r) => r.typeLabel === typeFilter)
+    result = result.filter((r) => statusMatches(r, statusFilter))
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      result = result.filter((r) => r.title.toLowerCase().includes(q))
+    }
+    return result
+  }, [combinedMeta, typeFilter, statusFilter, search])
+
+  const sortedMeta = useMemo(
+    () => (paginating ? sortRows(filteredMeta, sort) : filteredMeta),
+    [filteredMeta, sort, paginating],
+  )
+  const totalPages = Math.max(1, Math.ceil(sortedMeta.length / PAGE_SIZE))
+  const pageMeta = paginating ? sortedMeta.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : sortedMeta
 
   if (!decksQuery.isLoading && !deck) {
     return (
@@ -205,9 +367,17 @@ export function LibraryDeckPage() {
   const path = collectionPath(collections, cid)
   const metrics = metricsFor(metricsMap, deck.id)
   const totalCards = cards.length + v2Cards.length
+  const markLabel =
+    path.length > 0 ? markLabelFor(path[path.length - 1].name, 3) : markLabelFor(deck.name, 3)
 
   return (
-    <div>
+    <LibraryShell
+      collections={collections}
+      decks={navDecks}
+      selection={{ kind: 'collection', id: '__none__' }}
+      activeDeckId={deck.id}
+      onSelect={(next) => navigate(`/decks?${selectionToSearchParams(next)}`)}
+    >
       <nav className="mb-4 flex items-center gap-1.5 text-sm text-itera-muted">
         <button type="button" onClick={() => navigate('/decks')} className="hover:text-itera-ink">
           Library
@@ -230,7 +400,7 @@ export function LibraryDeckPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
-          <DeckMark label={markLabelFor(deck.name)} size="lg" />
+          <DeckMark label={markLabel} size="lg" />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand">
@@ -245,9 +415,14 @@ export function LibraryDeckPage() {
             {deck.description && <p className="mt-1 max-w-md text-sm text-itera-muted">{deck.description}</p>}
 
             <div className="mt-3 flex flex-wrap items-center gap-6">
-              <Stat label="cards" value={String(totalCards)} />
-              <Stat label="due today" value={String(metrics.dueCount)} accent={metrics.dueCount > 0} />
-              <Stat label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
+              <Stat icon={Layers} label="cards" value={String(totalCards)} />
+              <Stat
+                icon={CalendarClock}
+                label="due today"
+                value={String(metrics.dueCount)}
+                accent={metrics.dueCount > 0}
+              />
+              <Stat icon={Clock} label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
               <div className="flex items-center gap-2">
                 <MasteryRing value={metrics.masteryFraction} />
                 <div>
@@ -261,31 +436,36 @@ export function LibraryDeckPage() {
           </div>
         </div>
 
-        <div className="flex flex-none flex-wrap items-center gap-2">
-          <Button
-            variant={settingsOpen ? 'secondary' : 'ghost'}
-            onClick={() => setSettingsOpen((o) => !o)}
-            aria-expanded={settingsOpen}
-          >
-            <Settings size={15} /> Deck settings
-          </Button>
+        <div className="flex flex-none flex-col items-stretch gap-2">
+          <div className="flex items-center gap-2">
+            <OverflowMenu
+              ariaLabel="More deck actions"
+              items={[
+                {
+                  label: 'Flip through',
+                  icon: BookOpen,
+                  onClick: () => navigate(`/preview?deck=${id}&from=/decks/${id}`),
+                },
+              ]}
+            />
+            <Button
+              variant={settingsOpen ? 'secondary' : 'ghost'}
+              onClick={() => setSettingsOpen((o) => !o)}
+              aria-expanded={settingsOpen}
+            >
+              <Settings size={15} /> Deck settings
+            </Button>
+          </div>
           {totalCards > 0 && (
-            <>
-              <Link to={`/preview?deck=${id}&from=/decks/${id}`}>
-                <Button variant="secondary">
-                  <BookOpen size={15} /> Flip through
-                </Button>
-              </Link>
-              <Link to={`/review?deck=${id}`}>
-                <Button variant="secondary">
-                  <Play size={15} /> Study now
-                </Button>
-              </Link>
-            </>
+            <Link to={`/review?deck=${id}`}>
+              <Button variant="primary" className="w-full justify-center">
+                <Play size={15} /> Study Now
+              </Button>
+            </Link>
           )}
           <Link to={`/decks/${id}/cards/new`}>
-            <Button variant="primary">
-              <Plus size={15} /> New card
+            <Button variant="secondary" className="w-full justify-center">
+              <Plus size={15} /> Add Card
             </Button>
           </Link>
         </div>
@@ -293,71 +473,271 @@ export function LibraryDeckPage() {
 
       {settingsOpen && <DeckSettings deck={deck} decks={decks} />}
 
-      <div className="mb-4 mt-6 flex items-center justify-between text-xs text-itera-muted">
-        <span>
-          {cardsQuery.isLoading || cardsV2Query.isLoading
-            ? 'Loading…'
-            : `${totalCards} card${totalCards === 1 ? '' : 's'}`}
-          {cards.length > 1 && <span className="text-itera-muted-light"> · drag the handle to reorder</span>}
-        </span>
-        <label className="flex cursor-pointer items-center gap-1.5">
-          <input
-            type="checkbox"
-            checked={showSuspended}
-            onChange={(e) => setShowSuspended(e.target.checked)}
-            className="accent-itera-accent"
-          />
-          Show suspended
-        </label>
+      <div className="mb-4 mt-6 flex items-center gap-5 border-b border-itera-border text-sm font-semibold">
+        {(['cards', 'insights'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={
+              tab === key
+                ? 'border-b-2 border-itera-accent pb-2.5 text-itera-ink-brand'
+                : 'border-b-2 border-transparent pb-2.5 text-itera-muted hover:text-itera-ink'
+            }
+          >
+            {key === 'cards' ? 'Cards' : 'Insights'}
+          </button>
+        ))}
       </div>
 
-      {!cardsQuery.isLoading && !cardsV2Query.isLoading && cards.length === 0 && v2Cards.length === 0 && (
-        <EmptyState
-          title="No cards yet"
-          description="This deck doesn't have any cards yet."
-          action={
-            <Link to={`/decks/${id}/cards/new`}>
-              <Button variant="primary">Add a card</Button>
-            </Link>
-          }
-        />
-      )}
-
-      {v2Cards.length > 0 && (
-        <div className="mb-2.5 space-y-2.5">
-          {v2Cards.map((card) => (
-            <CardRowV2 key={card.id} card={card} now={now} />
-          ))}
-        </div>
-      )}
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2.5">
-            {cards.map((card) => (
-              <SortableCardRow
-                key={card.id}
-                card={card}
-                onToggleSuspend={toggleSuspend}
-                onDelete={remove}
-                decks={flatDecks}
-                onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
+      {tab === 'insights' ? (
+        <InsightsTab meta={combinedMeta} />
+      ) : (
+        <>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[200px] flex-1">
+              <Search
+                size={15}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted"
               />
-            ))}
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search cards..."
+                className={`${fieldClass} pl-9`}
+              />
+            </div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className={`${selectClass} w-auto`}
+            >
+              <option value="all">Type: All</option>
+              {typeOptions.map((t) => (
+                <option key={t} value={t}>
+                  Type: {t}
+                </option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+              className={`${selectClass} w-auto`}
+            >
+              <option value="all">Status: All</option>
+              <option value="new">Status: New</option>
+              <option value="learning">Status: Learning</option>
+              <option value="review">Status: Review</option>
+              <option value="relearning">Status: Relearning</option>
+              <option value="suspended">Status: Suspended</option>
+            </select>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              className={`${selectClass} w-auto`}
+            >
+              <option value="manual">Sort: Manual</option>
+              <option value="dueSoon">Sort: Due soon</option>
+              <option value="name">Sort: Name</option>
+              <option value="type">Sort: Type</option>
+              <option value="status">Sort: Status</option>
+            </select>
           </div>
-        </SortableContext>
-      </DndContext>
-    </div>
+
+          <div className="mb-2.5 text-xs text-itera-muted">
+            {cardsQuery.isLoading || cardsV2Query.isLoading
+              ? 'Loading…'
+              : `${sortedMeta.length} card${sortedMeta.length === 1 ? '' : 's'}`}
+            {!paginating && cards.length > 1 && (
+              <span className="text-itera-muted-light"> · drag the handle to reorder</span>
+            )}
+          </div>
+
+          {!cardsQuery.isLoading && !cardsV2Query.isLoading && combinedMeta.length === 0 && (
+            <EmptyState
+              title="No cards yet"
+              description="This deck doesn't have any cards yet."
+              action={
+                <Link to={`/decks/${id}/cards/new`}>
+                  <Button variant="primary">Add a card</Button>
+                </Link>
+              }
+            />
+          )}
+
+          {!cardsQuery.isLoading && !cardsV2Query.isLoading && combinedMeta.length > 0 && sortedMeta.length === 0 && (
+            <EmptyState
+              title="No cards match"
+              description="Try a different search, type, or status filter."
+            />
+          )}
+
+          {!paginating ? (
+            <>
+              {v2Cards.length > 0 && (
+                <div className="mb-2.5 space-y-2.5">
+                  {v2Cards.map((card) => (
+                    <CardRowV2 key={card.id} card={card} now={now} />
+                  ))}
+                </div>
+              )}
+
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-2.5">
+                    {cards.map((card) => (
+                      <SortableCardRow
+                        key={card.id}
+                        card={card}
+                        onToggleSuspend={toggleSuspend}
+                        onDelete={remove}
+                        decks={flatDecks}
+                        onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2.5">
+                {pageMeta.map((meta) => {
+                  if (meta.kind === 'v2') {
+                    const card = v2ById.get(meta.id)
+                    if (!card) return null
+                    return <CardRowV2 key={meta.id} card={card} now={now} />
+                  }
+                  const card = v1ById.get(meta.id)
+                  if (!card) return null
+                  return (
+                    <CardRow
+                      key={meta.id}
+                      card={card}
+                      onToggleSuspend={toggleSuspend}
+                      onDelete={remove}
+                      decks={flatDecks}
+                      onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
+                    />
+                  )
+                })}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="grid h-8 w-8 place-items-center rounded-itera-control border border-itera-border text-itera-muted disabled:pointer-events-none disabled:opacity-40 hover:text-itera-ink"
+                  >
+                    <ChevronRight size={15} className="rotate-180" />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPage(p)}
+                      className={
+                        p === page
+                          ? 'grid h-8 w-8 place-items-center rounded-itera-control border border-itera-accent bg-itera-accent-soft text-sm font-semibold text-itera-ink-brand'
+                          : 'grid h-8 w-8 place-items-center rounded-itera-control border border-itera-border text-sm text-itera-muted hover:text-itera-ink'
+                      }
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="grid h-8 w-8 place-items-center rounded-itera-control border border-itera-border text-itera-muted disabled:pointer-events-none disabled:opacity-40 hover:text-itera-ink"
+                  >
+                    <ChevronRight size={15} />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </LibraryShell>
   )
 }
 
-function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+// A light breakdown from data already computed elsewhere (status per card,
+// type per card) - no new metric/domain concept invented for this, just two
+// distributions over the same rows the Cards tab already lists.
+function InsightsTab({ meta }: { meta: RowMeta[] }) {
+  const total = meta.length
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<StatusFilter, number> = {
+      all: 0,
+      new: 0,
+      learning: 0,
+      review: 0,
+      relearning: 0,
+      suspended: 0,
+    }
+    for (const row of meta) {
+      if (row.suspended) counts.suspended += 1
+      else counts[row.state] += 1
+    }
+    return counts
+  }, [meta])
+
+  const typeCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const row of meta) counts.set(row.typeLabel, (counts.get(row.typeLabel) ?? 0) + 1)
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+  }, [meta])
+
+  if (total === 0) {
+    return <EmptyState title="Nothing to show yet" description="Add some cards to see insights for this deck." />
+  }
+
+  const statusRows: { label: string; count: number }[] = [
+    { label: 'New', count: statusCounts.new },
+    { label: 'Learning', count: statusCounts.learning },
+    { label: 'Review', count: statusCounts.review },
+    { label: 'Relearning', count: statusCounts.relearning },
+    { label: 'Suspended', count: statusCounts.suspended },
+  ]
+
   return (
-    <div>
-      <div className={`font-itera-display text-lg font-bold ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}>
-        {value}
+    <div className="grid gap-6 sm:grid-cols-2">
+      <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5">
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-itera-muted">By status</h2>
+        <div className="space-y-3">
+          {statusRows.map((row) => (
+            <div key={row.label} className="flex items-center gap-3">
+              <span className="w-24 flex-none text-sm text-itera-ink">{row.label}</span>
+              <div className="flex-1">
+                <MeterBar value={total > 0 ? row.count / total : 0} />
+              </div>
+              <span className="w-8 flex-none text-right text-sm font-semibold text-itera-ink-brand">
+                {row.count}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="text-xs text-itera-muted">{label}</div>
+
+      <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5">
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-itera-muted">By type</h2>
+        <div className="space-y-3">
+          {typeCounts.map(([label, count]) => (
+            <div key={label} className="flex items-center gap-3">
+              <span className="w-24 flex-none truncate text-sm text-itera-ink">{label}</span>
+              <div className="flex-1">
+                <MeterBar value={total > 0 ? count / total : 0} />
+              </div>
+              <span className="w-8 flex-none text-right text-sm font-semibold text-itera-ink-brand">{count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

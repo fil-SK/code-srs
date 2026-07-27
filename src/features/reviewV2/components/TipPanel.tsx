@@ -1,3 +1,4 @@
+import { Lightbulb } from 'lucide-react'
 import { RichText } from '@/components/text/RichText'
 
 // Shown before the answer is revealed, directly below the card — never in a
@@ -6,11 +7,14 @@ import { RichText } from '@/components/text/RichText'
 export function TipPanel({ text }: { text: string | undefined }) {
   if (!text?.trim()) return null
   return (
-    <div className="mt-4 rounded-itera-control border border-dashed border-itera-border bg-itera-accent-softer px-4 py-3">
-      <div className="text-xs font-semibold uppercase tracking-wide text-itera-accent-active">
-        Tip
+    <div className="mt-4 flex items-start gap-3 rounded-itera-card border border-itera-border bg-itera-surface p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-itera-control bg-itera-accent-soft text-itera-accent">
+        <Lightbulb size={18} />
       </div>
-      <RichText text={text} className="mt-1 text-sm leading-relaxed text-itera-ink" />
+      <div>
+        <div className="text-sm font-semibold text-itera-ink-brand">Tip (optional)</div>
+        <RichText text={text} className="mt-1 text-sm leading-relaxed text-itera-muted" />
+      </div>
     </div>
   )
 }

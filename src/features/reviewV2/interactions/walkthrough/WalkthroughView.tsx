@@ -81,14 +81,16 @@ export function WalkthroughView({
 
   return (
     <CardPanel>
-      <InteractionLabel text="Walkthrough" />
-      <RichText
-        text={card.prompt.value}
-        className="mt-3 text-lg font-semibold leading-snug text-itera-ink-brand"
-      />
+      <div className="flex flex-col items-center gap-1 text-center">
+        <InteractionLabel type="walkthrough" />
+        <RichText
+          text={card.prompt.value}
+          className="mt-2 text-2xl font-bold leading-snug text-itera-ink-brand"
+        />
+      </div>
       <RichText
         text={interaction.scenario.value}
-        className="mt-2 text-sm leading-relaxed text-itera-ink"
+        className="mt-3 text-center text-sm leading-relaxed text-itera-ink"
       />
 
       {interaction.code && (

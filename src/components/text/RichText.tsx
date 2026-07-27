@@ -83,7 +83,7 @@ export function RichText({
     <div className={className}>
       {blocks.map((b, i) =>
         b.type === 'code' ? (
-          <div key={i} className="my-2 first:mt-0 last:mb-0">
+          <div key={i} className="my-2 text-left first:mt-0 last:mb-0">
             <LazyCodeView code={b.body} language={b.lang ?? 'text'} />
           </div>
         ) : (

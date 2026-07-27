@@ -1,3 +1,4 @@
+import { BookOpen } from 'lucide-react'
 import { RichText } from '@/components/text/RichText'
 
 // Shown after reveal, below the answer and above the rating controls (spec
@@ -5,11 +6,14 @@ import { RichText } from '@/components/text/RichText'
 export function ExplanationPanel({ text }: { text: string | undefined }) {
   if (!text?.trim()) return null
   return (
-    <div className="mt-4 border-t border-dashed border-itera-border pt-4">
-      <div className="text-xs font-semibold uppercase tracking-wide text-itera-muted">
-        Explanation
+    <div className="mt-4 flex items-start gap-3 rounded-itera-card border border-itera-border bg-itera-surface p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-itera-control bg-itera-navy-soft text-itera-navy">
+        <BookOpen size={18} />
       </div>
-      <RichText text={text} className="mt-1 text-sm leading-relaxed text-itera-ink" />
+      <div>
+        <div className="text-sm font-semibold text-itera-ink-brand">Explanation</div>
+        <RichText text={text} className="mt-1 text-sm leading-relaxed text-itera-muted" />
+      </div>
     </div>
   )
 }

@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router-dom'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { TopNav } from './TopNav'
-import { CreateMenu } from './CreateMenu'
 import { ProfileMenu } from './ProfileMenu'
+import { StreakBadge } from './StreakBadge'
 import { primaryNavLinks } from './primaryNavLinks'
 
 // The one shared shell for every standard product route (Today, Library,
@@ -22,7 +22,7 @@ export function AppShell() {
         navLinks={primaryNavLinks}
         rightSlot={
           <>
-            <CreateMenu />
+            <StreakBadge />
             <ProfileMenu />
           </>
         }

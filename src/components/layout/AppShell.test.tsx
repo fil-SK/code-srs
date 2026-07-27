@@ -64,10 +64,11 @@ describe('AppShell', () => {
     expect(today.className).not.toMatch(/border-itera-accent/)
   })
 
-  it('renders a global Create action and a Profile menu', async () => {
+  it('renders a Profile menu and no global Search or Create action', async () => {
     renderAt('/decks')
-    expect(await screen.findByRole('button', { name: /Create/ })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Profile' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Profile' })).toBeTruthy()
+    expect(screen.queryByText('Search')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Create/ })).toBeNull()
   })
 
   it('does not render the shared shell around a route outside AppShell (Review)', async () => {
@@ -75,6 +76,6 @@ describe('AppShell', () => {
     expect(await screen.findByText('Review content')).toBeTruthy()
     expect(screen.queryByText('Itera')).toBeNull()
     expect(screen.queryByRole('link', { name: 'Library' })).toBeNull()
-    expect(screen.queryByRole('button', { name: /Create/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Profile' })).toBeNull()
   })
 })

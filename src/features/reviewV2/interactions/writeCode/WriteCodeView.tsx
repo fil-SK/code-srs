@@ -5,7 +5,7 @@ import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { SUPPORTED_LANGUAGES } from '@/components/code/languageList'
 import { cn } from '@/lib/cn'
 import { matchesAcceptedAnswer } from '@/domain/grading/writeCode'
-import { CardPanel } from '../../components/CardPanel'
+import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 
@@ -30,11 +30,7 @@ export function WriteCodeView({
 }: InteractionViewProps<'write_code'>) {
   const { interaction } = card
   const code = (response as string | undefined) ?? interaction.starterCode
-  const locked = phase.kind !== 'presenting' || hideActions
-  const showFeedback =
-    phase.kind === 'feedback' ||
-    phase.kind === 'rating' ||
-    phase.kind === 'transitioning'
+  const flipped = phase.kind !== 'presenting'
 
   // The editor is uncontrolled after mount (see CodeEditor's own note) — seed
   // `response` with the starter code once, so submitting without editing
@@ -45,75 +41,86 @@ export function WriteCodeView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const correct = showFeedback
+  const correct = flipped
     ? matchesAcceptedAnswer(code, interaction.acceptedAnswers, interaction.comparison)
     : null
 
-  return (
-    <CardPanel>
-      <InteractionLabel text="Write Code" />
-      <div className="mt-1 flex items-center gap-2">
+  const header = (size: 'front' | 'back') => (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <InteractionLabel type="write_code" />
+      <div className="mt-2 flex w-full items-center justify-center gap-2">
         <RichText
           text={card.prompt.value}
-          className="flex-1 text-lg font-semibold leading-snug text-itera-ink-brand"
+          className={cn('font-bold leading-snug text-itera-ink-brand', size === 'front' ? 'text-2xl' : 'text-xl')}
         />
-        <span className="shrink-0 rounded-itera-pill bg-itera-navy-soft px-2.5 py-1 font-mono text-xs font-semibold text-itera-ink-brand">
-          {languageLabel(interaction.language)}
-        </span>
       </div>
+      <span className="rounded-itera-pill bg-itera-navy-soft px-2.5 py-1 font-mono text-xs font-semibold text-itera-ink-brand">
+        {languageLabel(interaction.language)}
+      </span>
+    </div>
+  )
 
-      <div className="mt-4">
-        {locked ? (
-          // Feedback state: the learner's submitted answer, frozen — reusing
-          // the read-only viewer (unmodified) rather than making the editor
-          // itself read-only, so "preserve the answer after submission" is
-          // exact by construction, not a state-tracking assumption.
-          <LazyCodeView code={code} language={interaction.language} />
-        ) : (
-          <LazyCodeEditor
-            value={code}
-            language={interaction.language}
-            onChange={setResponse}
-          />
-        )}
-      </div>
+  return (
+    <FlashcardSurface
+      flipped={flipped}
+      onFlip={onPrimaryAction}
+      ariaLabel={
+        flipped
+          ? 'Write code card, results showing'
+          : 'Write code card, write your answer and submit to flip'
+      }
+      front={
+        flipped ? null : (
+        <div className="flex flex-col gap-4">
+          {header('front')}
 
-      {phase.kind === 'presenting' && !hideActions && (
-        <button
-          type="button"
-          onClick={onPrimaryAction}
-          disabled={!responseReady}
-          className="mt-4 rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
-        >
-          Submit answer
-        </button>
-      )}
+          <LazyCodeEditor value={code} language={interaction.language} onChange={setResponse} />
 
-      {showFeedback && (
-        <>
-          <div
-            className={cn(
-              'mt-4 rounded-itera-control px-3.5 py-2.5 text-sm font-semibold',
-              correct
-                ? 'bg-itera-success-soft text-itera-success'
-                : 'bg-itera-error-soft text-itera-error',
-            )}
-          >
-            {correct ? 'Correct' : 'Incorrect'}
-          </div>
-          {!correct && (
-            <div className="mt-3">
-              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-itera-muted">
-                Expected answer
-              </div>
-              <LazyCodeView
-                code={interaction.acceptedAnswers[0] ?? ''}
-                language={interaction.language}
-              />
-            </div>
+          {!hideActions && (
+            <button
+              type="button"
+              onClick={onPrimaryAction}
+              disabled={!responseReady}
+              className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+            >
+              Submit answer
+            </button>
           )}
-        </>
-      )}
-    </CardPanel>
+        </div>
+        )
+      }
+      back={
+        !flipped ? null : (
+          <div className="flex flex-col gap-4">
+            {header('back')}
+
+            <LazyCodeView code={code} language={interaction.language} />
+
+            <div
+              className={cn(
+                'rounded-itera-control px-3.5 py-2.5 text-center text-sm font-semibold',
+                correct
+                  ? 'bg-itera-success-soft text-itera-success'
+                  : 'bg-itera-error-soft text-itera-error',
+              )}
+            >
+              {correct ? 'Correct' : 'Incorrect'}
+            </div>
+
+            {!correct && (
+              <div>
+                <div className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-itera-muted">
+                  Expected answer
+                </div>
+                <LazyCodeView
+                  code={interaction.acceptedAnswers[0] ?? ''}
+                  language={interaction.language}
+                />
+              </div>
+            )}
+          </div>
+        )
+      }
+    />
   )
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Settings, LogOut } from 'lucide-react'
+import { ChevronDown, Settings, LogOut } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { isSupabaseConfigured } from '@/data/supabase/client'
 
@@ -32,9 +32,12 @@ export function ProfileMenu() {
         aria-expanded={open}
         aria-label="Profile"
         onClick={() => setOpen((o) => !o)}
-        className="grid h-9 w-9 place-items-center rounded-full bg-itera-navy-soft font-semibold text-itera-ink-brand"
+        className="flex items-center gap-1 rounded-full py-1 pl-1 pr-1.5 hover:bg-itera-surface-subtle"
       >
-        {initial}
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-itera-navy-soft font-semibold text-itera-ink-brand">
+          {initial}
+        </span>
+        <ChevronDown size={14} className="text-itera-muted" />
       </button>
       {open && (
         <div

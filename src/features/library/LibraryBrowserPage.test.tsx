@@ -41,8 +41,10 @@ describe('LibraryBrowserPage', () => {
     // "C++" is a Collection in the nav (it has a child deck)...
     expect(await screen.findByRole('button', { name: /C\+\+/ })).toBeTruthy()
     // ...but is NOT itself a row in the deck list — only its leaf child and
-    // the other top-level leaf deck are.
-    expect(await screen.findByText('Type Deduction')).toBeTruthy()
+    // the other top-level leaf deck are. "Type Deduction" now appears twice
+    // (once nested in the sidebar's Collection tree, once as its own deck
+    // row in the main list) - both are expected.
+    expect(await screen.findAllByText('Type Deduction')).toHaveLength(2)
     expect(await screen.findByText('Odds and Ends')).toBeTruthy()
     const rows = screen.getAllByRole('button', { name: 'Deck actions' })
     expect(rows).toHaveLength(2) // Type Deduction + Odds and Ends, not C++
@@ -55,12 +57,12 @@ describe('LibraryBrowserPage', () => {
     await repo.decks.put(misc)
 
     renderPage()
-    await screen.findByText('Type Deduction')
+    await screen.findAllByText('Type Deduction')
 
     const collectionButton = await screen.findByRole('button', { name: /C\+\+/ })
     collectionButton.click()
 
-    expect(await screen.findByText('Type Deduction')).toBeTruthy()
+    expect(await screen.findAllByText('Type Deduction')).toHaveLength(2)
     expect(screen.queryByText('Odds and Ends')).toBeNull()
   })
 

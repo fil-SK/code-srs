@@ -62,8 +62,14 @@ export function LibraryBrowserPage() {
   )
 
   const navDecks = useMemo(
-    () => leaves.map((d) => ({ id: d.id, collectionId: collectionIdFor(d, collections) })),
-    [leaves, collections],
+    () =>
+      leaves.map((d) => ({
+        id: d.id,
+        name: d.name,
+        collectionId: collectionIdFor(d, collections),
+        cardCount: metricsFor(metrics, d.id).cardCount,
+      })),
+    [leaves, collections, metrics],
   )
 
   const scoped = useMemo(() => {

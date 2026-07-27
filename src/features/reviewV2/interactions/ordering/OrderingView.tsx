@@ -13,7 +13,7 @@ import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import { gradeOrdering } from '@/domain/grading/ordering'
 import type { ID } from '@/types/common'
-import { CardPanel } from '../../components/CardPanel'
+import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 import { OrderingRow } from './OrderingRow'
@@ -47,16 +47,15 @@ export function OrderingView({
   }, [])
 
   const order = (response as ID[] | undefined) ?? initialOrder
-  const locked = phase.kind !== 'presenting' || Boolean(hideActions)
+  const flipped = phase.kind !== 'presenting'
+  const locked = flipped || Boolean(hideActions)
   // Visible index numbers and button aria-labels change after a move, but
   // that's not reliably announced by screen readers on its own - an
   // aria-live region gives an explicit, unambiguous announcement of the new
   // position (task requirement: "announce or expose the updated position
   // accessibly").
   const [announcement, setAnnouncement] = useState('')
-  const showFeedback =
-    phase.kind === 'feedback' || phase.kind === 'rating' || phase.kind === 'transitioning'
-  const grade = showFeedback ? gradeOrdering(interaction, order) : null
+  const grade = flipped ? gradeOrdering(interaction, order) : null
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
 
@@ -84,85 +83,138 @@ export function OrderingView({
   }
 
   return (
-    <CardPanel>
-      <InteractionLabel text="Ordering" />
-      <RichText
-        text={card.prompt.value}
-        className="mt-3 text-lg font-semibold leading-snug text-itera-ink-brand"
-      />
-      {!locked && (
-        <p className="mt-1 text-xs font-medium text-itera-muted">
-          Drag to reorder, or use the up/down controls.
-        </p>
-      )}
-      <div aria-live="polite" className="sr-only">
-        {announcement}
-      </div>
-
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={order} strategy={verticalListSortingStrategy}>
-          <ol className="mt-4 space-y-2">
-            {order.map((id, idx) => {
-              const item = itemById.get(id)
-              const cell = grade?.positions.find((p) => p.itemId === id)
-              return (
-                <OrderingRow
-                  key={id}
-                  id={id}
-                  index={idx}
-                  total={order.length}
-                  content={item?.content.value ?? ''}
-                  locked={locked}
-                  showFeedback={Boolean(grade)}
-                  correct={cell?.correct ?? false}
-                  expectedIndex={cell?.correctIndex ?? idx}
-                  onMoveUp={() => move(idx, -1)}
-                  onMoveDown={() => move(idx, 1)}
-                />
-              )
-            })}
-          </ol>
-        </SortableContext>
-      </DndContext>
-
-      {phase.kind === 'presenting' && !hideActions && (
-        <button
-          type="button"
-          onClick={onPrimaryAction}
-          disabled={!responseReady}
-          className="mt-4 rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
-        >
-          Submit answer
-        </button>
-      )}
-
-      {grade && (
-        <div
-          className={cn(
-            'mt-4 rounded-itera-control px-3.5 py-2.5 text-sm font-semibold',
-            grade.correct
-              ? 'bg-itera-success-soft text-itera-success'
-              : 'bg-itera-error-soft text-itera-error',
-          )}
-        >
-          {grade.correct ? 'Correct' : `${Math.round(grade.score * 100)}% in the right position`}
-        </div>
-      )}
-
-      {grade && !grade.correct && (
-        <div className="mt-3 rounded-itera-control border border-dashed border-itera-border px-3.5 py-2.5">
-          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-itera-muted">
-            Correct order
+    <FlashcardSurface
+      flipped={flipped}
+      onFlip={onPrimaryAction}
+      ariaLabel={
+        flipped
+          ? 'Ordering card, results showing'
+          : 'Ordering card, arrange the items and submit to flip'
+      }
+      front={
+        flipped ? null : (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-1 text-center">
+            <InteractionLabel type="ordering" />
+            <RichText
+              text={card.prompt.value}
+              className="mt-2 text-2xl font-bold leading-snug text-itera-ink-brand"
+            />
+            {!locked && (
+              <p className="text-xs font-medium text-itera-muted">
+                Drag to reorder, or use the up/down controls.
+              </p>
+            )}
           </div>
-          <ol className="space-y-1 text-sm text-itera-ink">
-            {interaction.correctOrder.map((id, i) => (
-              <li key={id}>
-                {i + 1}. <InlineText text={itemById.get(id)?.content.value ?? ''} />
-              </li>
-            ))}
-          </ol>
+          <div aria-live="polite" className="sr-only">
+            {announcement}
+          </div>
+
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <SortableContext items={order} strategy={verticalListSortingStrategy}>
+              <ol className="space-y-2">
+                {order.map((id, idx) => {
+                  const item = itemById.get(id)
+                  return (
+                    <OrderingRow
+                      key={id}
+                      id={id}
+                      index={idx}
+                      total={order.length}
+                      content={item?.content.value ?? ''}
+                      locked={locked}
+                      showFeedback={false}
+                      correct={false}
+                      expectedIndex={idx}
+                      onMoveUp={() => move(idx, -1)}
+                      onMoveDown={() => move(idx, 1)}
+                    />
+                  )
+                })}
+              </ol>
+            </SortableContext>
+          </DndContext>
+
+          {!hideActions && (
+            <button
+              type="button"
+              onClick={onPrimaryAction}
+              disabled={!responseReady}
+              className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+            >
+              Submit answer
+            </button>
+          )}
         </div>
-      )}
-    </CardPanel>
+        )
+      }
+      back={
+        !flipped ? null : (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col items-center gap-1 text-center">
+            <InteractionLabel type="ordering" />
+            <RichText
+              text={card.prompt.value}
+              className="mt-2 text-xl font-bold leading-snug text-itera-ink-brand"
+            />
+          </div>
+
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={() => {}}>
+            <SortableContext items={order} strategy={verticalListSortingStrategy}>
+              <ol className="space-y-2">
+                {order.map((id, idx) => {
+                  const item = itemById.get(id)
+                  const cell = grade?.positions.find((p) => p.itemId === id)
+                  return (
+                    <OrderingRow
+                      key={id}
+                      id={id}
+                      index={idx}
+                      total={order.length}
+                      content={item?.content.value ?? ''}
+                      locked
+                      showFeedback
+                      correct={cell?.correct ?? false}
+                      expectedIndex={cell?.correctIndex ?? idx}
+                      onMoveUp={() => {}}
+                      onMoveDown={() => {}}
+                    />
+                  )
+                })}
+              </ol>
+            </SortableContext>
+          </DndContext>
+
+          {grade && (
+            <div
+              className={cn(
+                'rounded-itera-control px-3.5 py-2.5 text-center text-sm font-semibold',
+                grade.correct
+                  ? 'bg-itera-success-soft text-itera-success'
+                  : 'bg-itera-error-soft text-itera-error',
+              )}
+            >
+              {grade.correct ? 'Correct' : `${Math.round(grade.score * 100)}% in the right position`}
+            </div>
+          )}
+
+          {grade && !grade.correct && (
+            <div className="rounded-itera-control border border-dashed border-itera-border px-3.5 py-2.5">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-itera-muted">
+                Correct order
+              </div>
+              <ol className="space-y-1 text-sm text-itera-ink">
+                {interaction.correctOrder.map((id, i) => (
+                  <li key={id}>
+                    {i + 1}. <InlineText text={itemById.get(id)?.content.value ?? ''} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+        )
+      }
+    />
   )
 }

@@ -43,11 +43,11 @@ export function CardTypeChooser({
                 enabled
                   ? isSelected
                     ? 'border-itera-accent bg-itera-accent text-white shadow-sm'
-                    : 'border-itera-accent bg-itera-accent-softer text-itera-ink-brand hover:border-itera-accent-hover'
+                    : 'border-itera-border bg-itera-surface text-itera-ink-brand hover:border-itera-navy hover:bg-itera-navy-soft'
                   : 'cursor-not-allowed border-itera-border bg-itera-surface text-itera-muted opacity-60',
               )}
             >
-              <Icon size={20} className={isSelected ? 'text-white' : enabled ? 'text-itera-accent' : 'text-itera-muted'} />
+              <Icon size={20} className={isSelected ? 'text-white' : enabled ? 'text-itera-navy' : 'text-itera-muted'} />
               <span className="text-sm font-semibold">{meta.label}</span>
               {!enabled && <span className="text-[11px] text-itera-muted">Coming soon</span>}
             </button>
