@@ -3,6 +3,7 @@ import { RichText } from '@/components/text/RichText'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { cn } from '@/lib/cn'
 import { gradeWalkthroughStep } from '@/domain/grading/walkthrough'
+import { CardPanel } from '../../components/CardPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 import { initialWalkthroughState, type WalkthroughState } from './state'
@@ -79,7 +80,7 @@ export function WalkthroughView({
   const highlightLines = focusToHighlightLines(step?.focus)
 
   return (
-    <div>
+    <CardPanel>
       <InteractionLabel text="Walkthrough" />
       <RichText
         text={card.prompt.value}
@@ -171,6 +172,6 @@ export function WalkthroughView({
           </button>
         )}
       </div>
-    </div>
+    </CardPanel>
   )
 }

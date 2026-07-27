@@ -4,6 +4,7 @@ import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import { gradeMultipleChoice } from '@/domain/grading/multipleChoice'
+import { CardPanel } from '../../components/CardPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 
@@ -42,7 +43,7 @@ export function MultipleChoiceView({
   }
 
   return (
-    <div>
+    <CardPanel>
       <InteractionLabel text="Multiple Choice" />
       <RichText
         text={card.prompt.value}
@@ -140,6 +141,6 @@ export function MultipleChoiceView({
           {grade.correct ? 'Correct' : 'Incorrect'}
         </div>
       )}
-    </div>
+    </CardPanel>
   )
 }

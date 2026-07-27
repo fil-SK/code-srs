@@ -5,6 +5,7 @@ import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { SUPPORTED_LANGUAGES } from '@/components/code/languageList'
 import { cn } from '@/lib/cn'
 import { matchesAcceptedAnswer } from '@/domain/grading/writeCode'
+import { CardPanel } from '../../components/CardPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 
@@ -49,7 +50,7 @@ export function WriteCodeView({
     : null
 
   return (
-    <div>
+    <CardPanel>
       <InteractionLabel text="Write Code" />
       <div className="mt-1 flex items-center gap-2">
         <RichText
@@ -113,6 +114,6 @@ export function WriteCodeView({
           )}
         </>
       )}
-    </div>
+    </CardPanel>
   )
 }

@@ -13,6 +13,7 @@ import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import { gradeOrdering } from '@/domain/grading/ordering'
 import type { ID } from '@/types/common'
+import { CardPanel } from '../../components/CardPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 import { OrderingRow } from './OrderingRow'
@@ -83,7 +84,7 @@ export function OrderingView({
   }
 
   return (
-    <div>
+    <CardPanel>
       <InteractionLabel text="Ordering" />
       <RichText
         text={card.prompt.value}
@@ -162,6 +163,6 @@ export function OrderingView({
           </ol>
         </div>
       )}
-    </div>
+    </CardPanel>
   )
 }

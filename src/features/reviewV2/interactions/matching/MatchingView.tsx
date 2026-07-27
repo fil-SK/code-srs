@@ -3,6 +3,7 @@ import { Check, X } from 'lucide-react'
 import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { gradeMatching, type MatchingResponse } from '@/domain/grading/matching'
+import { CardPanel } from '../../components/CardPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 
@@ -63,7 +64,7 @@ export function MatchingView({
   }
 
   return (
-    <div>
+    <CardPanel>
       <InteractionLabel text="Matching" />
       <RichText
         text={card.prompt.value}
@@ -214,6 +215,6 @@ export function MatchingView({
           {grade.correct ? 'Correct' : `${Math.round(grade.score * 100)}% of relationships correct`}
         </div>
       )}
-    </div>
+    </CardPanel>
   )
 }
