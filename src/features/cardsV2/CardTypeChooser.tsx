@@ -4,15 +4,14 @@ import { cn } from '@/lib/cn'
 
 // Spec §22.2: "restrained list/modules with a small interaction sketch,
 // avoid a rainbow icon grid." All six types render (matches the approved
-// mockup); Walkthrough has no editor built yet, so it stays visually muted
-// and non-interactive with a "Coming soon" cue rather than hidden — this
-// signals what's next without pretending it works.
+// mockup); all six now have editors built (Walkthrough completes the set).
 const ENABLED: InteractionType[] = [
   'recall',
   'multiple_choice',
   'write_code',
   'ordering',
   'matching',
+  'walkthrough',
 ]
 
 export function CardTypeChooser({

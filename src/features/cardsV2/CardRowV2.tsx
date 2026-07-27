@@ -127,8 +127,8 @@ export function CardRowV2({ card, now }: { card: CardV2Record; now: number }) {
           <div className="truncate text-sm font-semibold text-itera-ink-brand">
             {firstLine(card.prompt.value)}
           </div>
-          {card.tags.length > 0 && (
-            <div className="mt-0.5 flex gap-1.5">
+          {(card.tags.length > 0 || card.interaction.type === 'walkthrough') && (
+            <div className="mt-0.5 flex items-center gap-1.5">
               {card.tags.slice(0, 2).map((tag) => (
                 <span
                   key={tag}
@@ -137,6 +137,11 @@ export function CardRowV2({ card, now }: { card: CardV2Record; now: number }) {
                   {tag}
                 </span>
               ))}
+              {card.interaction.type === 'walkthrough' && (
+                <span className="text-[11px] text-itera-muted">
+                  {card.interaction.steps.length} steps
+                </span>
+              )}
             </div>
           )}
         </div>

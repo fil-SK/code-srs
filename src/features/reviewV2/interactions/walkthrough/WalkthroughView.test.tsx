@@ -142,4 +142,37 @@ describe('WalkthroughView', () => {
     const good = screen.getByRole('button', { name: /Good/ })
     expect(good.className).toMatch(/itera-accent\/50/)
   })
+
+  it('does not steal focus on initial mount, but moves focus to the new step panel after Continue', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+    expect(document.activeElement).toBe(document.body)
+
+    await answerStep1Correctly(user)
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+
+    const step2Prompt = screen.getByText(step2.prompt.value)
+    expect(document.activeElement?.contains(step2Prompt)).toBe(true)
+    expect(document.activeElement?.getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('accepts a seeded initialResponse so a caller can start mid-sequence (used by the editor\'s live preview)', () => {
+    render(
+      <ReviewSessionScreen
+        card={fixture}
+        definition={walkthroughDefinition}
+        current={1}
+        total={1}
+        onExit={() => {}}
+        schedulingBefore={initialSchedulingState()}
+        initialResponse={{
+          stepIndex: 1,
+          answers: { 'step-1': { type: 'multiple_choice', selected: [] } },
+          results: {},
+        }}
+      />,
+    )
+    expect(screen.getByText('Step 2 of 2')).toBeTruthy()
+    expect(screen.getByText(step2.prompt.value)).toBeTruthy()
+  })
 })

@@ -37,6 +37,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
   onExit,
   schedulingBefore,
   onGraded,
+  initialResponse,
 }: {
   card: CardV2 & { interaction: Extract<CardInteraction, { type: T }> }
   definition: InteractionDefinition<T>
@@ -48,9 +49,17 @@ export function ReviewSessionScreen<T extends InteractionType>({
   // baseline since there is nothing real to persist against yet.
   schedulingBefore: SchedulingState
   onGraded?: (result: SubmitReviewResult) => void
+  // Purely additive, optional seed for `response`'s initial value. Every
+  // existing caller omits it (identical behavior to before). Added so a
+  // multi-step type's editor preview (Walkthrough) can jump straight into an
+  // arbitrary authored step for inspection — the first interaction type with
+  // in-place multi-screen navigation, so no prior type ever needed to seed a
+  // non-empty starting response. Callers still reset via `key={...}`, not by
+  // changing this prop after mount.
+  initialResponse?: InteractionResponse
 }) {
   const [phase, dispatch] = useReducer(reviewPhaseReducer, initialReviewPhase)
-  const [response, setResponse] = useState<InteractionResponse>(undefined)
+  const [response, setResponse] = useState<InteractionResponse>(initialResponse)
   const [presentedAt] = useState(() => Date.now())
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
 

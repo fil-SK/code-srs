@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { RichText } from '@/components/text/RichText'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { cn } from '@/lib/cn'
@@ -30,12 +30,29 @@ export function WalkthroughView({
   const stepAnswered = step ? step.id in state.answers : false
   const isLastStep = state.stepIndex === interaction.steps.length - 1
   const allAnswered = interaction.steps.every((s) => s.id in state.answers)
+  const stepPanelRef = useRef<HTMLDivElement>(null)
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
     if (response === undefined) setResponse(initialWalkthroughState)
     // Mount-only seed, same convention as Ordering/Write Code.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Walkthrough is the first interaction type with in-place multi-screen
+  // navigation (every other type is single-screen), so nothing else in
+  // reviewV2 needed to move focus on an internal transition. Skips the
+  // initial mount (no prior type auto-focuses anything on first render) and
+  // only fires on a genuine step change, landing focus on the new step's
+  // panel so screen-reader users get the new prompt/highlight context
+  // instead of stale focus on the Previous/Continue button.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    stepPanelRef.current?.focus()
+  }, [state.stepIndex])
 
   function submitStep(stepId: string, answer: Parameters<typeof gradeWalkthroughStep>[1]) {
     if (locked || stepId in state.answers) return // first submission wins
@@ -112,7 +129,11 @@ export function WalkthroughView({
       </div>
 
       {step && (
-        <div className="mt-3 rounded-itera-control border border-itera-border bg-itera-surface p-4">
+        <div
+          ref={stepPanelRef}
+          tabIndex={-1}
+          className="mt-3 rounded-itera-control border border-itera-border bg-itera-surface p-4 outline-none focus-visible:ring-2 focus-visible:ring-itera-accent"
+        >
           <RichText
             text={step.prompt.value}
             className="text-sm font-semibold leading-snug text-itera-ink-brand"
