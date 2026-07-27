@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { TodayShell } from './TodayShell'
 import { SuggestedSessionHero } from './SuggestedSessionHero'
 import { MomentumPanel } from './MomentumPanel'
 import { ContinueLearningList } from './ContinueLearningList'
@@ -39,13 +38,17 @@ function useIsWideToday(): boolean {
 // supplied; most content here is placeholder (no streak/momentum/pace/
 // suggested-session data exists yet) — see the per-component comments and
 // the decisions log for exactly what's real versus illustrative.
+//
+// Renders through the shared AppShell/TopNav now (App Shell convergence
+// milestone) rather than its own private TodayShell — the page just returns
+// its content, AppShell supplies IteraSurface/nav/width.
 export function TodayPage() {
   const isWide = useIsWideToday()
   // Picked once per mount, not per render — see greetings.ts.
   const [message] = useState(() => pickDashboardMessage())
 
   return (
-    <TodayShell>
+    <div>
       <h1 className="font-itera-display text-3xl font-bold tracking-tight text-itera-ink-brand">
         {message.mainText}
       </h1>
@@ -84,6 +87,6 @@ export function TodayPage() {
           <PaceChart />
         </div>
       </div>
-    </TodayShell>
+    </div>
   )
 }

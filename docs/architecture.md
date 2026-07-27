@@ -17,7 +17,7 @@ src/
 ├── app/          router.tsx, RouteError.tsx, theme.tsx (ThemeContext/ThemeProvider/useTheme)
 ├── auth/         Supabase magic-link auth: AuthProvider, AuthGate, LoginPage
 ├── components/
-│   ├── layout/   AppShell, Sidebar, BottomNav, navItems.ts
+│   ├── layout/   AppShell, TopNav, primaryNavLinks.ts, CreateMenu, ProfileMenu, useNavBadges.ts
 │   ├── ui/       Button, Field, FlipCard (v1) — shared, generic UI primitives
 │   ├── code/     CodeView, LazyCodeView, LazyCodeEditor, lineRanges.ts
 │   └── text/     RichText, InlineText (the markdown-subset renderer)
@@ -34,17 +34,18 @@ src/
 ├── features/
 │   ├── cards/          registry/ (v1 CardTypeDefinition registry), renderers/<type>/, BrowsePage, CardEditorPage, cardTypeMeta.ts
 │   ├── dashboard/      DashboardPage — the old '/' page; unrouted, still in the tree
-│   ├── decks/          DecksPage, DeckDetailPage
+│   ├── decks/          DecksPage, DeckDetailPage — unrouted since the App Shell convergence (superseded by features/library/), kept until parity is re-confirmed
 │   ├── design-preview/ /design-preview/* routes exercising real v2 components against fixtures;
-│   │                   also library-shared/library-browser/library-deck (Phase H preview slice)
+│   │                   also library-shared/library-browser/library-deck (the Phase H preview slice `features/library/` was adapted from — still isolated, untouched)
 │   ├── drafts/         DraftsPage, seedContent.ts
+│   ├── library/        LibraryBrowserPage (/decks), LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (CollectionNav, CollectionNavDrawer, DeckMark, MasteryRing, MeterBar, EmptyState, useIsWideLibrary)
 │   ├── preview/        PreviewPage — generic v1 card preview, no scheduling impact
 │   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2), legacy ReviewSession/useReviewSession (v1, unrouted)
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
-│   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG)
+│   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG) — hidden from primary nav, route/data preserved
 │   ├── settings/       SettingsPage, CardStateMigrationSection
 │   ├── stats/          StatsPage
-│   └── today/          TodayPage, TodayShell, SuggestedSessionHero, MomentumPanel, ContinueLearningList, PaceChart
+│   └── today/          TodayPage, SuggestedSessionHero, MomentumPanel, ContinueLearningList, PaceChart — renders through the shared AppShell now, no separate TodayShell
 ├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
 ├── lib/          cn.ts (clsx+twMerge), id.ts (newId), lazyWithRetry.ts
 ├── test/         setup.ts (global Vitest setup)
@@ -224,15 +225,15 @@ The Browse filter and editor type picker both derive from `cardTypeMeta`, so the
 
 ## Routing
 
-`src/app/router.tsx` uses `createBrowserRouter` with **three structurally separate top-level entries** (not one nested tree):
+`src/app/router.tsx` uses `createBrowserRouter` with **three structurally separate top-level entries** (not one nested tree) — since the App Shell convergence milestone (2026-07-27), Today and Review have swapped places in this list relative to earlier docs:
 
-1. `{ path: '/', element: <TodayPage /> }` — Today owns `/` outright, with its own top-nav shell (`TodayShell`), not `AppShell`'s sidebar.
-2. `{ element: <AppShell />, children: [...] }` — a **pathless layout route** (no `path` key), so children resolve at the top level with unchanged URLs: `decks`, `decks/:id`, `decks/:deckId/cards/new` (Phase F chooser + Recall editor), `roadmaps`, `roadmaps/:id`, `review`, `preview`, `browse`, `cards/new`, `cards/:id/edit` (branches between the new Recall editor and the old `CardEditorPage` — see "Card creation" below), `cards/:id/study` (Phase F Recall review preview — the Deck row's primary click target), `drafts`, `stats`, `settings`.
-3. `{ path: 'design-preview', children: [...] }` — a separate top-level entry (not nested in `AppShell`), one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library-empty`, `library/:deckId` (the Phase H preview slice, fixture-driven — see [`docs/itera-redesign-plan.md`](itera-redesign-plan.md) Phase H status).
+1. `{ path: '/', element: <AppShell />, children: [...] }` — a **pathless layout route** whose `index` child is `TodayPage` (Today no longer has its own separate shell — see below), plus `decks` and `decks/:id` (the real `LibraryBrowserPage`/`LibraryDeckPage`, not the old `DecksPage`/`DeckDetailPage`), `decks/:deckId/cards/new`, `roadmaps`, `roadmaps/:id`, `preview`, `browse`, `cards/new`, `cards/:id/edit` (branches between the new Recall editor and the old `CardEditorPage` — see "Card creation" below), `cards/:id/study`, `drafts`, `stats`, `settings`. All children resolve at the top level with unchanged URLs.
+2. `{ path: 'review', element: <ReviewPage /> }` — a separate top-level entry, **not** nested under `AppShell`. Before this milestone `/review` was actually a plain `AppShell` child (full sidebar chrome and all, contrary to earlier docs); it is now genuinely chrome-free by construction.
+3. `{ path: 'design-preview', children: [...] }` — unchanged: one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library-empty`, `library/:deckId` (the Phase H preview slice `features/library/` was adapted from, not replaced by it — still isolated, fixture-driven).
 
-`AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` (Sidebar + sticky header with a "Study now" CTA + `<Outlet/>` + BottomNav) — this is the mechanism by which every v1 page picks up the Itera visual system automatically, since they already use the shared semantic Tailwind classes `.itera-scope` re-points. `ThemeToggle` is deliberately not rendered (light-only for now).
+`AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` → `TopNav` (logo, `Today · Library · Progress`, Search, `+Create` via `CreateMenu`, Profile via `ProfileMenu`) → `<Outlet/>` — no sidebar, no bottom nav, no per-route topbar (`Sidebar.tsx`/`BottomNav.tsx`/`navItems.ts`/`PageHeaderOverride.tsx` were all deleted, not deprecated in place). This is the mechanism by which every route it wraps picks up the Itera visual system and the shared nav automatically, since pages already use the shared semantic Tailwind classes `.itera-scope` re-points. `ThemeToggle` is deliberately not rendered (light-only for now).
 
-`IteraSurface`/`ForceLightTheme` (`src/features/reviewV2/components/`) are the shared root used by `AppShell`, `TodayShell`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared, the Phase H preview — reuses `IteraSurface` directly, not `PreviewShell`, since its two-pane layout needs Today's wider container and it deliberately omits `PreviewShell`'s "not part of the live app" banner), and `ReviewSessionV2` — one mechanism, not separate "real" vs. "preview" copies. See [`docs/design-system.md`](design-system.md) for what they do and why.
+`IteraSurface`/`ForceLightTheme` (`src/features/reviewV2/components/`) are the shared root used by `AppShell`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared — reuses `IteraSurface` directly, not `PreviewShell`, since its two-pane layout needs a wider container and it deliberately omits `PreviewShell`'s "not part of the live app" banner), and `ReviewSessionV2` — one mechanism, not separate "real" vs. "preview" copies. See [`docs/design-system.md`](design-system.md) for what they do and why. See `docs/itera-decisions.md`'s "App Shell and Visual Foundation Convergence" entry for the full rationale.
 
 ---
 

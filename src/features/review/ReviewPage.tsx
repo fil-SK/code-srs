@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { subtreeIds } from '@/domain/decks/tree'
 import { useDueCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
+import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { ReviewSessionV2 } from './ReviewSessionV2'
 
 export function ReviewPage() {
@@ -30,45 +31,55 @@ export function ReviewPage() {
 
   const loading = isLoading || (!!deckParam && decks.isLoading)
 
+  // Review is a top-level, chrome-free route (no AppShell ancestor providing
+  // IteraSurface), so every return branch here wraps itself — the loading/
+  // empty branches previously relied on AppShell for this; ReviewSessionV2
+  // below already self-wraps and needs no change.
   if (loading) {
-    return <p className="text-sm text-muted">Loading…</p>
+    return (
+      <IteraSurface className="grid min-h-screen place-items-center">
+        <p className="text-sm text-itera-muted">Loading…</p>
+      </IteraSurface>
+    )
   }
 
   if (!cards || cards.length === 0) {
     return (
-      <div className="mx-auto max-w-md rounded-card border border-dashed border-border bg-panel p-10 text-center">
-        <div className="text-lg font-semibold">Nothing due 🎯</div>
-        <p className="mt-2 text-sm text-muted">
-          {scope
-            ? `No cards due in “${scope.name}”.`
-            : 'No cards are due right now. Create some or come back later.'}
-        </p>
-        <div className="mt-4 flex justify-center gap-2.5">
-          {scope && (
-            <Link to="/review">
-              <Button>All decks</Button>
+      <IteraSurface className="grid min-h-screen place-items-center px-4">
+        <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
+          <div className="text-lg font-semibold text-itera-ink-brand">Nothing due 🎯</div>
+          <p className="mt-2 text-sm text-itera-muted">
+            {scope
+              ? `No cards due in “${scope.name}”.`
+              : 'No cards are due right now. Create some or come back later.'}
+          </p>
+          <div className="mt-4 flex justify-center gap-2.5">
+            {scope && (
+              <Link to="/review">
+                <Button>All decks</Button>
+              </Link>
+            )}
+            <Link to="/cards/new">
+              <Button variant="primary">New card</Button>
             </Link>
-          )}
-          <Link to="/cards/new">
-            <Button variant="primary">New card</Button>
-          </Link>
+          </div>
         </div>
-      </div>
+      </IteraSurface>
     )
   }
 
   return (
-    <div>
+    <IteraSurface className="min-h-screen">
       {scope && (
-        <div className="mx-auto mb-3 max-w-3xl text-sm text-muted">
-          Studying <span className="font-semibold text-text">{scope.name}</span>{' '}
+        <div className="mx-auto max-w-3xl px-4 pt-4 text-sm text-itera-muted">
+          Studying <span className="font-semibold text-itera-ink-brand">{scope.name}</span>{' '}
           and its subdecks ·{' '}
-          <Link to="/review" className="text-accent hover:underline">
+          <Link to="/review" className="text-itera-accent hover:underline">
             all decks
           </Link>
         </div>
       )}
       <ReviewSessionV2 key={`${deckParam ?? 'all'}-${cards.length}`} cards={cards} />
-    </div>
+    </IteraSurface>
   )
 }

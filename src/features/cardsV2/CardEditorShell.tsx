@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
-import { useSetPageHeader } from '@/components/layout/PageHeaderOverride'
 import { useIsWideEditor } from './useIsWideEditor'
 
 // Editor column width when the preview is closed (also the shell's own
@@ -23,9 +22,8 @@ const GAP = '1.5rem'
 // left-aligned with a contextual subtitle, and the action group (Preview /
 // Back to deck / Save) lives together on the right — Save is the only solid
 // action, matching D71-era spec intent that Save should visually dominate.
-// Also syncs AppShell's topbar via useSetPageHeader so it stops showing
-// "Decks" and a competing "Study now" CTA while this shell is mounted (see
-// docs/itera-decisions.md).
+// (The old AppShell topbar this used to suppress via useSetPageHeader is
+// gone — the shared shell has no per-route title bar to compete with.)
 export function CardEditorShell({
   mode,
   subtitle,
@@ -49,8 +47,6 @@ export function CardEditorShell({
   const [tab, setTab] = useState<'editor' | 'preview'>('editor')
   const [previewOpen, setPreviewOpen] = useState(false)
   const title = mode === 'edit' ? 'Edit card' : 'Create card'
-
-  useSetPageHeader({ title, sub: subtitle, hideCta: true })
 
   return (
     <div

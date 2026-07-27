@@ -2,8 +2,8 @@ import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
 import { RouteError } from './RouteError'
 import { TodayPage } from '@/features/today/TodayPage'
-import { DecksPage } from '@/features/decks/DecksPage'
-import { DeckDetailPage } from '@/features/decks/DeckDetailPage'
+import { LibraryBrowserPage } from '@/features/library/LibraryBrowserPage'
+import { LibraryDeckPage } from '@/features/library/LibraryDeckPage'
 import { RoadmapsPage } from '@/features/roadmaps/RoadmapsPage'
 import { RoadmapEditorPage } from '@/features/roadmaps/RoadmapEditorPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
@@ -27,28 +27,22 @@ import { LibraryBrowserPreviewPage } from '@/features/design-preview/library-bro
 import { LibraryDeckPreviewPage } from '@/features/design-preview/library-deck/LibraryDeckPreviewPage'
 
 export const router = createBrowserRouter([
-  // Today owns '/' as its own structurally separate top-level route (its own
-  // top-nav shell, not AppShell's sidebar — see docs/itera-decisions.md) —
-  // same "chrome-free/different-chrome by construction" pattern as
-  // design-preview below, not a page nested under AppShell.
+  // Today owns '/' as its own structurally separate top-level route
+  // previously (now folded into the shared AppShell — see below); kept as
+  // its own top-level entry only because Review, right below, needs the same
+  // "chrome-free/different-chrome by construction" treatment design-preview
+  // already used, and Today's route already proved the pattern works.
   {
     path: '/',
-    element: <TodayPage />,
-    errorElement: <RouteError />,
-  },
-  // AppShell is a pathless layout route (no `path`): its children's routes
-  // resolve exactly as before ('/decks', '/review', ...) with no URL change,
-  // while '/' itself now belongs to Today above, not this shell.
-  {
     element: <AppShell />,
     errorElement: <RouteError />,
     children: [
-      { path: 'decks', element: <DecksPage /> },
-      { path: 'decks/:id', element: <DeckDetailPage /> },
+      { index: true, element: <TodayPage /> },
+      { path: 'decks', element: <LibraryBrowserPage /> },
+      { path: 'decks/:id', element: <LibraryDeckPage /> },
       { path: 'decks/:deckId/cards/new', element: <CardCreatePage /> },
       { path: 'roadmaps', element: <RoadmapsPage /> },
       { path: 'roadmaps/:id', element: <RoadmapEditorPage /> },
-      { path: 'review', element: <ReviewPage /> },
       { path: 'preview', element: <PreviewPage /> },
       { path: 'browse', element: <BrowsePage /> },
       { path: 'cards/new', element: <CardEditorPage /> },
@@ -58,6 +52,15 @@ export const router = createBrowserRouter([
       { path: 'stats', element: <StatsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
+  },
+  // Review is immersive (locked IA): no global nav, no logo, no sidebar. A
+  // structurally separate top-level route — the same "chrome-free by
+  // construction, not by hiding AppShell's chrome with CSS" pattern
+  // design-preview uses below — not a child of AppShell.
+  {
+    path: 'review',
+    element: <ReviewPage />,
+    errorElement: <RouteError />,
   },
   // Design-preview routes are a structurally separate top-level entry, not
   // children of AppShell — chrome-free by construction, not by hiding

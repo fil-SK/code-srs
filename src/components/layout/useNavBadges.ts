@@ -10,7 +10,10 @@ export function useNavBadges(): Record<string, number> {
   const drafts = useDrafts()
 
   return {
-    '/review': due.data?.length ?? 0,
+    // Studying now happens from Today (its hero/"Continue learning" list) and
+    // from Library's per-deck "Study now", not a dedicated /review nav entry,
+    // so the due count surfaces on the Today link instead.
+    '/': due.data?.length ?? 0,
     '/drafts': drafts.data?.length ?? 0,
   }
 }

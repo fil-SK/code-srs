@@ -47,7 +47,7 @@ export function OrderingView({
   }, [])
 
   const order = (response as ID[] | undefined) ?? initialOrder
-  const locked = phase.kind !== 'presenting' || hideActions
+  const locked = phase.kind !== 'presenting' || Boolean(hideActions)
   // Visible index numbers and button aria-labels change after a move, but
   // that's not reliably announced by screen readers on its own - an
   // aria-live region gives an explicit, unambiguous announcement of the new

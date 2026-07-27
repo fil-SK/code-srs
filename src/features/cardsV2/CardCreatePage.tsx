@@ -97,11 +97,13 @@ export function CardCreatePage() {
   return (
     <div>
       {/* Sticky so "Choose interaction" stays put as the editor below grows —
-          it never gets pushed around once a type is picked. Offset by the
-          AppShell header's own sticky height (77px) so the two stack rather
-          than overlap; the -mx/px pair cancels <main>'s side padding so the
-          background spans edge-to-edge like that header does. */}
-      <div className="sticky top-[77px] z-[5] -mx-4 bg-bg px-4 pb-4 pt-1 md:-mx-6 md:px-6">
+          it never gets pushed around once a type is picked. top-0 (not offset
+          below TopNav) because the shared AppShell's TopNav is not itself
+          sticky/fixed — it scrolls away with the page like Today's/Library's
+          headers, so once it's scrolled past, this is the first thing at the
+          top of the viewport. The -mx/px pair cancels <main>'s side padding
+          so the background spans edge-to-edge. */}
+      <div className="sticky top-0 z-[5] -mx-4 bg-bg px-4 pb-4 pt-1 md:-mx-6 md:px-6">
         <div className="mx-auto max-w-3xl">
           {/* invisible (not unmounted) once a type is picked — CardEditorShell
               shows its own "Back to deck" below, but this keeps the same

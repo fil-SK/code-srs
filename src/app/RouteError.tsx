@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useRouteError } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
+import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 
 // A dynamic-import failure (usually a stale chunk right after a deploy) surfaces
 // here. Detect it and reload once to pick up the new build.
@@ -37,18 +38,20 @@ export function RouteError() {
   }, [error])
 
   return (
-    <div className="mx-auto mt-16 max-w-md rounded-card border border-border bg-panel p-8 text-center">
-      <div className="text-lg font-semibold">Something went wrong</div>
-      <p className="mt-2 text-sm text-muted">
-        The app may have just updated. Reloading usually fixes it.
-      </p>
-      <Button
-        variant="primary"
-        className="mt-4"
-        onClick={() => window.location.reload()}
-      >
-        Reload
-      </Button>
-    </div>
+    <IteraSurface className="grid min-h-screen place-items-center px-4">
+      <div className="mx-auto max-w-md rounded-itera-card border border-itera-border bg-itera-surface p-8 text-center">
+        <div className="text-lg font-semibold text-itera-ink-brand">Something went wrong</div>
+        <p className="mt-2 text-sm text-itera-muted">
+          The app may have just updated. Reloading usually fixes it.
+        </p>
+        <Button
+          variant="primary"
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Reload
+        </Button>
+      </div>
+    </IteraSurface>
   )
 }

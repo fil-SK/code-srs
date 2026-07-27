@@ -1,22 +1,20 @@
 @import 'tailwindcss';
 
-/* Self-hosted webfonts (@fontsource — bundled by Vite, no CDN request at
-   runtime), so this local-first PWA actually renders the fonts its own CSS
-   below has always declared, works offline once cached, and never depends on
-   an external font service being reachable.
+/* Self-hosted webfonts (@fontsource-variable — bundled by Vite, no CDN
+   request at runtime), so this local-first PWA actually renders the fonts its
+   own CSS below has always declared, works offline once cached, and never
+   depends on an external font service being reachable. Variable-font builds
+   (one file covering the whole weight axis) replace the earlier static
+   per-weight @fontsource packages so any weight (400/500/600/700/...) is
+   available without adding more imports.
    Note: @font-face registration is global by nature (it can't be scoped to
-   .itera-scope), so loading Inter/JetBrains Mono here also fixes production's
+   .itera-scope), so loading these here also fixes production's
    --font-sans/--font-mono, which have referenced these same font names since
    before this redesign and were silently falling back to system-ui the whole
    time — this is a pre-existing bug fix, not a redesign decision. */
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/inter/700.css';
-@import '@fontsource/inter-tight/600.css';
-@import '@fontsource/inter-tight/700.css';
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter-tight/wght.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
 
 /* Dark mode driven by [data-theme="dark"] on <html>, not prefers-color-scheme,
    so the in-app toggle controls it. */
@@ -82,10 +80,14 @@
   --color-blue: var(--blue);
   --color-code-bg: var(--code-bg);
 
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
 
-  --radius-card: 12px;
+  /* Adopt the itera-scoped radius everywhere: --radius-itera-card (14px) was
+     a second, larger value living alongside this one under a different name
+     — not a namespacing duplicate but a real conflict, since .itera-scope
+     now wraps the whole app. One card radius, defined once. */
+  --radius-card: var(--radius-itera-card);
 
   /* ---------- Itera design-preview tokens (additive; see .itera-scope below) ----------
      New itera-prefixed utilities (bg-itera-surface, text-itera-ink, rounded-itera-card,
@@ -115,9 +117,13 @@
   --color-itera-warning: var(--itera-warning);
   --color-itera-warning-soft: var(--itera-warning-soft);
 
-  --font-itera-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-itera-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
-  --font-itera-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+  /* One literal font stack per family, not two: --font-itera-sans/-mono just
+     alias the Tailwind-required --font-sans/--font-mono keys above rather
+     than repeating the same stack under a second name. --font-itera-display
+     (Inter Tight) has no legacy counterpart, so it's defined directly. */
+  --font-itera-sans: var(--font-sans);
+  --font-itera-display: 'Inter Tight Variable', 'Inter Tight', var(--font-sans);
+  --font-itera-mono: var(--font-mono);
 
   --radius-itera-code: 8px;
   --radius-itera-control: 9px;
