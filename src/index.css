@@ -338,6 +338,13 @@ body {
 .preview-shell-row {
   transition: gap 0.3s ease;
 }
+/* The shell wrapping the header + editor/preview row (CardEditorShell.tsx)
+   grows its own max-width in step with the drawer above, so the header
+   (which shares this exact width) widens/narrows in sync rather than the
+   editor column appearing to float inside a wider, unrelated header. */
+.card-editor-shell {
+  transition: max-width 0.3s ease;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .flip-face {
@@ -347,7 +354,8 @@ body {
     animation: none;
   }
   .preview-drawer,
-  .preview-shell-row {
+  .preview-shell-row,
+  .card-editor-shell {
     transition: none;
   }
 }

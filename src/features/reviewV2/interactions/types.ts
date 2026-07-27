@@ -19,6 +19,14 @@ export interface InteractionViewProps<T extends InteractionType> {
   // interactive types. A no-op once phase is no longer 'presenting'.
   onPrimaryAction: () => void
   responseReady: boolean
+  // Optional, default false. Set by InteractionAnswerPreview (the card
+  // editor's simplified authoring preview — see docs/itera-decisions.md) so
+  // an interactive type's own "Submit answer" button doesn't render there:
+  // that preview drives `phase` directly from a plain Question/Answer
+  // toggle rather than a real attempt, so there is nothing to submit. Real
+  // Review (ReviewSessionScreen) never sets this — every existing caller is
+  // unaffected.
+  hideActions?: boolean
 }
 
 // Everything needed to render and (if auto-graded) grade one interaction

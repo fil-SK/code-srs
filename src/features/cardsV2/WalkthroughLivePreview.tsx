@@ -91,6 +91,8 @@ export function WalkthroughLivePreview({ form }: { form: WalkthroughFormState })
         onExit={() => {}}
         schedulingBefore={initialSchedulingState()}
         initialResponse={initialResponse}
+        hideTopBar
+        hideRating
       />
     </IteraSurface>
   )

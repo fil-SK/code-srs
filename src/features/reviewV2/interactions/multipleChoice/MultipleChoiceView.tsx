@@ -14,10 +14,11 @@ export function MultipleChoiceView({
   setResponse,
   onPrimaryAction,
   responseReady,
+  hideActions,
 }: InteractionViewProps<'multiple_choice'>) {
   const { interaction } = card
   const selected = (response as string[] | undefined) ?? []
-  const locked = phase.kind !== 'presenting'
+  const locked = phase.kind !== 'presenting' || hideActions
   const showFeedback =
     phase.kind === 'feedback' ||
     phase.kind === 'rating' ||
@@ -116,7 +117,7 @@ export function MultipleChoiceView({
         })}
       </div>
 
-      {phase.kind === 'presenting' && (
+      {phase.kind === 'presenting' && !hideActions && (
         <button
           type="button"
           onClick={onPrimaryAction}

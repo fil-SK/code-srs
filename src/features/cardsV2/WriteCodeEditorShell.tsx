@@ -9,6 +9,7 @@ import { useSaveWriteCodeCard, type SaveWriteCodeCardTarget } from '@/hooks/useC
 import { WriteCodeFields } from './WriteCodeFields'
 import { WriteCodeLivePreview } from './WriteCodeLivePreview'
 import { CardEditorShell } from './CardEditorShell'
+import { editorSubtitle } from './shared/editorSubtitle'
 
 // The Create/Edit shell for Write Code, built on the shared CardEditorShell
 // (header/Organize/layout block previously duplicated per type — see
@@ -78,6 +79,7 @@ export function WriteCodeEditorShell({
   return (
     <CardEditorShell
       mode={mode}
+      subtitle={editorSubtitle('write_code', flatDecks, form.deckId)}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

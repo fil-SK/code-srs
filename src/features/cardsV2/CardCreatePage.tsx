@@ -104,8 +104,8 @@ export function CardCreatePage() {
       <div className="sticky top-[77px] z-[5] -mx-4 bg-bg px-4 pb-4 pt-1 md:-mx-6 md:px-6">
         <div className="mx-auto max-w-3xl">
           {/* invisible (not unmounted) once a type is picked — CardEditorShell
-              shows its own Cancel below, but this keeps the same space
-              reserved above the chooser so it never shifts vertically. */}
+              shows its own "Back to deck" below, but this keeps the same
+              space reserved above the chooser so it never shifts vertically. */}
           <button
             type="button"
             onClick={() => navigate(backTo)}
@@ -115,7 +115,7 @@ export function CardCreatePage() {
               selectedType && 'invisible',
             )}
           >
-            ← Cancel
+            ← Back to deck
           </button>
           <CardTypeChooser selected={selectedType} onSelect={setSelectedType} />
         </div>

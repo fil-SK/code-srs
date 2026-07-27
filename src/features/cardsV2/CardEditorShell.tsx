@@ -2,18 +2,33 @@ import { useState, type ReactNode } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
+import { useSetPageHeader } from '@/components/layout/PageHeaderOverride'
 import { useIsWideEditor } from './useIsWideEditor'
 
-// Shared Create/Edit shell for every CardV2 interaction type (spec §22.3):
-// header (Cancel / title / Preview toggle / Save) plus the editor-vs-preview
-// layout. D71/D74/D75/D76/D78 deliberately deferred extracting this out of
-// each *EditorShell.tsx until a change actually needed identical treatment
-// across all six — the preview-drawer behavior here is that change (see
-// docs/itera-decisions.md). The live preview is now opt-in: hidden by
-// default so the editor gets full width to breathe, revealed via "Preview
-// card" as a slide-in panel rather than a permanent half-width column.
+// Editor column width when the preview is closed (also the shell's own
+// max-width then); the preview drawer adds PREVIEW_COL + GAP on top of it
+// when open. Kept as named constants since both the shell wrapper and the
+// drawer/gap need the exact same numbers to stay visually in sync.
+const EDITOR_COL = '42rem'
+const PREVIEW_COL = '420px'
+const GAP = '1.5rem'
+
+// Shared Create/Edit shell for every CardV2 interaction type (spec §22.3).
+// Redesigned per product feedback: the previous header had three unrelated
+// alignment anchors (a left-floating Cancel, a mathematically-centered
+// title, a right-floating action cluster) sitting above a body whose width
+// changed when the preview opened — no consistent alignment was possible
+// that way. Now header and content share one literal outer width (this
+// component's own root div, not just each row separately), the title is
+// left-aligned with a contextual subtitle, and the action group (Preview /
+// Back to deck / Save) lives together on the right — Save is the only solid
+// action, matching D71-era spec intent that Save should visually dominate.
+// Also syncs AppShell's topbar via useSetPageHeader so it stops showing
+// "Decks" and a competing "Study now" CTA while this shell is mounted (see
+// docs/itera-decisions.md).
 export function CardEditorShell({
   mode,
+  subtitle,
   onCancel,
   onSave,
   canSave,
@@ -22,6 +37,7 @@ export function CardEditorShell({
   previewPane,
 }: {
   mode: 'create' | 'edit'
+  subtitle: string
   onCancel: () => void
   onSave: () => void
   canSave: boolean
@@ -32,21 +48,25 @@ export function CardEditorShell({
   const isWide = useIsWideEditor()
   const [tab, setTab] = useState<'editor' | 'preview'>('editor')
   const [previewOpen, setPreviewOpen] = useState(false)
+  const title = mode === 'edit' ? 'Edit card' : 'Create card'
+
+  useSetPageHeader({ title, sub: subtitle, hideCta: true })
 
   return (
-    <div>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-xs text-itera-muted hover:text-itera-ink"
-        >
-          ← Cancel
-        </button>
-        <h1 className="text-lg font-semibold tracking-tight text-itera-ink-brand">
-          {mode === 'edit' ? 'Edit card' : 'New card'}
-        </h1>
-        <div className="flex items-center gap-2">
+    <div
+      className="card-editor-shell mx-auto w-full"
+      style={{
+        maxWidth: !isWide ? 'none' : previewOpen ? `calc(${EDITOR_COL} + ${GAP} + ${PREVIEW_COL})` : EDITOR_COL,
+      }}
+    >
+      <header className="mb-5 grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="min-w-0">
+          <h1 className="truncate text-lg font-semibold tracking-tight text-itera-ink-brand">
+            {title}
+          </h1>
+          <p className="truncate text-xs text-itera-muted">{subtitle}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {isWide && (
             <button
               type="button"
@@ -63,17 +83,22 @@ export function CardEditorShell({
               {previewOpen ? 'Hide preview' : 'Preview card'}
             </button>
           )}
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-itera-control px-3 py-2 text-xs font-semibold text-itera-muted hover:text-itera-ink"
+          >
+            ← Back to deck
+          </button>
           <Button variant="primary" onClick={onSave} disabled={!canSave || isSaving}>
             {isSaving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Save card'}
           </Button>
         </div>
-      </div>
+      </header>
 
       {isWide ? (
         <div className={cn('preview-shell-row flex items-start', previewOpen ? 'gap-6' : 'gap-0')}>
-          <div className="min-w-0 flex-1">
-            <div className="mx-auto w-full max-w-2xl">{editorPane}</div>
-          </div>
+          <div className="min-w-0 flex-1">{editorPane}</div>
           <div
             className={cn(
               'preview-drawer shrink-0 overflow-hidden',

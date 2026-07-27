@@ -9,6 +9,7 @@ import { useSaveRecallCard, type SaveRecallCardTarget } from '@/hooks/useCardsV2
 import { RecallFields } from './RecallFields'
 import { RecallLivePreview } from './RecallLivePreview'
 import { CardEditorShell } from './CardEditorShell'
+import { editorSubtitle } from './shared/editorSubtitle'
 
 // The shared Create/Edit shell (spec §22.3): editor pane, with the live
 // Review preview available on demand via CardEditorShell's "Preview card"
@@ -80,6 +81,7 @@ export function RecallEditorShell({
   return (
     <CardEditorShell
       mode={mode}
+      subtitle={editorSubtitle('recall', flatDecks, form.deckId)}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

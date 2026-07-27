@@ -9,6 +9,7 @@ import { useSaveMultipleChoiceCard, type SaveMultipleChoiceCardTarget } from '@/
 import { MultipleChoiceFields } from './MultipleChoiceFields'
 import { MultipleChoiceLivePreview } from './MultipleChoiceLivePreview'
 import { CardEditorShell } from './CardEditorShell'
+import { editorSubtitle } from './shared/editorSubtitle'
 
 // The Create/Edit shell for Multiple Choice, built on the shared
 // CardEditorShell (header/Organize/layout block previously duplicated per
@@ -78,6 +79,7 @@ export function MultipleChoiceEditorShell({
   return (
     <CardEditorShell
       mode={mode}
+      subtitle={editorSubtitle('multiple_choice', flatDecks, form.deckId)}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

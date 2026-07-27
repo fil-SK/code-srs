@@ -9,6 +9,7 @@ import { useSaveMatchingCard, type SaveMatchingCardTarget } from '@/hooks/useCar
 import { MatchingFields } from './MatchingFields'
 import { MatchingLivePreview } from './MatchingLivePreview'
 import { CardEditorShell } from './CardEditorShell'
+import { editorSubtitle } from './shared/editorSubtitle'
 
 // The Create/Edit shell for Matching, built on the shared CardEditorShell
 // (header/Organize/layout block previously duplicated per type — see
@@ -78,6 +79,7 @@ export function MatchingEditorShell({
   return (
     <CardEditorShell
       mode={mode}
+      subtitle={editorSubtitle('matching', flatDecks, form.deckId)}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

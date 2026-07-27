@@ -9,6 +9,7 @@ import { useSaveOrderingCard, type SaveOrderingCardTarget } from '@/hooks/useCar
 import { OrderingFields } from './OrderingFields'
 import { OrderingLivePreview } from './OrderingLivePreview'
 import { CardEditorShell } from './CardEditorShell'
+import { editorSubtitle } from './shared/editorSubtitle'
 
 // The Create/Edit shell for Ordering, built on the shared CardEditorShell
 // (header/Organize/layout block previously duplicated per type — see
@@ -78,6 +79,7 @@ export function OrderingEditorShell({
   return (
     <CardEditorShell
       mode={mode}
+      subtitle={editorSubtitle('ordering', flatDecks, form.deckId)}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

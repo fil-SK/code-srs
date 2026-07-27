@@ -38,6 +38,8 @@ export function ReviewSessionScreen<T extends InteractionType>({
   schedulingBefore,
   onGraded,
   initialResponse,
+  hideTopBar,
+  hideRating,
 }: {
   card: CardV2 & { interaction: Extract<CardInteraction, { type: T }> }
   definition: InteractionDefinition<T>
@@ -57,6 +59,14 @@ export function ReviewSessionScreen<T extends InteractionType>({
   // non-empty starting response. Callers still reset via `key={...}`, not by
   // changing this prop after mount.
   initialResponse?: InteractionResponse
+  // Optional, both default false — every existing caller (real Review,
+  // /design-preview/review/*) omits them and is unaffected. Set by
+  // WalkthroughLivePreview only, whose step-jump authoring preview still
+  // needs this shell's real phase/grading machinery (unlike the other five
+  // types' simplified InteractionAnswerPreview) but not its session-only
+  // chrome — see docs/itera-decisions.md.
+  hideTopBar?: boolean
+  hideRating?: boolean
 }) {
   const [phase, dispatch] = useReducer(reviewPhaseReducer, initialReviewPhase)
   const [response, setResponse] = useState<InteractionResponse>(initialResponse)
@@ -132,6 +142,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
 
       if (
         phase.kind === 'feedback' &&
+        !hideRating &&
         !interactiveTarget &&
         ['1', '2', '3', '4'].includes(e.key)
       ) {
@@ -163,12 +174,14 @@ export function ReviewSessionScreen<T extends InteractionType>({
 
   return (
     <div>
-      <ReviewTopBar
-        current={current}
-        total={total}
-        onExit={onExit}
-        shortcutHint={shortcutHint}
-      />
+      {!hideTopBar && (
+        <ReviewTopBar
+          current={current}
+          total={total}
+          onExit={onExit}
+          shortcutHint={shortcutHint}
+        />
+      )}
 
       <definition.View
         card={card}
@@ -183,7 +196,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
 
       {showExplanation && <ExplanationPanel text={card.explanation?.value} />}
 
-      {showRating && (
+      {showRating && !hideRating && (
         <RatingControls
           selected={selectedRating}
           suggested={suggested}

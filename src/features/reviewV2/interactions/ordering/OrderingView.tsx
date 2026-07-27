@@ -24,6 +24,7 @@ export function OrderingView({
   setResponse,
   onPrimaryAction,
   responseReady,
+  hideActions,
 }: InteractionViewProps<'ordering'>) {
   const { interaction } = card
   const itemById = useMemo(
@@ -45,7 +46,7 @@ export function OrderingView({
   }, [])
 
   const order = (response as ID[] | undefined) ?? initialOrder
-  const locked = phase.kind !== 'presenting'
+  const locked = phase.kind !== 'presenting' || hideActions
   // Visible index numbers and button aria-labels change after a move, but
   // that's not reliably announced by screen readers on its own - an
   // aria-live region gives an explicit, unambiguous announcement of the new
@@ -123,7 +124,7 @@ export function OrderingView({
         </SortableContext>
       </DndContext>
 
-      {phase.kind === 'presenting' && (
+      {phase.kind === 'presenting' && !hideActions && (
         <button
           type="button"
           onClick={onPrimaryAction}

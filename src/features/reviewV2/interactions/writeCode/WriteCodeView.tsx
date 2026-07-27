@@ -25,10 +25,11 @@ export function WriteCodeView({
   setResponse,
   onPrimaryAction,
   responseReady,
+  hideActions,
 }: InteractionViewProps<'write_code'>) {
   const { interaction } = card
   const code = (response as string | undefined) ?? interaction.starterCode
-  const locked = phase.kind !== 'presenting'
+  const locked = phase.kind !== 'presenting' || hideActions
   const showFeedback =
     phase.kind === 'feedback' ||
     phase.kind === 'rating' ||
@@ -76,7 +77,7 @@ export function WriteCodeView({
         )}
       </div>
 
-      {phase.kind === 'presenting' && (
+      {phase.kind === 'presenting' && !hideActions && (
         <button
           type="button"
           onClick={onPrimaryAction}

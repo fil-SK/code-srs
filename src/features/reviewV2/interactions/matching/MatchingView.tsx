@@ -19,11 +19,12 @@ export function MatchingView({
   setResponse,
   onPrimaryAction,
   responseReady,
+  hideActions,
 }: InteractionViewProps<'matching'>) {
   const { interaction } = card
   const [sourceCol, ...otherCols] = interaction.columns
   const assign = (response as MatchingResponse | undefined) ?? {}
-  const locked = phase.kind !== 'presenting'
+  const locked = phase.kind !== 'presenting' || hideActions
   const showFeedback =
     phase.kind === 'feedback' || phase.kind === 'rating' || phase.kind === 'transitioning'
   const grade = showFeedback ? gradeMatching(interaction, assign) : null
@@ -190,7 +191,7 @@ export function MatchingView({
         })}
       </ul>
 
-      {phase.kind === 'presenting' && (
+      {phase.kind === 'presenting' && !hideActions && (
         <button
           type="button"
           onClick={onPrimaryAction}
