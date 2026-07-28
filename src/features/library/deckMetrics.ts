@@ -65,3 +65,28 @@ export function computeDeckMetrics(
 export function metricsFor(map: Map<ID, DeckMetrics>, deckId: ID): DeckMetrics {
   return map.get(deckId) ?? EMPTY
 }
+
+// Sums per-deck metrics already computed by computeDeckMetrics over a set of
+// deck ids (a Collection's leaf descendants) — no separate query, just a
+// reduction over data the page already has. masteryFraction is omitted: the
+// Collection header intentionally doesn't show an aggregate mastery number
+// (see LibraryCollectionView.tsx).
+export interface CollectionMetrics {
+  deckCount: number
+  cardCount: number
+  dueCount: number
+  lastStudied?: number
+}
+
+export function aggregateMetrics(map: Map<ID, DeckMetrics>, deckIds: ID[]): CollectionMetrics {
+  const agg: CollectionMetrics = { deckCount: deckIds.length, cardCount: 0, dueCount: 0 }
+  for (const id of deckIds) {
+    const m = metricsFor(map, id)
+    agg.cardCount += m.cardCount
+    agg.dueCount += m.dueCount
+    if (m.lastStudied && (!agg.lastStudied || m.lastStudied > agg.lastStudied)) {
+      agg.lastStudied = m.lastStudied
+    }
+  }
+  return agg
+}

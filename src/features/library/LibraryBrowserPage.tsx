@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import type { Deck } from '@/types'
-import { fieldClass, selectClass } from '@/components/ui/Field'
+import { fieldClass } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { useCreateDeck, useDecks, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
@@ -10,18 +10,18 @@ import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import {
   collectionIdFor,
   deriveCollections,
-  getSubtreeCollectionIds,
   leafDecks,
   selectionFromSearchParams,
   type LibrarySelection,
 } from './collectionTree'
 import { computeDeckMetrics, metricsFor } from './deckMetrics'
 import { LibraryShell } from './shared/LibraryShell'
+import { RowFilterDropdown } from './shared/RowFilterDropdown'
 import { EmptyState } from './shared/EmptyState'
 import { DeckRow, DeckTableHeader } from './DeckRow'
 import { FilterMenu } from './FilterMenu'
-
-type SortKey = 'name' | 'due' | 'lastStudied' | 'cardCount'
+import { LibraryCollectionView } from './LibraryCollectionView'
+import { sortDecks, type DeckSortKey } from './shared/sortDecks'
 
 // The default Library destination (/decks). Replaces DecksPage's flat/nested
 // tree browser with the redesigned Collection-nav + Deck-list layout,
@@ -35,7 +35,7 @@ export function LibraryBrowserPage() {
     selectionFromSearchParams(searchParams),
   )
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<SortKey>('name')
+  const [sort, setSort] = useState<DeckSortKey>('name')
   const [dueOnly, setDueOnly] = useState(false)
 
   const decksQuery = useDecks()
@@ -72,14 +72,12 @@ export function LibraryBrowserPage() {
     [leaves, collections, metrics],
   )
 
+  // A specific Collection selection renders LibraryCollectionView instead
+  // (below) - that view scopes and paginates its own leaf-descendant list
+  // independently. This root composition only ever needs "all" or "unfiled".
   const scoped = useMemo(() => {
-    if (selection.kind === 'all') return leaves
     if (selection.kind === 'unfiled') return leaves.filter((d) => !collectionIdFor(d, collections))
-    const ids = getSubtreeCollectionIds(collections, selection.id)
-    return leaves.filter((d) => {
-      const cid = collectionIdFor(d, collections)
-      return cid && ids.includes(cid)
-    })
+    return leaves
   }, [collections, leaves, selection])
 
   const filtered = useMemo(() => {
@@ -120,96 +118,99 @@ export function LibraryBrowserPage() {
       onSelect={setSelection}
       onCreateDeck={newDeck}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand">
-          Library
-        </h1>
-        <Button variant="primary" onClick={newDeck}>
-          + New Deck
-        </Button>
-      </div>
-
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[220px] flex-1">
-          <Search
-            size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted"
-          />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search decks..."
-            className={`${fieldClass} pl-9`}
-          />
-        </div>
-        <FilterMenu dueOnly={dueOnly} onDueOnlyChange={setDueOnly} />
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortKey)}
-          className={`${selectClass} w-auto`}
-        >
-          <option value="name">Sort: Name</option>
-          <option value="lastStudied">Sort: Last studied</option>
-          <option value="due">Sort: Due count</option>
-          <option value="cardCount">Sort: Card count</option>
-        </select>
-      </div>
-
-      {leaves.length === 0 ? (
-        <EmptyState
-          title="No decks yet"
-          description="Create one (and nest subdecks inside it), or just make a card — an “Inbox” deck is created automatically."
-          action={
+      {selection.kind === 'collection' ? (
+        <LibraryCollectionView
+          collectionId={selection.id}
+          decks={decksQuery.data ?? []}
+          collections={collections}
+          metrics={metrics}
+          now={now}
+          onSelect={setSelection}
+        />
+      ) : (
+        <>
+          <div className="mb-4 flex items-center justify-between">
+            <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand">
+              Library
+            </h1>
             <Button variant="primary" onClick={newDeck}>
               + New Deck
             </Button>
-          }
-        />
-      ) : filtered.length === 0 && search.trim() ? (
-        <EmptyState
-          title="No decks match your search"
-          description={`Nothing found for "${search.trim()}".`}
-          action={
-            <Button variant="secondary" onClick={() => setSearch('')}>
-              Clear search
-            </Button>
-          }
-        />
-      ) : scoped.length === 0 ? (
-        <EmptyState title="This collection is empty" description="No decks have been added to this collection yet." />
-      ) : (
-        <div className="overflow-x-auto rounded-itera-card border border-itera-border bg-itera-surface px-4">
-          <DeckTableHeader />
-          <div className="divide-y divide-itera-border">
-            {filtered.map((deck) => (
-              <DeckRow
-                key={deck.id}
-                deck={deck}
-                metrics={metricsFor(metrics, deck.id)}
-                now={now}
-                onRename={rename}
-                onDelete={remove}
-              />
-            ))}
           </div>
-        </div>
+
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="relative min-w-[220px] flex-1">
+              <Search
+                size={15}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted"
+              />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search decks..."
+                className={`${fieldClass} pl-9`}
+              />
+            </div>
+            <FilterMenu dueOnly={dueOnly} onDueOnlyChange={setDueOnly} />
+            <RowFilterDropdown
+              label="Sort"
+              value={sort}
+              onChange={(v) => setSort(v as DeckSortKey)}
+              showValueWhenDefault
+              options={[
+                { value: 'name', label: 'Name' },
+                { value: 'due', label: 'Due soon' },
+                { value: 'lastStudied', label: 'Last studied' },
+                { value: 'cardCount', label: 'Card count' },
+              ]}
+            />
+          </div>
+
+          {leaves.length === 0 ? (
+            <EmptyState
+              title="No decks yet"
+              description="Create one (and nest subdecks inside it), or just make a card — an “Inbox” deck is created automatically."
+              action={
+                <Button variant="primary" onClick={newDeck}>
+                  + New Deck
+                </Button>
+              }
+            />
+          ) : filtered.length === 0 && search.trim() ? (
+            <EmptyState
+              title="No decks match your search"
+              description={`Nothing found for "${search.trim()}".`}
+              action={
+                <Button variant="secondary" onClick={() => setSearch('')}>
+                  Clear search
+                </Button>
+              }
+            />
+          ) : scoped.length === 0 ? (
+            <EmptyState title="No unfiled decks" description="Every deck currently belongs to a collection." />
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="px-5">
+                <DeckTableHeader />
+              </div>
+              <div className="rounded-itera-card border border-itera-border bg-itera-surface px-4">
+                <div className="divide-y divide-itera-border">
+                  {filtered.map((deck) => (
+                    <DeckRow
+                      key={deck.id}
+                      deck={deck}
+                      metrics={metricsFor(metrics, deck.id)}
+                      now={now}
+                      onRename={rename}
+                      onDelete={remove}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </LibraryShell>
   )
-}
-
-function sortDecks(decks: Deck[], sort: SortKey, metrics: ReturnType<typeof computeDeckMetrics>): Deck[] {
-  const copy = [...decks]
-  switch (sort) {
-    case 'name':
-      return copy.sort((a, b) => a.name.localeCompare(b.name))
-    case 'due':
-      return copy.sort((a, b) => metricsFor(metrics, b.id).dueCount - metricsFor(metrics, a.id).dueCount)
-    case 'lastStudied':
-      return copy.sort(
-        (a, b) => (metricsFor(metrics, b.id).lastStudied ?? 0) - (metricsFor(metrics, a.id).lastStudied ?? 0),
-      )
-    case 'cardCount':
-      return copy.sort((a, b) => metricsFor(metrics, b.id).cardCount - metricsFor(metrics, a.id).cardCount)
-  }
 }

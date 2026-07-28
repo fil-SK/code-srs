@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
   DndContext,
   KeyboardSensor,
@@ -64,12 +64,13 @@ import { markLabelFor } from './deckMark'
 import {
   deriveCollections,
   collectionIdFor,
+  collectionPathFor,
   leafDecks,
   selectionToSearchParams,
-  type LibraryCollection,
 } from './collectionTree'
 import { computeDeckMetrics, metricsFor } from './deckMetrics'
 import { formatLastStudied } from '@/features/cardsV2/shared/format'
+import { Stat } from './shared/Stat'
 
 const byOrder = (a: Card, b: Card) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt)
 const PAGE_SIZE = 10
@@ -113,18 +114,6 @@ function sortRows(rows: RowMeta[], sort: SortKey): RowMeta[] {
     default:
       return copy
   }
-}
-
-function collectionPath(collections: LibraryCollection[], collectionId: string | undefined): LibraryCollection[] {
-  if (!collectionId) return []
-  const byId = new Map(collections.map((c) => [c.id, c]))
-  const path: LibraryCollection[] = []
-  let current = byId.get(collectionId)
-  while (current) {
-    path.unshift(current)
-    current = current.parentId ? byId.get(current.parentId) : undefined
-  }
-  return path
 }
 
 // A CardTableRowV1 made draggable: the grip handle carries the drag
@@ -179,30 +168,6 @@ function SortableCardTableRow({
       compact={compact}
       showGrip
     />
-  )
-}
-
-function Stat({
-  icon: Icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: typeof Layers
-  label: string
-  value: string
-  accent?: boolean
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <Icon size={18} className={accent ? 'text-itera-accent' : 'text-itera-muted'} />
-      <div>
-        <div className={`font-itera-display text-lg font-bold ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}>
-          {value}
-        </div>
-        <div className="text-xs text-itera-muted">{label}</div>
-      </div>
-    </div>
   )
 }
 
@@ -381,8 +346,17 @@ export function LibraryDeckPage() {
 
   if (!deck) return null
 
+  // A deck with children is a Collection (UI-only distinction, see
+  // collectionTree.ts) - it has no cards-of-its-own page here. Entry points
+  // that still link straight to a deck id regardless of whether it has
+  // children (RoadmapCanvas, old bookmarks) land here and get bounced to the
+  // Collection view instead of rendering an incorrectly-empty leaf page.
+  if (collections.some((c) => c.id === deck.id)) {
+    return <Navigate to={`/decks?${selectionToSearchParams({ kind: 'collection', id: deck.id })}`} replace />
+  }
+
   const cid = collectionIdFor(deck, collections)
-  const path = collectionPath(collections, cid)
+  const path = collectionPathFor(collections, cid)
   const metrics = metricsFor(metricsMap, deck.id)
   const totalCards = cards.length + v2Cards.length
   const markLabel =

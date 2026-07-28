@@ -51,21 +51,28 @@ function ShortcutsPopover({ onClose }: { onClose: () => void }) {
   )
 }
 
-// Card-count + pagination + a quiet tip strip, replacing LibraryTip's old
+// Item-count + pagination + a quiet tip strip, replacing LibraryTip's old
 // sidebar placement (product feedback: the mockup moves it to the Cards-tab
 // footer instead). Pagination is only shown once there's more than one page;
-// the strip itself always renders so the count/tip/shortcuts link are
-// available in manual-sort mode too.
+// the count/pagination row always renders. `itemLabel` lets non-Card lists
+// (e.g. a Collection's child-Deck list) reuse the same footer rhythm without
+// saying "card"; `showTip` hides the Review-specific keyboard tip for lists
+// where "press Space to reveal answer" isn't relevant (see
+// LibraryCollectionView.tsx's Decks section).
 export function CardListFooter({
   count,
   page,
   totalPages,
   onPageChange,
+  itemLabel = 'card',
+  showTip = true,
 }: {
   count: number
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  itemLabel?: string
+  showTip?: boolean
 }) {
   const [showShortcuts, setShowShortcuts] = useState(false)
 
@@ -73,7 +80,8 @@ export function CardListFooter({
     <div className="mt-8 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <span className="text-sm text-itera-muted">
-          {count} card{count === 1 ? '' : 's'}
+          {count} {itemLabel}
+          {count === 1 ? '' : 's'}
         </span>
 
         {totalPages > 1 && (
@@ -113,26 +121,28 @@ export function CardListFooter({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 rounded-itera-card border border-itera-border bg-itera-surface-subtle px-5 py-4 text-sm text-itera-muted">
-        <Keyboard size={21} className="text-itera-muted" />
-        <span className="font-semibold text-itera-ink-brand">Tip:</span>
-        <span>Press</span>
-        <kbd className="rounded border border-itera-border bg-itera-surface px-1.5 py-0.5 font-mono text-xs font-semibold text-itera-ink-brand">
-          Space
-        </kbd>
-        <span>to reveal answer during review</span>
-        <div className="relative ml-auto">
-          <button
-            type="button"
-            onClick={() => setShowShortcuts((v) => !v)}
-            className="inline-flex items-center gap-0.5 font-semibold text-itera-accent hover:brightness-90"
-          >
-            View keyboard shortcuts
-            <ChevronRight size={13} />
-          </button>
-          {showShortcuts && <ShortcutsPopover onClose={() => setShowShortcuts(false)} />}
+      {showTip && (
+        <div className="flex flex-wrap items-center gap-2.5 rounded-itera-card border border-itera-border bg-itera-surface-subtle px-5 py-4 text-sm text-itera-muted">
+          <Keyboard size={21} className="text-itera-muted" />
+          <span className="font-semibold text-itera-ink-brand">Tip:</span>
+          <span>Press</span>
+          <kbd className="rounded border border-itera-border bg-itera-surface px-1.5 py-0.5 font-mono text-xs font-semibold text-itera-ink-brand">
+            Space
+          </kbd>
+          <span>to reveal answer during review</span>
+          <div className="relative ml-auto">
+            <button
+              type="button"
+              onClick={() => setShowShortcuts((v) => !v)}
+              className="inline-flex items-center gap-0.5 font-semibold text-itera-accent hover:brightness-90"
+            >
+              View keyboard shortcuts
+              <ChevronRight size={13} />
+            </button>
+            {showShortcuts && <ShortcutsPopover onClose={() => setShowShortcuts(false)} />}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

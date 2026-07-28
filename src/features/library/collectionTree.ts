@@ -91,6 +91,23 @@ export function getSubtreeCollectionIds(collections: LibraryCollection[], rootId
   return node ? subtreeCollectionIds(node) : [rootId]
 }
 
+// Ancestor chain for a collection id, root-first — used by both the
+// focused Deck page's breadcrumb and the Collection/container view's.
+export function collectionPathFor(
+  collections: LibraryCollection[],
+  collectionId: string | undefined,
+): LibraryCollection[] {
+  if (!collectionId) return []
+  const byId = new Map(collections.map((c) => [c.id, c]))
+  const path: LibraryCollection[] = []
+  let current = byId.get(collectionId)
+  while (current) {
+    path.unshift(current)
+    current = current.parentId ? byId.get(current.parentId) : undefined
+  }
+  return path
+}
+
 export function getSelectionLabel(
   selection: LibrarySelection,
   collections: LibraryCollection[],
