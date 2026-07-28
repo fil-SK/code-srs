@@ -26,16 +26,16 @@ export function TopNav({
   const badges = useNavBadges()
 
   return (
-    <header className="border-b border-itera-border bg-itera-surface px-4 py-3 sm:px-6">
-      <div className="mx-auto flex max-w-[1280px] items-center gap-6 overflow-x-auto">
-        <Link to="/" className="flex shrink-0 items-center gap-2">
-          <img src="/itera-logo.png" alt="" className="h-[42px] w-[42px]" />
-          <span className="font-itera-display text-lg font-bold tracking-tight text-itera-ink-brand">
+    <header className="border-b border-itera-border bg-itera-canvas px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-[1280px] items-stretch gap-8 overflow-x-auto">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5">
+          <img src="/itera-logo.png" alt="" className="h-10 w-10" />
+          <span className="font-itera-display text-2xl font-extrabold tracking-tight text-itera-ink-brand">
             Itera
           </span>
         </Link>
 
-        <nav className="flex shrink-0 items-center gap-5">
+        <nav className="flex flex-1 shrink-0 items-stretch justify-center gap-8">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
@@ -43,7 +43,7 @@ export function TopNav({
               end={link.end}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-1.5 whitespace-nowrap border-b-2 py-1 text-sm font-semibold transition-colors',
+                  'flex items-center gap-1.5 whitespace-nowrap border-b-2 text-sm font-semibold transition-colors',
                   isActive
                     ? 'border-itera-accent text-itera-ink-brand'
                     : 'border-transparent text-itera-muted hover:text-itera-ink',
@@ -60,9 +60,7 @@ export function TopNav({
           ))}
         </nav>
 
-        <div className="flex-1" />
-
-        {rightSlot}
+        <div className="flex shrink-0 items-center gap-4">{rightSlot}</div>
       </div>
     </header>
   )

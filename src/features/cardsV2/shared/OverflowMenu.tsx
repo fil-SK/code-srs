@@ -18,9 +18,11 @@ export interface OverflowMenuItem {
 export function OverflowMenu({
   items,
   ariaLabel = 'Card actions',
+  bordered = false,
 }: {
   items: OverflowMenuItem[]
   ariaLabel?: string
+  bordered?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -45,7 +47,10 @@ export function OverflowMenu({
           e.preventDefault()
           setOpen((v) => !v)
         }}
-        className="grid h-8 w-8 place-items-center rounded-itera-control text-itera-muted hover:bg-itera-surface-subtle hover:text-itera-ink"
+        className={cn(
+          'grid h-8 w-8 place-items-center rounded-itera-control text-itera-muted hover:bg-itera-surface-subtle hover:text-itera-ink',
+          bordered && 'h-10 w-10 border border-itera-border hover:border-itera-border-strong',
+        )}
       >
         <MoreVertical size={16} />
       </button>

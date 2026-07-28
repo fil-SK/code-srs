@@ -113,7 +113,13 @@ export function LibraryBrowserPage() {
   }
 
   return (
-    <LibraryShell collections={collections} decks={navDecks} selection={selection} onSelect={setSelection}>
+    <LibraryShell
+      collections={collections}
+      decks={navDecks}
+      selection={selection}
+      onSelect={setSelection}
+      onCreateDeck={newDeck}
+    >
       <div className="mb-4 flex items-center justify-between">
         <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand">
           Library

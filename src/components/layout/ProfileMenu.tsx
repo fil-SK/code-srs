@@ -34,7 +34,7 @@ export function ProfileMenu() {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1 rounded-full py-1 pl-1 pr-1.5 hover:bg-itera-surface-subtle"
       >
-        <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-itera-navy-soft font-semibold text-itera-ink-brand">
+        <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-itera-navy font-semibold text-white">
           {initial}
         </span>
         <ChevronDown size={14} className="text-itera-muted" />

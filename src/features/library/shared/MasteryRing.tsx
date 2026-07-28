@@ -1,8 +1,8 @@
 // Small single-value circular progress ring for the deck header's mastery
 // stat. Hand-rolled SVG with CSS-var strokes, matching PaceChart.tsx's
 // existing "no charting library" technique.
-const SIZE = 44
-const STROKE = 4
+const SIZE = 56
+const STROKE = 6
 const RADIUS = (SIZE - STROKE) / 2
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 

@@ -8,10 +8,13 @@ import { Flame } from 'lucide-react'
 // exists to back it; swap for a real computed value once that exists.
 export function StreakBadge() {
   return (
-    <div className="flex shrink-0 items-center gap-1.5 text-sm font-semibold text-itera-ink-brand">
-      <Flame size={16} className="text-itera-accent" />
-      <span>7</span>
-      <span className="hidden font-normal text-itera-muted sm:inline">day streak</span>
+    <div className="flex shrink-0 items-center gap-2">
+      <Flame size={20} className="text-itera-accent" />
+      <div className="hidden leading-tight sm:block">
+        <div className="text-base font-bold text-itera-ink-brand">7</div>
+        <div className="text-xs text-itera-muted">day streak</div>
+      </div>
+      <span className="text-sm font-semibold text-itera-ink-brand sm:hidden">7</span>
     </div>
   )
 }
