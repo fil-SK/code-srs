@@ -164,11 +164,15 @@ Status legend: not started unless noted. As of this revision: Phase A complete. 
 **Depends on:** Phase E (Start Session launches the new Review shell), ~~Phase H (Continue Learning rows need the new Deck model and the new global shell to render inside)~~ — the global-shell half of this is now satisfied (see Update above); Continue Learning rows still need real due-card data wiring, unrelated to the shell.
 **Acceptance (not yet met):** a new user with zero content sees the empty-state variant (§12.5), not blank analytics; every number on the page is real, not illustrative.
 
-## Phase J — Progress
+## Phase J — Progress (shipped, 2026-07-28)
 
-**Files:** `src/features/progress/ProgressPage.tsx` (new, replaces `StatsPage.tsx`), `src/domain/stats/computeStats.ts` (extend, don't rewrite — existing tests cover it).
-**Depends on:** Phase H (new shell).
-**Acceptance:** one dominant heat map + supporting metrics, not equal-weight stat boxes; empty state per §23.4.
+**Status (2026-07-28):** shipped. `/progress` is a new route rendering `ProgressPage.tsx`, driven by a locked mockup (`progress.png`): five KPI tiles with period-over-period deltas, a dominant activity heat map, a retention-over-time chart, a deck-performance table, and a derived recent-milestones panel, inside a local sidebar (Overview live, seven other mockup destinations shown disabled with a "Soon" pill — Decks/Activity/Review lag/Milestones/Achievements/Stats/Reports — plus an "Itera Pro" upsell that was omitted entirely, all decided with the user rather than guessed). See `itera-decisions.md`'s 2026-07-28 entry (D112-D117) for the full reasoning, including two new metric definitions this phase had to invent (accuracy vs. retention, gap-clustered "sessions") and why every chart is hand-rolled SVG rather than a new dependency.
+
+**Deviation from the plan as originally written:** `computeStats.ts` was **not** extended, and `StatsPage.tsx`/`/stats` were **not** replaced or deleted — a stricter constraint than this phase's original text assumed. Instead, a new parallel domain layer (`src/domain/stats/{dateRange,progressMetrics}.ts`, fully additive, own test files) computes everything `/progress` needs from real `ReviewLog`/`Card`/`Deck` data, and `/stats` stays mounted, byte-for-byte unchanged, as a direct-URL safety net now that `primaryNavLinks.ts`'s "Progress" link points at `/progress` instead.
+
+**Files:** `src/features/progress/{ProgressPage,ProgressShell,ProgressNav,useIsWideProgress}.tsx|ts` + `src/features/progress/components/{KpiTile,DateRangePicker,SegmentedToggle,ActivityHeatmap,RetentionChart,DeckScopeDropdown,DeckPerformanceTable,Sparkline,RecentMilestones}.tsx`, `src/domain/stats/{dateRange,progressMetrics}.ts` (new, additive — `computeStats.ts` untouched).
+**Depends on:** Phase H (new shell) — satisfied.
+**Acceptance:** one dominant heat map + supporting metrics, not equal-weight stat boxes — met; empty state per §23.4 — met (`EmptyState`, reused from `library/shared`, shown when a fresh install has zero `ReviewLog`s).
 
 ## Phase K — Onboarding + empty states
 

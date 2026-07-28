@@ -35,7 +35,7 @@ describe('TopNav', () => {
   })
 
   it('marks only the link matching the current path as active', () => {
-    renderNav('/stats')
+    renderNav('/progress')
     expect(screen.getByRole('link', { name: 'Progress' }).className).toMatch(/border-itera-accent/)
     expect(screen.getByRole('link', { name: 'Today' }).className).not.toMatch(/border-itera-accent/)
     expect(screen.getByRole('link', { name: 'Library' }).className).not.toMatch(/border-itera-accent/)
