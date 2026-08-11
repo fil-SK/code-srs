@@ -132,7 +132,7 @@
   --radius-itera-pill: 999px;
 }
 
-/* Itera redesign — namespaced design tokens (docs/itera-claude-master-spec.md §4-5).
+/* Itera redesign — namespaced design tokens (docs/design-system.md).
    Applied via the .itera-scope class, now wrapping the *whole app*
    (AppShell, via IteraSurface — src/features/reviewV2/components/IteraSurface.tsx),
    not just /design-preview/* and Review. Defines a distinct --itera-*

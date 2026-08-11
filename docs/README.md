@@ -1,26 +1,71 @@
 # Documentation index
 
-Two kinds of documents live here — a developer reference (how the app works, right now) and the Itera redesign's own working log (why it's changing, and what's been decided). Don't confuse the two: the reference below describes current behavior; the redesign log describes an in-progress, continuously-updated effort layered on top of it.
+Shared, **agent-neutral** documentation for Itera (the app still named `code-srs` in `package.json` and its deployment). Claude Code reads [`../CLAUDE.md`](../CLAUDE.md) and Codex reads [`../AGENTS.md`](../AGENTS.md); both are thin entry points that point **here**. Product, design, architecture and migration truth lives in this folder and is never duplicated into an agent instruction file.
 
-## Developer reference
+## Start here
 
-Read these for "how does this work" / "where is X" / "what color/token do I use." Written to be accurate as of the date they were last updated — if something looks stale, trust the code and fix the doc.
+- **[`CURRENT_STATE.md`](CURRENT_STATE.md)** — what is actually implemented right now: current milestone, page-by-page real vs. placeholder, routes (including the legacy ones kept on purpose), architecture state, migrations that have *not* run, known problems, tests/build baseline, and the one recommended next milestone. **Read this before planning any change.**
 
-- **[`architecture.md`](architecture.md)** — the storage seam, data-access hooks, card-type registries (v1 and v2), routing, FSRS scheduling, and the v1→v2 migration machinery.
-- **[`design-system.md`](design-system.md)** — the two token systems (general app tokens vs. Itera's locked palette), typography/spacing, icon conventions, and shared UI-component patterns.
-- **[`features.md`](features.md)** — a route-by-route table of what exists today and whether it's original (v1) or part of the Itera redesign.
+## Canonical documents
 
-The root [`CLAUDE.md`](../CLAUDE.md) stays intentionally terse (rules and gotchas for Claude Code); these three files are where the full detail — exact tokens, full hook/registry tables, current feature status — lives.
+Each owns one concern. If two of them say different things about the same thing, that is a bug — fix it rather than picking a side silently.
 
-## Itera redesign log
-
-The redesign's own spec, plan, and decision trail, in the order you'd typically need them:
-
-| File | Purpose | Status |
+| Document | Owns | Does **not** own |
 |---|---|---|
-| [`itera-claude-master-spec.md`](itera-claude-master-spec.md) | The full product/UX/visual/implementation spec, mirrored verbatim from its original source. Everything else cites this by section number (e.g. §4.4, §9.5). | **Frozen reference** — not edited; the source of truth other docs derive from. |
-| [`itera-redesign-plan.md`](itera-redesign-plan.md) | The phased implementation plan (Phase A–M), grounded in this repo's actual files, with live status per phase. | **Authoritative, continuously updated** — read before starting redesign work. |
-| [`itera-decisions.md`](itera-decisions.md) | Append-only decision log (D1, D2, ... in order). Product-owner corrections, architecture calls, implementation gotchas. | **Authoritative, actively maintained** — read the most recent entries first. Never edited in place; superseded entries are appended, not rewritten. |
-| [`itera-migration-plan.md`](itera-migration-plan.md) | The concrete data-migration contract: the `MigrationRunner` interface, the 8→6 card-type mapping, CardState extraction steps, the Collection/Deck split's preflight requirements. | **Authoritative, living** — still current, phases not yet fully executed. |
-| [`itera-repository-audit.md`](itera-repository-audit.md) | The original Phase A audit: pre-redesign stack, spec-conflict table, Retain/Migrate/Rewrite/Delete map. | **Historical** — a few rows have later "Resolved" annotations; don't treat unannotated rows as current state without cross-checking `itera-decisions.md`. |
-| [`ai-card-prompt.md`](ai-card-prompt.md) | A copy-paste prompt for generating flashcard-import JSON via an external LLM chat, for **Settings → Import JSON**. | **Standalone user-facing tool doc** — still describes the v1/8-type backup schema, not yet updated for the v2 6-type taxonomy. |
+| [`CURRENT_STATE.md`](CURRENT_STATE.md) | Implementation status, known problems, next milestone | Rules, rationale, mechanism |
+| [`architecture.md`](architecture.md) | How the system is structured: storage seam, hooks, both card registries, auth boundary, scheduling/`ReviewService`, routing, backup, data-safety constraints | What shipped when |
+| [`design-system.md`](design-system.md) | How it looks and behaves: brand and logo rules, tokens, typography, spacing, shape, navigation, surfaces, tables/lists, popovers, motion, reduced motion, accessibility, responsive, orange restraint, the Review-shell exception, visual-reference tiers | Component-by-component status |
+| [`features.md`](features.md) | What the product does route by route, cross-cutting behavior (interactions, grading, Tip vs Explanation, sessions, login), plus **planned** and **explicitly out of scope** | Why a call was made |
+| [`itera-decisions.md`](itera-decisions.md) | **Append-only** material decision log (D1…D143): decision, rationale, date, supersession | Implementation status |
+| [`itera-migration-plan.md`](itera-migration-plan.md) | The data-migration and data-safety contract, with every phase marked completed / partial / not started | Anything unrelated to persisted data |
+
+## Other current material
+
+- **[`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)** — a copy-paste prompt for generating flashcard-import JSON via an external LLM chat, loaded through **Account settings → Import / Export → Import JSON → Merge**. Active and user-facing. It still describes the **v1 / 8-type backup schema** (`BACKUP_VERSION` is still `1`), which is correct today and will need updating when the backup version bumps.
+
+## Visual references
+
+Reference mockups are **not tracked in this repository** — there is deliberately no `docs/references/` directory, because inventing one would create paths that resolve to nothing. They live at `C:\Users\SK\Desktop\itera-mockups\` (`webapp/`, `inspo-icons/`, `inspiration/`, `mobile/`). [`design-system.md`](design-system.md) §14 defines the **LOCKED / DIRECTION / CONCEPT** tiers and how each is treated; [`itera-decisions.md`](itera-decisions.md) cites individual files by name.
+
+## Historical documents — [`archive/`](archive/)
+
+Preserved for project history. Each opens with a visible warning. **None of them is a current source of truth, and none may override a canonical document.**
+
+| File | What it was |
+|---|---|
+| [`archive/itera-repository-audit-2026-07-22.md`](archive/itera-repository-audit-2026-07-22.md) | The Phase A audit: a snapshot of the repository **before** the redesign, its spec-conflict table and Retain/Migrate/Rewrite/Delete map. Most conflicts are long resolved. |
+| [`archive/itera-redesign-plan.md`](archive/itera-redesign-plan.md) | The phased A–M implementation sequence. Reality deviated from it (the Library/shell rebuild shipped without the Collection/Deck migration; Today shipped early). `CURRENT_STATE.md` defines the next milestone instead. |
+| [`archive/itera-claude-master-spec.md`](archive/itera-claude-master-spec.md) | The original Claude-addressed master specification everything derives from. Its durable rules were moved into the canonical docs above; it is kept whole and unedited because the decision log cites it **by section number** (e.g. "spec §4.4"). |
+
+## Source-of-truth hierarchy
+
+When two sources disagree, resolve in this order. Never resolve a conflict in favor of an archived document.
+
+**Current status of anything**
+1. The repository itself — read the code
+2. [`CURRENT_STATE.md`](CURRENT_STATE.md)
+3. [`architecture.md`](architecture.md) / [`features.md`](features.md) / [`design-system.md`](design-system.md)
+4. [`archive/`](archive/)
+
+**Design**
+1. A visual reference explicitly marked **LOCKED** for that surface
+2. [`design-system.md`](design-system.md)
+3. The relevant entries in [`itera-decisions.md`](itera-decisions.md)
+4. [`archive/`](archive/)
+
+**Architecture**
+1. The current repository implementation
+2. [`architecture.md`](architecture.md)
+3. [`itera-decisions.md`](itera-decisions.md)
+4. [`itera-migration-plan.md`](itera-migration-plan.md), where persisted data is involved
+
+**Future migration work**
+1. [`itera-decisions.md`](itera-decisions.md) — a later decision supersedes an earlier plan
+2. [`itera-migration-plan.md`](itera-migration-plan.md) — the contract itself
+3. [`CURRENT_STATE.md`](CURRENT_STATE.md) §13 — which stage each migration is actually at
+
+Two standing rules: **the repository wins over any document** on questions of what exists, and `itera-decisions.md` is **append-only** — supersede an entry with a new dated one, never edit its substance in place.
+
+## Keeping this accurate
+
+When a change reaches finalized state (a feature implemented, a design or behavior settled — not a WIP edit), update documentation **in the same pass**: `CURRENT_STATE.md` whenever status changes, the canonical doc that owns the topic, [`../README.md`](../README.md) for user-facing changes, and a new appended entry in `itera-decisions.md` for anything material.

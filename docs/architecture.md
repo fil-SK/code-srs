@@ -1,12 +1,28 @@
 # Architecture reference
 
-Technical reference for how code-srs / Itera is put together: the storage seam, data-access hooks, card-type registries (v1 and v2), routing, scheduling, and migration. Written to be read in pieces — jump to the section you need.
+The canonical technical architecture: **how the system is structured**, and which structural rules must not be broken. It is written to be read in pieces — jump to the section you need.
+
+It deliberately does **not** track implementation status ("what shipped last week"). For that, read [`CURRENT_STATE.md`](CURRENT_STATE.md).
 
 This complements, but doesn't replace:
-- **[`CLAUDE.md`](../CLAUDE.md)** — terse rules and gotchas for working in this repo. Read that first if you just need "what to watch out for."
-- **[`docs/itera-decisions.md`](itera-decisions.md)** — the *why* behind every non-obvious architectural call below (append-only log, cited throughout by "D#" number).
-- **[`docs/features.md`](features.md)** — which pages/routes are v1 vs. the in-progress Itera redesign.
-- **[`docs/design-system.md`](design-system.md)** — colors, tokens, typography, and UI-component conventions.
+- **[`CURRENT_STATE.md`](CURRENT_STATE.md)** — what is actually built right now, what is placeholder, and what to do next.
+- **[`itera-decisions.md`](itera-decisions.md)** — the *why* behind every non-obvious architectural call below (append-only log, cited throughout by "D#" number).
+- **[`features.md`](features.md)** — product capabilities, route by route.
+- **[`design-system.md`](design-system.md)** — colors, tokens, typography, and UI conventions.
+- **[`itera-migration-plan.md`](itera-migration-plan.md)** — the data-migration contract for schema changes that touch real user data.
+- **[`../CLAUDE.md`](../CLAUDE.md)** / **[`../AGENTS.md`](../AGENTS.md)** — terse working rules for coding agents; both point here.
+
+---
+
+## Architectural principles
+
+Five constraints shape everything below. Breaking one of them is a decision, not a refactor.
+
+1. **Local-first.** Card authoring, review, scheduling, search, history, import/export and previews all work with **no network and no account**. Dexie/IndexedDB is the default backend; Supabase is opt-in cloud sync, never a prerequisite. AI is optional external tooling (see [`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)) and never a runtime dependency.
+2. **One storage seam.** The entire app depends on the `Repository` interface and never learns which backend is live.
+3. **Layer separation.** `UI components → hooks (application/use-case) → domain models + scheduler boundary → repositories`. FSRS math, persistence and UI state must not share a component. Everything under `src/domain/` is pure and React-free.
+4. **Content is separate from learning state.** `Card` (content), `CardState` (scheduling), `ReviewEvent`/`ReviewLog` (immutable history) are distinct concerns. This is a hard requirement for any future shared or purchased deck, and it is why the CardState extraction exists at all.
+5. **No destructive data change without an explicit, dry-runnable cutover.** Additive first; removal is always a separate, later, separately-decided step.
 
 ---
 
@@ -18,7 +34,7 @@ src/
 ├── auth/         session boundary: AuthProvider, AuthGate, RequireAuth, localSession
 ├── components/
 │   ├── layout/   AppShell, TopNav, primaryNavLinks.ts, AccountMenu(+Content), StreakBadge, useNavBadges.ts
-│   ├── ui/       Button, Field, FlipCard (v1) — shared, generic UI primitives
+│   ├── ui/       Button, Field, FloatingPanel, dialogs, FlipCard (v1) — shared, generic UI primitives
 │   ├── code/     CodeView, LazyCodeView, LazyCodeEditor, lineRanges.ts
 │   └── text/     RichText, InlineText (the markdown-subset renderer)
 ├── data/         repository.ts (the interface), index.ts (getRepository), dexie/, supabase/, backup.ts
@@ -36,9 +52,9 @@ src/
 │   ├── dashboard/      DashboardPage — the old '/' page; unrouted, still in the tree
 │   ├── decks/          DecksPage, DeckDetailPage — unrouted since the App Shell convergence (superseded by features/library/), kept until parity is re-confirmed
 │   ├── design-preview/ /design-preview/* routes exercising real v2 components against fixtures;
-│   │                   also library-shared/library-browser/library-deck (the Phase H preview slice `features/library/` was adapted from — still isolated, untouched)
+│   │                   also library-shared/library-browser/library-deck (the preview slice `features/library/` was adapted from — still isolated, untouched)
 │   ├── drafts/         DraftsPage, seedContent.ts
-│   ├── library/        LibraryBrowserPage (/decks), LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (CollectionNav, CollectionNavDrawer, DeckMark, MasteryRing, MeterBar, EmptyState, useIsWideLibrary)
+│   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, sortDecks, useIsWideLibrary)
 │   ├── preview/        PreviewPage — flip through cards, no scheduling impact (renders the v2 shell)
 │   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2), legacy ReviewSession/useReviewSession (v1, unrouted)
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
@@ -160,7 +176,7 @@ Parameterized keys (`cardsDue`, `cardsSearch`) embed the query object itself, so
 | `useReview.ts` | `useReviewLogs`, `useGradeCard`, `usePersistReviewResult`, `useUndoGrade` | The grading write path — see "Scheduling" below. |
 | `useRoadmaps.ts` | `useRoadmaps`, `useRoadmap`, `useCreateRoadmap`, `useSaveRoadmap`, `useDeleteRoadmap` | `useSaveRoadmap` is the **only** hook using `qc.setQueryData` for an optimistic write, alongside invalidation. |
 | `useBackup.ts` | `useImportBackup` | `onSuccess: () => qc.invalidateQueries()` with no key filter — appropriate after a bulk multi-entity replace/merge. |
-| `useCardsV2.ts` | `useCardV2`, `useSearchCardsV2`, `useCreateCardV2`, `useSaveCardV2`, `useDeleteCardV2`, `useSaveRecallCard`, `useSaveMultipleChoiceCard` | Plain CRUD over `CardV2Repo`, plus one `useSave*Card` per authorable interaction type — thin wrappers around the pure `src/domain/cardsV2/save{Recall,MultipleChoice}Card.ts` (each unit-tested directly against a repository), which are the only places a legacy v1 card gets migrated to a `CardV2Record` on save. |
+| `useCardsV2.ts` | `useCardV2`, `useSearchCardsV2`, `useCreateCardV2`, `useSaveCardV2`, `useDeleteCardV2`, plus one `useSave*Card` per interaction type (`useSaveRecallCard`, `useSaveMultipleChoiceCard`, `useSaveWriteCodeCard`, `useSaveOrderingCard`, `useSaveMatchingCard`, `useSaveWalkthroughCard`) | Plain CRUD over `CardV2Repo`, plus one save hook per authorable interaction type — thin wrappers around the pure `src/domain/cardsV2/save*Card.ts` modules (each unit-tested directly against a repository), which are the only places a legacy v1 card gets migrated to a `CardV2Record` on save. |
 
 Conventions observed across all of them: query keys always go through `qk`, never inlined; every mutation is a thin async function calling 1+ repo methods directly (no separate service layer for plain CRUD); `onSuccess` invalidates the coarse list key and, where relevant, the specific item key.
 
@@ -233,7 +249,18 @@ The Browse filter and editor type picker both derive from `cardTypeMeta`, so the
 
 `AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` → `TopNav` (logo, `Today · Library · Progress`, then a `rightSlot` holding `StreakBadge` + `AccountMenu`; there is deliberately no global Search or `+Create`, both removed as unscoped actions) → `<Outlet/>` — no sidebar, no bottom nav, no per-route topbar (`Sidebar.tsx`/`BottomNav.tsx`/`navItems.ts`/`PageHeaderOverride.tsx` were all deleted, not deprecated in place). This is the mechanism by which every route it wraps picks up the Itera visual system and the shared nav automatically, since pages already use the shared semantic Tailwind classes `.itera-scope` re-points. `ThemeToggle` is deliberately not rendered (light-only for now).
 
-`AccountMenu` (`src/components/layout/AccountMenu.tsx`) is the shell's only global right-side action: an avatar button (`aria-haspopup="menu"`, `aria-expanded`, "Open account menu") opening a 300px anchored popover through `FloatingPanel` with `manageFocus`, or — below 480px (`useIsNarrowShell`) — the same `AccountMenuContent` in a bottom sheet. It is quick navigation only (Account settings · Preferences · Keyboard shortcuts · Help & documentation · About Itera · Sign out); everything except Account settings is an `aria-disabled` placeholder marked "Soon", because none of those surfaces exist yet, and Sign out only activates when a Supabase session does. Since it is mounted from `AppShell`, `/review` has no account menu by construction.
+`AccountMenu` (`src/components/layout/AccountMenu.tsx`) is the shell's only global right-side action: an avatar button (`aria-haspopup="menu"`, `aria-expanded`, "Open account menu") opening a 300px anchored popover through `FloatingPanel` with `manageFocus`, or — below 480px (`useIsNarrowShell`) — the same `AccountMenuContent` in a bottom sheet. It is quick navigation only (Account settings · Preferences · Keyboard shortcuts · Help & documentation · About Itera · Sign out); **Account settings and Sign out are live** — Sign out whenever any session exists, local, demo or Supabase — and every other row is an `aria-disabled` placeholder marked "Soon", because none of those surfaces exist yet. Since it is mounted from `AppShell`, `/review` has no account menu by construction.
+
+### Auth / session boundary
+
+`src/auth/` owns the entire concept of "signed in," in four files:
+
+- **`RequireAuth.tsx`** — a **single pathless layout route** in `router.tsx` wrapping every product route (the whole `AppShell` tree *and* `/review`). Signed-out visitors are redirected to `/login` carrying the route they wanted. `/login` and `/design-preview/*` sit outside it. "Signed out" is therefore answered in exactly one place, never per page.
+- **`AuthProvider.tsx`** — counts **a Supabase session or a `LocalSession`** as signed in (`isAuthenticated`, `identity`). `session` still means the Supabase session specifically and is `null` in local mode; a real Supabase session outranks a local one.
+- **`AuthGate.tsx`** — blocks only on the Supabase session bootstrap. It does not decide what renders.
+- **`localSession.ts`** — the **single storage seam for auth**: one key (`itera.session`), `localStorage` when "Remember me" is checked and `sessionStorage` otherwise, every access wrapped in `try/catch`, a corrupt value reading as signed out. **Do not add a session or `localStorage` auth check anywhere else in the app.**
+
+Local mode is gated: a fresh browser lands on `/login` and must sign in or continue with a demo workspace. **In local mode the password is a dev/demo shell — never stored, sent or verified.** With Supabase configured, the only real authentication is magic-link OTP: the password field and Remember me are hidden and the button mails a link. No password authentication exists anywhere in this codebase.
 
 `IteraSurface`/`ForceLightTheme` (`src/features/reviewV2/components/`) are the shared root used by `AppShell`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared — reuses `IteraSurface` directly, not `PreviewShell`, since its two-pane layout needs a wider container and it deliberately omits `PreviewShell`'s "not part of the live app" banner), and `ReviewSessionV2` — one mechanism, not separate "real" vs. "preview" copies. See [`docs/design-system.md`](design-system.md) for what they do and why. See `docs/itera-decisions.md`'s "App Shell and Visual Foundation Convergence" entry for the full rationale.
 
@@ -292,7 +319,7 @@ interface MigrationRunner {
 }
 ```
 
-Production wiring: `src/features/review/ReviewSessionV2.tsx` migrates each v1 `Card` via `migrateCard()` (memoized per card), renders it through `reviewV2`'s shell, then persists the FSRS result back onto the **original v1 `Card.scheduling`** via `usePersistReviewResult` — there is no `CardV2`-backed store yet, so v2's *content* model is live in production, but its *storage* model isn't.
+Production wiring: `src/features/review/ReviewSessionV2.tsx` migrates each v1 `Card` via `migrateCard()` (memoized per card), renders it through `reviewV2`'s shell, then persists the FSRS result back onto the **original v1 `Card.scheduling`** via `usePersistReviewResult`. A `CardV2Record` store does exist (`cardsV2`, see "Card creation" below) and carries its own embedded scheduling — but the due queue this path reads is still the v1 one, so a v2-authored card never reaches `/review` (the known gap at the end of this section).
 
 ### `src/features/reviewV2/` — the v2 Review shell
 
@@ -334,7 +361,7 @@ interface InteractionDefinition<T extends InteractionType> {
 - `src/domain/cardsV2/{saveRecallCard,saveMultipleChoiceCard,saveWriteCodeCard,saveOrderingCard,saveMatchingCard,saveWalkthroughCard}.ts` — the single save path per type (unit-tested directly against a repository, independent of the `useSave*Card` hooks that wrap them), each covering three targets: `new` (fresh `CardV2Record`), `v2` (update in place, same id/scheduling), and `v1` (the **legacy cutover** — builds a `CardV2Record` reusing the original v1 card's `id`/`createdAt`/`scheduling`/`suspended` so `ReviewLog` history keeps resolving, writes it to `cardsV2`, then deletes the superseded `cards` row and its `cardStates` mirror).
 - `CardEditEntry.tsx` (the element at `cards/:id/edit`) — branches: a `CardV2Record` opens its matching editor by `interaction.type`; a legacy v1 `basic`/`codeReading`/`bugFinding` card opens `RecallEditorShell`, a legacy v1 `mcq` card opens `MultipleChoiceEditorShell`, a legacy v1 `codeCompletion` card opens `WriteCodeEditorShell`, a legacy v1 `ordering`/`matching` card opens the matching v2 editor, and a legacy v1 `story` card opens `WalkthroughEditorShell`; any other v1 type falls through to the untouched `CardEditorPage`. Legacy cards only migrate to `CardV2Record` when actually edited-and-saved this way — not in bulk.
 - `CardStudyPreviewPage.tsx` (`cards/:id/study`) — the Deck row's primary click target: the same non-committing `ReviewSessionScreen` embedding as the editor's live preview, dispatched by `card.interaction.type` (`getInteractionDefinition(card.interaction.type)`), seeded from the real record but a fresh scheduling baseline.
-- `CardRowV2.tsx` — the compact Deck-page row, rendered by `DeckDetailPage.tsx` alongside the existing v1 `CardRow` list (two row styles intentionally coexist, same as the two nav shells). The interaction tile reads `card.interaction.type` generically (no per-type branching in the row itself), with one small exception: a Walkthrough card shows a quiet `"N steps"` count next to its tags (no other type shows a count). The row body opens the study preview directly; an inline Edit (pencil) button and an overflow menu (Duplicate/Move/Suspend/Delete, the last two using a local `MovePopover`) live on the row itself — there is no separate read-only detail/overview screen (`CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow, all of which now live one level up; see `itera-decisions.md`).
+- `CardRowV2.tsx` — the compact v2 card row. It is rendered only by the **unrouted** legacy `features/decks/DeckDetailPage.tsx`; production's `/decks/:id` renders both v1 and v2 rows through `features/library/shared/CardTable.tsx` instead, over a unified `RowMeta`. `CardRowV2` is kept because `DeckDetailPage` is kept. The interaction tile reads `card.interaction.type` generically (no per-type branching in the row itself), with one small exception: a Walkthrough card shows a quiet `"N steps"` count next to its tags (no other type shows a count). The row body opens the study preview directly; an inline Edit (pencil) button and an overflow menu (Duplicate/Move/Suspend/Delete, the last two using a local `MovePopover`) live on the row itself — there is no separate read-only detail/overview screen (`CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow, all of which now live one level up; see `itera-decisions.md`).
 - `shared/{StatusBadge,format,interactionTypeMeta,InteractionTypeBadge,OverflowMenu}.tsx` — the first four promoted out of `design-preview/library-shared/` once a real consumer needed them (they were already built against real `SchedulingStateKind`/`InteractionType`, not fixture types); `OverflowMenu` is a new shared primitive, since two independent ad hoc kebab-menu implementations already existed in the codebase before this one. Its panel is rendered through `src/components/ui/FloatingPanel.tsx` (portal + fixed positioning + flip-above), not as an `absolute` child — see `itera-decisions.md` D112.
 
 **Known gap:** `CardV2Record`s aren't in the global due queue yet (`useDueCards`/`ReviewPage` only read v1 `cards`) — real, scheduling-affecting review of a `CardV2Record` isn't wired up; only the non-committing editor preview and "Study this Card" exist so far.

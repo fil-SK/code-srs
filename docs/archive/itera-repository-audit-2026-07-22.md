@@ -1,6 +1,14 @@
+> **HISTORICAL DOCUMENT — not a current source of truth. Preserved for project history only.**
+>
+> Archived 2026-08-12. This is the **Phase A audit snapshot, taken 2026-07-22**, describing the repository *before* the Itera redesign began. Almost everything in §3's conflict table has since changed: the 8-item left sidebar, `BottomNav`, `navItems.ts` and the purple/navy palette are gone; Review, Library, Progress, Settings and Login have been rebuilt; a v2 card model, a `cardsV2` store and a `cardStates` store now exist.
+>
+> Rows carrying a later "Resolved"/"Confirmed"/"Shipped" annotation were updated in place while this was still live; **unannotated rows are simply stale, not open**. Do not read any row as current state.
+>
+> For current state read [`../CURRENT_STATE.md`](../CURRENT_STATE.md); for how the system is structured read [`../architecture.md`](../architecture.md). The durable findings this audit produced — the storage seam being sound, the registry dispatch pattern being the right mechanism, content/scheduling separation being mandatory, the FSRS wrapper needing golden tests, and the data risks around two live backends — are carried forward in [`../architecture.md`](../architecture.md) and [`../itera-migration-plan.md`](../itera-migration-plan.md).
+
 # Itera — Repository Audit (Phase A)
 
-Audited against `itera_claude_master_spec.md`. No production code was changed to produce this document. All file paths are relative to the repo root.
+Audited 2026-07-22 against `itera_claude_master_spec.md` (now [`itera-claude-master-spec.md`](itera-claude-master-spec.md), also archived). No production code was changed to produce this document. All file paths are relative to the repo root.
 
 ## 1. How the current application works
 

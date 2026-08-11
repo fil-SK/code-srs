@@ -1,7 +1,7 @@
 import type { ID, Millis } from './common'
 import type { SchedulingState, SchedulingStateKind } from './review'
 
-// v2 card model, per docs/itera-claude-master-spec.md §8-9. Lives alongside the
+// v2 card model, per docs/architecture.md. Lives alongside the
 // current `Card` union (./card.ts) through the Phase C/D migration; nothing in
 // the production app reads these types yet — only the migrators
 // (src/domain/migration/) and the /design-preview/* routes.

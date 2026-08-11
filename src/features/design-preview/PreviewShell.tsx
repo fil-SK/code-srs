@@ -4,7 +4,7 @@ import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 // Chrome-free wrapper for every /design-preview/* route: no sidebar, no top
 // nav, no header actions, no production layout of any kind — this is not
 // AppShell with parts hidden, it is a structurally separate route registered
-// as a sibling of AppShell in router.tsx (see docs/itera-redesign-plan.md
+// as a sibling of AppShell in router.tsx (see docs/archive/itera-redesign-plan.md
 // Phase B). The Itera surface itself (ForceLightTheme + .itera-scope) is
 // shared with production via IteraSurface; only the "not part of the live
 // app" banner is specific to this preview wrapper.

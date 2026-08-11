@@ -1,103 +1,114 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Durable working instructions for Codex (and any other coding agent) in this repository.
+Claude Code reads [`CLAUDE.md`](CLAUDE.md), which points at the **same** shared documents listed below. Keep it that way: product, design and architecture decisions live in `docs/`, never duplicated into an agent instruction file.
 
-## What this is
+## Read first
 
-code-srs ("Itera" mid-rebrand, see below) is a personal, code-first spaced-repetition app for learning software engineering, CS, compilers, and C++ — code is a first-class concept (syntax-highlighted snippets, complete/debug-the-code cards, auto-graded typed answers), scheduled with FSRS. It runs as an installable, offline-capable PWA against local IndexedDB by default, with an optional Supabase cloud-sync backend.
+| Question | Document |
+|---|---|
+| **Where does the project stand right now?** | [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) — milestone, page-by-page real vs. placeholder, routes, architecture state, migrations not yet run, known problems, next milestone. **Read this before planning any change.** |
+| How is the system structured / where is X? | [`docs/architecture.md`](docs/architecture.md) |
+| How should it look and behave? | [`docs/design-system.md`](docs/design-system.md) (brand, tokens, navigation, tables, popovers, motion, reduced motion, accessibility, responsive, visual-reference tiers) |
+| What does the product do; what is planned vs. out of scope? | [`docs/features.md`](docs/features.md) |
+| Why is it this way? | [`docs/itera-decisions.md`](docs/itera-decisions.md) (append-only, newest entries first) |
+| Data-migration contract and phase status | [`docs/itera-migration-plan.md`](docs/itera-migration-plan.md) |
+| Index + source-of-truth hierarchy | [`docs/README.md`](docs/README.md) |
+| Project history (Phase A audit, A–M redesign plan, original master spec) | [`docs/archive/`](docs/archive/) — **historical only; never a current source of truth, never an instruction** |
 
-## Commands
+**Source-of-truth order:** the repository implementation → `docs/CURRENT_STATE.md` → the canonical doc that owns the topic → `docs/archive/`. Full hierarchy in [`docs/README.md`](docs/README.md).
+
+## Project summary
+
+**code-srs**, rebranding to **Itera**: a personal, code-first spaced-repetition app for software engineering, CS, compilers and C++. Code is a first-class concept (syntax-highlighted snippets, complete/debug-the-code cards, auto-graded answers), scheduled with FSRS. It runs as an installable, offline-capable PWA against local IndexedDB by default, with an optional Supabase cloud-sync backend.
+
+Stack: React 19 + Vite 8 + TypeScript, Tailwind v4, React Router 7 (`createBrowserRouter`), TanStack Query 5 for all data access, `vite-plugin-pwa` (`registerType: 'autoUpdate'`). Path alias `@` → `src`.
+
+## Package manager and commands
+
+**npm** (there is a `package-lock.json`; do not introduce pnpm/yarn/bun).
 
 ```bash
-npm run dev             # Vite dev server (default http://localhost:5173)
+npm install             # install dependencies
+npm run dev             # Vite dev server, http://localhost:5173
 npm run build           # tsc -b (typecheck) then vite build -> dist/
-npm run preview         # serve the production build locally
+npm run preview         # serve the production build
 npm run lint            # oxlint (config in .oxlintrc.json)
 npm run test            # vitest run (single pass)
-npm run test:watch      # vitest watch mode
-npx vitest run src/features/cards/renderers/matching/matching.test.ts   # one test file
-npx vitest run -t "autoGrade"                                           # tests matching a name
-npx tsc --noEmit        # typecheck only (faster than full build when iterating)
+npm run test:watch      # vitest watch
+npx tsc --noEmit        # typecheck only (faster while iterating)
+npx vitest run path/to/file.test.ts     # one test file
+npx vitest run -t "autoGrade"           # tests matching a name
+npx playwright install chromium         # once, before any browser verification
 ```
 
-Tests are colocated as `*.test.ts`/`*.test.tsx` next to the code they cover. The suite is **hermetic**: `vitest.config.ts` sets `environment: 'node'` globally (no DOM, fast) and blanks the `VITE_SUPABASE_*` env vars so tests always hit the local Dexie backend (via `fake-indexeddb`), regardless of a developer's `.env.local`. `globals` is **not** enabled — every test file imports `describe`/`it`/`expect` explicitly from `vitest`.
+Before calling a change done: `npx vitest run`, `npx tsc --noEmit`, and `npm run lint` must all be clean (current baseline in `docs/CURRENT_STATE.md` §16).
 
-**Component tests** are the exception and need a DOM: opt in per-file with a `// @vitest-environment happy-dom` pragma as the file's first line (see `src/features/reviewV2/ReviewSessionScreen.test.tsx`), rather than changing the global config. `@testing-library/react`, `@testing-library/user-event`, `@testing-library/dom`, and `happy-dom` are devDependencies for this. Because `globals` isn't enabled, RTL's automatic `afterEach` cleanup never registers — any component test file must add its own `afterEach(() => cleanup())` or renders accumulate across `it` blocks within that file (a real failure mode, not theoretical — see `docs/itera-decisions.md` D24 for how it was first found).
+### Test conventions
 
-## Big-picture architecture
+Colocated `*.test.ts(x)`. The suite is **hermetic**: `vitest.config.ts` sets `environment: 'node'` globally and blanks `VITE_SUPABASE_*`, so tests always hit the local Dexie backend via `fake-indexeddb`, regardless of a developer's `.env.local`. `globals` is **not** enabled — import `describe`/`it`/`expect` from `vitest` in every file.
 
-React 19 + Vite 8 + TypeScript, Tailwind v4, React Router 7 (`createBrowserRouter`), TanStack Query 5 for all data access, installable PWA (`vite-plugin-pwa`, `registerType: 'autoUpdate'`). Path alias `@` -> `src`.
+Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as the **first line**, and must add their own `afterEach(() => cleanup())` — without `globals`, RTL's automatic cleanup never registers and renders accumulate across `it` blocks. Do not change the global environment.
 
-For full reference detail this file intentionally keeps terse — exact color tokens, complete hook/registry tables, a route-by-route feature-status matrix — see `docs/architecture.md`, `docs/design-system.md`, and `docs/features.md` (indexed in `docs/README.md`).
+`happy-dom` has no visibility semantics, so **component tests cannot catch focus or layout bugs**; those need a real browser.
 
-### Storage seam (the most important abstraction)
+## Architecture constraints
 
-The entire app depends on one interface, `Repository` in `src/data/repository.ts`, and never knows which backend is live. `getRepository()` in `src/data/index.ts` picks:
+- **One storage seam.** Everything depends on `Repository` (`src/data/repository.ts`); `getRepository()` (`src/data/index.ts`) picks `DexieRepository` or `SupabaseRepository`. **Never import a backend from a component, hook or page.**
+- **All data access goes through the TanStack Query hooks in `src/hooks/`**, with keys centralized in `src/hooks/queryKeys.ts`.
+- **Entities are opaque JSON blobs** keyed by an inline `id`; Supabase's few generated columns exist only for indexing, and all text/tag/type filtering happens **in memory identically in both backends**. Adding a field to a type needs no migration.
+- **Two card models coexist on purpose.** `src/types/card.ts` (v1, 8-type union, its own registry in `src/features/cards/registry/`) and `src/types/cardV2.ts` (v2, 6-type `CardInteraction`, registry in `src/features/reviewV2/interactions/registry.ts`). When grepping for "Card", check which model you are in.
+- **Adding a v1 card type** means: content interface + union member in `src/types/card.ts`, a `src/features/cards/renderers/<type>/` folder, registration in the exhaustive registry, then satisfying the exhaustive switches the compiler flags (`cardTypeMeta.ts`, `searchableText.ts`, `seedContent.ts`).
+- **Adding an entity** means: a `CrudRepo<T>` line in *both* backends + a Dexie `version()` bump + a Supabase table block + a hook + `queryKeys` + inclusion in the backup.
+- **No new dependencies for things this repo builds by hand**: no markdown library (`src/components/text/RichText.tsx` is a deliberate XSS-safe subset), no charting library (charts are hand-rolled SVG/CSS), no graph library (roadmap canvas is hand-built SVG), no popover library (`src/components/ui/FloatingPanel.tsx`). CodeMirror must stay lazy-loaded via `LazyCodeView`/`LazyCodeEditor`.
+- **The app is light-only right now** — `.itera-scope` has no dark palette. `ThemeProvider`/`ThemeToggle` still exist and are unchanged; do not delete them, and do not add dark-mode styling without a dark palette existing first.
 
-- **`DexieRepository`** (default) — IndexedDB, offline, zero setup.
-- **`SupabaseRepository`** — chosen automatically when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are set. Postgres, magic-link auth, Row Level Security.
+## Data-safety constraints
 
-Both back ends store each entity as a **full JSON blob** (`data jsonb` in Postgres; a plain object in Dexie) keyed by an inline `id`. Supabase adds a few **generated columns** (e.g. `due`, `suspended`, `deck_id`) purely so hot queries can be indexed; all text/tag/type filtering happens **in memory identically in both backends** so results match. Because entities are opaque blobs, adding a field to a type needs no migration. Data access is always through TanStack Query hooks in `src/hooks/` (`useCards`, `useDecks`, `useDrafts`, `useReview`, `useRoadmaps`); query keys are centralized in `src/hooks/queryKeys.ts`.
+- **Dexie schema changes require a `version()` bump** in `src/data/dexie/db.ts` (declare only new/changed stores; existing ones carry forward).
+- **Supabase tables need GRANTs, not just RLS.** Postgres denies before RLS runs: RLS-without-grant = **403 on every request**, RLS-without-policy = empty 200. Every table needs table + `enable row level security` + an `own rows` policy + `grant select, insert, update, delete … to authenticated`. `supabase/schema.sql` is **not** auto-applied — the user runs it in the Supabase SQL editor, so hand them the exact block.
+- The **publishable** key (`sb_publishable_…`) is `VITE_SUPABASE_ANON_KEY`. The secret key must never reach the frontend.
+- **`Card.scheduling` is still the sole source of truth for scheduling.** `Repository.cardStates` is dual-written by every write path and read by nothing. Do not remove either side of the dual write, and do not switch any read over to `cardStates` outside a deliberate, dry-run-able read-cutover task ([`docs/itera-migration-plan.md`](docs/itera-migration-plan.md) §4, steps 4-6, not started).
+- **`CardV2Record` carries its own embedded `scheduling`**, independent of `cardStates`.
+- **Backup files are versioned** (`src/domain/io/backup.ts`); new entity arrays are added **optional** so older backups still import.
+- **Migrations that touch real user data are explicit, dry-run-able and reportable** via `src/domain/migration/runner.ts`'s `MigrationRunner`. The single exception permitted to be lazy/on-read is `migrateCard` (v1 → `CardV2`). Do not add a second lazy migration.
+- Never delete or rewrite persisted rows as a side effect of a UI change.
 
-### Card type registry (how card types are added)
+## Visual implementation workflow
 
-Card behavior is data-driven, not hard-coded per page. `Card` (`src/types/card.ts`) is a **discriminated union on `type`**. Each type is one `CardTypeDefinition<T>` (`src/features/cards/registry/types.ts`) bundling `emptyContent`, `isComplete`, optional `autoGrade` / `isResponseReady`, and three React components: `Question`, `Answer`, `Editor`. All definitions are registered in `src/features/cards/registry/index.ts` as an exhaustive `Record<CardType, …>`, so a new type won't compile until it's registered.
+This project is mockup-driven, and several mockups are **locked references**.
 
-`ReviewSession` and `PreviewPage` render any card generically through `CardView` + the registry — they contain **no per-type logic**. The review flow is strictly two-phase: Question → reveal → Answer → one FSRS grade. `interactive: true` gates reveal behind `isResponseReady`; `autoGrade` returning a result shows a pass/fail banner and pre-selects a rating that the user can still override. (The `story` type exploits this: its multi-step walk lives inside its `Question`, and `isResponseReady` keeps the grade bar locked until the last step.)
+1. **Read `docs/CURRENT_STATE.md` and the relevant `docs/itera-decisions.md` entries** for the surface you are about to touch — most screens already have decisions recording what was deliberately *not* copied from the mockup and why.
+2. **When a target screenshot is marked as locked/reference, treat it as the authority for composition, hierarchy, spacing, density and typography.** Do not improvise a different layout. Two standing exceptions, both already decided: (a) colors always come from the locked Itera token palette, never from a mockup's own hues, and (b) a mockup element with no real data or backing feature is not fabricated — it is either omitted or rendered as a focusable `aria-disabled` row with a "Soon" pill (never a `disabled` control, never a hidden one).
+3. Where a written brief and a locked mockup conflict, say so explicitly and ask the user which wins rather than silently picking one.
+4. **Run the app and verify visually. Tests are not sufficient for UI work.** `npm run dev`, then drive Chromium via the `playwright` devDependency (`npx playwright install chromium` once) — take screenshots at the widths that matter (1440x900 desktop, 390x844 phone), and check hover, keyboard focus, and any graded/revealed state, not just the resting state. Anything involving focus, popover placement, overflow or animated transforms **must** be checked in a browser, because the test environment cannot see it.
+5. Put throwaway browser-driving scripts in your session scratch directory, **not** in the repo root.
+6. Respect the locked orange rule: orange is a signal — one primary orange action plus at most two or three minor accents per screen. That rule, plus motion/reduced-motion, accessibility and responsive conventions, lives in [`docs/design-system.md`](docs/design-system.md).
+7. `SuggestedSessionHero.tsx`'s geometry and `LearningCardsIllustration.tsx`'s card offsets are pixel-tuned from product feedback and carry hard constraints stated in their own files. Change them only when explicitly asked.
 
-**To add a card type:** add the content interface + union member in `src/types/card.ts`, create `src/features/cards/renderers/<type>/` (Question/Answer/Editor/index), register it, then satisfy the exhaustive switches the compiler flags — currently `getCardTitle` + `cardTypeMeta` (`src/features/cards/cardTypeMeta.ts`), `searchableText` (`src/domain/search/searchableText.ts`), and `seedContent` (`src/features/drafts/seedContent.ts`). The Browse filter and editor type picker derive from `cardTypeMeta`, so they pick it up automatically.
+## Visual references
 
-### The Itera redesign (in progress, parallel to production — read before touching)
+There is deliberately **no `docs/references/` directory** — mockups and inspiration are not tracked in git. They live outside the repository. [`docs/design-system.md`](docs/design-system.md) §14 defines how each reference is treated (**LOCKED** = authoritative composition, **DIRECTION** = feel only, **CONCEPT** = history only); check the citing entry in `docs/itera-decisions.md` before implementing against an image.
 
-This project is mid-redesign into a rebranded product ("Itera": new IA, new 6-type card taxonomy, new visual system). **Read `docs/itera-decisions.md` and `docs/itera-redesign-plan.md` before doing any work in this area** — they are the authoritative, continuously-updated phase plan and decision log; this section is only an orientation pointer, not a substitute. Also present: `docs/itera-repository-audit.md` (the original audit), `docs/itera-migration-plan.md` (data migration contract), `docs/itera-Codex-master-spec.md` (the design spec this all derives from, mirrored verbatim).
+```
+C:\Users\SK\Desktop\itera-mockups\
+    webapp\        # the locked product mockups referenced throughout docs/itera-decisions.md
+                   #   login-v3.png, profile.png, profile-menu.png, progress.png,
+                   #   library.png, all-decks.png, library-use.png, add-new-card.png,
+                   #   recall-card.png, recall-card-revealed.png, mcq-card.png,
+                   #   ordering-card.png, matching-card.png, optional-tip.png, ...
+    inspo-icons\   # per-interaction icon references
+    inspiration\   # general visual direction
+```
 
-The redesign proceeds in additive phases. As of the App Shell and Visual Foundation Convergence milestone (2026-07-27), the whole app shares one shell and one Library/Deck implementation — this is no longer scoped to Review alone:
-
-1. **Every standard route renders inside the Itera visual system, through one shared shell.** `AppShell.tsx` renders `IteraSurface` (`.itera-scope` + light-only `ForceLightTheme`) → `TopNav` (logo, `Today · Library · Progress`, Profile — no left sidebar, no bottom nav; those and `navItems.ts`/`PageHeaderOverride.tsx` were deleted) → `<Outlet>`. There is deliberately no global Search or Create action in the shell (product call, 2026-07-27): both are scoped concepts (search *within* a Library, create a card *within* a deck) and belong on the Library page instead of floating in the shell with no context — `TopNav`'s Search affordance and `CreateMenu.tsx` (the deck-picker "+Create" dropdown) were removed outright, not hidden. Every route it wraps (Today, Library browser/Deck, Roadmaps, Browse, Card Editor, Drafts, Stats, Settings) picks up Itera's colors and the shared top nav automatically. **The app is light-only for now** (Itera's tokens have no dark palette; spec §36 defers it) — `ThemeToggle` is not rendered anywhere, but `ThemeProvider`/`useTheme`/`ThemeToggle.tsx` are all unchanged and this is reversible the moment a dark palette exists.
-2. **`/review` is a genuinely separate, chrome-free top-level route** (`element: <ReviewPage/>` alongside `element: <AppShell/>` in `router.tsx`, not a child of it) — before this milestone it was actually a plain `AppShell` child (sidebar and all), contrary to earlier plan text; it renders through `ReviewSessionV2`/`ReviewSessionScreen`, the same shell `/design-preview/review/*` uses. Today (`src/features/today/`) lost its own separate `TodayShell` and now renders through the same shared `AppShell` as everything else — the "two nav styles coexist" tradeoff earlier phases accepted no longer applies. Today's content (streak, momentum, suggested-session, pace chart) is still placeholder/illustrative — no such product logic exists yet; only the shell converged, not the data.
-3. **`/decks` and `/decks/:id` render the real Library browser and focused Deck page** (`src/features/library/{LibraryBrowserPage,LibraryDeckPage}.tsx`), promoted from the `/design-preview/library*` fixture-driven preview to real `useDecks`/`useSearchCards`/`useSearchCardsV2` data — same paths as before (no `/library` route was introduced; ~15 existing deep links hardcode `/decks/:id`). "Collection" in the Library's nav is **UI-only**, derived from the existing `Deck.parentId` tree (`src/features/library/collectionTree.ts`): any deck with children is a Collection node, childless decks are the actual Library deck rows — there is still no real `Collection` type or migration (Phase G, see `docs/itera-redesign-plan.md`, has not run). The old `src/features/decks/{DecksPage,DeckDetailPage}.tsx` are unrouted but not deleted, kept until feature parity (dnd-kit drag-reorder, per-card actions — already ported into the new pages) is independently re-confirmed.
-
-Router shape reflects this: `AppShell` is a **pathless layout route** (`element`, no `path`) in `router.tsx` wrapping `/` (Today, index route), `/decks`, `/decks/:id`, `/decks/:deckId/cards/new`, `/roadmaps*`, `/preview`, `/browse`, `/cards/*`, `/drafts`, `/stats`, `/settings`, `/settings/:section` - and `AppShell` itself, together with `/review`, now hangs off one `RequireAuth` layout route (see Auth below). `/review`, `/login` and `design-preview/*` are separate top-level entries with no `AppShell` ancestor — the same "structurally separate, not CSS-hidden" pattern for both. `DashboardPage.tsx` (the pre-Itera `/` page) is untouched and still in the tree, unreferenced.
-
-Full detail on all of the above lives in `docs/itera-decisions.md` (append-only decision log — read the most recent entries first, especially the "App Shell and Visual Foundation Convergence" entry) and the "Aside" note plus Phase E/H/I status blocks in `docs/itera-redesign-plan.md`.
-
-- `src/types/cardV2.ts` — a **second**, parallel card model (`CardV2`, `CardInteraction` 6-type union, `RichContent`, `CardState`, `ReviewEvent`) living alongside `src/types/card.ts`'s v1 union, not replacing it. When grepping for "Card," check which one you're in.
-- `src/domain/migration/cardMigration.ts` — `migrateCard(v1) -> CardV2`, pure and total across all 8 old types, run lazily on read. This is the **only** migration in the plan allowed to be lazy/on-read; CardState extraction and the Deck/Collection split (later phases) are explicit, dry-run-able, reportable migrations instead (`src/domain/migration/runner.ts`'s `MigrationRunner` contract) — see `itera-migration-plan.md` §0 for why.
-- `src/features/reviewV2/` — the actual Review shell (`ReviewSessionScreen`, the phase reducer, the six-type `InteractionDefinition` registry) plus reusable components (`FlashcardSurface`, `FlipCard`, `TipPanel`, `ExplanationPanel`, `RatingControls`, `InteractionLabel`, `IteraSurface`, `ForceLightTheme`). Rendered both by `/design-preview/review/*` and, now, production's `/review` route (`src/features/review/ReviewSessionV2.tsx`) — one shell, not two.
-- `src/domain/scheduling/reviewService.ts` — the `ReviewService` boundary spec §9.5 requires, wrapping `reviewState`/`buildReviewLog` so callers go through a service rather than the scheduler functions directly. Internally still reads/writes `Card.scheduling` (Phase D hasn't cut it over to `CardState` yet — see below); its public interface is designed not to change when that happens. `src/hooks/useReview.ts` (v1) intentionally still calls the scheduler functions directly rather than this service — known duplication, not yet consolidated (`itera-decisions.md` D26).
-- `src/domain/grading/` — one pure `grade*` function per v2 interaction type (`matching.ts`, `multipleChoice.ts`, `ordering.ts`, `walkthrough.ts`, `writeCode.ts`; Recall is self-graded, no function needed), each with its own colocated test. This is what every `reviewV2/interactions/*/*.tsx` view calls to compute `ObjectiveResult` (with an optional `score` for partial credit — Matching/Ordering/Walkthrough use it, the binary types don't).
-- `src/features/design-preview/` — `/design-preview/*` routes, registered in `router.tsx` as a **structurally separate top-level route array entry**, not nested under `AppShell` — chrome-free by construction, not by hiding production nav with CSS. New routes are added only once their real components exist (no throwaway mockup routes).
-- `.itera-scope` / `.itera-flip*` in `src/index.css` — a fully namespaced token/CSS set for the redesign (locked navy/orange palette, spacing, radii), applied via the `.itera-scope` class (never the app's `[data-theme]` attribute, to avoid colliding with the existing light/dark toggle) — through `IteraSurface` (`src/features/reviewV2/components/`), shared by both `PreviewShell` and production's `ReviewSessionV2`. Additive `@theme inline` lines expose `itera-`-prefixed Tailwind utilities alongside the existing ones.
-- `IteraSurface` wraps `ForceLightTheme`, which locally overrides `ThemeContext` (exported from `src/app/theme.tsx` for exactly this purpose) to a static `'light'` value for a subtree, without touching `document.documentElement` or `localStorage`. Needed because `CodeView` picks its syntax-highlight palette from live theme context, not a CSS var, and the redesign is light-only for now — this now applies to production Review too, not just previews.
-- Production's `src/components/ui/FlipCard.tsx` has a known gap (no keyboard/ARIA support) that was deliberately **not** fixed in place — `reviewV2`'s `FlipCard` is a separate, correctly-accessible replacement used everywhere v2 renders (including production Review now). Whether to eventually fix the shared one or keep both is an open call, tracked in the decision log.
-- `Repository.cardStates` (`CardState`, keyed by `cardId` not `id`) — Phase D's additive, dual-written scheduling store (Dexie `version(3)`; Supabase `card_states`, unverified against a live database — see `itera-decisions.md` D42). Every write path (`useGradeCard`, `useUndoGrade`, `usePersistReviewResult`, `useCreateCard`, `useSaveCard`, `useDeleteCard`) writes both `Card.scheduling` and the matching `CardState` row. **Nothing reads from it yet** — `Card.scheduling` is still the sole source of truth for `getDue()` and everywhere else, until a later, separate read-cutover step.
-- `TodayPage.tsx`'s layout is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, collapsing to one stacked column below ~980px), not Tailwind grid utilities — Tailwind has no grid-area utility, so the grid container and each child's `gridArea` are inline `style`, and a `useIsWideToday()` hook (`matchMedia`) drives the breakpoint since 980px isn't a default Tailwind one. This is what keeps Continue Learning and Today's Pace top-aligned to each other regardless of Hero/Momentum's height. `SuggestedSessionHero.tsx` is a bespoke, extensively product-tuned 4-layer stacked-card component (one front content card + three rear decorative layers, each positioned as a percentage of the front card's own box, plus a real-logo-derived watermark) — its exact offsets/rotations/colors came from many rounds of pixel-measured product feedback; change them only when asked, not incidentally while touching nearby code.
-- `src/components/layout/{AppShell,TopNav,primaryNavLinks,AccountMenu,AccountMenuContent}.tsx` — the shared shell (see the redesign section above). `TopNav` is presentational only (nav links + active-state + a `rightSlot`); `primaryNavLinks.ts` is the single source of truth for the three primary destinations; `StreakBadge` + `AccountMenu` are the only global right-side actions left (Search and `CreateMenu` were removed - see above). `AccountMenu` is the avatar popover: a 300px anchored `FloatingPanel` (`manageFocus`, so focus enters the menu, arrows walk it, and Escape returns focus to the trigger), collapsing to a bottom sheet below 480px (`useIsNarrowShell`). It is deliberately *quick navigation only* - Account settings is the single live row, every other row (Preferences, Keyboard shortcuts, Help & documentation, About Itera, but no longer Sign out, which is live whenever any session is) is an `aria-disabled` "Soon" placeholder because those surfaces do not exist yet. Do not grow it into a second settings sidebar; new settings go into `src/features/settings/` instead. There is no per-route topbar title/subtitle slot anymore (`PageHeaderOverride` was deleted) — a route that needs its own heading renders one as ordinary page content (see `CardEditorShell.tsx`), it doesn't sync anything back into the shell.
-- `src/features/login/` — the `/login` page (`LoginPage` + `LoginBrandPanel` + `LearningCardsIllustration` + `SignInPanel`), built to the `login-v3.png` mockup and rendered inside `IteraSurface` like everything else. `LearningCardsIllustration` is three absolutely-positioned CSS cards with one literal `style.transform` rotation each; its overlap obeys a hard rule stated in the file - a card may never cover the next card's title, which is tighter than it looks because each card leans, so widening one or shifting it left needs the geometry re-checked in a browser, not just in the numbers.
-- `src/features/settings/` — the Account settings page (`AccountSettingsPage.tsx` at `/settings` and `/settings/:section`, `SettingsNav.tsx`, `settingsSections.ts`, `sections/*`). Only `ImportExportSection` (the JSON backup) and `CardSchedulingSection` (the Phase D `CardStateMigrationSection`) are real; every other section is an inert greyed placeholder. The pre-Itera `SettingsPage.tsx` was deleted once its content moved here.
-- `src/features/library/` — the real Library browser (`LibraryBrowserPage.tsx`, at `/decks`), focused Deck page (`LibraryDeckPage.tsx`, at `/decks/:id`), and the Collection identity view (`LibraryCollectionView.tsx`, rendered by `LibraryBrowserPage` whenever a Collection is selected — see `itera-decisions.md` D111), plus `collectionTree.ts` (the UI-only Collection derivation over `Deck.parentId` — see the redesign section above and `itera-decisions.md` D88) and `deckMetrics.ts` (per-deck card/due/mastery/last-studied aggregation from real `Card`/`CardV2Record` data, not fixtures, plus `aggregateMetrics` for a Collection's rolled-up totals). `shared/` holds presentational pieces adapted from (not imported from) `design-preview/library-shared/*` — the two stay independent so `design-preview/*` remains untouched/isolated. All three pages render inside `LibraryShell`/`CollectionNav` (`itera-decisions.md` D102-D103, D111): the sidebar tree drills all the way to individual decks (a small dot marks the active one, `activeDeckId` prop), not just Collection nodes, and carries a `LibraryTip` aside in its own empty space below the tree. `LibraryDeckPage` has a Cards/Insights tab split; the Cards tab's search/type/status/sort toolbar and pagination operate over a unified `RowMeta` computed for both v1 `Card` and `CardV2Record` rows (D108) — pagination only activates once a filter/search/non-manual sort is chosen, so the default view keeps the original unpaginated, drag-to-reorder (v1) list intact. A direct `/decks/:id` navigation whose id resolves to a deck-with-children redirects to `LibraryCollectionView` instead of rendering an incorrectly-empty leaf page (closes the same gap for `RoadmapCanvas.tsx` and old bookmarks, not just `CollectionNav`'s own folder clicks).
-
-### Other cross-cutting pieces
-
-- **Scheduling:** FSRS via `ts-fsrs`, wrapped in `src/features/review/useReviewSession.ts`. Manual card `order` is for browsing only; review order is FSRS-driven.
-- **Markdown:** a zero-dependency, XSS-safe renderer, `src/components/text/RichText.tsx` (`RichText` for block + fenced code, `InlineText` for inline only). Supports `` `code` ``, `**bold**`, `*italic*`, and fenced blocks. Underscores are intentionally not emphasis markers (snake_case safety). Do not pull in a markdown library.
-- **Code display/editing:** CodeMirror 6 is **lazy-loaded** (`LazyCodeView` / `LazyCodeEditor`) to stay out of the main bundle. `CodeView` supports per-line highlighting via `highlightLines` (see `src/components/code/lineRanges.ts`).
-- **Entities:** cards, decks (nestable via `parentId`; tree helpers in `src/domain/decks/`), drafts (quick-capture inbox), review logs, and roadmaps (graphs whose nodes reference decks; hand-built SVG canvas in `src/features/roadmaps/`, no graph library). Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (see below) + hook + `queryKeys` + inclusion in `src/data/backup.ts`.
-- **Auth / session boundary:** `src/auth/`. `RequireAuth` is a single pathless layout route in `router.tsx` wrapping every product route (the whole `AppShell` tree plus `/review`); `/login` and `/design-preview/*` sit outside it. `AuthProvider` counts a Supabase session **or** a `LocalSession` as signed in, so **local mode is gated now too** (it previously had no login at all); `AuthGate` only waits for the Supabase bootstrap. `localSession.ts` is the one and only file that touches auth storage (`itera.session`, in `localStorage` when Remember me is checked and `sessionStorage` otherwise) - do not add `localStorage` session checks anywhere else. In local mode the password is a dev/demo shell: never stored, sent, or verified. With Supabase configured the only real authentication is still magic-link OTP, so the login page hides the password field and mails a link; no password auth was added.
-
-## Gotchas
-
-- **Supabase requires table GRANTs, not just RLS.** Postgres denies a table before RLS runs, so a missing grant yields a **403 on every request** (RLS-without-grant = 403; RLS-without-policy = empty 200). Every table in `supabase/schema.sql` needs `grant select, insert, update, delete … to authenticated`. When adding a table, add the table + `enable row level security` + an `own rows` policy + the grant, and have the user run that block in the Supabase SQL editor (`schema.sql` is not auto-applied).
-- **Dexie schema changes need a `version()` bump** in `src/data/dexie/db.ts` (declare only the new/changed stores; existing ones carry forward).
-- **Stale chunk after deploy:** hashed lazy chunks (CodeMirror) 404 on old tabs after a redeploy. `src/lib/lazyWithRetry.ts` (`importWithReload`) and `src/app/RouteError.tsx` reload once to recover; keep lazy `import()`s wrapped.
-- The new Supabase **publishable** key (`sb_publishable_…`) is the value for `VITE_SUPABASE_ANON_KEY`; the secret key must never reach the frontend.
-- **A CSS `transition` on `transform` doesn't reliably animate when that transform is composed from Tailwind utility classes** (`scale-*`, `rotate-*`, `translate-*`, including `group-hover:` variants) — those utilities each write a separate CSS custom property that a shared rule combines into the final `transform`, and transitioning that composed value was measured snapping instantly in Chromium despite a correct `transition-duration`. For anything whose transform must visually animate (e.g. a hover zoom), compute it as one literal `style.transform` string in JS instead (see `SuggestedSessionHero.tsx`).
+`docs/itera-decisions.md` cites these by filename; open the named file before implementing against a decision that references it.
 
 ## Conventions
 
-- **No em dashes in code comments.** Explain non-obvious *why*, not *what*.
-- Match the surrounding code: shared input styling via `Field` / `fieldClass` / `selectClass`, buttons via `components/ui/Button`, class merging via `cn` (`src/lib/cn.ts`), ids via `newId()` (`src/lib/id.ts`).
-- oxlint enforces `react-hooks/exhaustive-deps`; when intentionally omitting a dep, use a stable serialized key and an `// eslint-disable-next-line react-hooks/exhaustive-deps` (see `CodeView`, `ReviewSession`).
-- Backup files (`src/domain/io/backup.ts`) are versioned; new entity arrays are added **optional** so older backups still import.
-- `docs/itera-decisions.md` is **append-only**: never edit a past entry's substance in place. If a decision is superseded, add a new dated entry that says so and cross-references the old one (strikethrough the old text if needed for clarity) — don't rewrite history.
-- **When a change reaches finalized state** (a feature is implemented, a design/behavior change is settled — not a WIP/exploratory edit), update the relevant documentation in the same pass: `docs/architecture.md`/`docs/design-system.md`/`docs/features.md` for what they cover, `README.md` for user-facing changes, and `docs/itera-decisions.md`/`docs/itera-redesign-plan.md` for redesign-scoped work. Don't leave docs describing the pre-change state once the change is done.
+- **No em dashes in code comments.** Comments explain the non-obvious *why*, not the *what*.
+- Match the surrounding code: shared inputs via `Field` / `fieldClass` / `selectClass`, buttons via `components/ui/Button`, class merging via `cn` (`src/lib/cn.ts`), ids via `newId()` (`src/lib/id.ts`), confirmations via `useDialogs()` (never `window.confirm`/`prompt`/`alert`).
+- oxlint enforces `react-hooks/exhaustive-deps`; when intentionally omitting a dep, use a stable serialized key plus an `// eslint-disable-next-line react-hooks/exhaustive-deps`.
+- A CSS `transition` on a Tailwind-**composed** transform (`scale-*`/`rotate-*`/`translate-*`, including `group-hover:` variants) does not animate reliably — compute such transforms as one literal `style.transform` string in JS.
+- Keep lazy `import()`s wrapped in `src/lib/lazyWithRetry.ts`'s `importWithReload`, so a stale hashed chunk after a deploy recovers instead of 404ing.
+- **`docs/itera-decisions.md` is append-only.** Never edit a past entry's substance; supersede it with a new dated entry that cross-references the old one.
+- **When a change reaches finalized state, update docs in the same pass**: `docs/CURRENT_STATE.md` (always, when status changes), plus `docs/architecture.md` / `docs/design-system.md` / `docs/features.md` for what they cover, `README.md` for user-facing changes, and `docs/itera-decisions.md` for material decisions (append a new dated entry, never edit one).

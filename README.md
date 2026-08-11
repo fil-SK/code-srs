@@ -149,7 +149,7 @@ Every push to `main` then auto-deploys. The PWA (`registerType: 'autoUpdate'`) r
 
 ## Generating cards with AI
 
-Want to bulk-create cards from study material? [`docs/ai-card-prompt.md`](docs/ai-card-prompt.md) is a ready-made prompt you can give another AI chat: it explains the full JSON backup schema and every card-content shape. Paste your notes, get back a JSON file, and load it via **Account settings → Import / Export → Import JSON → Merge** (additive — it won't overwrite existing cards).
+Want to bulk-create cards from study material? [`docs/prompts/ai-card-prompt.md`](docs/prompts/ai-card-prompt.md) is a ready-made prompt you can give another AI chat: it explains the full JSON backup schema and every card-content shape. Paste your notes, get back a JSON file, and load it via **Account settings → Import / Export → Import JSON → Merge** (additive — it won't overwrite existing cards).
 
 ---
 
@@ -176,21 +176,25 @@ src/
   features/    cards, decks, drafts, library, login, preview, review, settings, today
   hooks/       TanStack Query hooks
   types/       entity types (Card discriminated union, Deck, Draft, ReviewLog)
-supabase/      schema.sql for cloud setup
-docs/          ai-card-prompt.md
+supabase/      schema.sql + migrations/ for cloud setup
+docs/          shared documentation (see docs/README.md)
 ```
 
-See [`CLAUDE.md`](CLAUDE.md) for the architecture and [`docs/`](docs/) for the in-progress Itera redesign's plan and decision log.
+See [`docs/README.md`](docs/README.md) for the documentation index, and [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) for what is actually implemented right now.
 
 ---
 
 ## Developer documentation
 
-For a full technical reference beyond this README — exact color tokens, the complete storage/hooks/registry architecture, and a route-by-route feature status table — see [`docs/README.md`](docs/README.md), the index for:
+For a full technical reference beyond this README — exact color tokens, the complete storage/hooks/registry architecture, and a route-by-route feature table — see [`docs/README.md`](docs/README.md), the index and source-of-truth hierarchy for:
 
-- [`docs/architecture.md`](docs/architecture.md) — storage seam, data hooks, card-type registries, routing, scheduling, migration.
-- [`docs/design-system.md`](docs/design-system.md) — colors, typography, spacing, icon conventions, shared UI components.
-- [`docs/features.md`](docs/features.md) — current feature/page inventory, v1 vs. Itera redesign.
+- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) — what is actually implemented right now, known problems, and the next milestone. **Start here.**
+- [`docs/architecture.md`](docs/architecture.md) — storage seam, data hooks, card-type registries, auth boundary, routing, scheduling, migration machinery.
+- [`docs/design-system.md`](docs/design-system.md) — brand, tokens, typography, navigation, motion, accessibility, responsive rules.
+- [`docs/features.md`](docs/features.md) — current feature/page inventory, plus what is planned and what is out of scope.
+- [`docs/itera-decisions.md`](docs/itera-decisions.md) — the append-only decision log.
+
+Project history (the original repository audit, the phased redesign plan, and the original master spec) is preserved under [`docs/archive/`](docs/archive/) and is **not** a current source of truth.
 
 ---
 

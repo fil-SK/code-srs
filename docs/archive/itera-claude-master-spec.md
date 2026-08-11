@@ -1,4 +1,16 @@
-> Saved verbatim as provided to the project (via ChatGPT, following the redesign brief written earlier in this project). Some special characters (em dashes, curly quotes) may show encoding artifacts (e.g. "â") from the original paste — preserved as received rather than guessed at, so this stays a faithful record of the source. Referenced by `itera-repository-audit.md`, `itera-redesign-plan.md`, `itera-decisions.md`, and `itera-migration-plan.md`.
+> **HISTORICAL DOCUMENT — not a current source of truth. Preserved for project history only.**
+>
+> Archived 2026-08-12. This was the original, Claude-addressed master specification the whole Itera redesign derives from. Its durable rules now live in the agent-neutral canonical docs and **those win wherever they differ from this file**:
+>
+> - visual/interaction rules (§4 brand, §5 spacing/widths, §11 shell, §13–15 Library/Deck/Review blueprints, §27 motion, §28 accessibility, §29 responsive) → [`../design-system.md`](../design-system.md)
+> - architecture rules (§7 ontology, §9 session/CardState/ReviewEvent/scheduler boundary, §25.1 local-first, §30 layering) → [`../architecture.md`](../architecture.md)
+> - product behavior and scope (§6 IA, §10.1 Tip vs Explanation, §12/13/14/23/24 screen behavior, §36 deferred scope) → [`../features.md`](../features.md)
+> - migration rules (§33) → [`../itera-migration-plan.md`](../itera-migration-plan.md)
+> - what is *actually built* → [`../CURRENT_STATE.md`](../CURRENT_STATE.md)
+>
+> **This file is still cited by section number** (e.g. "spec §4.4") from [`../itera-decisions.md`](../itera-decisions.md) and from a few source comments, which is why it is kept whole and unedited below. Do not treat any section here as an instruction for current work, and do not resolve a disagreement in its favor: it predates every decision D1–D143 and describes an application state that no longer exists (8-item sidebar, `+ Create` in the global nav, `Search` in the shell, an unbuilt Review, an unmigrated Deck ontology).
+>
+> Saved verbatim as provided to the project (via ChatGPT, following the redesign brief written earlier in this project). Some special characters (em dashes, curly quotes) may show encoding artifacts (e.g. "â") from the original paste — preserved as received rather than guessed at, so this stays a faithful record of the source.
 
 # Itera — Master Product, UX, Visual Design, and Implementation Specification
 

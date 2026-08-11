@@ -32,7 +32,7 @@ function useIsWideToday(): boolean {
 }
 
 // Replaces DashboardPage.tsx as the '/' route (docs/itera-decisions.md,
-// docs/itera-redesign-plan.md's "whole-app visual pass" aside). DashboardPage
+// docs/archive/itera-redesign-plan.md's "whole-app visual pass" aside). DashboardPage
 // itself is untouched and still in the tree, unreferenced — reversible via
 // router.tsx if needed. Built from a reference mockup the product owner
 // supplied; most content here is placeholder (no streak/momentum/pace/

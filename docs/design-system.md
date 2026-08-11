@@ -1,6 +1,14 @@
 # Design system reference
 
-Colors, tokens, typography, spacing, icon conventions, and shared UI-component patterns. This is the practical answer to "how do I make a new piece of UI match" — whether that's a new icon, a new panel, or a new page.
+The canonical Itera visual and interaction design system: brand rules, tokens, typography, spacing, shape, navigation, surfaces, motion, responsive behavior and accessibility. This is the practical answer to "how do I make a new piece of UI match" — whether that's a new icon, a new panel, or a new page.
+
+**How to read the labels.** Design rules and shipped code are not the same thing, and this doc marks the difference wherever it matters:
+
+- **DESIGN RULE** — a locked or settled rule that binds new work, whether or not every existing screen already follows it.
+- **IMPLEMENTED** — what the code actually does today, including where it deliberately diverges from the rule above it.
+- **FUTURE** — intended direction that nothing implements yet. Never build against these as though they exist.
+
+This document owns *how it should look and behave*. It does not track *what is built* — that is [`CURRENT_STATE.md`](CURRENT_STATE.md) — or *why a call was made*, which is [`itera-decisions.md`](itera-decisions.md).
 
 There are **two token systems** layered on top of each other. Understanding the split is the key to everything else in this doc.
 
@@ -71,12 +79,37 @@ Radii: `--radius-itera-code: 8px`, `--radius-itera-control: 9px`, `--radius-iter
 
 Fonts: `font-itera-sans` (Inter), `font-itera-display` (Inter Tight, used **sparingly** — large expressive moments only, e.g. Today's greeting or a session-completion title), `font-itera-mono` (JetBrains Mono). All self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
 
-### The intended type/spacing scale (spec, not yet all wired into CSS vars)
+### Typography rules — DESIGN RULE (locked)
 
-From `docs/itera-claude-master-spec.md` §4.5/§5.1 — these describe the *intended* scale; components currently use literal Tailwind utilities (`p-5`, `gap-3`, `text-lg`, ...) rather than a mirrored set of `--space-*`/`--text-*` CSS vars, so treat this table as the reference to match by eye, not a token you can import:
+Three families, no more. **Do not add a fourth, and do not mix decorative fonts.**
+
+- **Inter** — UI, body, and almost every heading.
+- **Inter Tight** — large expressive moments **only** (Today's greeting, a session-completion title). If you are reaching for it on a table header or a card title, use Inter.
+- **JetBrains Mono** — code, keyboard shortcuts, and selected technical metadata. Nothing else.
+
+Hierarchy comes from **type scale, weight, spacing and composition**, not from wrapping things in more containers.
+
+Suggested line heights: UI labels `1.2–1.3`, body `1.45–1.6`, large titles `1.05–1.2`, code `1.5–1.7`.
+
+### The intended type/spacing scale — DESIGN RULE, not a token
+
+These describe the *intended* scale. **IMPLEMENTED:** components use literal Tailwind utilities (`p-5`, `gap-3`, `text-lg`, ...); there is no mirrored set of `--space-*`/`--text-*` CSS vars to import. Match the scale by eye.
 
 - Type: `xs 12px, sm 14px, md 16px, lg 18px, xl 22px, 2xl 28px, 3xl 36px, display clamp(38px,5vw,58px)`.
-- Spacing: `1:4px, 2:8px, 3:12px, 4:16px, 5:20px, 6:24px, 8:32px, 10:40px, 12:48px, 16:64px, 20:80px`. Prefer larger gaps between sections, smaller gaps inside one semantic object.
+- Spacing: `1:4px, 2:8px, 3:12px, 4:16px, 5:20px, 6:24px, 8:32px, 10:40px, 12:48px, 16:64px, 20:80px`. Prefer larger gaps **between** sections, smaller gaps **inside** one semantic object.
+
+### Page widths and workspace
+
+**DESIGN RULE — the app is a centered workspace.** Content is centered in a bounded column with real breathing room on both sides; it never runs edge to edge, and no page introduces its own competing outer frame. Every standard page is already inside `AppShell`'s centered `<main>`, so a page renders its own content directly and does **not** add another max-width wrapper around everything.
+
+| Surface | Intended (spec §5.3) | IMPLEMENTED |
+|---|---|---|
+| Global app content | 1440–1520px | **1280px** — `AppShell`'s `<main class="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6">`, matched by `TopNav`'s inner row so logo and content align |
+| Review content | 1040–1120px | Narrower on purpose: the card is `max-w-2xl` (672px), or `max-w-4xl` (896px) for interactions whose definition reports `widthFor() === 'wide'` |
+| Editor + preview | 1440px | `CardEditorShell`'s own animated `max-width`, growing in step with the preview drawer |
+| Text-heavy panel | 760–840px | Followed by eye; no token |
+
+Top bars — **DESIGN RULE:** global nav 68–72px desktop, Review top bar 60–64px, mobile 56–60px. **IMPLEMENTED:** `TopNav` is `h-16` (64px).
 
 ---
 
@@ -94,7 +127,7 @@ export function IteraSurface({ children, className }) {
 }
 ```
 
-Used by `AppShell` (whole app), `TodayShell`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared — the Phase H preview slice; see [`docs/itera-redesign-plan.md`](itera-redesign-plan.md) Phase H), and `ReviewSessionV2` — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the Itera visual system needs to be wrapped in `IteraSurface`** (or already be a descendant of one of the above).
+Used by `AppShell` (whole app), `ReviewPage`, `LoginPage`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared — the fixture-driven Library preview slice the production Library was adapted from), and `ReviewSessionV2` — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the Itera visual system needs to be wrapped in `IteraSurface`** (or already be a descendant of one of the above).
 
 `ForceLightTheme` locally overrides `ThemeContext` (from `src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light Itera code background paired with a dark syntax palette. Only light values are defined in `.itera-scope` (spec §36 defers dark mode), so the app is light-only for now; `ThemeToggle` is unrendered but not deleted, reversible the moment a dark palette exists.
 
@@ -167,8 +200,184 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 ---
 
-## 7. Shape and logo usage rules (spec, locked)
+## 7. Shape and logo usage rules — DESIGN RULE (locked)
 
-- **Don't nest decorative containers.** A code block inside a flashcard is fine; a metric card nested inside a stat card nested inside a dashboard panel is not (§4.6).
-- **Radius isn't uniform** — code surfaces stay more rectangular; tables/lists often use open rows + separators instead of one bordered container per row.
-- **The logo/stacked-card motif is locked to specific sanctioned spots**: main nav, onboarding/launch, the Today session hero, completion/branded transitions (§4.2). It is explicitly **forbidden** as a general decoration — not on every deck cover, not behind every card, not repeated as filler. `SuggestedSessionHero.tsx`'s stacked-layer treatment is called out in its own comments as the one sanctioned reuse of this motif outside the logo itself; don't lift that pattern into new components.
+The shape language is **structured softness**.
+
+- **Don't round every object equally.** Radius is a signal that something is an interactive or semantic object. Code surfaces stay more rectangular (`--radius-itera-code: 8px`); pills are reserved for true pills, tags and small labels.
+- **Don't nest decorative containers.** A code block inside a flashcard is fine. A metric card inside a stat card inside a dashboard panel is not. If you are on your third border, delete two of them.
+- **Tables and lists use open rows + separators**, not one bordered container per row.
+- **Shadows are sparing.** A main Review card may carry `--itera-shadow-card`; most Library rows carry none. `--itera-shadow-float` is for genuinely floating elements (popovers, sheets, dialogs).
+
+**The logo / stacked-card motif is locked to sanctioned spots:** main navigation, onboarding and launch, the Today session hero, and completion or branded transition moments. It is explicitly **forbidden** as general decoration — not on every deck cover, not behind every card, never inside Review content, never as repeated filler. The failure mode named in the brand rules is *"look, here are more stacked cards because the logo has stacked cards."* The motif appears only where it carries meaning.
+
+**IMPLEMENTED:** `SuggestedSessionHero.tsx`'s 4-layer stacked treatment is the one sanctioned reuse of the motif outside the logo itself, and its own file comments say so. Do not lift that pattern into new components. `src/features/reviewV2/ReviewSessionScreen.tsx`'s `.itera-card-enter` next-card entrance is a second, narrower echo of it (the incoming card settles out of an off-stack rotated pose) and is likewise not a general-purpose animation.
+
+---
+
+## 8. Navigation
+
+**DESIGN RULE (locked IA).** One calm horizontal top navigation. Logo left, primary destinations centered-left, account at far right. No permanent dark header, no global left sidebar, no bottom nav forced from desktop onto mobile. The active destination gets a **thin orange marker**, not a filled orange pill.
+
+**IMPLEMENTED** (`src/components/layout/`):
+
+- `TopNav.tsx` is presentational only: logo, primary links, and a `rightSlot`. It holds no product logic and no per-route title slot.
+- `primaryNavLinks.ts` is the single source of truth for the primary destinations, and there are exactly three: **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
+- The right side holds `StreakBadge` + `AccountMenu`. Nothing else.
+- **There is deliberately no global Search and no global `+ Create`.** The original locked IA included both; they were removed as a product call because each is a *scoped* concept — you search within a Library, you create a card within a deck — and a global affordance with no context to act on is worse than none. `CreateMenu.tsx` and `TopNav`'s search control were **deleted, not hidden**. Do not reintroduce either without a decision entry.
+- Settings is reached through the account menu, never as a top-level destination. That part of the locked IA holds.
+- **Local (page-level) sidebars are the convention for section navigation**, and they are what replaced the deleted global sidebar: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`.
+
+**FUTURE:** a mobile-specific navigation pattern (compact top bar plus a platform-appropriate primary-destination affordance) is specified but not built; the desktop `TopNav` currently just scrolls horizontally on narrow screens.
+
+### The Review-shell exception — DESIGN RULE (locked)
+
+**Review renders none of the above.** It is immersive by construction: a thin top bar carrying only exit, position ("7 of 23") and a shortcut hint, then the card, tip, explanation and rating controls on open space.
+
+Never add to Review: global navigation, the Itera logo, a left sidebar, the upcoming queue, a card-information panel, a session-statistics panel, an explanation of spaced repetition, or persistent deck metadata. Those were tested and rejected because they distract from recall.
+
+**IMPLEMENTED:** `/review` is a **structurally separate top-level route with no `AppShell` ancestor** (`src/app/router.tsx`), so it is chrome-free by construction rather than by hiding the shell with CSS. `/login` and `/design-preview/*` use the same pattern. `ReviewTopBar.tsx` carries exit + counter + shortcut hint and nothing else. Because `AccountMenu` mounts from `AppShell`, Review has no account menu automatically.
+
+---
+
+## 9. Surfaces: canvas, cards, panels, rows
+
+**DESIGN RULE.** Three levels, and rarely more on one screen:
+
+1. **Canvas** (`--itera-canvas`) — the page ground. Set by `.itera-scope`; a page should not paint its own background.
+2. **Surface** (`--itera-surface`) — cards, panels, popovers. One border (`--itera-border`), `--radius-itera-card`, shadow only when genuinely elevated.
+3. **Subtle surface** (`--itera-surface-subtle`) — secondary fills inside a surface (search pills, inset areas). Not a third card layer.
+
+**Cards and panels.** A panel earns its border by grouping something semantically. Section headings and spacing are the preferred grouping device; reach for a container second.
+
+**Tables and lists — DESIGN RULE:** open rows separated by hairlines, **not** a bordered box per row, and not huge tiles. A row's hit target is the row itself; secondary actions live in a trailing overflow (kebab) menu rather than a rank of always-visible buttons.
+
+**IMPLEMENTED:**
+
+- Deck rows (`src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-itera-accent`.
+- Card rows (`src/features/library/shared/CardTable.tsx`) render both v1 `Card` and v2 `CardV2Record` rows through one unified `RowMeta`, and clicking the row **opens the card in preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
+- Shared row furniture: `MasteryRing`, `MeterBar`, `Stat`, `DeckMark`, `EmptyState`, `StatusBadge`, `InteractionTypeBadge`, `OverflowMenu`.
+- **Deck marks are restrained, never rainbow icon art.** A designed deck-cover system is **FUTURE**, not something to improvise per deck.
+
+### Library's local sidebar
+
+**DESIGN RULE.** Library is a **two-pane browser**: a Collection sidebar local to Library on the left, content on the right. Do not add a permanent third pane (sidebar + deck list + full deck page); that composition was tried and rejected as clunky and overly managerial. When a Deck opens, the deck **list** gives way to the deck page — the Collection navigation stays.
+
+Sidebar styling: quiet text hierarchy, indentation and subtle branches, **no yellow folder art, no large colorful icons**, muted counts, selection shown as a pale tint plus a small orange focus marker (not a solid orange pill), and "Unfiled" near the bottom.
+
+**IMPLEMENTED:** `LibraryShell.tsx` is a `grid-cols-[264px_1fr]`; `CollectionNav.tsx` drills all the way to individual decks (a small dot marks the active one via `activeDeckId`), and a `LibraryTip` aside fills the sidebar's own empty space below the tree. `CollectionNavDrawer.tsx` is the narrow-width drawer. Progress and Settings reuse the same local-sidebar idea with their own nav components.
+
+---
+
+## 10. Menus, popovers and the account menu
+
+**DESIGN RULE.** Overlays float above the canvas with `--itera-shadow-float`, close on Escape and outside click, and never trap the user. A disabled destination is shown as a **focusable `aria-disabled` row with a "Soon" pill** — never a `disabled` control (unreachable by keyboard, invisible to screen readers) and never silently hidden. This is how the product states its intended IA without fabricating features.
+
+**IMPLEMENTED:**
+
+- `FloatingPanel.tsx` is the one popover primitive (§3): portaled, viewport-aware, flips above the anchor when it will not fit below, clamps 8px from every edge, re-places on scroll/resize. Opt into real menu keyboard semantics with `manageFocus`.
+- `AccountMenu.tsx` / `AccountMenuContent.tsx` — the avatar popover: a 300px anchored `FloatingPanel` with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger), collapsing below 480px (`useIsNarrowShell`) into a bottom sheet with identical content. Live rows: **Account settings** and **Sign out** (live whenever any session exists — local, demo or Supabase). Preferences, Keyboard shortcuts, Help & documentation and About Itera are `aria-disabled` "Soon" rows.
+- **The account menu is quick navigation only.** Do not grow it into a second settings sidebar; new settings belong in `src/features/settings/`.
+- Portals sit outside `.itera-scope` and must re-apply the class plus cancel its canvas background (§3).
+
+---
+
+## 11. Motion — DESIGN RULE (locked)
+
+The motion language is **quiet momentum**: motion implies forward progress without spectacle.
+
+Use it for card transitions, restrained progress animation, the Recall flip, subtle selected-state changes, smooth reordering, and a calm completion transition. **Avoid** bounce-heavy easing, confetti, floating decorations, large spring animations, and any motion that makes the learner wait.
+
+Timing guidance, with easing near `cubic-bezier(0.2, 0.8, 0.2, 1)`:
+
+| Interaction | Duration |
+|---|---|
+| Hover / press | 100–160ms |
+| Selection change | 140–200ms |
+| Panel expand / collapse | 180–260ms |
+| Recall flip | 320–420ms |
+| Card-to-card transition | 180–280ms |
+| Completion transition | 350–600ms |
+
+**IMPLEMENTED:** the flip lives in `.itera-flip*` (`src/index.css`), the next-card entrance in `.itera-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), and the editor/preview width sync in `.card-editor-shell`.
+
+**Two mechanics you must know before animating anything:**
+
+1. **Reduced motion is honored in CSS, per effect.** `@media (prefers-reduced-motion: reduce)` blocks in `src/index.css` neutralize `.itera-flip-face`, `.itera-card-enter`, `.flip-face`, `.reveal-in`, `.preview-drawer`, `.preview-shell-row` and `.card-editor-shell`. **Any new animated class must add its own reduced-motion rule** — there is no blanket `*` override doing it for you. JS-driven motion checks `window.matchMedia('(prefers-reduced-motion: reduce)')` directly (`AccountMenu.tsx`, `SuggestedSessionHero.tsx`). Reduced motion must never gate *content*: reveal happens synchronously regardless of motion settings, and there is a test asserting exactly that.
+2. **A CSS `transition` on a Tailwind-composed `transform` does not reliably animate.** `scale-*`/`rotate-*`/`translate-*` (including `group-hover:` variants) each write a separate custom property that a shared rule composes; transitioning the composed value was measured snapping instantly in Chromium despite a correct duration. Compute such transforms as **one literal `style.transform` string in JS**.
+
+---
+
+## 12. Accessibility — DESIGN RULE
+
+- **WCAG AA** contrast for text and controls.
+- **Visible focus rings.** The convention is `focus-visible:ring-2 focus-visible:ring-itera-accent` (with `ring-offset-2` on card-sized targets) or `focus-visible:outline-2 focus-visible:outline-itera-accent`. Never remove an outline without replacing it.
+- **Every card interaction is keyboard-operable**, not drag-only.
+- **No color-only correctness indicators** — pair color with a glyph, label or text.
+- Screen-reader labels for card type and state; reduced-motion support (§11); touch targets ≥44×44px where practical.
+- Shortcuts must **not** fire while focus is inside a text or code input.
+
+Intended Review shortcuts: `Escape` exit/pause with confirmation, `Space` flip a Recall card, `Enter` submit an automatic interaction, `1/2/3/4` for Again/Hard/Good/Easy after feedback, arrows to walk MCQ options or ordering controls.
+
+**IMPLEMENTED, and worth copying:**
+
+- `reviewV2/components/FlipCard.tsx` is the accessible flip: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. **`src/components/ui/FlipCard.tsx` (v1) is a plain `<div onClick>` with no keyboard or ARIA support** — a known gap deliberately not fixed in place. Use the v2 one for new work.
+- **Ordering** provides Move up / Move down buttons alongside drag: they stay in the DOM and in tab order at all times, faded with `opacity-0` until hover or focus, **never `hidden`** (`OrderingRow.tsx`), and positions are announced via `aria-live`.
+- **Multiple Choice** option rows carry no checkbox/radio glyph; state is conveyed by color **and** `aria-checked`.
+- `FloatingPanel`'s `manageFocus` implements the menu keyboard contract; `dialogs.tsx` replaces the `window.*` builtins with focus-managed modals.
+- **A gap to respect:** `happy-dom` has no visibility semantics, so component tests cannot catch focus or layout bugs — `focus()` on a hidden element silently succeeds there and fails in Chromium. Anything focus-, popover- or overflow-related must be verified in a real browser.
+
+**FUTURE:** the Matching listbox/assignment fallback for screen readers and small screens, and a full sweep of the accessibility acceptance checklist, are specified but not done.
+
+---
+
+## 13. Responsive behavior
+
+**DESIGN RULE.** Breakpoint bands: mobile `<768px`, tablet `768–1199px`, desktop `1200–1599px`, wide `≥1600px`.
+
+| Surface | Rule |
+|---|---|
+| **Library** | Desktop: Collection sidebar + content. Tablet: collapsible sidebar. Mobile: Collection drill-down or drawer, deck page one column, metrics wrap, filters become a sheet or horizontal scroll. |
+| **Review** | **One focused column at every width.** Card near full mobile width, code scrolls horizontally, Tip/Explanation stack below, rating controls become 2×2 or vertical. |
+| **Create / Edit** | Desktop: editor + preview split. Mobile/tablet: Editor / Preview tabs. |
+| **Matching** | Desktop: columns side by side. Mobile: **FUTURE** — select a source, then choose a target, showing completed pairs as stacked rows. |
+
+**IMPLEMENTED:** breakpoints that Tailwind does not provide are `matchMedia` hooks, because the layouts they drive are real CSS Grid rather than utility classes — `useIsWideLibrary`, `useIsWideProgress`, `useIsWideEditor` (~980px), `useIsWideToday` (980px), `useIsNarrowShell` (480px). `CollectionNavDrawer` is Library's narrow-width answer; `AccountMenuContent` becomes a bottom sheet; the card editor becomes Editor/Preview tabs.
+
+**Known gap:** Matching's mobile flow is only partly satisfied — a two-column card lays out side by side at 390px (verified live), but cards with three columns fall back to stacked flow rather than the stepwise pairing flow.
+
+---
+
+## 14. Visual references
+
+The project is **mockup-driven**. Reference images are **not tracked in this repository** — there is no `docs/references/` directory, and inventing one would create paths that resolve to nothing. They live on the product owner's machine:
+
+```
+C:\Users\SK\Desktop\itera-mockups\
+    webapp\        # product mockups cited by filename throughout itera-decisions.md:
+                   #   login-v3.png, profile.png, profile-menu.png, progress.png,
+                   #   library.png, all-decks.png, library-use.png, add-new-card.png,
+                   #   recall-card.png, recall-card-revealed.png, mcq-card.png,
+                   #   ordering-card.png, matching-card.png, walkthrough-card.png,
+                   #   write-code-card.png, optional-tip.png, ...
+    inspo-icons\   # per-interaction icon references
+    inspiration\   # general visual direction
+    mobile\        # mobile-specific references
+```
+
+**How to treat a reference.** Every reference sits in one of three tiers, and the tier is stated in the decision entry that cites it — check [`itera-decisions.md`](itera-decisions.md) before implementing against any image:
+
+| Tier | Meaning | How to use it |
+|---|---|---|
+| **LOCKED** | The approved target for that surface. Most `webapp/*.png` mockups cited by an implemented decision are locked. | Authoritative for **composition, hierarchy, spacing, density and typography**. Do not improvise a different layout. |
+| **DIRECTION** | Approved feel, not an approved layout (much of `inspiration/`, `inspo-icons/`). | Borrow the mood, the icon weight, the density. Do not copy structure. |
+| **CONCEPT** | Explored and not adopted, or superseded by a later image (e.g. earlier login variants). | Read for history only. Never implement from one. |
+
+**Two standing exceptions apply to every locked mockup**, both already decided and not re-litigated per screen:
+
+1. **Colors always come from the locked Itera token palette**, never from a mockup's own hues. This is why Progress's charts are navy/orange/success/warning rather than the mockup's blue/purple.
+2. **A mockup element with no real data or backing feature is never fabricated.** It is either omitted outright (Billing, Plan & usage, the "Itera Pro" upsell) or rendered as a focusable `aria-disabled` row with a "Soon" pill.
+
+Where a written brief and a locked mockup conflict, **say so and ask** — do not silently pick one.
+
+**Verify visually.** Tests are not sufficient for UI work. Run the app and drive Chromium via the `playwright` devDependency (`npx playwright install chromium` once), check 1440×900 and 390×844, and exercise hover, keyboard focus and graded/revealed states — not just the resting state.

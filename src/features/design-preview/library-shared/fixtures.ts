@@ -2,7 +2,7 @@ import type { ID, Millis } from '@/types/common'
 import type { InteractionType } from '@/types/cardV2'
 import type { SchedulingStateKind } from '@/types/review'
 
-// Preview-only stand-ins for the Library feature (docs/itera-redesign-plan.md
+// Preview-only stand-ins for the Library feature (docs/archive/itera-redesign-plan.md
 // Phase H). `Collection` doesn't exist as a real type yet — it will be
 // *derived* from existing Deck.parentId structure by an explicit migration
 // (docs/itera-decisions.md D8), not authored fresh. These types are

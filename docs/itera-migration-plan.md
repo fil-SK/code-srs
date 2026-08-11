@@ -1,8 +1,23 @@
 # Itera — Migration Plan
 
-Concrete data migration path from the current 8-card-type, unified-Deck model to the spec's 6-interaction-type, Collection/Deck-split model. Covers both storage backends (Dexie in every user's browser; Supabase in production) — they must move in lockstep or they will silently diverge.
+**Canonical, living document.** The data-migration and data-safety contract for moving from the 8-card-type, unified-Deck model to the 6-interaction-type, Collection/Deck-split model. Covers both storage backends (Dexie in every user's browser; Supabase in production) — they must move in lockstep or they will silently diverge.
 
 **Revised after a correction pass** — see `itera-decisions.md` D14–D16 for what changed and why. The headline change: only the old-Card-payload adaptation (§1) is allowed to run lazily on read. CardState extraction and the Collection/Deck split are explicit, run-once, reportable, reversible migrations, defined by the shared contract in §0.
+
+## Status at a glance (verified against the working tree, 2026-08-12)
+
+| Migration | Status |
+|---|---|
+| §1 — Card payload 8 → 6 (lazy on read) | **Completed as designed.** `migrateCard` is pure, total across all 8 v1 types, tested including idempotence, and runs on read. Two follow-on tests in §9 remain unwritten. |
+| §2 — Schema versioning / `BACKUP_VERSION` bump | **Not started.** `BACKUP_VERSION` is still `1`; no per-entity `schemaVersion` was added to v1 `Card`. |
+| §4 — CardState extraction, steps 1–3 (additive schema, backfill, dual-write) | **Completed.** |
+| §4 — CardState extraction, steps 4–6 (parity verification, read cutover, cleanup) | **Not started.** `Card.scheduling` is still the sole source of truth; nothing reads `cardStates`. |
+| §5 — Preserve richer Matching/Walkthrough capability | **Completed and honored** in the shipped v2 types, editors and graders. |
+| §6 — Deck → Collection + Deck split | **Not started.** Even the read-only preflight report (§6.1) has never been run. The Library ships against a UI-only `parentId` derivation instead. |
+| §8 — Versioned Supabase migration files | **Partially implemented.** `supabase/migrations/0001_card_states.sql` exists; **`cards_v2` was added to `schema.sql` with no matching migration file** — a real gap in this process, not a decision. |
+| §9 — Required test coverage | **Partially implemented.** See the annotations in that section. |
+
+**Do not rewrite a completed row above as though it were future work**, and do not start a "not started" migration as a side effect of a UI change. The current implementation snapshot lives in [`CURRENT_STATE.md`](CURRENT_STATE.md) §13.
 
 ## 0. Shared migration-runner contract
 
@@ -72,13 +87,13 @@ Every old type's optional `explanation` field maps to the new `explanation` fiel
 
 ## 4. Card/CardState separation
 
-**Status (2026-07-23): steps 1-3 shipped.** Additive Dexie/Supabase `CardState` schema, a tested backfill (`src/domain/migration/cardStateBackfill.ts`), and dual-write from every write path are live — see `itera-redesign-plan.md` Phase D's status block and `itera-decisions.md` D38-D44 for exactly what shipped and what's still open (steps 4-6: parity verification, read cutover, cleanup). The steps below are the original plan and remain accurate as written; only the status has changed, not the design.
+**Status: steps 1-3 completed (2026-07-23); steps 4-6 not started.** Additive Dexie (`version(3)`, `cardStates`) and Supabase (`supabase/migrations/0001_card_states.sql`) schema, a tested backfill (`src/domain/migration/cardStateBackfill.ts`) exposed as a dry-run/apply UI in **Account settings → Card scheduling**, and dual-write from every write path are live — see `itera-decisions.md` D38-D44 for exactly what shipped. The steps below are the original plan and remain accurate as written; only the status has changed, not the design.
 
-Currently `Card.scheduling: SchedulingState` (see `src/types/card.ts`, `CardBase`). This is `itera-redesign-plan.md` Phase D. Steps (each independently deployable and reversible):
+Currently `Card.scheduling: SchedulingState` (see `src/types/card.ts`, `CardBase`). Steps (each independently deployable and reversible):
 
 1. **Additive schema.** A versioned migration file (§8) adds a `card_states` table (Supabase) / `cardStates` store (Dexie), keyed by `cardId`, holding the current `SchedulingState` shape. Nothing existing changes.
 2. **Backfill.** A `MigrationRunner` (§0) that writes one `CardState` row per existing `Card`, copied from `card.scheduling`. Dry run first; the report's `beforeCounts`/`afterCounts` prove every card got exactly one row, and `orphans` proves none were missed.
-3. **Dual-write.** `createCard` (`src/domain/cards/factory.ts`) and `useGradeCard`/`useUndoGrade` (`src/hooks/useReview.ts`) write to **both** `Card.scheduling` and the new `CardState` row, via the `ReviewService` boundary (`itera-redesign-plan.md` Phase E). Reads still come from `Card.scheduling` — nothing observable changes.
+3. **Dual-write.** `createCard` (`src/domain/cards/factory.ts`) and `useGradeCard`/`useUndoGrade` (`src/hooks/useReview.ts`) write to **both** `Card.scheduling` and the new `CardState` row, via the `ReviewService` boundary (`src/domain/scheduling/reviewService.ts`). Reads still come from `Card.scheduling` — nothing observable changes.
 4. **Parity verification.** Compare every `Card.scheduling` against its `CardState` row over a real observation period; they must never diverge under dual-write. This is where the golden/invariant FSRS tests from §9 matter — without them, "parity" only proves the two write paths agree with each other, not that either is correct.
 5. **Read cutover.** Once parity holds, reads (`getDue()` in both backends, and everywhere else that reads `card.scheduling`) switch to `CardState`. Writes to `Card.scheduling` continue (now redundant, but harmless) until cleanup.
 6. **Cleanup — a later release, not this phase.** Only after read cutover has been live and stable for a real observation period does `scheduling` get removed from `Card` and dual-write stop.
@@ -96,7 +111,9 @@ Per `itera-decisions.md` D13, explicitly locked by the product owner (not a defa
 
 ## 6. Deck → Collection + Deck split
 
-`itera-redesign-plan.md` Phase G. **No remedy for any ambiguous case is designed before the preflight report proves it occurs** (`itera-decisions.md` D15) — this corrects the previous version of this document, which proposed auto-creating a "General" deck speculatively.
+**Status: not started.** Neither the preflight report nor any migration code exists; there is no `Collection` type, no `collections` table, and no `src/domain/collections/tree.ts`. The Library UI ships against a **UI-only** derivation (`src/features/library/collectionTree.ts`: any deck with children is treated as a Collection node) which moves and transforms no data at all. That derivation is not a substitute for this migration, and shipping it did not advance it.
+
+**No remedy for any ambiguous case is designed before the preflight report proves it occurs** (`itera-decisions.md` D15) — this corrects the previous version of this document, which proposed auto-creating a "General" deck speculatively.
 
 ### 6.1 Preflight report (required, reviewed by a human, before any migration code runs)
 
@@ -149,13 +166,17 @@ grant select, insert, update, delete on public.<table> to authenticated;
 -- corresponding read-cutover step ships).
 ```
 
-Missing the final `grant` is the exact bug that caused a production 403 earlier in this project (Postgres denies the table before RLS runs) — every new migration file re-checks this. `supabase/schema.sql` may still be updated afterward as a consolidated reference, but the migration files, not dashboard edits, are the source of truth for what changed and when. No migration files exist yet — none of this has shipped.
+Missing the final `grant` is the exact bug that caused a production 403 earlier in this project (Postgres denies the table before RLS runs) — every new migration file re-checks this. `supabase/schema.sql` may still be updated afterward as a consolidated reference, but the migration files, not dashboard edits, are the source of truth for what changed and when.
+
+**Status: partially implemented, with one known gap.** `supabase/migrations/0001_card_states.sql` exists and follows the shape above. The later `cards_v2` table, however, was added **only** to `supabase/schema.sql` with no corresponding migration file — so a Supabase project created from `schema.sql` gets it, while one migrated file-by-file does not. Closing that gap (a `0002_cards_v2.sql` mirroring what `schema.sql` already declares) is the next action here.
+
+Separately: both `card_states` and `cards_v2` are **unverified against a live database** — the project owner's Supabase project was deleted mid-development. They are written to the same standard as the rest of the schema, but flagged rather than assumed correct (`itera-decisions.md` D42).
 
 ## 9. Required test coverage
 
 Minimum bar before the corresponding phase is considered complete:
 
-- **Card payload migration (§1, Phase C):** every old type migrates without throwing (done, 11 tests); migration is idempotent (calling `migrateCard` on the same input twice produces deep-equal output — not yet an explicit test); a real exported v1 backup migrates every card without throwing (not yet written); v1 backup auto-imports into a v2 app once `BACKUP_VERSION` bumps (not yet written, blocked on the bump); unknown future schema versions are still rejected safely (already true today for `parseBackup`'s `version > BACKUP_VERSION` check — needs a test once v2 exists to confirm it still holds).
+- **Card payload migration (§1):** every old type migrates without throwing — **done**; migration is idempotent (calling `migrateCard` on the same input twice produces deep-equal output) — **done**, added during implementation; a real exported v1 backup migrates every card without throwing — **not written**; v1 backup auto-imports into a v2 app once `BACKUP_VERSION` bumps — **not written, blocked on the bump** (`BACKUP_VERSION` is still `1`); unknown future schema versions are still rejected safely (already true today for `parseBackup`'s `version > BACKUP_VERSION` check — needs a test once v2 exists to confirm it still holds).
 - **CardState extraction (§4, Phase D):** backfill preserves scheduling state exactly (before/after equality per card, not just counts); due queries (`getDue()`, both backends) return the identical set of cards before and after read cutover on the same dataset; Review undo remains correct under dual-write.
 - **Collection/Deck split (§6, Phase G):** entity and Card counts are conserved (report's before/after counts match reality); dry run output matches what `apply()` actually does; re-running `apply()` is a no-op (idempotence).
 - **FSRS wrapper (`scheduler.ts`):** golden/invariant tests against known ts-fsrs reference values and multi-review sequences (repeated Again → relearning transition, long histories) — the current `scheduler.test.ts` covers single-review behavior only. Required before Phase D's parity verification step relies on the wrapper as a fully verified boundary, not just "reviewed with no defects found" (see the audit's corrected FSRS section).

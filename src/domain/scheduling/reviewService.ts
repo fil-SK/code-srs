@@ -6,7 +6,7 @@ import { buildReviewLog, previewStates, reviewState } from './scheduler'
 //
 // Deliberately still shaped around SchedulingState (the same shape embedded
 // in v1 Card.scheduling today), not a separate CardState — per
-// docs/itera-redesign-plan.md Phase D, CardState extraction changes *where*
+// docs/itera-migration-plan.md section 4, CardState extraction changes *where*
 // this state is read from and written to (a CardState table instead of
 // Card.scheduling), not what gets computed. Keeping this service's public
 // shape stable across that migration means Review UI built against it now

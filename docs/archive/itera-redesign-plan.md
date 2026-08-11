@@ -1,6 +1,16 @@
+> **HISTORICAL DOCUMENT — not a current source of truth. Preserved for project history only.**
+>
+> Archived 2026-08-12. This was the phased (A–M) implementation sequence for the Itera redesign. It is kept because it records *how the project got here* and carries the original per-phase acceptance criteria, but it is no longer the plan:
+>
+> - **Reality deviated from the sequence.** Phase H (Library/Deck UI + global shell) shipped **without** Phase G (the Collection/Deck migration) ever running, against a UI-only `parentId` derivation. Today shipped ahead of Phase I with placeholder content. Progress (J) shipped without touching `computeStats.ts`. Several dependency and acceptance lines below are struck through for this reason.
+> - **For what is actually built and what to do next**, read [`../CURRENT_STATE.md`](../CURRENT_STATE.md) — it defines the current milestone, not this file.
+> - **The still-open forward work this plan described is preserved elsewhere:** Phase G's preflight/migration contract in [`../itera-migration-plan.md`](../itera-migration-plan.md) §0/§6, Phase D's remaining steps in the same file §4, and Phases K (onboarding/empty states), L (responsive) and M (accessibility/cleanup) as the "Planned" and "Not implemented" rows in [`../features.md`](../features.md) and [`../CURRENT_STATE.md`](../CURRENT_STATE.md).
+>
+> Nothing here overrides a canonical document. Where this file and `CURRENT_STATE.md` disagree, `CURRENT_STATE.md` is right.
+
 # Itera — Redesign Implementation Plan
 
-Phased per `itera_claude_master_spec.md` §34, grounded in this repository's actual files. **Revised** from the original version after a correction pass — see `itera-decisions.md` for what changed and why. Each phase lists concrete files/modules touched, explicit dependencies (no phase depends on a phase that doesn't exist or hasn't been reached), and acceptance criteria.
+Phased per `itera_claude_master_spec.md` §34 (now [`itera-claude-master-spec.md`](itera-claude-master-spec.md), also archived), grounded in this repository's actual files. **Revised** from the original version after a correction pass — see `itera-decisions.md` for what changed and why. Each phase lists concrete files/modules touched, explicit dependencies (no phase depends on a phase that doesn't exist or hasn't been reached), and acceptance criteria.
 
 Status legend: not started unless noted. As of this revision: Phase A complete. **The first Phase B/C pull request is complete and merged into the working tree** — see the updated status blocks below and `itera-decisions.md` (2026-07-23 entries D20-D24) for the amendments applied during implementation. No other phase has started; no existing production file's behavior was changed (one production file, `src/app/theme.tsx`, gained a purely-additive export — see D22).
 

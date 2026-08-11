@@ -81,7 +81,7 @@ export const router = createBrowserRouter([
   },
   // Design-preview routes are a structurally separate top-level entry, not
   // children of AppShell — chrome-free by construction, not by hiding
-  // AppShell's chrome with CSS. See docs/itera-redesign-plan.md Phase B.
+  // AppShell's chrome with CSS. See docs/archive/itera-redesign-plan.md Phase B (historical).
   {
     path: 'design-preview',
     errorElement: <RouteError />,
