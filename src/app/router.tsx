@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
+import { RequireAuth } from '@/auth/RequireAuth'
+import { LoginPage } from '@/features/login/LoginPage'
 import { RouteError } from './RouteError'
 import { TodayPage } from '@/features/today/TodayPage'
 import { LibraryBrowserPage } from '@/features/library/LibraryBrowserPage'
@@ -28,41 +30,53 @@ import { LibraryBrowserPreviewPage } from '@/features/design-preview/library-bro
 import { LibraryDeckPreviewPage } from '@/features/design-preview/library-deck/LibraryDeckPreviewPage'
 
 export const router = createBrowserRouter([
-  // Today owns '/' as its own structurally separate top-level route
-  // previously (now folded into the shared AppShell — see below); kept as
-  // its own top-level entry only because Review, right below, needs the same
-  // "chrome-free/different-chrome by construction" treatment design-preview
-  // already used, and Today's route already proved the pattern works.
+  // Every product route sits behind one guard (a pathless layout route), so
+  // "signed out" is answered in exactly one place rather than per page. Only
+  // /login and /design-preview/* live outside it.
   {
-    path: '/',
-    element: <AppShell />,
+    element: <RequireAuth />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <TodayPage /> },
-      { path: 'decks', element: <LibraryBrowserPage /> },
-      { path: 'decks/:id', element: <LibraryDeckPage /> },
-      { path: 'decks/:deckId/cards/new', element: <CardCreatePage /> },
-      { path: 'roadmaps', element: <RoadmapsPage /> },
-      { path: 'roadmaps/:id', element: <RoadmapEditorPage /> },
-      { path: 'preview', element: <PreviewPage /> },
-      { path: 'browse', element: <BrowsePage /> },
-      { path: 'cards/new', element: <CardEditorPage /> },
-      { path: 'cards/:id/edit', element: <CardEditEntry /> },
-      { path: 'cards/:id/study', element: <CardStudyPreviewPage /> },
-      { path: 'drafts', element: <DraftsPage /> },
-      { path: 'stats', element: <StatsPage /> },
-      { path: 'progress', element: <ProgressPage /> },
-      { path: 'settings', element: <AccountSettingsPage /> },
-      { path: 'settings/:section', element: <AccountSettingsPage /> },
+      // Today owns '/' as its own structurally separate top-level route
+      // previously (now folded into the shared AppShell — see below); kept as
+      // its own entry only because Review, right below, needs the same
+      // "chrome-free/different-chrome by construction" treatment
+      // design-preview already used, and Today's route already proved the
+      // pattern works.
+      {
+        path: '/',
+        element: <AppShell />,
+        children: [
+          { index: true, element: <TodayPage /> },
+          { path: 'decks', element: <LibraryBrowserPage /> },
+          { path: 'decks/:id', element: <LibraryDeckPage /> },
+          { path: 'decks/:deckId/cards/new', element: <CardCreatePage /> },
+          { path: 'roadmaps', element: <RoadmapsPage /> },
+          { path: 'roadmaps/:id', element: <RoadmapEditorPage /> },
+          { path: 'preview', element: <PreviewPage /> },
+          { path: 'browse', element: <BrowsePage /> },
+          { path: 'cards/new', element: <CardEditorPage /> },
+          { path: 'cards/:id/edit', element: <CardEditEntry /> },
+          { path: 'cards/:id/study', element: <CardStudyPreviewPage /> },
+          { path: 'drafts', element: <DraftsPage /> },
+          { path: 'stats', element: <StatsPage /> },
+          { path: 'progress', element: <ProgressPage /> },
+          { path: 'settings', element: <AccountSettingsPage /> },
+          { path: 'settings/:section', element: <AccountSettingsPage /> },
+        ],
+      },
+      // Review is immersive (locked IA): no global nav, no logo, no sidebar. A
+      // structurally separate route — the same "chrome-free by construction,
+      // not by hiding AppShell's chrome with CSS" pattern design-preview uses
+      // below — not a child of AppShell.
+      { path: 'review', element: <ReviewPage /> },
     ],
   },
-  // Review is immersive (locked IA): no global nav, no logo, no sidebar. A
-  // structurally separate top-level route — the same "chrome-free by
-  // construction, not by hiding AppShell's chrome with CSS" pattern
-  // design-preview uses below — not a child of AppShell.
+  // Login is chrome-free by construction too: no AppShell ancestor, and
+  // outside RequireAuth for the obvious reason.
   {
-    path: 'review',
-    element: <ReviewPage />,
+    path: 'login',
+    element: <LoginPage />,
     errorElement: <RouteError />,
   },
   // Design-preview routes are a structurally separate top-level entry, not

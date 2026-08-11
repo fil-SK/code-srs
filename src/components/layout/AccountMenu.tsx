@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { ChevronDown, User } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
-import { isSupabaseConfigured } from '@/data/supabase/client'
 import { FloatingPanel } from '@/components/ui/FloatingPanel'
 import { AccountMenuContent } from './AccountMenuContent'
 import { useIsNarrowShell } from './useIsNarrowShell'
@@ -24,7 +23,7 @@ const PANEL_CLASS = 'w-[300px] max-w-[calc(100vw-16px)] rounded-itera-dialog py-
 export function AccountMenu() {
   const [open, setOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const { email, session } = useAuth()
+  const { identity } = useAuth()
   const isNarrow = useIsNarrowShell()
   const location = useLocation()
 
@@ -32,7 +31,7 @@ export function AccountMenu() {
   // (browser back/forward, a nav link elsewhere in the shell).
   useEffect(() => setOpen(false), [location.key])
 
-  const initial = isSupabaseConfigured && session ? email?.[0]?.toUpperCase() : undefined
+  const initial = identity?.email[0]?.toUpperCase()
 
   return (
     <div className="relative shrink-0">

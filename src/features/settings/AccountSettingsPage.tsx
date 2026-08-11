@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
-import { isSupabaseConfigured } from '@/data/supabase/client'
 import { useIsWideLibrary } from '@/features/library/shared/useIsWideLibrary'
 import { SettingsNav } from './SettingsNav'
 import { resolveSection } from './settingsSections'
@@ -26,8 +25,15 @@ export function AccountSettingsPage() {
   const { section } = useParams()
   const active = resolveSection(section)
   const isWide = useIsWideLibrary()
-  const { email, session } = useAuth()
-  const signedInEmail = isSupabaseConfigured && session ? email : undefined
+  const { identity } = useAuth()
+  // The demo workspace's synthetic address would read as a real account here,
+  // so it says what it actually is instead.
+  const subtitle =
+    identity === null
+      ? 'Local account — everything is stored in this browser.'
+      : identity.kind === 'demo'
+        ? 'Demo workspace — everything is stored in this browser.'
+        : identity.email
 
   const body = <SectionBody slug={active} />
 
@@ -38,7 +44,7 @@ export function AccountSettingsPage() {
           Account settings
         </h1>
         <p className="mt-1 text-sm text-itera-muted">
-          {signedInEmail ?? 'Local account — everything is stored in this browser.'}
+          {subtitle}
         </p>
       </div>
 

@@ -111,7 +111,7 @@ describe('AccountMenu', () => {
       const item = screen.getByRole('menuitem', { name: new RegExp(label) })
       expect(item.getAttribute('aria-disabled')).toBe('true')
     }
-    // Sign out is disabled too in local mode, where there is no session.
+    // Sign out is disabled while signed out (no local or Supabase session).
     expect(screen.getByRole('menuitem', { name: /Sign out/ }).getAttribute('aria-disabled')).toBe(
       'true',
     )

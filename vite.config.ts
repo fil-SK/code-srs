@@ -13,11 +13,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
-        name: 'code-srs',
-        short_name: 'code-srs',
+        name: 'Itera',
+        short_name: 'Itera',
         description: 'Spaced-repetition learning for software, CS, and compilers.',
-        theme_color: '#0b0e14',
-        background_color: '#0b0e14',
+        // Itera's canvas (--itera-canvas), not the pre-rebrand dark palette:
+        // the app is light-only for now, so a dark splash/chrome color would
+        // flash the wrong background before first paint.
+        theme_color: '#f6f7f9',
+        background_color: '#f6f7f9',
         display: 'standalone',
         start_url: '/',
         icons: [

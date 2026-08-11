@@ -98,7 +98,9 @@ npm install
 npm run dev
 ```
 
-Open the printed URL (default http://localhost:5173). With no `.env.local`, it runs in **local-only mode** — no login, data stored in your browser.
+Open the printed URL (default http://localhost:5173). With no `.env.local`, it runs in **local-only mode**: data stored in your browser, no server, no account.
+
+You land on `/login` first. There is no accounts backend in local mode, so it is a session boundary rather than authentication — **Continue with demo workspace** gets you straight in, or sign in with any email and password (the password is never stored, sent, or checked). Signing out from the avatar menu returns you here. With Supabase configured, the same page sends a real magic link instead.
 
 ### Scripts
 
@@ -167,11 +169,11 @@ Want to bulk-create cards from study material? [`docs/ai-card-prompt.md`](docs/a
 ```
 src/
   app/         providers, router, theme, query client
-  auth/        Supabase magic-link auth (provider, gate, login)
+  auth/        session boundary (provider, route guard, local/demo session)
   components/  shared UI (buttons, fields, code views, RichText markdown)
   data/        repository interface + Dexie and Supabase backends
   domain/      pure logic: scheduling, grading, search, stats, decks, io
-  features/    cards, dashboard, decks, drafts, preview, review, settings, stats
+  features/    cards, decks, drafts, library, login, preview, review, settings, today
   hooks/       TanStack Query hooks
   types/       entity types (Card discriminated union, Deck, Draft, ReviewLog)
 supabase/      schema.sql for cloud setup

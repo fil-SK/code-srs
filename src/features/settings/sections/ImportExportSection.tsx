@@ -22,7 +22,9 @@ export function ImportExportSection() {
   async function handleExport() {
     const backup = await exportBackup()
     const date = new Date().toISOString().slice(0, 10)
-    downloadText(`code-srs-backup-${date}.json`, serializeBackup(backup))
+    // Filename only. The `app` marker *inside* the file stays 'code-srs' so
+    // every backup exported before the rebrand still imports (backup.ts).
+    downloadText(`itera-backup-${date}.json`, serializeBackup(backup))
   }
 
   async function handleFile(file: File) {

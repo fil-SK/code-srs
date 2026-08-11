@@ -15,7 +15,7 @@ This complements, but doesn't replace:
 ```
 src/
 ├── app/          router.tsx, RouteError.tsx, theme.tsx (ThemeContext/ThemeProvider/useTheme)
-├── auth/         Supabase magic-link auth: AuthProvider, AuthGate, LoginPage
+├── auth/         session boundary: AuthProvider, AuthGate, RequireAuth, localSession
 ├── components/
 │   ├── layout/   AppShell, TopNav, primaryNavLinks.ts, AccountMenu(+Content), StreakBadge, useNavBadges.ts
 │   ├── ui/       Button, Field, FlipCard (v1) — shared, generic UI primitives

@@ -9,7 +9,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
-import { isSupabaseConfigured } from '@/data/supabase/client'
 import { cn } from '@/lib/cn'
 
 // The account menu's body, shared verbatim by the anchored popover and the
@@ -21,7 +20,9 @@ import { cn } from '@/lib/cn'
 // appearance, privacy, notifications, devices) lives inside the Account
 // settings page, reachable from the first row here.
 //
-// Everything except Account settings renders disabled, because none of it
+// Sign out is live whenever any session is (local, demo, or Supabase) — it is
+// the exit half of the /login loop. Everything except that and Account
+// settings renders disabled, because none of it
 // exists yet — the rows are here to state the intended IA, and each one is
 // marked "Soon" so the greying is explicit rather than something the user has
 // to infer from a color. They stay focusable (aria-disabled, not `disabled`)
@@ -122,13 +123,12 @@ function Divider() {
 }
 
 export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
-  const { email, session, signOut } = useAuth()
-  const signedIn = isSupabaseConfigured && session !== null
+  const { identity, isAuthenticated, signOut } = useAuth()
 
-  // Local mode (no Supabase) has no account at all, so there is no name or
-  // email to show — a greyed placeholder identity, consistent with the rest of
-  // the menu, rather than inventing one. A real session fills the email in.
-  const displayEmail = signedIn ? email : undefined
+  // Whatever session is live (Supabase or local) supplies the email. There is
+  // still no display name anywhere in the product, so that line stays a greyed
+  // placeholder rather than inventing one.
+  const displayEmail = identity?.email
   const initial = displayEmail?.[0]?.toUpperCase()
 
   const groups: MenuRow[][] = [
@@ -146,7 +146,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
         label: 'Sign out',
         icon: LogOut,
         accent: true,
-        onSelect: signedIn ? () => void signOut() : undefined,
+        onSelect: isAuthenticated ? () => void signOut() : undefined,
       },
     ],
   ]
