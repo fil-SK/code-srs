@@ -99,9 +99,8 @@ C:\Users\SK\Desktop\itera-mockups\
                    #   ordering-card.png, matching-card.png, optional-tip.png, ...
     inspo-icons\   # per-interaction icon references
     inspiration\   # general visual direction
+    mobile\        # mobile-specific references
 ```
-
-`docs/itera-decisions.md` cites these by filename; open the named file before implementing against a decision that references it.
 
 ## Conventions
 

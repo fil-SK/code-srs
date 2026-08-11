@@ -1,6 +1,8 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-12** (branch `app_redesign`, HEAD `9505921`).
+**Last verified against the working tree: 2026-08-12** (branch `app_redesign`, HEAD `000a22f`, plus the uncommitted documentation/hygiene cleanup that produced this revision).
+
+The last commit to change **product code** is `9505921` ("Add the Itera login page and a real session boundary behind it"); `000a22f` and this revision are documentation and repository hygiene only, so every status claim below still describes `9505921`'s behavior.
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -12,7 +14,7 @@ Document boundaries — do not duplicate content across them:
 | [`architecture.md`](architecture.md) | How the system is structured, and which structural rules must not be broken. |
 | [`design-system.md`](design-system.md) | How it should look and behave: brand, tokens, navigation, motion, responsive, accessibility, visual-reference tiers. |
 | [`features.md`](features.md) | What the product does, plus what is planned and what is out of scope. |
-| [`itera-decisions.md`](itera-decisions.md) | Append-only decision log (D1…D143) — *why* each thing is the way it is. |
+| [`itera-decisions.md`](itera-decisions.md) | Append-only decision log — *why* each thing is the way it is. Read the newest relevant entries first. |
 | [`itera-migration-plan.md`](itera-migration-plan.md) | The data-migration contract, with each phase marked completed / partial / not started. |
 | [`archive/`](archive/) | **Historical only.** The Phase A audit, the A–M redesign plan, and the original Claude master spec. Never overrides anything above. |
 
@@ -101,7 +103,7 @@ All three views render inside `LibraryShell` + `CollectionNav` (a local sidebar 
 - **Parent / container ("Collection") view** — `LibraryCollectionView`, rendered by `LibraryBrowserPage` when the selection is a Collection. Identity header, rolled-up stats (`aggregateMetrics`), its child decks, and any cards filed directly on it. A direct `/decks/:id` navigation whose id resolves to a deck-with-children **redirects here** instead of rendering an incorrectly empty leaf page.
 - **Focused leaf-Deck view (`/decks/:id`)** — `LibraryDeckPage`. Cards / Insights tab split. The Cards tab's search / type / status / sort toolbar and pagination operate over a unified `RowMeta` computed for **both** v1 `Card` and `CardV2Record` rows; pagination only activates once a filter/search/non-manual sort is chosen, so the default view keeps the original unpaginated dnd-kit drag-reorder (v1) list. Clicking a row **opens the card in preview** (`/preview?card=…` for v1, `/cards/:id/study` for v2); Edit/Duplicate/Move/Suspend/Delete live in the row kebab menu. There is no separate read-only card detail screen, by decision.
 
-**"Collection" is UI-only.** It is derived structurally from the existing `Deck.parentId` tree in `src/features/library/collectionTree.ts` (any deck with children is a Collection node; childless decks are the browsable Library decks). **There is no `Collection` type, no table, and no migration** — see §12.
+**"Collection" is UI-only.** It is derived structurally from the existing `Deck.parentId` tree in `src/features/library/collectionTree.ts` (any deck with children is a Collection node; childless decks are the browsable Library decks). **There is no `Collection` type, no table, and no migration** — see §13.
 
 ## 9. Progress state
 
@@ -184,21 +186,22 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 **Technical debt:**
 
-- **Three Playwright scratch scripts are committed at the repo root** — `.scratch-shot.cjs`, `.scratch-shot2.cjs`, `.scratch-shot3.cjs`. They hard-code a stale per-session temp path, and one produces the suite's single oxlint warning (unused `path`). Safe to delete; nothing imports them.
 - **Component tests cannot catch focus/visibility bugs.** `happy-dom` has no visibility semantics, so `HTMLElement.focus()` on a `visibility: hidden` element silently no-ops there but fails in Chromium. Anything focus- or layout-dependent needs a real browser pass.
 - **Transitioning a Tailwind-composed `transform` does not animate reliably.** `scale-*`/`rotate-*`/`translate-*` (including `group-hover:` variants) each write a separate custom property; transitioning the composed value snaps instantly in Chromium. Compute such transforms as one literal `style.transform` string in JS.
 
 ## 16. Tests / build status
 
-Verified 2026-08-12 on this working tree (re-confirmed during the documentation reconciliation pass the same day):
+Measured 2026-08-12 on this working tree, after the documentation/hygiene cleanup pass:
 
 ```
-npx vitest run     → 63 files, 429 tests, all passing (~54s)
-npx tsc --noEmit   → clean
-npm run lint       → clean except 1 pre-existing warning in .scratch-shot.cjs (unused `path`)
+npx vitest run     → 63 test files, 429 tests, all passing (~34s)
+npx tsc --noEmit   → clean, no errors
+npm run lint       → clean, zero warnings
 ```
 
-**429 is the correct count.** The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; a measured run reports 429. The decision log is append-only and was not edited — trust this number, which is re-measured, over the one recorded there.
+**This is a fully clean baseline.** Lint previously carried one warning from `.scratch-shot.cjs`; those three committed scratch scripts have been deleted, so there are now no warnings at all. Treat any new warning as a regression introduced by the change that caused it.
+
+**429 is the correct test count.** The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; measured runs report 429. The decision log is append-only and was not edited — trust this re-measured number over the one recorded there.
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 
@@ -291,43 +294,22 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 - Unrouted but retained: `DashboardPage.tsx`, `decks/{DecksPage,DeckDetailPage}.tsx`, `review/{ReviewSession,useReviewSession}`.
 - Deleted for good (do not resurrect): `Sidebar.tsx`, `BottomNav.tsx`, `navItems.ts`, `PageHeaderOverride.tsx`, `TodayShell.tsx`, `CreateMenu.tsx`, `ProfileMenu.tsx`, `SettingsPage.tsx`, `src/auth/LoginPage.tsx`, `CardDetailPage`.
 
-## 20. Typography
+## 20. Visual system status
 
-Self-hosted variable webfonts via `@fontsource-variable` (bundled by Vite — no CDN request, works offline in the PWA), imported at the top of `src/index.css`:
+Status only. Usage rules — families, weights, scale, icon conventions, the orange rule, portal mechanics, the full token and radius tables — are owned by [`design-system.md`](design-system.md).
 
-| Package | Family | Token | Use |
-|---|---|---|---|
-| `@fontsource-variable/inter` | Inter Variable | `--font-sans` / `--font-itera-sans` | Everything by default. |
-| `@fontsource-variable/inter-tight` | Inter Tight Variable | `--font-itera-display` | **Sparingly** — large expressive moments only (Today's greeting, a completion title). |
-| `@fontsource-variable/jetbrains-mono` | JetBrains Mono Variable | `--font-mono` / `--font-itera-mono` | Code surfaces, CodeMirror (13px). |
+**Typography — implemented.** Inter, Inter Tight and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. `--font-itera-sans` / `--font-itera-mono` are aliases of `--font-sans` / `--font-mono`, not second stacks. **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
 
-`--font-itera-sans` / `--font-itera-mono` are aliases of `--font-sans` / `--font-mono`, not second stacks. The intended type scale (`xs 12 … display clamp(38px,5vw,58px)`) is documented in the spec and `design-system.md` but is **not** wired into CSS vars — components use literal Tailwind utilities and the scale is matched by eye.
+**Icons — implemented.** `lucide-react` is the only icon library, at a single version. There are no hand-drawn SVG icon files, with two one-off exceptions inside `SuggestedSessionHero.tsx` (a bracket motif and a logo-derived watermark).
 
-## 21. Icons
+**Tokens — implemented, light-only.** Two systems layer in `src/index.css`: the theme-aware general tokens (`:root` / `[data-theme]`), and an additive `.itera-scope` namespace applied through `IteraSurface`. The Itera scope defines the locked `--itera-*` palette **and re-points the general tokens to Itera values inside the scope** — that re-pointing is the compatibility mechanism by which every pre-existing v1 component reskins with zero edits, so do not "simplify" it away. There is no dark palette (see §4).
 
-**`lucide-react` (^1.21.0) is the only icon library.** There are no hand-drawn SVG icon files, with two explicit one-off exceptions inside `SuggestedSessionHero.tsx` (a bracket motif and a logo-derived watermark). Conventions: 14–16px inline/list icons, 15px nav/chrome icons; the circular badge pattern (36px circle, thin border, `text-itera-accent`, icon inherits `currentColor`) for labeled list rows; `ChevronRight` as the trailing affordance.
+**Shared UI foundation — implemented:** `Button`, `Field`, `FloatingPanel`, `dialogs`, `FlipCard` (v1) in `src/components/ui/`; `RichText`/`InlineText`; `LazyCodeView`/`LazyCodeEditor`; `cn()` and `newId()` in `src/lib/`. Contracts and props are in [`design-system.md`](design-system.md) §3; the hand-built-on-purpose rule (no markdown, chart, graph or popover dependency) is in [`architecture.md`](architecture.md).
 
-**The orange rule is locked (spec §4.4):** orange is a *signal*, not theme paint — one primary orange action plus at most two or three minor orange accents per screen. New icons default to `text-itera-muted` or `text-itera-ink-brand`.
+## 21. Visual-reference workflow
 
-## 22. Design tokens and shared components
+Reference mockups are **not tracked in this repository** — there is deliberately no `docs/references/` directory. They live at `C:\Users\SK\Desktop\itera-mockups\`, and [`design-system.md`](design-system.md) §14 defines the LOCKED / DIRECTION / CONCEPT tiers, the two standing exceptions, and the browser-verification requirement. Read it before implementing against any image.
 
-Two token systems layered in `src/index.css`:
-
-1. **General app tokens** — theme-aware (`:root` / `[data-theme='light'] `/ `[data-theme='dark']`), exposed to Tailwind via `@theme inline` (`bg-bg`, `text-muted`, `border-border`, …).
-2. **Itera tokens** — an additive, **light-only** namespace under `.itera-scope`, applied through `IteraSurface`. It defines the locked `--itera-*` palette (navy `#1e293b`, orange `#ff6902`, canvas/surface/ink/muted/border, success/error/warning, two shadows) **and re-points the general tokens to Itera values inside the scope**. That re-pointing is why every pre-existing v1 component reskins with zero edits.
-
-Radii: `--radius-itera-code 8px`, `-control 9px`, `-card 14px`, `-dialog 16px`, `-pill 999px`. Full tables in [`design-system.md`](design-system.md).
-
-Shared components: `Button` (primary/secondary/ghost/danger), `Field` + `fieldClass`/`selectClass`, `FloatingPanel` (portaled, viewport-aware, optional `manageFocus`), `dialogs` (`useDialogs()` → promise-based `confirm`/`prompt`/`alert`, replacing the `window.*` builtins), `RichText`/`InlineText` (zero-dependency, XSS-safe markdown subset — `` `code` ``, `**bold**`, `*italic*`, fenced blocks; underscores are deliberately **not** emphasis markers, for `snake_case` safety — **do not add a markdown library**), `LazyCodeView`/`LazyCodeEditor` (CodeMirror 6, lazy-loaded, `highlightLines` support), `cn()` (`clsx` + `tailwind-merge`), `newId()`.
-
-Anything portaled into `document.body` sits **outside** `.itera-scope` and must re-apply the `itera-scope` class on its own root plus cancel that class's canvas background with an inline `background: transparent`, or its `itera-*` tokens resolve to nothing.
-
-## 23. Visual-reference workflow
-
-Reference mockups are **not tracked in this repository**; there is no `docs/references/` directory. They live at `C:\Users\SK\Desktop\itera-mockups\` (`webapp/` holds the product mockups cited by filename throughout [`itera-decisions.md`](itera-decisions.md); `inspo-icons/`, `inspiration/` and `mobile/` hold direction material).
-
-Before implementing against any reference, read [`design-system.md`](design-system.md) §14 for the LOCKED / DIRECTION / CONCEPT tiers and the two standing exceptions that always apply (colors come from the Itera token palette, never from a mockup's hues; a mockup element with no backing feature is omitted or rendered as an `aria-disabled` "Soon" row, never fabricated). **UI work is verified in a real browser at 1440×900 and 390×844, not by tests alone** — `happy-dom` cannot see focus, visibility, popover placement or animated transforms.
-
-## 24. Where the rest of the documentation lives
+## 22. Where the rest of the documentation lives
 
 [`README.md`](README.md) is the index and states the source-of-truth hierarchy. In short: **the repository outranks every document**, this file outranks the reference docs on questions of status, and everything under [`archive/`](archive/) is history that never overrides a canonical doc.

@@ -2,7 +2,7 @@
 
 Record of material implementation/design assumptions made during the redesign, so later phases stay consistent. Append to this file; do not rewrite history — if a decision is later reversed, add a new entry noting the reversal rather than editing the old one.
 
-> **Reading note (added 2026-08-12, header only — no entry below was edited).** Three documents were archived during the documentation reconciliation pass (D144-D149 at the end of this file). Entries written before that date cite them at their old paths; they now live under `docs/archive/`:
+> **Reading note (added 2026-08-12, header only — no entry below was edited).** Three documents were archived during the documentation reconciliation pass (entries D144-D149). Entries written before that date cite them at their old paths; they now live under `docs/archive/`:
 >
 > | Cited as | Now at |
 > |---|---|
