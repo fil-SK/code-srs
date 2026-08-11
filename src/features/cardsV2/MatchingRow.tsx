@@ -9,8 +9,8 @@ import type { MatchingColumnFormState, MatchingRowFormState } from '@/domain/car
 // is fully keyboard-operable, and aria-disabled (not native `disabled`) on
 // boundary buttons so focus survives repeated moves instead of being
 // forcibly blurred by the browser — mirrors OrderingItemRow.tsx. Row order
-// is user-visible (it's the display order of MatchingView's accordion),
-// unlike a fixed column's option order.
+// is user-visible (it's the order of the term column on MatchingView's
+// board), unlike a shared column's option order.
 export function MatchingRow({
   row,
   index,

@@ -38,6 +38,15 @@ export interface MatchingRowFormState {
   cells: Record<string, string>
 }
 
+// A Matching card is capped at three columns total: the term column plus at
+// most two value columns. The board (MatchingBoard.tsx) draws a relationship
+// as a chain of hops across the gutters, and past three columns that becomes
+// both unreadable and too narrow to hold real text at the card's width. Three
+// is also exactly what the richest existing content needs — a legacy v1
+// `triple` matching card migrates to three columns — so no authored card is
+// left un-editable by the cap.
+export const MAX_MATCHING_VALUE_COLUMNS = 2
+
 export interface MatchingFormState {
   deckId: string
   prompt: string
@@ -290,6 +299,9 @@ export function validateMatchingForm(form: MatchingFormState): MatchingValidatio
 
   if (form.prompt.trim().length === 0) errors.push('Prompt is required.')
   if (form.columns.length < 1) errors.push('Add at least one more column.')
+  if (form.columns.length > MAX_MATCHING_VALUE_COLUMNS) {
+    errors.push(`A Matching card supports at most ${MAX_MATCHING_VALUE_COLUMNS + 1} columns.`)
+  }
   if (form.rows.length < 2) errors.push('Add at least 2 rows.')
 
   const sourceLabel = form.sourceLabel.trim() || 'the source column'
@@ -389,6 +401,7 @@ export function moveMatchingRow(
 }
 
 export function addMatchingColumn(form: MatchingFormState): MatchingFormState {
+  if (form.columns.length >= MAX_MATCHING_VALUE_COLUMNS) return form
   return {
     ...form,
     columns: [...form.columns, { id: newId(), label: '', fixed: false, options: [] }],

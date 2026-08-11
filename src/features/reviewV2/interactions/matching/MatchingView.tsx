@@ -2,19 +2,13 @@ import { useMemo } from 'react'
 import { RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
+import type { MatchingColumnItem } from '@/types/cardV2'
 import { gradeMatching, type MatchingResponse } from '@/domain/grading/matching'
 import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
-import { MatchingAccordionBack, MatchingAccordionFront } from './MatchingAccordion'
 import { MatchingBoard } from './MatchingBoard'
 
-// Two shapes of Matching, one grading path. A plain two-column card renders as
-// a connected board (MatchingBoard) — the mockup's layout, where each pair is
-// drawn as a line between the two facing columns. A card with more than one
-// value column keeps the accordion (MatchingAccordion), which is the only
-// layout that stays readable for 3-part relationships. Everything else — the
-// response shape, grading, submit gating — is identical for both.
 export function MatchingView({
   card,
   phase,
@@ -25,55 +19,47 @@ export function MatchingView({
   hideActions,
 }: InteractionViewProps<'matching'>) {
   const { interaction } = card
-  const [sourceCol, ...otherCols] = interaction.columns
+  const { columns } = interaction
+  const otherCols = columns.slice(1)
   const assign = (response as MatchingResponse | undefined) ?? {}
   const flipped = phase.kind !== 'presenting'
   const locked = flipped || Boolean(hideActions)
   const grade = flipped ? gradeMatching(interaction, assign) : null
-  const board = otherCols.length === 1 ? otherCols[0] : null
 
-  // Presentation order for the board's right column, held here (not inside
-  // MatchingBoard) because the front and back faces mount separate board
-  // instances - shuffling inside one would deal a different layout on reveal
-  // than the learner answered on. A fixed column's items are a shared option
-  // list in authored order, which carries no answer information; a unique
-  // column's are one per row in row order, so unshuffled would give it away.
-  const targetItems = useMemo(
-    () => (!board ? [] : board.fixed ? board.items : shuffle(board.items)),
-    [board],
-  )
-
-  function setCell(sourceId: string, columnId: string, itemId: string) {
-    if (locked) return
-    const nextForSource = { ...(assign[sourceId] ?? {}) }
-    if (nextForSource[columnId] === itemId) {
-      delete nextForSource[columnId] // clicking the current choice again clears it
-    } else {
-      nextForSource[columnId] = itemId
+  // Presentation order per value column, held here (not inside MatchingBoard)
+  // because the front and back faces mount separate board instances -
+  // shuffling inside one would deal a different layout on reveal than the
+  // learner answered on. A fixed column's items are a shared option list in
+  // authored order, which carries no answer information; a unique column's are
+  // one per row in row order, so unshuffled would give it away.
+  const presented = useMemo(() => {
+    const byColumn: Record<string, MatchingColumnItem[]> = {}
+    for (const col of otherCols) {
+      byColumn[col.id] = col.fixed ? col.items : shuffle(col.items)
     }
-    setResponse({ ...assign, [sourceId]: nextForSource })
-  }
+    return byColumn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns])
 
-  // Board-only: assigning a value that another term already claims moves it,
-  // so the unique-column invariant (no value paired twice) still holds.
-  function setPair(sourceId: string, targetItemId: string) {
-    if (locked || !board) return
+  // Filling a cell in a unique column takes the value from whichever term
+  // currently holds it, so "one value, one term" still holds there. A fixed
+  // column is a shared list by definition: any number of terms may land on the
+  // same value, and nothing is taken from anyone.
+  function setCell(sourceId: string, columnId: string, itemId: string | null) {
+    if (locked) return
+    const column = otherCols.find((c) => c.id === columnId)
     const next: MatchingResponse = {}
     for (const [sid, cells] of Object.entries(assign)) {
-      next[sid] =
-        !board.fixed && sid !== sourceId && cells[board.id] === targetItemId
-          ? Object.fromEntries(Object.entries(cells).filter(([cid]) => cid !== board.id))
-          : cells
+      const steals = itemId != null && !column?.fixed && sid !== sourceId && cells[columnId] === itemId
+      next[sid] = steals
+        ? Object.fromEntries(Object.entries(cells).filter(([cid]) => cid !== columnId))
+        : cells
     }
-    next[sourceId] = { ...(next[sourceId] ?? {}), [board.id]: targetItemId }
+    const own = { ...(next[sourceId] ?? {}) }
+    if (itemId == null) delete own[columnId]
+    else own[columnId] = itemId
+    next[sourceId] = own
     setResponse(next)
-  }
-
-  function clearPair(sourceId: string) {
-    if (locked || !board) return
-    const cells = { ...(assign[sourceId] ?? {}) }
-    delete cells[board.id]
-    setResponse({ ...assign, [sourceId]: cells })
   }
 
   const header = (size: 'front' | 'back') => (
@@ -88,9 +74,7 @@ export function MatchingView({
       />
       {size === 'front' && !locked && (
         <p className="text-xs font-medium text-itera-muted">
-          {board
-            ? 'Tap a term, then tap the value it pairs with.'
-            : 'Select an item, then choose its match.'}
+          Tap a term, then tap the value it pairs with.
         </p>
       )}
     </div>
@@ -110,26 +94,14 @@ export function MatchingView({
           <div className="flex flex-col gap-6">
             {header('front')}
 
-            {board ? (
-              <MatchingBoard
-                sourceCol={sourceCol}
-                targetCol={board}
-                targetItems={targetItems}
-                assign={assign}
-                setPair={setPair}
-                clearPair={clearPair}
-                locked={locked}
-                grade={null}
-              />
-            ) : (
-              <MatchingAccordionFront
-                sourceCol={sourceCol}
-                otherCols={otherCols}
-                assign={assign}
-                setCell={setCell}
-                locked={locked}
-              />
-            )}
+            <MatchingBoard
+              columns={columns}
+              presented={presented}
+              assign={assign}
+              setCell={setCell}
+              locked={locked}
+              grade={null}
+            />
 
             {!hideActions && (
               <div className="flex justify-end">
@@ -151,20 +123,14 @@ export function MatchingView({
           <div className="flex flex-col gap-6">
             {header('back')}
 
-            {board ? (
-              <MatchingBoard
-                sourceCol={sourceCol}
-                targetCol={board}
-                targetItems={targetItems}
-                assign={assign}
-                setPair={setPair}
-                clearPair={clearPair}
-                locked
-                grade={grade}
-              />
-            ) : (
-              <MatchingAccordionBack sourceCol={sourceCol} otherCols={otherCols} grade={grade} />
-            )}
+            <MatchingBoard
+              columns={columns}
+              presented={presented}
+              assign={assign}
+              setCell={setCell}
+              locked
+              grade={grade}
+            />
 
             {grade && (
               <div

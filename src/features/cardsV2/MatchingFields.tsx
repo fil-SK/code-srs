@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Field, fieldClass } from '@/components/ui/Field'
 import {
+  MAX_MATCHING_VALUE_COLUMNS,
   addMatchingColumn,
   addMatchingOption,
   addMatchingRow,
@@ -20,12 +21,13 @@ import {
 import { MatchingColumnEditor } from './MatchingColumnEditor'
 import { MatchingRow } from './MatchingRow'
 
-// The centerpiece is two lists — "other" columns (add/remove, each with an
-// optional fixed-value-list sub-editor) and rows (add/remove/reorder) — plus
-// the shared Prompt/source-label/Tip/Explanation fields. Column reordering
-// is out of scope (add/remove only); row order is kept because it's
-// genuinely user-visible (display order in MatchingView's accordion),
-// unlike a fixed column's option order. Mirrors OrderingFields.tsx's
+// The centerpiece is two lists — "other" columns (add/remove up to
+// MAX_MATCHING_VALUE_COLUMNS, each with an optional fixed-value-list
+// sub-editor) and rows (add/remove/reorder) — plus the shared
+// Prompt/source-label/Tip/Explanation fields. Column reordering is out of
+// scope (add/remove only); row order is kept because it's genuinely
+// user-visible (the term column's order on MatchingView's board), unlike a
+// fixed column's option order. Mirrors OrderingFields.tsx's
 // set(key, value) + pure-helper-from-domain-module composition, except the
 // mutation helpers themselves live in matchingForm.ts (not local closures)
 // so their cascade-cleanup invariants (dangling column/option references)
@@ -86,9 +88,15 @@ export function MatchingFields({
             }
           />
         ))}
-        <Button type="button" variant="ghost" onClick={() => onChange(addMatchingColumn(form))}>
-          <Plus size={14} /> Add column
-        </Button>
+        {form.columns.length < MAX_MATCHING_VALUE_COLUMNS ? (
+          <Button type="button" variant="ghost" onClick={() => onChange(addMatchingColumn(form))}>
+            <Plus size={14} /> Add column
+          </Button>
+        ) : (
+          <p className="text-xs text-itera-muted">
+            A Matching card holds at most {MAX_MATCHING_VALUE_COLUMNS + 1} columns.
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

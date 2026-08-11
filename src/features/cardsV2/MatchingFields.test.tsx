@@ -106,13 +106,26 @@ describe('MatchingFields', () => {
     expect(latest?.rows.every((r) => !(newColumnId in r.cells))).toBe(true)
   })
 
+  it('replaces Add column with the cap notice once the card holds 3 columns', async () => {
+    const user = userEvent.setup()
+    render(<Harness initial={threeRowForm()} />)
+
+    await user.click(screen.getByRole('button', { name: /Add column/ }))
+
+    expect(screen.queryByRole('button', { name: /Add column/ })).toBeNull()
+    expect(screen.getByText('A Matching card holds at most 3 columns.')).toBeTruthy()
+
+    await user.click(screen.getAllByLabelText('Remove column')[1])
+    expect(screen.getByRole('button', { name: /Add column/ })).toBeTruthy()
+  })
+
   it('toggling a column fixed seeds 2 options; add/rename/remove options down to the 2-option floor', async () => {
     const user = userEvent.setup()
     let latest: MatchingFormState | undefined
     render(<Harness initial={threeRowForm()} onState={(f) => (latest = f)} />)
 
     const toggle = screen.getByRole('checkbox', {
-      name: 'Pick from a fixed list (shared across rows)',
+      name: 'One shared list of values (several terms can connect to the same value)',
     })
     await user.click(toggle)
     expect(latest?.columns[0].fixed).toBe(true)
@@ -140,7 +153,7 @@ describe('MatchingFields', () => {
     render(<Harness initial={threeRowForm()} onState={(f) => (latest = f)} />)
 
     await user.click(
-      screen.getByRole('checkbox', { name: 'Pick from a fixed list (shared across rows)' }),
+      screen.getByRole('checkbox', { name: 'One shared list of values (several terms can connect to the same value)' }),
     )
     const columnId = latest!.columns[0].id
     const yesOptionId = latest!.columns[0].options[0].id

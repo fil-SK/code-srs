@@ -39,7 +39,7 @@ src/
 │   │                   also library-shared/library-browser/library-deck (the Phase H preview slice `features/library/` was adapted from — still isolated, untouched)
 │   ├── drafts/         DraftsPage, seedContent.ts
 │   ├── library/        LibraryBrowserPage (/decks), LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (CollectionNav, CollectionNavDrawer, DeckMark, MasteryRing, MeterBar, EmptyState, useIsWideLibrary)
-│   ├── preview/        PreviewPage — generic v1 card preview, no scheduling impact
+│   ├── preview/        PreviewPage — flip through cards, no scheduling impact (renders the v2 shell)
 │   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2), legacy ReviewSession/useReviewSession (v1, unrouted)
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
 │   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG) — hidden from primary nav, route/data preserved
@@ -205,7 +205,7 @@ interface CardTypeDefinition<T extends CardType> {
 }
 ```
 
-`src/features/cards/registry/index.ts` registers all 8 as a **full** `{ [T in CardType]: CardTypeDefinition<T> }` — a new `CardType` fails to compile until it's registered here. `CardView`, `ReviewSession`, and `PreviewPage` render generically through this registry with no per-type branching.
+`src/features/cards/registry/index.ts` registers all 8 as a **full** `{ [T in CardType]: CardTypeDefinition<T> }` — a new `CardType` fails to compile until it's registered here. `CardView` and `ReviewSession` render generically through this registry with no per-type branching. Neither is routed any more: `/review` renders `ReviewSessionV2` and `/preview` renders `ReviewSessionScreen`, both migrating v1 cards on read into the v2 interaction registry instead (`itera-decisions.md` D128).
 
 ### Checklist: adding a new v1 card type
 
@@ -296,7 +296,7 @@ Production wiring: `src/features/review/ReviewSessionV2.tsx` migrates each v1 `C
 
 - `ReviewSessionScreen.tsx` — owns the phase state machine (`reviewPhase.ts`): `presenting -> submitting -> feedback -> rating -> transitioning`, with a `RESET` back to `presenting`. Self-graded types (Recall) skip `submitting`. `ObjectiveResult = {correct: boolean, score?: number}` — `score` supports partial credit (Matching/Ordering/Walkthrough), which v1's `autoGrade` has no equivalent for.
 - `components/` — `IteraSurface`/`ForceLightTheme`, an accessible `FlipCard` (deliberately separate from `src/components/ui/FlipCard.tsx`, which lacks keyboard/ARIA support), `FlashcardSurface`, `TipPanel`/`ExplanationPanel`, `RatingControls`, `ReviewTopBar` (exit, position counter, shortcut hint — no logo/nav/deck metadata, "tested and rejected because they distract from recall"), `InteractionLabel`.
-- `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting an `InteractionDefinition`. `matching/` is the one type with two bodies behind its single view: a two-column connected board (`MatchingBoard.tsx`, terms and values joined by measured SVG connectors — the reference-mockup layout, used whenever the card has exactly one value column) and the older accordion (`MatchingAccordion.tsx`, used for 3+-column relationships, where facing columns can't be drawn). See `itera-decisions.md` D118-D123.
+- `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting an `InteractionDefinition`. `matching/` renders through `MatchingBoard.tsx`: columns side by side, with each relationship drawn as measured SVG connectors (a chain of hops when the card has two value columns). A Matching card is capped at three columns — `MAX_MATCHING_VALUE_COLUMNS` in `domain/cardsV2/matchingForm.ts`, enforced in `addMatchingColumn`, `validateMatchingForm`, and the editor's Add-column control. A **shared** (`fixed`) column is how one value serves several terms at once; an unshared column stays one-to-one, and assigning its value to another term moves it. See `itera-decisions.md` D118-D127.
 
 `interactions/types.ts`:
 

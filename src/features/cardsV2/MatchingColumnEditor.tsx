@@ -5,9 +5,12 @@ import { cn } from '@/lib/cn'
 import type { MatchingColumnFormState } from '@/domain/cardsV2/matchingForm'
 import { MatchingOptionRow } from './MatchingOptionRow'
 
-// One "other" column's header: label, a fixed-list toggle (shares one value
-// list across every row, graded by value equality — e.g. Yes/No), and,
-// when fixed, its option list. No native <input type="checkbox"> per spec —
+// One "other" column's header: label, a shared-list toggle, and, when shared,
+// its option list. A shared column is how a value serves more than one term
+// at once (e.g. a Yes/No column, where many terms land on "Yes"): its values
+// are one list for the whole card rather than one per row, so nothing is
+// "taken" when a term connects to one. An unshared column stays one-to-one —
+// each term owns its value, and giving it to another term moves it. No native <input type="checkbox"> per spec —
 // the toggle is a small custom role="checkbox" button, matching
 // OrderingFields.tsx/MultipleChoiceFields.tsx's convention.
 export function MatchingColumnEditor({
@@ -67,7 +70,7 @@ export function MatchingColumnEditor({
         >
           {column.fixed && <span className="h-2 w-2 rounded-[1px] bg-white" />}
         </button>
-        Pick from a fixed list (shared across rows)
+        One shared list of values (several terms can connect to the same value)
       </label>
 
       {column.fixed && (

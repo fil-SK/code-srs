@@ -1,23 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { FlipCard } from '@/components/ui/FlipCard'
-import { cn } from '@/lib/cn'
-import { CardTypeBadge } from '@/features/cards/CardTypeBadge'
-import { CardView } from '@/features/cards/CardView'
-import { getCardDefinition } from '@/features/cards/registry'
-import type { CardResponse } from '@/features/cards/registry/types'
+import { migrateCard } from '@/domain/migration/cardMigration'
+import { initialSchedulingState } from '@/domain/scheduling/state'
 import { subtreeIds } from '@/domain/decks/tree'
+import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
+import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
+import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
 
-const noop = () => {}
-const faceClass =
-  'rounded-2xl border border-border bg-panel p-7 shadow-[var(--shadow)] min-h-[17rem] flex flex-col'
-
-// Don't let card shortcuts (arrows / space) fire while typing in an input,
-// select, or the code editor.
+// Don't let card shortcuts (arrows) fire while typing in an input, select, or
+// the code editor.
 function isEditingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null
   return Boolean(
@@ -26,10 +21,22 @@ function isEditingTarget(target: EventTarget | null): boolean {
 }
 
 // Browse a deck's cards (and its subdecks') one by one. You can attempt the
-// interactive cards (MCQ, completion, ordering, matching) and reveal how you
-// did, but nothing is recorded: no grading, no review logs, no scheduling.
+// interactive cards and reveal how you did, but nothing is recorded: no
+// grading, no review logs, no scheduling.
+//
+// The card itself is the real Review experience — `migrateCard` into the v2
+// model, then `ReviewSessionScreen` with its session-only chrome hidden — the
+// same path `/review` (ReviewSessionV2) and `cards/:id/study`
+// (CardStudyPreviewPage) already take. It previously rendered the v1
+// `CardView`/registry instead, which is why a card here could look nothing
+// like the same card in a real session: two independent renderers for one
+// card. Only this page's own chrome (back link, card counter, prev/next) is
+// still local; reveal/flip/submit/grading/tip/explanation all belong to the
+// shared shell now, which is also what retired this page's separate
+// FlipCard/"Check answer"/result-banner/"Show question" controls.
 export function PreviewPage() {
   const [params] = useSearchParams()
+  const navigate = useNavigate()
   const deckParam = params.get('deck')
   const cardParam = params.get('card')
   const fromParam = params.get('from')
@@ -70,68 +77,46 @@ export function PreviewPage() {
   }
 
   const [index, setIndex] = useState(0)
-  const [revealed, setRevealed] = useState(false)
-  const [response, setResponse] = useState<CardResponse>(undefined)
 
   useEffect(() => {
     setIndex(0)
-    setRevealed(false)
-    setResponse(undefined)
   }, [deckParam, cardParam])
 
   const safeIndex = Math.min(index, Math.max(0, cards.length - 1))
   const current = cards[safeIndex]
 
-  const def = current ? getCardDefinition(current.type) : undefined
-  const interactive = def?.interactive ?? false
-  const useFlip = (def?.reveal ?? 'slide') === 'flip'
-  const responseReady =
-    !interactive ||
-    (current ? (def?.isResponseReady?.(response, current.content) ?? true) : true)
-  const autoResult =
-    revealed && current && def?.autoGrade
-      ? def.autoGrade(current.content, response)
-      : null
+  // The one lazy/on-read migration this codebase allows (see cardMigration.ts):
+  // every v1 card renders through the v2 interaction registry here.
+  const cardV2 = useMemo(() => (current ? migrateCard(current) : undefined), [current])
 
   function go(delta: number) {
     setIndex(() => Math.min(cards.length - 1, Math.max(0, safeIndex + delta)))
-    setRevealed(false)
-    setResponse(undefined)
   }
 
   // Jump to a 0-based card index (from the "Card N of M" input).
   function jumpTo(target: number) {
     if (!Number.isFinite(target)) return
     setIndex(Math.min(cards.length - 1, Math.max(0, target)))
-    setRevealed(false)
-    setResponse(undefined)
   }
 
-  function reveal() {
-    if (responseReady) setRevealed(true)
-  }
-
+  // Only prev/next lives here — reveal/submit/rating shortcuts belong to
+  // ReviewSessionScreen's own listener, which is mounted below.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (isEditingTarget(e.target)) return
       if (e.key === 'ArrowRight') go(1)
       else if (e.key === 'ArrowLeft') go(-1)
-      else if (e.code === 'Space') {
-        e.preventDefault()
-        if (revealed) setRevealed(false)
-        else reveal()
-      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cards.length, safeIndex, revealed, responseReady])
+  }, [cards.length, safeIndex])
 
   if (allCards.isLoading || (deckParam && decks.isLoading)) {
     return <p className="text-sm text-muted">Loading…</p>
   }
 
-  if (cards.length === 0 || !current || !def) {
+  if (cards.length === 0 || !current || !cardV2) {
     return (
       <div className="mx-auto max-w-md rounded-card border border-dashed border-border bg-panel p-10 text-center">
         <div className="text-lg font-semibold">
@@ -153,25 +138,19 @@ export function PreviewPage() {
     )
   }
 
-  const { Question, Answer } = def
-
-  const header = (
-    <div className="mb-4 flex items-center gap-2">
-      <CardTypeBadge type={current.type} />
-      {current.tags.map((tag) => (
-        <span key={tag} className="font-mono text-[11.5px] text-blue">
-          #{tag}
-        </span>
-      ))}
-    </div>
-  )
-
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-4xl">
       <div className="mb-4 flex items-center justify-between text-xs text-muted">
-        <Link to={back.to} className="hover:text-text">
-          {back.label}
-        </Link>
+        <span className="flex items-center gap-2">
+          <Link to={back.to} className="hover:text-text">
+            {back.label}
+          </Link>
+          {current.tags.map((tag) => (
+            <span key={tag} className="font-mono text-[11.5px] text-blue">
+              #{tag}
+            </span>
+          ))}
+        </span>
         <span className="flex items-center gap-1">
           {cardParam ? (
             'Single card'
@@ -194,152 +173,33 @@ export function PreviewPage() {
         </span>
       </div>
 
-      {useFlip ? (
-        <FlipCard
-          flipped={revealed}
-          faceClassName={faceClass}
-          onFrontClick={() => setRevealed(true)}
-          front={
-            <>
-              {header}
-              <div className="flex flex-1 flex-col justify-center">
-                <Question
-                  content={current.content}
-                  revealed={false}
-                  response={undefined}
-                  setResponse={noop}
-                />
-              </div>
-              <div className="mt-6 text-center text-xs font-medium text-faint">
-                Tap or press Space to flip
-              </div>
-            </>
-          }
-          back={
-            <>
-              {header}
-              <div className="flex-1">
-                <Answer content={current.content} response={undefined} />
-              </div>
-            </>
-          }
+      <IteraSurface>
+        <ReviewSessionScreen
+          key={current.id}
+          card={cardV2}
+          definition={getInteractionDefinition(cardV2.interaction.type)}
+          current={safeIndex + 1}
+          total={cards.length}
+          onExit={() => navigate(back.to)}
+          schedulingBefore={initialSchedulingState()}
+          hideTopBar
+          hideRating
         />
-      ) : (
-        <div className={faceClass}>
-          {header}
-          <CardView
-            card={current}
-            revealed={revealed}
-            response={response}
-            setResponse={setResponse}
-          />
+      </IteraSurface>
 
-          {!revealed ? (
-            <Button
-              variant="secondary"
-              className="mt-5 w-full"
-              disabled={!responseReady}
-              onClick={reveal}
-            >
-              {interactive ? 'Check answer' : 'Show answer'}
-            </Button>
-          ) : (
-            autoResult && (
-              <div
-                className={cn(
-                  'reveal-in mt-4 rounded-[9px] px-3.5 py-2.5 text-sm font-semibold',
-                  autoResult.correct
-                    ? 'bg-green/10 text-green'
-                    : 'bg-red/10 text-red',
-                )}
-              >
-                {autoResult.correct ? 'Correct' : 'Incorrect'}
-                <span className="ml-1.5 font-normal text-muted">
-                  · preview, nothing recorded
-                </span>
-              </div>
-            )
-          )}
+      {!cardParam && (
+        <div className="mt-4 flex items-center justify-between">
+          <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
+            <ChevronLeft size={16} /> Prev
+          </Button>
+          <Button
+            onClick={() => go(1)}
+            disabled={safeIndex === cards.length - 1}
+          >
+            Next <ChevronRight size={16} />
+          </Button>
         </div>
       )}
-
-      <div className="mt-4 flex items-center justify-between">
-        {cardParam ? (
-          <div className="flex-1 text-center">
-            <RevealToggle
-              revealed={revealed}
-              useFlip={useFlip}
-              interactive={interactive}
-              onShowQuestion={() => setRevealed(false)}
-              onReveal={reveal}
-            />
-          </div>
-        ) : (
-          <>
-            <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
-              <ChevronLeft size={16} /> Prev
-            </Button>
-            <RevealToggle
-              revealed={revealed}
-              useFlip={useFlip}
-              interactive={interactive}
-              onShowQuestion={() => setRevealed(false)}
-              onReveal={reveal}
-            />
-            <Button
-              onClick={() => go(1)}
-              disabled={safeIndex === cards.length - 1}
-            >
-              Next <ChevronRight size={16} />
-            </Button>
-          </>
-        )}
-      </div>
     </div>
-  )
-}
-
-// Bottom-center control: flip back to the question after revealing, or (for
-// flip cards) reveal. For interactive cards the in-card "Check answer" button
-// is the primary reveal, so this just hints before revealing.
-function RevealToggle({
-  revealed,
-  useFlip,
-  interactive,
-  onShowQuestion,
-  onReveal,
-}: {
-  revealed: boolean
-  useFlip: boolean
-  interactive: boolean
-  onShowQuestion: () => void
-  onReveal: () => void
-}) {
-  if (revealed) {
-    return (
-      <button
-        type="button"
-        onClick={onShowQuestion}
-        className="text-sm font-semibold text-accent hover:underline"
-      >
-        Show question
-      </button>
-    )
-  }
-  if (useFlip) {
-    return (
-      <button
-        type="button"
-        onClick={onReveal}
-        className="text-sm font-semibold text-accent hover:underline"
-      >
-        Flip to answer
-      </button>
-    )
-  }
-  return (
-    <span className="text-xs text-faint">
-      {interactive ? 'Answer, then Check' : 'Show the answer above'}
-    </span>
   )
 }

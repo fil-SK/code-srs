@@ -34,7 +34,8 @@ const interaction: MatchingInteraction = {
   ],
 }
 
-// A third column forces the accordion layout instead of the connected board.
+// Three columns — the maximum — with the third a shared list, so several terms
+// can connect to the same value in it.
 const threeColumnInteraction: MatchingInteraction = {
   type: 'matching',
   columns: [
@@ -192,32 +193,55 @@ describe('MatchingView (two-column board)', () => {
   })
 })
 
-describe('MatchingView (3+ columns, accordion)', () => {
+describe('MatchingView (three columns)', () => {
   afterEach(() => cleanup())
 
-  it('fills every column of a relationship from one expanded row', async () => {
+  it('names every column in a term’s accessible state, not just the first', async () => {
     const user = userEvent.setup()
     renderScreen(threeColumnInteraction)
 
-    await user.click(screen.getByRole('button', { name: /Stack/ }))
-    const definition = screen.getByRole('button', { name: LIFO })
-    await user.click(definition)
-    expect(definition.getAttribute('aria-pressed')).toBe('true')
+    expect(
+      screen.getByRole('button', { name: 'Stack, Definition: not set, Region: not set' }),
+    ).toBeTruthy()
 
-    await user.click(screen.getByRole('button', { name: 'Automatic' }))
-    await user.click(screen.getByRole('button', { name: /Stack/ })) // collapse
-    expect(screen.getByText(`Definition: ${LIFO} · Region: Automatic`)).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /^Stack, / }))
+    await user.click(unpaired(LIFO))
+    await user.click(screen.getByRole('button', { name: /^Stack, / }))
+    await user.click(unpaired('Automatic'))
+
+    expect(
+      screen.getByRole('button', { name: `Stack, Definition: ${LIFO}, Region: Automatic` }),
+    ).toBeTruthy()
   })
 
-  it('a unique-column value already claimed by another row is unavailable, not silently reassignable', async () => {
+  it('continues a relationship along the chain: picking a value, then a value in the next column, fills the term that owns the first', async () => {
     const user = userEvent.setup()
     renderScreen(threeColumnInteraction)
 
-    await user.click(screen.getByRole('button', { name: /Stack/ }))
-    await user.click(screen.getByRole('button', { name: LIFO }))
+    await user.click(screen.getByRole('button', { name: /^Heap, / }))
+    await user.click(unpaired(MANUAL))
 
-    await user.click(screen.getByRole('button', { name: /Heap/ }))
-    const takenChip = screen.getByRole('button', { name: `${LIFO} (used)` }) as HTMLButtonElement
-    expect(takenChip.disabled).toBe(true)
+    // No term selected — the definition already belongs to Heap, so the Region
+    // picked next lands on Heap without naming it again.
+    await user.click(pairedWith(MANUAL, 'Heap'))
+    await user.click(unpaired('Dynamic'))
+
+    expect(
+      screen.getByRole('button', { name: `Heap, Definition: ${MANUAL}, Region: Dynamic` }),
+    ).toBeTruthy()
+  })
+
+  it('a shared-list value serves several terms at once, taking it from no one', async () => {
+    const user = userEvent.setup()
+    renderScreen(threeColumnInteraction)
+
+    await user.click(screen.getByRole('button', { name: /^Stack, / }))
+    await user.click(unpaired('Automatic'))
+    await user.click(screen.getByRole('button', { name: /^Heap, / }))
+    await user.click(pairedWith('Automatic', 'Stack'))
+
+    expect(pairedWith('Automatic', 'Stack, Heap')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Stack, .*Region: Automatic/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Heap, .*Region: Automatic/ })).toBeTruthy()
   })
 })

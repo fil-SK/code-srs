@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Card } from '@/types'
 import type { CardV2Record } from '@/types/cardV2'
 import {
+  MAX_MATCHING_VALUE_COLUMNS,
   addMatchingColumn,
   addMatchingOption,
   addMatchingRow,
@@ -384,6 +385,21 @@ describe('validateMatchingForm', () => {
     expect(result.errors).toContain('Add at least one more column.')
   })
 
+  it('rejects more than 3 columns, so data that predates the cap can’t be saved past it', () => {
+    const fourColumn = {
+      ...twoColumn,
+      columns: [
+        ...twoColumn.columns,
+        { id: 'third', label: 'Third', fixed: false, options: [] },
+        { id: 'fourth', label: 'Fourth', fixed: false, options: [] },
+      ],
+      rows: twoColumn.rows.map((r) => ({ ...r, cells: { ...r.cells, third: 'x', fourth: 'y' } })),
+    }
+    const result = validateMatchingForm(fourColumn)
+    expect(result.canSave).toBe(false)
+    expect(result.errors).toContain('A Matching card supports at most 3 columns.')
+  })
+
   it('requires at least 2 rows', () => {
     const result = validateMatchingForm({ ...twoColumn, rows: [twoColumn.rows[0]] })
     expect(result.canSave).toBe(false)
@@ -528,6 +544,14 @@ describe('pure mutation helpers', () => {
     const readded = addMatchingColumn(removed)
     expect(readded.columns[1].id).not.toBe(thirdId)
     expect(readded.columns).toHaveLength(2)
+  })
+
+  it('addMatchingColumn stops at the 3-column cap (2 value columns), returning the form untouched', () => {
+    const withThird = addMatchingColumn(twoColumn)
+    expect(withThird.columns).toHaveLength(MAX_MATCHING_VALUE_COLUMNS)
+
+    const capped = addMatchingColumn(withThird)
+    expect(capped).toBe(withThird)
   })
 
   it('setColumnFixed(true) seeds 2 blank options and resets every row cell for that column', () => {

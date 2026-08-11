@@ -201,10 +201,14 @@ export function ReviewSessionScreen<T extends InteractionType>({
           editor's own column (CardEditorShell's EDITOR_COL, 42rem/max-w-2xl)
           - noticeably narrower than the full session width the top bar
           uses, matching the reference mockups (top bar spans edge to edge,
-          the card is a centered, narrower column below it). */}
+          the card is a centered, narrower column below it). A type may ask
+          for the wider column when its own content genuinely needs it (only
+          Matching does, and only for a three-column board, where 42rem
+          leaves each column too narrow to hold a line of text). */}
       <div
         className={cn(
-          'itera-card-enter mx-auto max-w-2xl',
+          'itera-card-enter mx-auto',
+          definition.widthFor?.(card.interaction) === 'wide' ? 'max-w-4xl' : 'max-w-2xl',
           entered && 'itera-card-enter-active',
         )}
       >

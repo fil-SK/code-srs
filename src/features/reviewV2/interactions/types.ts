@@ -49,5 +49,10 @@ export interface InteractionDefinition<T extends InteractionType> {
     interaction: Extract<CardInteraction, { type: T }>,
     response: InteractionResponse,
   ) => ObjectiveResult | null
+  // Which card column this interaction needs, decided per card rather than
+  // per type: 'default' (the shell's normal 42rem flashcard column) unless
+  // the content itself can't fit in it. Only Matching implements this, and
+  // only for a three-column board.
+  widthFor?: (interaction: Extract<CardInteraction, { type: T }>) => 'default' | 'wide'
   View: ComponentType<InteractionViewProps<T>>
 }
