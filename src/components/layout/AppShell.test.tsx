@@ -64,9 +64,9 @@ describe('AppShell', () => {
     expect(today.className).not.toMatch(/border-itera-accent/)
   })
 
-  it('renders a Profile menu and no global Search or Create action', async () => {
+  it('renders the account menu and no global Search or Create action', async () => {
     renderAt('/decks')
-    expect(await screen.findByRole('button', { name: 'Profile' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Open account menu' })).toBeTruthy()
     expect(screen.queryByText('Search')).toBeNull()
     expect(screen.queryByRole('button', { name: /Create/ })).toBeNull()
   })
@@ -76,6 +76,6 @@ describe('AppShell', () => {
     expect(await screen.findByText('Review content')).toBeTruthy()
     expect(screen.queryByText('Itera')).toBeNull()
     expect(screen.queryByRole('link', { name: 'Library' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Profile' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Open account menu' })).toBeNull()
   })
 })

@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { TopNav } from './TopNav'
-import { ProfileMenu } from './ProfileMenu'
+import { AccountMenu } from './AccountMenu'
 import { StreakBadge } from './StreakBadge'
 import { primaryNavLinks } from './primaryNavLinks'
 
@@ -23,7 +23,7 @@ export function AppShell() {
         rightSlot={
           <>
             <StreakBadge />
-            <ProfileMenu />
+            <AccountMenu />
           </>
         }
       />

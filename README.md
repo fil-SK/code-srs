@@ -63,7 +63,7 @@ Grading model: interactive types (MCQ, completion, ordering, matching) **auto-de
 - **Preview** — try cards with **no scheduling impact**: answer the interactive ones and **Check** to see if you were right, flip the self-graded ones, and **jump to any card by number**. Nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
 - **Stats** — streak, retention, reviews/day, and upcoming load.
-- **Settings** — theme, JSON import/export, and (in cloud mode) your account / sign-out.
+- **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The other sections (profile, email & password, appearance, notifications, privacy, connected devices) are visible but greyed out: they are planned, not built. Sign-out lives in the avatar menu and only appears in cloud mode.
 
 **Markdown** works in every card's prose: `` `inline code` ``, `**bold**`, `*italic*`, and:
 
@@ -83,7 +83,7 @@ The app talks to storage through a single repository interface, with two interch
 - **Local (default).** With no configuration it uses **IndexedDB** (Dexie). Everything stays in that browser. Zero setup, fully offline — but not shared across devices.
 - **Cloud (optional).** Provide Supabase credentials and it uses **Postgres** with per-user **Row Level Security** and **magic-link** sign-in, so your cards sync across every device. Online-first.
 
-You can move data between modes (or make a backup) anytime via **Settings → Export / Import JSON**.
+You can move data between modes (or make a backup) anytime via **Account settings → Import / Export**.
 
 ---
 
@@ -147,7 +147,7 @@ Every push to `main` then auto-deploys. The PWA (`registerType: 'autoUpdate'`) r
 
 ## Generating cards with AI
 
-Want to bulk-create cards from study material? [`docs/ai-card-prompt.md`](docs/ai-card-prompt.md) is a ready-made prompt you can give another AI chat: it explains the full JSON backup schema and every card-content shape. Paste your notes, get back a JSON file, and load it via **Settings → Import JSON → Merge** (additive — it won't overwrite existing cards).
+Want to bulk-create cards from study material? [`docs/ai-card-prompt.md`](docs/ai-card-prompt.md) is a ready-made prompt you can give another AI chat: it explains the full JSON backup schema and every card-content shape. Paste your notes, get back a JSON file, and load it via **Account settings → Import / Export → Import JSON → Merge** (additive — it won't overwrite existing cards).
 
 ---
 

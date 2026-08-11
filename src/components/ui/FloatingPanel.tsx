@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/cn'
 
@@ -17,6 +24,8 @@ const EDGE = 8 // minimum distance the panel keeps from the viewport edge
 // stacking contexts that a z-index inside the row can't escape. Portaling out
 // sidesteps all of it, and lets the panel flip above its anchor when there
 // isn't room below.
+const ITEM_SELECTOR = '[role="menuitem"]'
+
 export function FloatingPanel({
   anchor,
   onClose,
@@ -25,6 +34,8 @@ export function FloatingPanel({
   className,
   role,
   ariaLabel,
+  manageFocus = false,
+  returnFocusTo,
 }: {
   anchor: HTMLElement | null
   onClose: () => void
@@ -33,6 +44,15 @@ export function FloatingPanel({
   className?: string
   role?: string
   ariaLabel?: string
+  /**
+   * Opt in to real menu keyboard semantics: focus moves into the panel on
+   * open, Arrow/Home/End walk the `role="menuitem"` children, Tab closes.
+   * Off by default so the row kebab menus (which are pointer-driven and were
+   * shipped without it) keep behaving exactly as they did.
+   */
+  manageFocus?: boolean
+  /** Where focus goes when the panel unmounts. Usually the trigger. */
+  returnFocusTo?: HTMLElement | null
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
@@ -91,6 +111,69 @@ export function FloatingPanel({
     }
   }, [anchor, onClose])
 
+  // Read through a ref so a changing `returnFocusTo` (the trigger's ref is
+  // null on the very first render) never re-runs the effect and re-steals
+  // focus mid-interaction.
+  const returnFocusRef = useRef(returnFocusTo)
+  returnFocusRef.current = returnFocusTo
+
+  // Gated on `pos`, not just mount: until the panel has been measured it is
+  // still `visibility: hidden`, and focus() on a hidden element is a silent
+  // no-op — the menu would open with focus stranded on the trigger.
+  const placed = pos !== null
+  const focusedIn = useRef(false)
+
+  useEffect(() => {
+    if (!manageFocus || !placed || focusedIn.current) return
+    focusedIn.current = true
+    const panel = panelRef.current
+    const enabled = panel?.querySelector<HTMLElement>(
+      `${ITEM_SELECTOR}:not([aria-disabled="true"])`,
+    )
+    ;(enabled ?? panel?.querySelector<HTMLElement>(ITEM_SELECTOR) ?? panel)?.focus()
+  }, [manageFocus, placed])
+
+  useEffect(() => {
+    if (!manageFocus) return
+    const panel = panelRef.current
+    return () => {
+      // Only pull focus back when it is still ours to move. Clicking straight
+      // into another control should leave focus where the user put it.
+      const active = document.activeElement
+      if (active && active !== document.body && !panel?.contains(active)) return
+      returnFocusRef.current?.focus()
+    }
+  }, [manageFocus])
+
+  function onPanelKeyDown(e: ReactKeyboardEvent<HTMLDivElement>) {
+    const panel = panelRef.current
+    if (!manageFocus || !panel) return
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      onClose()
+      return
+    }
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
+    const items = Array.from(panel.querySelectorAll<HTMLElement>(ITEM_SELECTOR))
+    if (items.length === 0) return
+    e.preventDefault()
+    const current = items.indexOf(document.activeElement as HTMLElement)
+    const last = items.length - 1
+    const next =
+      e.key === 'Home'
+        ? 0
+        : e.key === 'End'
+          ? last
+          : e.key === 'ArrowDown'
+            ? current < 0
+              ? 0
+              : (current + 1) % items.length
+            : current < 0
+              ? last
+              : (current - 1 + items.length) % items.length
+    items[next]?.focus()
+  }
+
   return createPortal(
     // document.body sits outside `.itera-scope`, so the portal has to
     // re-establish the token scope itself. The class also paints a canvas
@@ -104,6 +187,8 @@ export function FloatingPanel({
         ref={panelRef}
         role={role}
         aria-label={ariaLabel}
+        tabIndex={manageFocus ? -1 : undefined}
+        onKeyDown={onPanelKeyDown}
         style={{
           position: 'fixed',
           top: pos?.top ?? 0,

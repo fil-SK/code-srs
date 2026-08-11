@@ -16,7 +16,7 @@ import { CardStudyPreviewPage } from '@/features/cardsV2/CardStudyPreviewPage'
 import { DraftsPage } from '@/features/drafts/DraftsPage'
 import { StatsPage } from '@/features/stats/StatsPage'
 import { ProgressPage } from '@/features/progress/ProgressPage'
-import { SettingsPage } from '@/features/settings/SettingsPage'
+import { AccountSettingsPage } from '@/features/settings/AccountSettingsPage'
 import { DesignPreviewIndex } from '@/features/design-preview/DesignPreviewIndex'
 import { RecallPreviewPage } from '@/features/design-preview/review-recall/RecallPreviewPage'
 import { MultipleChoicePreviewPage } from '@/features/design-preview/review-multiple-choice/MultipleChoicePreviewPage'
@@ -52,7 +52,8 @@ export const router = createBrowserRouter([
       { path: 'drafts', element: <DraftsPage /> },
       { path: 'stats', element: <StatsPage /> },
       { path: 'progress', element: <ProgressPage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      { path: 'settings', element: <AccountSettingsPage /> },
+      { path: 'settings/:section', element: <AccountSettingsPage /> },
     ],
   },
   // Review is immersive (locked IA): no global nav, no logo, no sidebar. A
