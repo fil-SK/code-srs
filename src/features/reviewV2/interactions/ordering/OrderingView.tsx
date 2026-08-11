@@ -93,16 +93,16 @@ export function OrderingView({
       }
       front={
         flipped ? null : (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col items-center gap-1 text-center">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-2 text-center">
             <InteractionLabel type="ordering" />
             <RichText
               text={card.prompt.value}
               className="mt-2 text-2xl font-bold leading-snug text-itera-ink-brand"
             />
             {!locked && (
-              <p className="text-xs font-medium text-itera-muted">
-                Drag to reorder, or use the up/down controls.
+              <p className="text-sm text-itera-muted-light">
+                Drag items into the correct sequence.
               </p>
             )}
           </div>
@@ -112,7 +112,7 @@ export function OrderingView({
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
-              <ol className="space-y-2">
+              <ol className="space-y-3">
                 {order.map((id, idx) => {
                   const item = itemById.get(id)
                   return (
@@ -136,22 +136,24 @@ export function OrderingView({
           </DndContext>
 
           {!hideActions && (
-            <button
-              type="button"
-              onClick={onPrimaryAction}
-              disabled={!responseReady}
-              className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
-            >
-              Submit answer
-            </button>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={onPrimaryAction}
+                disabled={!responseReady}
+                className="rounded-itera-control bg-itera-accent px-8 py-3 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+              >
+                Submit answer
+              </button>
+            </div>
           )}
         </div>
         )
       }
       back={
         !flipped ? null : (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col items-center gap-1 text-center">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-2 text-center">
             <InteractionLabel type="ordering" />
             <RichText
               text={card.prompt.value}
@@ -161,7 +163,7 @@ export function OrderingView({
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={() => {}}>
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
-              <ol className="space-y-2">
+              <ol className="space-y-3">
                 {order.map((id, idx) => {
                   const item = itemById.get(id)
                   const cell = grade?.positions.find((p) => p.itemId === id)
