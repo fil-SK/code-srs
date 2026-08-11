@@ -34,21 +34,45 @@ const interaction: MatchingInteraction = {
   ],
 }
 
-const fixture: CardV2 & { interaction: MatchingInteraction } = {
-  id: 'test-matching-1',
-  schemaVersion: 2,
-  deckId: 'deck-1',
-  prompt: richText('Match each term to its definition.'),
-  interaction,
-  tags: [],
-  createdAt: 0,
-  updatedAt: 0,
+// A third column forces the accordion layout instead of the connected board.
+const threeColumnInteraction: MatchingInteraction = {
+  type: 'matching',
+  columns: [
+    interaction.columns[0],
+    interaction.columns[1],
+    {
+      id: 'region',
+      label: 'Region',
+      fixed: true,
+      items: [
+        { id: 'r1', content: richText('Automatic') },
+        { id: 'r2', content: richText('Dynamic') },
+      ],
+    },
+  ],
+  relationships: [
+    { source: 's1', target: 't1', region: 'r1' },
+    { source: 's2', target: 't2', region: 'r2' },
+  ],
 }
 
-function renderScreen() {
+function cardWith(i: MatchingInteraction): CardV2 & { interaction: MatchingInteraction } {
+  return {
+    id: 'test-matching-1',
+    schemaVersion: 2,
+    deckId: 'deck-1',
+    prompt: richText('Match each term to its definition.'),
+    interaction: i,
+    tags: [],
+    createdAt: 0,
+    updatedAt: 0,
+  }
+}
+
+function renderScreen(i: MatchingInteraction = interaction) {
   return render(
     <ReviewSessionScreen
-      card={fixture}
+      card={cardWith(i)}
       definition={matchingDefinition}
       current={1}
       total={1}
@@ -58,94 +82,142 @@ function renderScreen() {
   )
 }
 
-describe('MatchingView', () => {
+const LIFO = 'LIFO, function-call frames'
+const MANUAL = 'Manually managed, arbitrary lifetime'
+
+// The board states each pairing in the item's accessible name, so a connection
+// is never conveyed by the drawn line (or its color) alone.
+const unpaired = (label: string) => screen.getByRole('button', { name: `${label}, not paired` })
+const pairedWith = (label: string, other: string) =>
+  screen.getByRole('button', { name: `${label}, paired with ${other}` })
+
+describe('MatchingView (two-column board)', () => {
   afterEach(() => cleanup())
 
-  it('pairs a source with a value using only the keyboard (focus + Enter, no click)', async () => {
+  it('pairs a term with a value using only the keyboard (focus + Enter, no click)', async () => {
     const user = userEvent.setup()
     renderScreen()
 
-    const stackHeader = screen.getByRole('button', { name: /Stack/ })
-    stackHeader.focus()
-    await user.keyboard('{Enter}') // expands the row
+    unpaired('Stack').focus()
+    await user.keyboard('{Enter}')
+    unpaired(LIFO).focus()
+    await user.keyboard('{Enter}')
 
-    const chip = screen.getByRole('button', { name: 'LIFO, function-call frames' })
-    chip.focus()
-    await user.keyboard('{Enter}') // pairs Stack -> that value
-    expect(chip.getAttribute('aria-pressed')).toBe('true')
-
-    // Pairing state is stated in text, not left to color/position alone.
-    stackHeader.focus()
-    await user.keyboard('{Enter}') // collapse
-    expect(screen.getByText('Definition: LIFO, function-call frames')).toBeTruthy()
+    expect(pairedWith('Stack', LIFO)).toBeTruthy()
+    expect(pairedWith(LIFO, 'Stack')).toBeTruthy()
   })
 
-  it('clicking the same value again clears the pairing', async () => {
+  it('pairs value-first as well as term-first', async () => {
     const user = userEvent.setup()
     renderScreen()
 
-    await user.click(screen.getByRole('button', { name: /Stack/ }))
-    const chip = screen.getByRole('button', { name: 'LIFO, function-call frames' })
-    await user.click(chip)
-    expect(chip.getAttribute('aria-pressed')).toBe('true')
+    await user.click(unpaired(MANUAL))
+    await user.click(unpaired('Heap'))
 
-    await user.click(chip)
-    expect(chip.getAttribute('aria-pressed')).toBe('false')
+    expect(pairedWith('Heap', MANUAL)).toBeTruthy()
   })
 
-  it('a unique-column value already claimed by another row is unavailable, not silently reassignable', async () => {
+  it('re-picking a term’s current value clears the pairing', async () => {
     const user = userEvent.setup()
     renderScreen()
 
-    await user.click(screen.getByRole('button', { name: /Stack/ }))
-    await user.click(screen.getByRole('button', { name: 'LIFO, function-call frames' }))
+    await user.click(unpaired('Stack'))
+    await user.click(unpaired(LIFO))
+    await user.click(pairedWith('Stack', LIFO))
+    await user.click(pairedWith(LIFO, 'Stack'))
 
-    await user.click(screen.getByRole('button', { name: /Heap/ }))
-    const takenChip = screen.getByRole('button', {
-      name: 'LIFO, function-call frames (used)',
-    }) as HTMLButtonElement
-    expect(takenChip.disabled).toBe(true)
+    expect(unpaired('Stack')).toBeTruthy()
   })
 
-  it('Submit stays disabled until every row is paired, then grades and preserves the answers', async () => {
+  it('tapping a connected value with nothing selected detaches it', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    await user.click(unpaired('Stack'))
+    await user.click(unpaired(LIFO))
+    await user.click(pairedWith(LIFO, 'Stack'))
+
+    expect(unpaired('Stack')).toBeTruthy()
+    expect(unpaired(LIFO)).toBeTruthy()
+  })
+
+  it('giving a value to a second term moves it rather than pairing it twice', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    await user.click(unpaired('Stack'))
+    await user.click(unpaired(LIFO))
+
+    await user.click(unpaired('Heap'))
+    await user.click(pairedWith(LIFO, 'Stack'))
+
+    expect(pairedWith(LIFO, 'Heap')).toBeTruthy()
+    expect(unpaired('Stack')).toBeTruthy()
+  })
+
+  it('Submit stays disabled until every term is paired, then grades and preserves the answers', async () => {
     const user = userEvent.setup()
     renderScreen()
 
     const submit = screen.getByRole('button', { name: 'Submit answer' }) as HTMLButtonElement
     expect(submit.disabled).toBe(true)
 
-    await user.click(screen.getByRole('button', { name: /Stack/ }))
-    await user.click(screen.getByRole('button', { name: 'LIFO, function-call frames' }))
+    await user.click(unpaired('Stack'))
+    await user.click(unpaired(LIFO))
     expect(submit.disabled).toBe(true) // Heap still unpaired
 
-    await user.click(screen.getByRole('button', { name: /Heap/ }))
-    await user.click(screen.getByRole('button', { name: 'Manually managed, arbitrary lifetime' }))
+    await user.click(unpaired('Heap'))
+    await user.click(unpaired(MANUAL))
     expect(submit.disabled).toBe(false)
 
     await user.click(submit)
-    // "Correct" appears per-row and in the summary banner - just confirm the
-    // partial-credit banner text is absent (i.e. it graded as fully correct).
-    await screen.findAllByText('Correct')
+    expect(await screen.findByText('Correct')).toBeTruthy()
     expect(screen.queryByText(/% of relationships correct/)).toBeNull()
   })
 
-  it('an incorrect relationship is identified calmly, with the correct value stated in text', async () => {
+  it('an incorrect pairing is identified calmly, with the correct value stated in text', async () => {
     const user = userEvent.setup()
     renderScreen()
 
     // Swap the pairings so both are wrong.
-    await user.click(screen.getByRole('button', { name: /Stack/ }))
-    await user.click(
-      screen.getByRole('button', { name: 'Manually managed, arbitrary lifetime' }),
-    )
-    await user.click(screen.getByRole('button', { name: /Heap/ }))
-    await user.click(screen.getByRole('button', { name: 'LIFO, function-call frames' }))
+    await user.click(unpaired('Stack'))
+    await user.click(unpaired(MANUAL))
+    await user.click(unpaired('Heap'))
+    await user.click(unpaired(LIFO))
 
     await user.click(screen.getByRole('button', { name: 'Submit answer' }))
 
     expect(await screen.findByText('0% of relationships correct')).toBeTruthy()
-    // Both rows are wrong in this test; each one states the correct value in
-    // text (not just a red border) — assert at least one such statement exists.
-    expect(screen.getAllByText(/should be/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Should be/).length).toBe(2)
+  })
+})
+
+describe('MatchingView (3+ columns, accordion)', () => {
+  afterEach(() => cleanup())
+
+  it('fills every column of a relationship from one expanded row', async () => {
+    const user = userEvent.setup()
+    renderScreen(threeColumnInteraction)
+
+    await user.click(screen.getByRole('button', { name: /Stack/ }))
+    const definition = screen.getByRole('button', { name: LIFO })
+    await user.click(definition)
+    expect(definition.getAttribute('aria-pressed')).toBe('true')
+
+    await user.click(screen.getByRole('button', { name: 'Automatic' }))
+    await user.click(screen.getByRole('button', { name: /Stack/ })) // collapse
+    expect(screen.getByText(`Definition: ${LIFO} · Region: Automatic`)).toBeTruthy()
+  })
+
+  it('a unique-column value already claimed by another row is unavailable, not silently reassignable', async () => {
+    const user = userEvent.setup()
+    renderScreen(threeColumnInteraction)
+
+    await user.click(screen.getByRole('button', { name: /Stack/ }))
+    await user.click(screen.getByRole('button', { name: LIFO }))
+
+    await user.click(screen.getByRole('button', { name: /Heap/ }))
+    const takenChip = screen.getByRole('button', { name: `${LIFO} (used)` }) as HTMLButtonElement
+    expect(takenChip.disabled).toBe(true)
   })
 })
