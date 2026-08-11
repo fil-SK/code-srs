@@ -4,6 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { getRepository } from '@/data'
+import { DialogProvider } from '@/components/ui/dialogs'
 import type { Deck } from '@/types'
 import { LibraryBrowserPage } from './LibraryBrowserPage'
 
@@ -11,9 +12,11 @@ function renderPage() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/decks']}>
-        <LibraryBrowserPage />
-      </MemoryRouter>
+      <DialogProvider>
+        <MemoryRouter initialEntries={['/decks']}>
+          <LibraryBrowserPage />
+        </MemoryRouter>
+      </DialogProvider>
     </QueryClientProvider>,
   )
 }

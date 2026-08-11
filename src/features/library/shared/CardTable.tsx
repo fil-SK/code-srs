@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { BookOpen, Copy, Eye, EyeOff, FolderInput, Trash2 } from 'lucide-react'
+import { useRef, useState, type CSSProperties, type ReactNode, type Ref } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Copy, Eye, EyeOff, FolderInput, Pencil, Trash2 } from 'lucide-react'
 import type { Card } from '@/types'
 import type { CardV2Record } from '@/types/cardV2'
 import type { FlatDeck } from '@/domain/decks/tree'
@@ -11,7 +11,18 @@ import { StatusBadge } from '@/features/cardsV2/shared/StatusBadge'
 import { formatDue } from '@/features/cardsV2/shared/format'
 import { OverflowMenu, type OverflowMenuItem } from '@/features/cardsV2/shared/OverflowMenu'
 import { useCreateCardV2, useDeleteCardV2, useSaveCardV2 } from '@/hooks/useCardsV2'
+import { useDialogs } from '@/components/ui/dialogs'
+import { FloatingPanel } from '@/components/ui/FloatingPanel'
 import { rowVisualFor } from './rowVisuals'
+
+// Where a preview/study view should send the user back to. The row can be
+// rendered from the Deck page, a Collection view, or anywhere else, so the
+// return trip is "wherever this table currently lives" rather than a
+// hardcoded /decks.
+function useReturnTo() {
+  const { pathname, search } = useLocation()
+  return `${pathname}${search}`
+}
 
 // min-w guards the 1fr card column from being crushed to near-zero by the
 // fixed-width columns when the table is narrower than its content — the
@@ -56,32 +67,22 @@ function TypeCell({ kind, type }: { kind: 'v1' | 'v2'; type: string }) {
 // kinds, toggled from the overflow menu's "Move" item (same UX CardRowV2
 // established) rather than a separate always-visible icon button.
 function MovePopover({
+  anchor,
   decks,
   currentDeckId,
   onMove,
   onClose,
 }: {
+  anchor: HTMLElement | null
   decks: FlatDeck[]
   currentDeckId: string
   onMove: (deckId: string) => void
   onClose: () => void
 }) {
-  const ref = useRef<HTMLDivElement>(null)
   const others = decks.filter((d) => d.deck.id !== currentDeckId)
 
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
-  }, [onClose])
-
   return (
-    <div
-      ref={ref}
-      className="absolute right-0 top-full z-20 mt-1 w-56 rounded-itera-control border border-itera-border bg-itera-surface py-1 shadow-[var(--itera-shadow-float)]"
-    >
+    <FloatingPanel anchor={anchor} onClose={onClose} ariaLabel="Move to deck" className="w-56">
       <div className="px-3 py-1.5 text-xs font-semibold text-itera-muted">Move to deck…</div>
       {others.length === 0 ? (
         <div className="px-3 py-1.5 text-sm text-itera-muted">No other decks.</div>
@@ -100,16 +101,17 @@ function MovePopover({
           ))}
         </ul>
       )}
-    </div>
+    </FloatingPanel>
   )
 }
 
 // The v1-Card table row: type tile, title (+tags), Type/Status/Due columns,
-// and a single overflow menu (Preview/Move/Suspend/Delete — Edit is the
-// row's own click target, matching the target mockup's "no exposed row
-// icons" instruction). `leading`/`containerRef`/`style` let a parent
-// (drag-reorder mode) make the row sortable, same contract the old CardRow
-// exposed.
+// and a single overflow menu (Edit/Move/Suspend/Delete). Clicking the row
+// opens the card in preview — reading a card is the common case and it is
+// non-destructive, so editing lives one deliberate step away in the menu
+// instead of being what a stray click does.
+// `leading`/`containerRef`/`style` let a parent (drag-reorder mode) make the
+// row sortable, same contract the old CardRow exposed.
 export function CardTableRowV1({
   card,
   decks,
@@ -136,12 +138,14 @@ export function CardTableRowV1({
   showGrip?: boolean
 }) {
   const navigate = useNavigate()
+  const returnTo = useReturnTo()
   const [showMove, setShowMove] = useState(false)
+  const moveAnchorRef = useRef<HTMLDivElement>(null)
   const visual = rowVisualFor({ kind: 'v1', type: card.type })
   const Icon = visual.icon
 
   const items: OverflowMenuItem[] = [
-    { label: 'Preview', icon: BookOpen, onClick: () => navigate(`/preview?card=${card.id}&from=/decks`) },
+    { label: 'Edit', icon: Pencil, onClick: () => navigate(`/cards/${card.id}/edit`) },
     { label: 'Move', icon: FolderInput, onClick: () => setShowMove((v) => !v) },
     {
       label: card.suspended ? 'Unsuspend' : 'Suspend',
@@ -158,7 +162,10 @@ export function CardTableRowV1({
       className={cn(gridClass(showGrip), 'px-1', compact ? 'py-2' : 'py-4', card.suspended && 'opacity-55')}
     >
       {showGrip && leading}
-      <Link to={`/cards/${card.id}/edit`} className="flex min-w-0 items-center gap-3 hover:text-itera-accent">
+      <Link
+        to={`/preview?card=${card.id}&from=${encodeURIComponent(returnTo)}`}
+        className="flex min-w-0 items-center gap-3 hover:text-itera-accent"
+      >
         <div className={cn('grid h-8 w-8 flex-none place-items-center rounded-itera-control text-white', visual.tileClass)}>
           <Icon size={15} />
         </div>
@@ -185,10 +192,11 @@ export function CardTableRowV1({
       <TypeCell kind="v1" type={card.type} />
       <StatusBadge state={card.scheduling.state} suspended={card.suspended} />
       <span className="text-sm text-itera-muted">{formatDue(card.scheduling.due, now)}</span>
-      <div className="relative flex-none justify-self-end">
+      <div ref={moveAnchorRef} className="relative flex-none justify-self-end">
         <OverflowMenu items={items} ariaLabel="Card actions" />
         {showMove && (
           <MovePopover
+            anchor={moveAnchorRef.current}
             decks={decks}
             currentDeckId={card.deckId}
             onMove={(deckId) => {
@@ -221,10 +229,12 @@ export function CardTableRowV2({
   showGrip?: boolean
 }) {
   const navigate = useNavigate()
+  const dialogs = useDialogs()
   const saveCard = useSaveCardV2()
   const deleteCard = useDeleteCardV2()
   const createCard = useCreateCardV2()
   const [showMove, setShowMove] = useState(false)
+  const moveAnchorRef = useRef<HTMLDivElement>(null)
   const visual = rowVisualFor({ kind: 'v2', type: card.interaction.type })
   const Icon = visual.icon
   const title = card.prompt.value.split('\n')[0]?.trim() || '(untitled)'
@@ -232,8 +242,13 @@ export function CardTableRowV2({
   function toggleSuspend() {
     saveCard.mutate({ ...card, suspended: !card.suspended })
   }
-  function remove() {
-    if (window.confirm(`Delete this card?\n\n"${title}"`)) deleteCard.mutate(card.id)
+  async function remove() {
+    const ok = await dialogs.confirm({
+      title: 'Delete this card?',
+      description: `“${title}” will be removed permanently. This cannot be undone.`,
+      danger: true,
+    })
+    if (ok) deleteCard.mutate(card.id)
   }
   function duplicate() {
     createCard.mutate(
@@ -253,7 +268,7 @@ export function CardTableRowV2({
   }
 
   const items: OverflowMenuItem[] = [
-    { label: 'Preview', icon: BookOpen, onClick: () => navigate(`/cards/${card.id}/study`) },
+    { label: 'Edit', icon: Pencil, onClick: () => navigate(`/cards/${card.id}/edit`) },
     { label: 'Duplicate', icon: Copy, onClick: duplicate },
     { label: 'Move', icon: FolderInput, onClick: () => setShowMove((v) => !v) },
     { label: card.suspended ? 'Unsuspend' : 'Suspend', icon: card.suspended ? Eye : EyeOff, onClick: toggleSuspend },
@@ -263,7 +278,7 @@ export function CardTableRowV2({
   return (
     <div className={cn(gridClass(showGrip), 'px-1', compact ? 'py-2' : 'py-3', card.suspended && 'opacity-55')}>
       {showGrip && <span />}
-      <Link to={`/cards/${card.id}/edit`} className="flex min-w-0 items-center gap-3 hover:text-itera-accent">
+      <Link to={`/cards/${card.id}/study`} className="flex min-w-0 items-center gap-3 hover:text-itera-accent">
         <div className={cn('grid h-8 w-8 flex-none place-items-center rounded-itera-control text-white', visual.tileClass)}>
           <Icon size={15} />
         </div>
@@ -290,10 +305,16 @@ export function CardTableRowV2({
       <TypeCell kind="v2" type={card.interaction.type} />
       <StatusBadge state={card.scheduling.state} suspended={card.suspended} />
       <span className="text-sm text-itera-muted">{formatDue(card.scheduling.due, now)}</span>
-      <div className="relative flex-none justify-self-end">
+      <div ref={moveAnchorRef} className="relative flex-none justify-self-end">
         <OverflowMenu items={items} ariaLabel="Card actions" />
         {showMove && (
-          <MovePopover decks={decks} currentDeckId={card.deckId} onMove={moveTo} onClose={() => setShowMove(false)} />
+          <MovePopover
+            anchor={moveAnchorRef.current}
+            decks={decks}
+            currentDeckId={card.deckId}
+            onMove={moveTo}
+            onClose={() => setShowMove(false)}
+          />
         )}
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
 import type { Card, Deck, ID } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
+import { useDialogs } from '@/components/ui/dialogs'
 import { cn } from '@/lib/cn'
 import { languageLabel } from '@/domain/decks/languages'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
@@ -66,6 +67,7 @@ export function LibraryCollectionView({
   now: number
   onSelect: (selection: LibrarySelection) => void
 }) {
+  const dialogs = useDialogs()
   const createDeck = useCreateDeck()
   const saveDeck = useSaveDeck()
   const deleteDeck = useDeleteDeck()
@@ -116,43 +118,73 @@ export function LibraryCollectionView({
   const directCardsV2 = useSearchCardsV2({ deckId: collectionId, includeSuspended: true })
   const directCount = (directCards.data?.length ?? 0) + (directCardsV2.data?.length ?? 0)
 
-  function newDeck() {
-    const name = window.prompt('New deck name')?.trim()
+  async function newDeck() {
+    const name = await dialogs.prompt({
+      title: 'New deck',
+      description: deck ? `It will be created inside “${deck.name}”.` : undefined,
+      label: 'Deck name',
+      placeholder: 'e.g. Templates',
+      confirmLabel: 'Create deck',
+    })
     if (name) createDeck.mutate({ name, parentId: collectionId })
   }
 
-  function renameChild(child: Deck) {
-    const name = window.prompt('Deck name', child.name)?.trim()
+  async function renameChild(child: Deck) {
+    const name = await dialogs.prompt({
+      title: 'Rename deck',
+      label: 'Deck name',
+      initialValue: child.name,
+      confirmLabel: 'Rename',
+    })
     if (name && name !== child.name) saveDeck.mutate({ ...child, name })
   }
 
-  function removeChild(child: Deck, cardCount: number) {
+  async function removeChild(child: Deck, cardCount: number) {
     if (cardCount > 0) {
-      window.alert(`"${child.name}" has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`)
+      await dialogs.alert({
+        title: `“${child.name}” isn’t empty`,
+        description: `It still has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`,
+      })
       return
     }
-    if (window.confirm(`Delete deck "${child.name}"?`)) deleteDeck.mutate(child.id)
+    const ok = await dialogs.confirm({
+      title: 'Delete this deck?',
+      description: `“${child.name}” will be removed permanently. This cannot be undone.`,
+      danger: true,
+    })
+    if (ok) deleteDeck.mutate(child.id)
   }
 
   function toggleSuspendDirect(card: Card) {
     saveCard.mutate({ ...card, suspended: !card.suspended })
   }
 
-  function removeDirectCard(card: Card) {
-    if (window.confirm(`Delete this card?\n\n"${getCardTitle(card)}"`)) deleteCard.mutate(card.id)
+  async function removeDirectCard(card: Card) {
+    const ok = await dialogs.confirm({
+      title: 'Delete this card?',
+      description: `“${getCardTitle(card)}” will be removed permanently. This cannot be undone.`,
+      danger: true,
+    })
+    if (ok) deleteCard.mutate(card.id)
   }
 
-  function deleteCollection() {
+  async function deleteCollection() {
     if (!deck) return
     if (scoped.length > 0 || directCount > 0) {
-      window.alert(
-        `"${deck.name}" still contains ${scoped.length} deck${scoped.length === 1 ? '' : 's'}${
-          directCount > 0 ? ' and cards' : ''
+      await dialogs.alert({
+        title: `“${deck.name}” isn’t empty`,
+        description: `It still contains ${scoped.length} deck${scoped.length === 1 ? '' : 's'}${
+          directCount > 0 ? ' and cards of its own' : ''
         }. Move or delete them first.`,
-      )
+      })
       return
     }
-    if (!window.confirm(`Delete collection "${deck.name}"?`)) return
+    const ok = await dialogs.confirm({
+      title: 'Delete this collection?',
+      description: `“${deck.name}” will be removed permanently. This cannot be undone.`,
+      danger: true,
+    })
+    if (!ok) return
     deleteDeck.mutate(deck.id)
     onSelect(ancestors.length > 0 ? { kind: 'collection', id: ancestors[ancestors.length - 1].id } : { kind: 'all' })
   }

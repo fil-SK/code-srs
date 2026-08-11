@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { MoreVertical } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { FloatingPanel } from '@/components/ui/FloatingPanel'
 
 export interface OverflowMenuItem {
   label: string
@@ -10,11 +11,11 @@ export interface OverflowMenuItem {
   danger?: boolean
 }
 
-// A real, functional kebab menu — outside-click-to-close via a ref + document
-// listener (the design-preview/library-browser idiom), unlike v1 CardRow's
-// `fixed inset-0` backdrop. Two independent ad hoc copies of this pattern
-// already existed in the codebase before this one; this is the shared
-// primitive both should have been.
+// A real, functional kebab menu. The panel is portaled and positioned against
+// the trigger by FloatingPanel rather than being an `absolute` child: inside
+// the Library tables an in-flow panel got clipped by the surrounding
+// `overflow-x-auto` box (see FloatingPanel for the full why) and rows near the
+// bottom of the list could only be reached by scrolling the table.
 export function OverflowMenu({
   items,
   ariaLabel = 'Card actions',
@@ -25,23 +26,16 @@ export function OverflowMenu({
   bordered?: boolean
 }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
-  }, [open])
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   return (
-    <div ref={ref} className="relative flex-none">
+    <div className="relative flex-none">
       <button
+        ref={buttonRef}
         type="button"
         aria-label={ariaLabel}
         aria-expanded={open}
+        aria-haspopup="menu"
         onClick={(e) => {
           e.stopPropagation()
           e.preventDefault()
@@ -55,14 +49,18 @@ export function OverflowMenu({
         <MoreVertical size={16} />
       </button>
       {open && (
-        <div
-          className="absolute right-0 z-20 mt-1 w-44 rounded-itera-control border border-itera-border bg-itera-surface py-1 shadow-[var(--itera-shadow-float)]"
-          onClick={(e) => e.stopPropagation()}
+        <FloatingPanel
+          anchor={buttonRef.current}
+          onClose={() => setOpen(false)}
+          role="menu"
+          ariaLabel={ariaLabel}
+          className="w-44"
         >
           {items.map(({ label, icon: Icon, onClick, danger }) => (
             <button
               key={label}
               type="button"
+              role="menuitem"
               onClick={(e) => {
                 e.preventDefault()
                 setOpen(false)
@@ -79,7 +77,7 @@ export function OverflowMenu({
               {label}
             </button>
           ))}
-        </div>
+        </FloatingPanel>
       )}
     </div>
   )

@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import type { Deck } from '@/types'
 import { fieldClass } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
+import { useDialogs } from '@/components/ui/dialogs'
 import { useCreateDeck, useDecks, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
 import { useSearchCardsV2 } from '@/hooks/useCardsV2'
@@ -29,6 +30,7 @@ import { sortDecks, type DeckSortKey } from './shared/sortDecks'
 // to real Deck/Card data instead of fixtures. Collections are UI-only,
 // derived from Deck.parentId (see collectionTree.ts) — no schema change.
 export function LibraryBrowserPage() {
+  const dialogs = useDialogs()
   const now = useMemo(() => Date.now(), [])
   const [searchParams] = useSearchParams()
   const [selection, setSelection] = useState<LibrarySelection>(() =>
@@ -92,22 +94,40 @@ export function LibraryBrowserPage() {
     return sortDecks(result, sort, metrics)
   }, [scoped, search, sort, dueOnly, metrics])
 
-  function newDeck() {
-    const name = window.prompt('New deck name')?.trim()
+  async function newDeck() {
+    const name = await dialogs.prompt({
+      title: 'New deck',
+      label: 'Deck name',
+      placeholder: 'e.g. Templates',
+      confirmLabel: 'Create deck',
+    })
     if (name) createDeck.mutate({ name })
   }
 
-  function rename(deck: Deck) {
-    const name = window.prompt('Deck name', deck.name)?.trim()
+  async function rename(deck: Deck) {
+    const name = await dialogs.prompt({
+      title: 'Rename deck',
+      label: 'Deck name',
+      initialValue: deck.name,
+      confirmLabel: 'Rename',
+    })
     if (name && name !== deck.name) saveDeck.mutate({ ...deck, name })
   }
 
-  function remove(deck: Deck, cardCount: number) {
+  async function remove(deck: Deck, cardCount: number) {
     if (cardCount > 0) {
-      window.alert(`“${deck.name}” has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`)
+      await dialogs.alert({
+        title: `“${deck.name}” isn’t empty`,
+        description: `It still has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`,
+      })
       return
     }
-    if (window.confirm(`Delete deck “${deck.name}”?`)) deleteDeck.mutate(deck.id)
+    const ok = await dialogs.confirm({
+      title: 'Delete this deck?',
+      description: `“${deck.name}” will be removed permanently. This cannot be undone.`,
+      danger: true,
+    })
+    if (ok) deleteDeck.mutate(deck.id)
   }
 
   return (

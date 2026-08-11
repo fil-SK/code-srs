@@ -35,6 +35,7 @@ import {
 import type { Card, SchedulingStateKind } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
+import { useDialogs } from '@/components/ui/dialogs'
 import { cn } from '@/lib/cn'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
 import { languageLabel } from '@/domain/decks/languages'
@@ -179,6 +180,7 @@ function SortableCardTableRow({
 export function LibraryDeckPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const dialogs = useDialogs()
   const decksQuery = useDecks()
   const createDeck = useCreateDeck()
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -234,12 +236,22 @@ export function LibraryDeckPage() {
     saveCard.mutate({ ...card, suspended: !card.suspended })
   }
 
-  function remove(card: Card) {
-    if (window.confirm(`Delete this card?\n\n“${getCardTitle(card)}”`)) deleteCard.mutate(card.id)
+  async function remove(card: Card) {
+    const ok = await dialogs.confirm({
+      title: 'Delete this card?',
+      description: `“${getCardTitle(card)}” will be removed permanently. This cannot be undone.`,
+      danger: true,
+    })
+    if (ok) deleteCard.mutate(card.id)
   }
 
-  function newDeck() {
-    const name = window.prompt('New deck name')?.trim()
+  async function newDeck() {
+    const name = await dialogs.prompt({
+      title: 'New deck',
+      label: 'Deck name',
+      placeholder: 'e.g. Templates',
+      confirmLabel: 'Create deck',
+    })
     if (name) createDeck.mutate({ name })
   }
 
