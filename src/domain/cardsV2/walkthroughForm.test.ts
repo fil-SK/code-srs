@@ -22,7 +22,9 @@ import {
   updateWalkthroughAcceptedAnswer,
   updateWalkthroughRange,
   updateWalkthroughRecallAnswer,
+  updateWalkthroughStepExplanation,
   updateWalkthroughStepPrompt,
+  updateWalkthroughStepTip,
   validateWalkthroughForm,
   walkthroughFormToPreviewCard,
   walkthroughFormToRecord,
@@ -54,6 +56,8 @@ const twoStep: WalkthroughFormState = {
     {
       id: 'step-1',
       prompt: 'What runs first?',
+      tip: 'Look at the virtual keyword.',
+      explanation: 'The override controls dispatch.',
       ranges: [{ id: 'r1', start: '2', end: '2' }],
       responseType: 'recall',
       recallAnswer: 'Base::f is overridden',
@@ -64,6 +68,8 @@ const twoStep: WalkthroughFormState = {
     {
       id: 'step-2',
       prompt: 'Which function actually runs?',
+      tip: '',
+      explanation: '',
       ranges: [],
       responseType: 'multiple_choice',
       recallAnswer: '',
@@ -97,6 +103,16 @@ describe('walkthroughFormToPreviewCard', () => {
     expect(card.interaction.code).toEqual({ language: 'cpp', value: twoStep.codeValue })
     expect(card.interaction.steps).toHaveLength(2)
     expect(card.interaction.steps[0].focus).toEqual([{ startLine: 2, endLine: 2 }])
+    expect(card.interaction.steps[0].tip).toEqual({
+      format: 'markdown',
+      value: 'Look at the virtual keyword.',
+    })
+    expect(card.interaction.steps[0].explanation).toEqual({
+      format: 'markdown',
+      value: 'The override controls dispatch.',
+    })
+    expect(card.interaction.steps[1].tip).toBeUndefined()
+    expect(card.interaction.steps[1].explanation).toBeUndefined()
     expect(card.interaction.steps[0].response).toEqual({
       type: 'recall',
       answer: { format: 'markdown', value: 'Base::f is overridden' },
@@ -197,6 +213,8 @@ describe('cardV2RecordToWalkthroughForm round-trip', () => {
             { startLine: 8, endLine: 8 },
           ],
           prompt: { format: 'markdown', value: 'Step one' },
+          tip: { format: 'markdown', value: 'Step hint' },
+          explanation: { format: 'markdown', value: 'Step context' },
           response: { type: 'recall', answer: { format: 'markdown', value: 'Answer one' } },
         },
         {
@@ -228,6 +246,10 @@ describe('cardV2RecordToWalkthroughForm round-trip', () => {
     ])
     expect(form.steps[0].responseType).toBe('recall')
     expect(form.steps[0].recallAnswer).toBe('Answer one')
+    expect(form.steps[0].tip).toBe('Step hint')
+    expect(form.steps[0].explanation).toBe('Step context')
+    expect(form.steps[1].tip).toBe('')
+    expect(form.steps[1].explanation).toBe('')
     expect(form.steps[1].responseType).toBe('exact_input')
     expect(form.steps[1].acceptedAnswers.map((a) => a.text)).toEqual(['ub', 'undefined behavior'])
     expect(form.tags).toBe('x, y')
@@ -469,13 +491,25 @@ describe('pure mutation helpers', () => {
     expect(removed.steps[0]).toEqual(twoStep.steps[1])
   })
 
-  it('updateWalkthroughStepPrompt/updateWalkthroughRecallAnswer edit one step without touching the other', () => {
+  it('updates one step\'s prompt, tip, explanation, and answer without touching the other', () => {
     const updated = updateWalkthroughStepPrompt(twoStep, 'step-1', 'New prompt')
     expect(updated.steps[0].prompt).toBe('New prompt')
     expect(updated.steps[1].prompt).toBe('Which function actually runs?')
 
     const withAnswer = updateWalkthroughRecallAnswer(twoStep, 'step-1', 'New answer')
     expect(withAnswer.steps[0].recallAnswer).toBe('New answer')
+
+    const withTip = updateWalkthroughStepTip(twoStep, 'step-1', 'New tip')
+    expect(withTip.steps[0].tip).toBe('New tip')
+    expect(withTip.steps[1].tip).toBe('')
+
+    const withExplanation = updateWalkthroughStepExplanation(
+      twoStep,
+      'step-1',
+      'New explanation',
+    )
+    expect(withExplanation.steps[0].explanation).toBe('New explanation')
+    expect(withExplanation.steps[1].explanation).toBe('')
   })
 
   it('setWalkthroughStepResponseType resets every type-specific field for the newly chosen type', () => {

@@ -201,7 +201,7 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 `highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. `src/components/code/lineRanges.ts`'s `parseLineRanges` turns a human-friendly string (`"26-34, 40, 42-45"`) into a sorted, deduped line-number array.
 
-`LazyCodeView`/`LazyCodeEditor` are `React.lazy()` wrappers (via `src/lib/lazyWithRetry.ts`'s `importWithReload`) around `CodeView`/`CodeEditor` — CodeMirror plus language grammars are heavy, kept out of the initial bundle, loaded on first actual use. `importWithReload` also recovers from a stale/missing chunk after a deploy (reloads once).
+`LazyCodeView`/`LazyCodeEditor` are `React.lazy()` wrappers (via `src/lib/lazyWithRetry.ts`'s `importWithReload`) around `CodeView`/`CodeEditor` — CodeMirror plus language grammars are heavy, kept out of the initial bundle, loaded on first actual use. `importWithReload` also recovers from a stale/missing chunk after a deploy (reloads once). Both CodeMirror surfaces use the self-hosted `JetBrains Mono Variable` family first and request a fresh geometry measurement after `document.fonts.ready`, preventing fallback-font wrapping from persisting until a scroll or edit.
 
 ---
 
@@ -333,6 +333,7 @@ Intended Review shortcuts: `Escape` exit/pause with confirmation, `Space` flip a
 - `reviewV2/components/FlipCard.tsx` is the accessible flip: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. **`src/components/ui/FlipCard.tsx` (v1) is a plain `<div onClick>` with no keyboard or ARIA support** — a known gap deliberately not fixed in place. Use the v2 one for new work.
 - **Ordering** makes each complete row the pointer and keyboard drag target and shows a decorative 3×4 dot grip at its right edge. There are no separate arrow controls: focus a row, press Space to pick it up, use Arrow keys, then Space to drop. Positions are announced via `aria-live`.
 - **Multiple Choice** option rows pair a circular check marker with a navy selected-row tint and `aria-checked`; the marker is decorative to assistive technology because the row already owns the checkbox/radio semantics.
+- **Walkthrough** keeps card-wide Tip/Explanation panels and may also render a step-scoped panel inside the active step: the step tip is pre-answer only, while the step explanation appears after that step is submitted and remains visible when revisited. Code-backed Walkthrough cards use opacity-only entrance motion so CodeMirror glyphs are never scaled or rotated during rasterization.
 - `FloatingPanel`'s `manageFocus` implements the menu keyboard contract; `dialogs.tsx` replaces the `window.*` builtins with focus-managed modals.
 - **A gap to respect:** `happy-dom` has no visibility semantics, so component tests cannot catch focus or layout bugs — `focus()` on a hidden element silently succeeds there and fails in Chromium. Anything focus-, popover- or overflow-related must be verified in a real browser.
 

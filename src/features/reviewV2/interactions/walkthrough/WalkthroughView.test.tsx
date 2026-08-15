@@ -15,6 +15,8 @@ import { ReviewSessionScreen } from '../../ReviewSessionScreen'
 const step1: WalkthroughStep = {
   id: 'step-1',
   prompt: richText('Which statement about std::move is true?'),
+  tip: richText('Think about the type of the expression.'),
+  explanation: richText('The cast enables overload resolution; it does not move bytes.'),
   response: {
     type: 'multiple_choice',
     selectionMode: 'single',
@@ -28,6 +30,8 @@ const step1: WalkthroughStep = {
 const step2: WalkthroughStep = {
   id: 'step-2',
   prompt: richText('Name the special member function that does the actual work.'),
+  tip: richText('It has the same name as the class.'),
+  explanation: richText('The move constructor receives the rvalue reference.'),
   response: { type: 'exact_input', acceptedAnswers: ['move constructor'] },
 }
 
@@ -42,6 +46,7 @@ const fixture: CardV2 & { interaction: WalkthroughInteraction } = {
   schemaVersion: 2,
   deckId: 'deck-1',
   prompt: richText('Walk through this.'),
+  tip: richText('Overall walkthrough hint.'),
   explanation: richText('Wrap-up explanation text.'),
   interaction,
   tags: [],
@@ -90,6 +95,26 @@ describe('WalkthroughView', () => {
 
     expect(screen.getByText('Step 2 of 2')).toBeTruthy()
     expect(screen.getByText(step2.prompt.value)).toBeTruthy()
+  })
+
+  it('shows the active step tip before submission and its explanation after submission', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    expect(screen.getByText('Think about the type of the expression.')).toBeTruthy()
+    expect(screen.getByText('Overall walkthrough hint.')).toBeTruthy()
+    expect(screen.queryByText('The cast enables overload resolution; it does not move bytes.')).toBeNull()
+    expect(screen.queryByText('It has the same name as the class.')).toBeNull()
+
+    await answerStep1Correctly(user)
+
+    expect(screen.queryByText('Think about the type of the expression.')).toBeNull()
+    expect(screen.getByText('The cast enables overload resolution; it does not move bytes.')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(screen.getByText('It has the same name as the class.')).toBeTruthy()
+    expect(screen.queryByText('The cast enables overload resolution; it does not move bytes.')).toBeNull()
+    expect(screen.getByText('Overall walkthrough hint.')).toBeTruthy()
   })
 
   it('a step already answered cannot be resubmitted (first submission wins) when revisited', async () => {

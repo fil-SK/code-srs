@@ -22,6 +22,10 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
   )
 }
 
+function hasWalkthroughCode(interaction: CardInteraction): boolean {
+  return interaction.type === 'walkthrough' && Boolean(interaction.code)
+}
+
 // The shared Review shell (spec §15, §30.3): owns layout, Tip/Explanation/
 // rating placement, the phase state machine, and all keyboard coordination —
 // no interaction type implements any of this itself. Deliberately free of
@@ -223,6 +227,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
       <div
         className={cn(
           'itera-card-enter mx-auto',
+          hasWalkthroughCode(card.interaction) && 'itera-card-enter-crisp-code',
           definition.widthFor?.(card.interaction) === 'wide' ? 'max-w-4xl' : 'max-w-2xl',
           entered && 'itera-card-enter-active',
         )}

@@ -22,7 +22,9 @@ import {
   updateWalkthroughAcceptedAnswer,
   updateWalkthroughRange,
   updateWalkthroughRecallAnswer,
+  updateWalkthroughStepExplanation,
   updateWalkthroughStepPrompt,
+  updateWalkthroughStepTip,
   validateWalkthroughForm,
   type WalkthroughFormState,
 } from '@/domain/cardsV2/walkthroughForm'
@@ -167,6 +169,10 @@ export function WalkthroughFields({
             total={form.steps.length}
             canRemove={form.steps.length > 1}
             onPromptChange={(prompt) => onChange(updateWalkthroughStepPrompt(form, step.id, prompt))}
+            onTipChange={(tip) => onChange(updateWalkthroughStepTip(form, step.id, tip))}
+            onExplanationChange={(explanation) =>
+              onChange(updateWalkthroughStepExplanation(form, step.id, explanation))
+            }
             onResponseTypeChange={(type) =>
               onChange(setWalkthroughStepResponseType(form, step.id, type))
             }
@@ -223,7 +229,7 @@ export function WalkthroughFields({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Tip (optional)">
+        <Field label="Overall tip (optional)">
           <textarea
             className={fieldClass}
             rows={2}
@@ -232,7 +238,7 @@ export function WalkthroughFields({
             placeholder="A short hint to help narrow it down…"
           />
         </Field>
-        <Field label="Explanation (optional)">
+        <Field label="Overall explanation (optional)">
           <textarea
             className={fieldClass}
             rows={2}

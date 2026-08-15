@@ -107,6 +107,8 @@ export function WalkthroughStepEditor({
   total,
   canRemove,
   onPromptChange,
+  onTipChange,
+  onExplanationChange,
   onResponseTypeChange,
   onMoveUp,
   onMoveDown,
@@ -131,6 +133,8 @@ export function WalkthroughStepEditor({
   total: number
   canRemove: boolean
   onPromptChange: (prompt: string) => void
+  onTipChange: (tip: string) => void
+  onExplanationChange: (explanation: string) => void
   onResponseTypeChange: (type: WalkthroughStepResponseType) => void
   onMoveUp: () => void
   onMoveDown: () => void
@@ -315,6 +319,31 @@ export function WalkthroughStepEditor({
               </Button>
             </div>
           )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1.5">
+              <span className="block text-xs text-itera-muted">Tip for this step (optional)</span>
+              <textarea
+                className={fieldClass}
+                rows={2}
+                value={step.tip}
+                onChange={(e) => onTipChange(e.target.value)}
+                placeholder="A hint that only applies to this step…"
+              />
+            </label>
+            <label className="space-y-1.5">
+              <span className="block text-xs text-itera-muted">
+                Explanation for this step (optional)
+              </span>
+              <textarea
+                className={fieldClass}
+                rows={2}
+                value={step.explanation}
+                onChange={(e) => onExplanationChange(e.target.value)}
+                placeholder="Extra context shown after this step is answered…"
+              />
+            </label>
+          </div>
         </div>
       </div>
     </div>

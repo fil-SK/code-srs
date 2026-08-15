@@ -56,7 +56,7 @@ These rules apply to every card and every session, regardless of route.
 | **Write Code** | Producing the right code | Type into a code editor | Line-ending normalization + outer trim + per-line trailing-whitespace trim against accepted answers |
 | **Ordering** | Correct sequence | Drag, **or** keyboard Move up/down, then explicitly **Submit answer**; clicking the surrounding card surface never submits or flips it | Position-wise (an item counts only at its authored index), with partial-credit score |
 | **Matching** | Associating concepts across up to three columns | Assign values across a connected board | Partial credit per cell; a shared column lets one value serve several terms |
-| **Walkthrough** | Multi-step scenarios (tracing execution, staged reasoning) | Walk the steps, each with its own response type | Per step, dispatched by that step's response type; partial credit |
+| **Walkthrough** | Multi-step scenarios (tracing execution, staged reasoning) | Walk the steps, each with its own response type and optional step-scoped tip/explanation | Per step, dispatched by that step's response type; partial credit |
 
 Every interaction's front prompt uses the same 24px treatment. Prompts over 280 normalized characters or six non-empty lines use 20px in Review and trigger a non-blocking authoring warning to shorten or split the card.
 
@@ -76,6 +76,8 @@ Two distinct optional fields; do not merge them or use one for the other's job.
 | Collapsible | May be collapsed by the learner, but **never** hidden away in a side panel | — |
 
 Tip is a genuinely new field: **no pre-existing content was auto-assigned into it** when v1 cards were mapped to v2, with one exception — v1's `bugFinding.bugHint`, which already was a pre-answer hint.
+
+Walkthrough supports both scopes at once. The card-wide tip remains available throughout the unfinished sequence and the card-wide explanation appears after the final step. Independently, the active step may show its own optional tip before that step's first submission, then replace it with that step's optional explanation after submission. Returning to an answered step shows its explanation, not its pre-answer tip. Older Walkthrough records have neither step field and continue to render unchanged.
 
 ### Study sessions
 

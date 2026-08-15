@@ -130,6 +130,22 @@ describe('WalkthroughFields', () => {
     expect(latest?.steps[1].recallAnswer).toBe('Answer two')
   })
 
+  it('authors optional tip and explanation independently for each step', async () => {
+    const user = userEvent.setup()
+    let latest: WalkthroughFormState | undefined
+    render(<Harness initial={twoStepForm()} onState={(f) => (latest = f)} />)
+
+    const tips = screen.getAllByPlaceholderText(/A hint that only applies/)
+    const explanations = screen.getAllByPlaceholderText(/Extra context shown after/)
+    await user.type(tips[0], 'First hint')
+    await user.type(explanations[0], 'First explanation')
+
+    expect(latest?.steps[0].tip).toBe('First hint')
+    expect(latest?.steps[0].explanation).toBe('First explanation')
+    expect(latest?.steps[1].tip).toBe('')
+    expect(latest?.steps[1].explanation).toBe('')
+  })
+
   it('authors a multi-range highlight for a step: add/edit/remove independent ranges', async () => {
     const user = userEvent.setup()
     let latest: WalkthroughFormState | undefined

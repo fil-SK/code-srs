@@ -14,7 +14,8 @@ import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark'
 import { useTheme } from '@/app/theme'
 import { languageExtension } from './languageExtensions'
 
-const MONO = "'JetBrains Mono','Cascadia Code','Fira Code',ui-monospace,monospace"
+const MONO =
+  "'JetBrains Mono Variable','JetBrains Mono','Cascadia Code','Fira Code',ui-monospace,monospace"
 
 // Transparent so the wrapping container's --code-bg shows through, keeping the
 // editor visually consistent with the rest of the app in both themes.
@@ -95,7 +96,20 @@ export function CodeView({
       }),
     })
 
-    return () => view.destroy()
+    // @fontsource registers the variable family with font-display: swap. If it
+    // finishes after CodeMirror's first geometry pass, wrapped lines can keep
+    // fallback-font measurements until a scroll causes another measure.
+    // Re-measure once the authored mono face is ready instead of relying on
+    // that incidental repaint.
+    let destroyed = false
+    void document.fonts.ready.then(() => {
+      if (!destroyed) view.requestMeasure()
+    })
+
+    return () => {
+      destroyed = true
+      view.destroy()
+    }
     // hlKey stands in for highlightLines (a fresh array each render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, language, theme, hlKey])

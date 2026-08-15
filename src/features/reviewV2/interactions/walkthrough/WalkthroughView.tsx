@@ -5,7 +5,9 @@ import { cn } from '@/lib/cn'
 import { gradeWalkthroughStep } from '@/domain/grading/walkthrough'
 import { CardPrompt } from '../../components/CardPrompt'
 import { CardPanel } from '../../components/CardPanel'
+import { ExplanationPanel } from '../../components/ExplanationPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
+import { TipPanel } from '../../components/TipPanel'
 import type { InteractionViewProps } from '../types'
 import { initialWalkthroughState, type WalkthroughState } from './state'
 import { focusToHighlightLines } from './focusLines'
@@ -149,6 +151,15 @@ export function WalkthroughView({
               onSubmit={(answer) => submitStep(step.id, answer)}
             />
           </div>
+          {!stepAnswered && !locked && (
+            <TipPanel text={step.tip?.value} title="Tip for this step" />
+          )}
+          {(stepAnswered || locked) && (
+            <ExplanationPanel
+              text={step.explanation?.value}
+              title="Explanation for this step"
+            />
+          )}
         </div>
       )}
 

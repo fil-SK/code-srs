@@ -39,13 +39,14 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 | **Bug Finding** | Spotting defects | Read code (optional hint), flip to reveal explanation |
 | **Ordering** | Correct sequence/steps | Drag items into order, then submit explicitly for auto-grading |
 | **Matching** | Associating concepts | Match columns via dropdowns, auto-graded |
-| **Story** | Multi-step scenarios (e.g. tracing code execution) | Walk through steps one at a time, reveal each, self-grade at the end |
+| **Walkthrough** (legacy Story) | Multi-step scenarios (e.g. tracing code execution) | Walk through steps one at a time, reveal or submit each, then rate once at the end |
 
 Notable variants:
 
 - **MCQ** prompts support fenced code blocks, so you can ask "what does this print?" with a real snippet, and options can themselves be inline code. Toggle **multiple correct answers**, which shows a "Select all that apply" hint to the learner.
 - **Code Completion** can be a classic "fill the blank in this scaffold" card, **or** a plain prose question with an empty scaffold ("How do you reverse a list in Python?" → type `lst[::-1]`). Accepts multiple solutions with whitespace/case normalization.
 - **Matching** supports an optional **third column** (3-part: `A → B → C`), optional **bold column headers**, and per-column **fixed-option ("dropdown") columns** — a column can share one value list (e.g. Yes/No) graded by value, so rows can repeat answers. Rows are reshuffled each open so the answer pattern can't be memorized by position.
+- **Walkthrough** supports optional card-wide Tip/Explanation fields plus optional guidance for each individual step. A step's tip appears before its answer is submitted; its explanation replaces the tip afterward and remains available when that step is revisited.
 
 Every type also has an **optional Explanation** rendered on reveal, all prose fields accept the markdown above, and you can **change a card's type while editing** (it resets the content).
 

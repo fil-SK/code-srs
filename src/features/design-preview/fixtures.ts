@@ -256,6 +256,10 @@ export const walkthroughFixture: CardV2 & { interaction: WalkthroughInteraction 
         id: newId(),
         focus: [{ startLine: 2, endLine: 2 }],
         prompt: richText('What does `v.resize(3)` do to its size and capacity?'),
+        tip: richText('Separate `size()` from `capacity()` before answering.'),
+        explanation: richText(
+          '`resize(3)` destroys excess elements, but reducing size alone does not release the allocation.',
+        ),
         response: {
           type: 'recall',
           answer: richText(
@@ -271,6 +275,10 @@ export const walkthroughFixture: CardV2 & { interaction: WalkthroughInteraction 
         ],
         prompt: richText(
           'After `shrink_to_fit()` (line 3) and the copy (line 4), which statement is true?',
+        ),
+        tip: richText('The copy constructor owns its destination storage.'),
+        explanation: richText(
+          '`copy` receives its own allocation; it never aliases the buffer owned by `v`.',
         ),
         response: {
           type: 'multiple_choice',
@@ -302,6 +310,8 @@ export const walkthroughFixture: CardV2 & { interaction: WalkthroughInteraction 
         prompt: richText(
           'What is the name of the operation that produces `copy` from `v` on line 4?',
         ),
+        tip: richText('Look at the source expression: `v` is an lvalue.'),
+        explanation: richText('Initializing a new vector from the lvalue `v` invokes copy construction.'),
         response: {
           type: 'exact_input',
           acceptedAnswers: ['copy construction', 'copy constructor'],

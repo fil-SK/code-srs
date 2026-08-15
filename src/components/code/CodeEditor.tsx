@@ -15,7 +15,8 @@ import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark'
 import { useTheme } from '@/app/theme'
 import { languageExtension } from './languageExtensions'
 
-const MONO = "'JetBrains Mono','Cascadia Code','Fira Code',ui-monospace,monospace"
+const MONO =
+  "'JetBrains Mono Variable','JetBrains Mono','Cascadia Code','Fira Code',ui-monospace,monospace"
 
 const baseTheme = EditorView.theme({
   '&': { backgroundColor: 'transparent', fontSize: '13px' },
@@ -72,7 +73,18 @@ export function CodeEditor({
       }),
     })
 
-    return () => view.destroy()
+    // The self-hosted variable font uses font-display: swap. Refresh
+    // CodeMirror's line metrics after it arrives so the editor does not keep
+    // fallback-font wrapping until the learner scrolls or types.
+    let destroyed = false
+    void document.fonts.ready.then(() => {
+      if (!destroyed) view.requestMeasure()
+    })
+
+    return () => {
+      destroyed = true
+      view.destroy()
+    }
     // value is intentionally the initial doc only; see component note.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, theme])

@@ -37,6 +37,8 @@ export type WalkthroughStepResponseType = WalkthroughStepResponse['type']
 export interface WalkthroughStepFormState {
   id: string
   prompt: string
+  tip: string
+  explanation: string
   ranges: WalkthroughRangeFormState[]
   responseType: WalkthroughStepResponseType
   recallAnswer: string // meaningful only when responseType === 'recall'
@@ -62,6 +64,8 @@ function emptyWalkthroughStep(): WalkthroughStepFormState {
   return {
     id: newId(),
     prompt: '',
+    tip: '',
+    explanation: '',
     ranges: [],
     responseType: 'recall',
     recallAnswer: '',
@@ -86,8 +90,8 @@ export function emptyWalkthroughForm(deckId = ''): WalkthroughFormState {
   }
 }
 
-function optionalRichText(text: string): RichContent | undefined {
-  return text.trim() ? richText(text) : undefined
+function optionalRichText(text: string | undefined): RichContent | undefined {
+  return text?.trim() ? richText(text) : undefined
 }
 
 function parseTags(raw: string): string[] {
@@ -148,6 +152,8 @@ function toWalkthroughInteraction(form: WalkthroughFormState): WalkthroughIntera
         id: s.id,
         focus: toStepFocus(s.ranges),
         prompt: richText(s.prompt),
+        tip: optionalRichText(s.tip),
+        explanation: optionalRichText(s.explanation),
         response: toStepResponse(s),
       }),
     ),
@@ -222,6 +228,8 @@ function walkthroughInteractionToForm(interaction: WalkthroughInteraction): {
     steps: interaction.steps.map((s) => ({
       id: s.id,
       prompt: s.prompt.value,
+      tip: s.tip?.value ?? '',
+      explanation: s.explanation?.value ?? '',
       ranges: (s.focus ?? []).map((r) => ({
         id: newId(),
         start: String(r.startLine),
@@ -391,6 +399,25 @@ export function updateWalkthroughStepPrompt(
   prompt: string,
 ): WalkthroughFormState {
   return { ...form, steps: form.steps.map((s) => (s.id === stepId ? { ...s, prompt } : s)) }
+}
+
+export function updateWalkthroughStepTip(
+  form: WalkthroughFormState,
+  stepId: string,
+  tip: string,
+): WalkthroughFormState {
+  return { ...form, steps: form.steps.map((s) => (s.id === stepId ? { ...s, tip } : s)) }
+}
+
+export function updateWalkthroughStepExplanation(
+  form: WalkthroughFormState,
+  stepId: string,
+  explanation: string,
+): WalkthroughFormState {
+  return {
+    ...form,
+    steps: form.steps.map((s) => (s.id === stepId ? { ...s, explanation } : s)),
+  }
 }
 
 export function updateWalkthroughRecallAnswer(

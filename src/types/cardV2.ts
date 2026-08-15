@@ -114,6 +114,8 @@ export interface WalkthroughStep {
   // codebase's existing multi-range highlight capability. See migration §5.
   focus?: Array<{ startLine: number; endLine: number }>
   prompt: RichContent
+  tip?: RichContent
+  explanation?: RichContent
   response: WalkthroughStepResponse
 }
 

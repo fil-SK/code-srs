@@ -277,6 +277,14 @@
   opacity: 1;
 }
 
+/* Walkthrough keeps CodeMirror visible while its learner moves between steps.
+   Scaling and rotating an ancestor makes its monospace glyphs temporarily
+   rasterize off-pixel; a scroll repaints them, which looked like delayed code
+   rendering. Keep the entrance fade, but let the code use stable geometry. */
+.itera-card-enter.itera-card-enter-crisp-code {
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .itera-card-enter {
     transition: none;
