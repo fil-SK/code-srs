@@ -308,7 +308,7 @@ Timing guidance, with easing near `cubic-bezier(0.2, 0.8, 0.2, 1)`:
 | Card-to-card transition | 180–280ms |
 | Completion transition | 350–600ms |
 
-**IMPLEMENTED:** the flip lives in `.itera-flip*` (`src/index.css`), the next-card entrance in `.itera-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), and the editor/preview width sync in `.card-editor-shell`.
+**IMPLEMENTED:** the flip lives in `.itera-flip*` (`src/index.css`), the next-card entrance in `.itera-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), the Today hero's mount-in stacking reveal in `SuggestedSessionHero.tsx` (four layers dropping onto the pile back-to-front, 460ms each on a 110ms stagger; D170), and the editor/preview width sync in `.card-editor-shell`.
 
 **Two mechanics you must know before animating anything:**
 

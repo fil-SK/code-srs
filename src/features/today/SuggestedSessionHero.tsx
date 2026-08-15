@@ -87,6 +87,27 @@ function IteraSymbolWatermark() {
   )
 }
 
+// Cards #4 and #3 are `hidden sm:block`, so below 640px the stack is only two
+// layers deep. Their stagger slots would then elapse with nothing on screen (a
+// measured ~300ms of blank hero before the front card even starts), so the
+// reveal compresses to the two visible layers there.
+function useHasRearLayers(): boolean {
+  const query = '(min-width: 640px)'
+  const [matches, setMatches] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  )
+
+  useEffect(() => {
+    const mql = window.matchMedia(query)
+    const onChange = () => setMatches(mql.matches)
+    onChange()
+    mql.addEventListener('change', onChange)
+    return () => mql.removeEventListener('change', onChange)
+  }, [])
+
+  return matches
+}
+
 export function SuggestedSessionHero({
   cardCount = 24,
   estimatedMinutes = 15,
@@ -102,20 +123,36 @@ export function SuggestedSessionHero({
     return () => cancelAnimationFrame(raf)
   }, [mounted])
 
-  // The four layers reveal on a stagger (0/50/90/140ms delays below) so
-  // they visibly cascade in on first mount. That per-layer delay must NOT
-  // carry over into the hover-zoom transition below, or the four cards
-  // visibly zoom at different moments instead of as one object. `settled`
-  // flips once, shortly after the longest reveal transition (140ms delay +
-  // 300ms duration) would have finished, and forces every layer's delay to
-  // 0ms from then on — so hover always fires all four in perfect sync.
+  // The four layers reveal back-to-front on a stagger (REVEAL_STAGGER below)
+  // so the stack visibly builds a card at a time: each one starts lifted
+  // above the pile and slightly oversized (as if held closer to the viewer),
+  // then drops onto its resting box. Resting geometry is untouched — the
+  // whole reveal is a transient prefix on each layer's transform, so the
+  // settled composition is byte-for-byte the tuned one described above.
+  //
+  // That per-layer delay must NOT carry over into the hover-zoom transition
+  // below, or the four cards visibly zoom at different moments instead of as
+  // one object. `settled` flips once, shortly after the longest reveal
+  // transition (310ms delay + 460ms duration) would have finished, and from
+  // then on forces every layer's delay to 0ms and its duration to the
+  // shorter hover timing — so hover always fires all four in perfect sync.
   const [settled, setSettled] = useState(false)
   useEffect(() => {
     if (!mounted) return
-    const t = setTimeout(() => setSettled(true), 480)
+    const t = setTimeout(() => setSettled(true), 820)
     return () => clearTimeout(t)
   }, [mounted])
+  // Back-to-front, indexed by card number (#4 first, front card #1 last).
+  const hasRearLayers = useHasRearLayers()
+  const stagger = hasRearLayers
+    ? { c4: 0, c3: 110, c2: 210, c1: 310 }
+    : { c4: 0, c3: 0, c2: 0, c1: 110 }
   const revealDelay = (staggerMs: number) => (settled ? '0ms' : mounted ? `${staggerMs}ms` : '0ms')
+  const revealDuration = settled ? '200ms' : '460ms'
+  // The design system's standard decelerating curve (design-system.md §11)
+  // while stacking, so each card lands rather than glides; plain ease-out
+  // once settled, for the small hover zoom.
+  const revealEasing = settled ? 'ease-out' : 'cubic-bezier(0.2, 0.8, 0.2, 1)'
 
   // Hover-driven zoom is tracked in JS (not CSS group-hover) and baked into
   // each layer's literal `transform` string alongside its rotate/translate,
@@ -127,9 +164,18 @@ export function SuggestedSessionHero({
   // same mechanism the mount-in reveal already used, which does animate
   // correctly) sidesteps that.
   const [hovered, setHovered] = useState(false)
-  const hoverScale = (base: number) => (!mounted ? base : hovered ? 1.02 : 1)
 
-  const revealBase = 'transition-[opacity,transform] duration-300 ease-out'
+  // `rest` is the layer's resting transform, unchanged. Pre-mount the layer
+  // is translated straight up in the parent's coordinate space (the lift is
+  // prefixed, so it happens before the layer's own rotate) and scaled up a
+  // touch; the transition back to `rest` is the drop onto the stack.
+  const REVEAL_LIFT_PX = 46
+  const layerTransform = (rest: string) =>
+    mounted
+      ? `${rest} scale(${hovered ? 1.02 : 1})`
+      : `translateY(-${REVEAL_LIFT_PX}px) ${rest} scale(1.05)`
+
+  const revealBase = 'transition-[opacity,transform]'
 
   return (
     <div
@@ -153,8 +199,11 @@ export function SuggestedSessionHero({
           top: '4.1%',
           width: '99.2%',
           height: '82.9%',
-          transform: `rotate(0.15deg) scale(${hoverScale(0.97)})`,
+          transform: layerTransform('rotate(0.15deg)'),
           opacity: mounted ? 1 : 0,
+          transitionDelay: revealDelay(stagger.c4),
+          transitionDuration: revealDuration,
+          transitionTimingFunction: revealEasing,
         }}
       />
       {/* card #3 — deep navy. Rotated 5deg counterclockwise for asymmetry. */}
@@ -169,9 +218,11 @@ export function SuggestedSessionHero({
           top: '-2.1%',
           width: '100%',
           height: '92.4%',
-          transform: `rotate(-5deg) scale(${hoverScale(0.97)})`,
+          transform: layerTransform('rotate(-5deg)'),
           opacity: mounted ? 1 : 0,
-          transitionDelay: revealDelay(50),
+          transitionDelay: revealDelay(stagger.c3),
+          transitionDuration: revealDuration,
+          transitionTimingFunction: revealEasing,
         }}
       />
       {/* card #2 — navy. Starts at the exact same box as card #1 (same
@@ -192,9 +243,11 @@ export function SuggestedSessionHero({
           top: '0%',
           width: '100%',
           height: '100%',
-          transform: `translateX(35px) translateY(-20px) rotate(3.5deg) scale(${hoverScale(0.97)})`,
+          transform: layerTransform('translateX(35px) translateY(-20px) rotate(3.5deg)'),
           opacity: mounted ? 1 : 0,
-          transitionDelay: revealDelay(90),
+          transitionDelay: revealDelay(stagger.c2),
+          transitionDuration: revealDuration,
+          transitionTimingFunction: revealEasing,
         }}
       />
 
@@ -211,13 +264,15 @@ export function SuggestedSessionHero({
         className={cn(
           'relative z-10 overflow-hidden rounded-[21px] border border-white/[0.08] px-7 py-8 sm:min-h-[310px] sm:px-[50px] sm:py-[32px]',
           'shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_34px_rgba(15,23,42,0.16),0_3px_8px_rgba(15,23,42,0.08)]',
-          'transition-[opacity,transform] duration-300 ease-out',
+          'transition-[opacity,transform]',
           mounted ? 'opacity-100' : 'opacity-0',
         )}
         style={{
           background: 'linear-gradient(118deg, #1E293B 0%, #1C2A40 58%, #18243A 100%)',
-          transform: `translateX(5px) translateY(${mounted ? -28 : -12}px) scale(${hoverScale(1)})`,
-          transitionDelay: revealDelay(140),
+          transform: layerTransform('translateX(5px) translateY(-28px)'),
+          transitionDelay: revealDelay(stagger.c1),
+          transitionDuration: revealDuration,
+          transitionTimingFunction: revealEasing,
         }}
       >
         <IteraSymbolWatermark />

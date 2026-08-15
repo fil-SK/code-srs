@@ -94,7 +94,7 @@ Real data, real behavior, production-routed:
 
 ## 7. Today state
 
-Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, one column below 980px via a `matchMedia` hook) driven by inline `style`, because Tailwind has no grid-area utility. Its page typography now uses Inter Variable throughout, matching the finalized login family, including the greeting and the large session-card count. `SuggestedSessionHero.tsx` is a bespoke, pixel-tuned 4-layer stacked-card component — **do not adjust its offsets/rotations/colors incidentally**; they came from many rounds of measured product feedback.
+Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, one column below 980px via a `matchMedia` hook) driven by inline `style`, because Tailwind has no grid-area utility. Its page typography now uses Inter Variable throughout, matching the finalized login family, including the greeting and the large session-card count. `SuggestedSessionHero.tsx` is a bespoke, pixel-tuned 4-layer stacked-card component — **do not adjust its offsets/rotations/colors incidentally**; they came from many rounds of measured product feedback. On mount its layers stack themselves back-to-front (each drops from a lift onto its resting box, D170); the resting geometry is unchanged by that reveal.
 
 ## 8. Library state
 
