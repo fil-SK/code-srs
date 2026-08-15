@@ -1,71 +1,95 @@
-import { ChevronRight, Flag, Flame, Target, TrendingUp } from 'lucide-react'
+import { Flag, Flame, Target, TrendingUp } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-function MomentumRow({
-  icon: Icon,
-  label,
-  value,
-  progress,
-  chevron,
-}: {
-  icon: LucideIcon
-  label: string
-  value: string
-  progress?: number // 0-1, omitted rows show a value only, no bar
-  chevron?: boolean
-}) {
+function MetricIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
-    <div className="flex items-center gap-3 py-3">
-      <div className="grid h-9 w-9 flex-none place-items-center rounded-full border border-itera-border bg-itera-surface text-itera-accent">
-        <Icon size={16} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-itera-ink">{label}</span>
-          <span className="truncate text-sm font-semibold text-itera-ink-brand">
-            {value}
-          </span>
-        </div>
-        {progress != null && (
-          <div className="mt-1.5 h-1 overflow-hidden rounded-itera-pill bg-itera-border">
-            <div
-              className="h-full rounded-itera-pill bg-itera-accent"
-              style={{ width: `${Math.round(progress * 100)}%` }}
-            />
-          </div>
-        )}
-      </div>
-      {chevron && <ChevronRight size={16} className="flex-none text-itera-muted" />}
+    <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-itera-accent-soft text-itera-accent">
+      <Icon size={15} aria-hidden="true" />
     </div>
   )
 }
 
-// Placeholder content — no streak/goal/milestone tracking exists yet
-// (docs/itera-decisions.md). Structure and mark choices (thin single-hue
-// progress bars, no rainbow, status color reserved) follow the dataviz
-// skill's guidance even though the numbers themselves are illustrative.
+function ProgressBar({ label, value }: { label: string; value: number }) {
+  const percentage = Math.round(value * 100)
+
+  return (
+    <div
+      className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-itera-pill bg-itera-border"
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={percentage}
+    >
+      <div
+        className="h-full rounded-itera-pill bg-itera-accent"
+        style={{ width: `${percentage}%` }}
+      />
+    </div>
+  )
+}
+
+// Placeholder content. No streak/goal/milestone tracking exists yet
+// (docs/itera-decisions.md). This composition follows the supplied dashboard
+// direction while preserving the existing icon set and illustrative values.
 export function MomentumPanel() {
   return (
-    <div className="flex min-h-[345px] flex-col rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
-      <div className="text-xs font-bold uppercase tracking-wide text-itera-muted">
+    <section
+      aria-labelledby="momentum-heading"
+      className="flex min-h-[345px] flex-col rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]"
+    >
+      <h2 id="momentum-heading" className="text-base font-semibold text-itera-ink-brand">
         Momentum
+      </h2>
+
+      <div className="mt-5 flex flex-1 flex-col gap-5">
+        <div className="flex items-center gap-3">
+          <MetricIcon icon={Flame} />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-itera-ink-brand">7-day streak</div>
+            <div className="mt-0.5 text-xs text-itera-muted">Keep it going!</div>
+          </div>
+          <div className="text-2xl font-semibold leading-none text-itera-ink-brand">7</div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <MetricIcon icon={TrendingUp} />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-itera-ink-brand">Weekly goal</div>
+            <div className="mt-1 flex items-center gap-4">
+              <span className="flex-none text-xs text-itera-muted">4 of 5 sessions</span>
+              <ProgressBar label="Weekly goal progress" value={4 / 5} />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <MetricIcon icon={Target} />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-itera-ink-brand">Recall rate</div>
+            <div className="mt-0.5 text-xs font-medium text-itera-success">
+              +6% from last week
+            </div>
+          </div>
+          <div className="text-sm font-bold text-itera-ink-brand">82%</div>
+        </div>
+
+        <div className="mt-auto border-t border-itera-border pt-4">
+          <div className="mb-3 text-xs font-semibold text-itera-ink-brand">Next milestone</div>
+          <div className="flex items-center gap-3">
+            <MetricIcon icon={Flag} />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-itera-ink-brand">
+                Finish Type Deduction
+              </div>
+              <div className="mt-1 flex items-center gap-4">
+                <span className="flex-none text-xs text-itera-muted">12 / 18 topics mastered</span>
+                <ProgressBar label="Type Deduction milestone progress" value={12 / 18} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="mt-1 flex flex-1 flex-col justify-between divide-y divide-itera-border">
-        <MomentumRow icon={Flame} label="7-day streak" value="7 days" />
-        <MomentumRow
-          icon={TrendingUp}
-          label="Weekly sessions"
-          value="4 of 5"
-          progress={4 / 5}
-        />
-        <MomentumRow icon={Target} label="Recent recall" value="82%" progress={0.82} />
-        <MomentumRow
-          icon={Flag}
-          label="Next milestone"
-          value="Finish Type Deduction"
-          chevron
-        />
-      </div>
-    </div>
+    </section>
   )
 }

@@ -163,12 +163,12 @@ Icons come from **`lucide-react`** — there are no custom hand-drawn SVG icon f
 **The circular badge pattern** (`src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
 
 ```tsx
-<div className="grid h-9 w-9 flex-none place-items-center rounded-full border border-itera-border bg-itera-surface text-itera-accent">
-  <Icon size={16} />
+<div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-itera-accent-soft text-itera-accent">
+  <Icon size={15} />
 </div>
 ```
 
-A 36px circle, thin border, orange icon on a white surface — lucide icons inherit `currentColor`, so the wrapper's `text-itera-accent` is what colors the icon, not a prop on the icon itself.
+A 32px soft-orange circle with an orange glyph, used for the compact grouped metrics in Momentum — lucide icons inherit `currentColor`, so the wrapper's `text-itera-accent` is what colors the icon, not a prop on the icon itself.
 
 Other conventions seen across `src/features/today/*.tsx`:
 - **Sizes**: 14–16px for inline/list icons, 15px for nav/chrome icons (search, plus, play). No larger icon sizes in current use.
