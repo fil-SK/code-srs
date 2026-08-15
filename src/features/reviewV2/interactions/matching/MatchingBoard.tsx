@@ -4,6 +4,7 @@ import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { MatchingColumn, MatchingColumnItem } from '@/types/cardV2'
 import type { MatchingGrade, MatchingResponse } from '@/domain/grading/matching'
+import { placeMatchingBadges, type CubicEdgeGeometry } from './matchingBadgeGeometry'
 
 // The Matching board: terms in the first column, values in the columns facing
 // it, and a drawn connector for every pair the learner has made (see the
@@ -67,14 +68,6 @@ const BADGE_CLASS: Record<BoardEdgeState, string> = {
   incorrect: 'bg-itera-error',
 }
 
-// How far along a connector its badge sits. Not the midpoint (the mockup's
-// position, which only works when every line runs straight across): several
-// lines cross, and their midpoints collapse onto the same point in the gutter,
-// stacking the badges on top of each other. Anchoring near the start of each
-// hop gives every row its own badge height, which is also where "Should be ..."
-// is stated after grading.
-const BADGE_T = 0.3
-
 // Fixed columns are a shared option list — usually short labels like Yes/No —
 // so they get a narrower track than the free-text columns they sit beside.
 const FIXED_COLUMN_TRACK = 'minmax(0,0.6fr)'
@@ -114,11 +107,6 @@ function sameAnchors(a: Anchors, b: Anchors): boolean {
     const q = b[k]
     return q != null && p.x === q.x && p.y === q.y && p.w === q.w && p.h === q.h
   })
-}
-
-function cubicAt(t: number, p0: number, p1: number, p2: number, p3: number): number {
-  const u = 1 - t
-  return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3
 }
 
 export function MatchingBoard({
@@ -212,32 +200,48 @@ export function MatchingBoard({
   // until the first measurement lands (and permanently so in a
   // DOM-without-layout environment like the test suite's, where every offset
   // reads 0 and there is no geometry to draw).
-  const edges: Edge[] = sourceCol.items.flatMap((sourceItem) => {
-    const rowEdges: Edge[] = []
-    let anchorId = sourceItem.id
-    for (const col of otherCols) {
-      const chosenId = chosenIn(sourceItem.id, col.id)
-      if (!chosenId) continue // hop skipped; the next one starts from the last known point
-      const from = anchors[anchorId]
-      const to = anchors[chosenId]
-      anchorId = chosenId
-      if (!from || !to || from.w === 0 || to.w === 0) continue
-      const cell = cellFor(sourceItem.id, col.id)
-      const x1 = from.x + from.w
-      const y1 = from.y + from.h / 2
-      const x2 = to.x
-      const y2 = to.y + to.h / 2
-      const bend = Math.max(12, (x2 - x1) * 0.4)
-      rowEdges.push({
-        key: `${sourceItem.id}:${col.id}`,
-        state: !grade ? 'paired' : cell?.correct ? 'correct' : 'incorrect',
-        d: `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`,
-        badgeX: cubicAt(BADGE_T, x1, x1 + bend, x2 - bend, x2),
-        badgeY: cubicAt(BADGE_T, y1, y1, y2, y2),
-      })
-    }
-    return rowEdges
-  })
+  const rawEdges: Array<Omit<Edge, 'badgeX' | 'badgeY'> & { curve: CubicEdgeGeometry }> =
+    sourceCol.items.flatMap((sourceItem) => {
+      const rowEdges: Array<Omit<Edge, 'badgeX' | 'badgeY'> & { curve: CubicEdgeGeometry }> = []
+      let anchorId = sourceItem.id
+      for (const col of otherCols) {
+        const chosenId = chosenIn(sourceItem.id, col.id)
+        if (!chosenId) continue // hop skipped; the next one starts from the last known point
+        const from = anchors[anchorId]
+        const to = anchors[chosenId]
+        anchorId = chosenId
+        if (!from || !to || from.w === 0 || to.w === 0) continue
+        const cell = cellFor(sourceItem.id, col.id)
+        const x1 = from.x + from.w
+        const y1 = from.y + from.h / 2
+        const x2 = to.x
+        const y2 = to.y + to.h / 2
+        const bend = Math.max(12, (x2 - x1) * 0.4)
+        const curve = {
+          x1,
+          y1,
+          controlX1: x1 + bend,
+          controlY1: y1,
+          controlX2: x2 - bend,
+          controlY2: y2,
+          x2,
+          y2,
+        }
+        rowEdges.push({
+          key: `${sourceItem.id}:${col.id}`,
+          state: !grade ? 'paired' : cell?.correct ? 'correct' : 'incorrect',
+          d: `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`,
+          curve,
+        })
+      }
+      return rowEdges
+    })
+  const badgeCenters = placeMatchingBadges(rawEdges.map((edge) => edge.curve))
+  const edges: Edge[] = rawEdges.map(({ curve: _curve, ...edge }, index) => ({
+    ...edge,
+    badgeX: badgeCenters[index].x,
+    badgeY: badgeCenters[index].y,
+  }))
 
   function onItemClick(columnIndex: number, itemId: string) {
     if (locked) return
