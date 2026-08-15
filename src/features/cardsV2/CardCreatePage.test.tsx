@@ -9,6 +9,7 @@ import { getRepository } from '@/data'
 import type { Deck } from '@/types'
 import { AppShell } from '@/components/layout/AppShell'
 import { CardCreatePage } from './CardCreatePage'
+import { STICKY_TOP_VAR } from './CardEditorShell'
 
 const deck: Deck = { id: 'deck-1', name: 'C++', createdAt: 0, updatedAt: 0 }
 
@@ -58,6 +59,24 @@ describe('CardCreatePage under the shared AppShell', () => {
     expect(await screen.findAllByText('Create card')).toHaveLength(1)
     expect(screen.queryByText('Decks')).toBeNull()
     expect(screen.queryByRole('link', { name: /Study now/i })).toBeNull()
+  })
+
+  // happy-dom has no layout, so this cannot prove the editor's action header
+  // actually parks below the chooser (D132 - that needs a browser), and it
+  // drops the header's own `top: var(...)` outright. What it does guard is
+  // that the page still measures its chooser and publishes the offset the
+  // shell reads: drop the ResizeObserver and the header silently pins to 0,
+  // overlapping the chooser. Both sides share STICKY_TOP_VAR, so the name
+  // itself cannot drift.
+  it('measures its sticky chooser into the offset the editor header reads', async () => {
+    const user = userEvent.setup()
+    const { container } = renderCreateFlow()
+
+    await user.click(await screen.findByRole('button', { name: 'Recall' }))
+
+    const publisher = container.querySelector('.sticky.top-0')?.parentElement as HTMLElement
+    expect(publisher.style.getPropertyValue(STICKY_TOP_VAR)).toMatch(/^\d+(\.\d+)?px$/)
+    expect(container.querySelector('.card-editor-shell header')).toBeTruthy()
   })
 
   it('warns without blocking when a prompt is too long for a focused flashcard', async () => {

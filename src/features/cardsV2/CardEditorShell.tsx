@@ -13,6 +13,14 @@ const EDITOR_COL = '42rem'
 const PREVIEW_COL = '420px'
 const GAP = '1.5rem'
 
+// How far below the scrollport top this shell's own sticky action header
+// parks. A page that stacks its own sticky bar above the shell sets this on
+// any ancestor (CardCreatePage measures its interaction chooser into it);
+// unset, the fallback below pins the header to the scrollport top. Exported
+// so the publisher and the consumer can never drift on the name - a typo
+// would silently collapse to 0 and overlap whatever sits above.
+export const STICKY_TOP_VAR = '--card-editor-sticky-top'
+
 // Shared Create/Edit shell for every CardV2 interaction type (spec §22.3).
 // Redesigned per product feedback: the previous header had three unrelated
 // alignment anchors (a left-floating Cancel, a mathematically-centered
@@ -59,14 +67,26 @@ export function CardEditorShell({
         maxWidth: !isWide ? 'none' : previewOpen ? `calc(${EDITOR_COL} + ${GAP} + ${PREVIEW_COL})` : EDITOR_COL,
       }}
     >
-      <header className="mb-5 grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      {/* Sticky for the same reason the create page's chooser is (D81): the
+          editor pane is tall enough that Preview / Back to deck / Save used to
+          require scrolling back to the top to reach them. z-[4] keeps it under
+          that chooser's z-[5]. The -mx/px pair bleeds the background a couple
+          of px past the editor column so a card's border doesn't peek out at
+          the edges while scrolling under it. */}
+      <header
+        className="sticky z-[4] -mx-2 mb-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-bg px-2 pb-3 pt-2"
+        style={{ top: `var(${STICKY_TOP_VAR}, 0px)` }}
+      >
         <div className="min-w-0">
           <h1 className="truncate text-lg font-semibold tracking-tight text-itera-ink-brand">
             {title}
           </h1>
           <p className="truncate text-xs text-itera-muted">{subtitle}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        {/* No wrapping: the header is sticky, so a second row of actions on a
+            phone would cost viewport height under the equally-sticky chooser
+            for the whole session. Title/subtitle truncate instead. */}
+        <div className="flex items-center gap-2 justify-self-end">
           {isWide && (
             <button
               type="button"
