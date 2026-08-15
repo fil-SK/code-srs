@@ -99,6 +99,12 @@ describe('ReviewSessionScreen (via Recall)', () => {
 
     expect(screen.getByText(fixture.explanation!.value)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Good/ })).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: /Again|Hard|Good|Easy/ })).toHaveLength(4)
+    expect(screen.getByRole('button', { name: /Again/ }).querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Hard/ }).querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Good/ }).querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Easy/ }).querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Good/ }).textContent).toContain('•')
     expect(screen.getByText('Rate your answer')).toBeTruthy()
     expect(screen.queryByText('1–4')).toBeNull()
   })
@@ -141,10 +147,10 @@ describe('ReviewSessionScreen (via Recall)', () => {
 
     await waitFor(() => {
       const again = screen.getByRole('button', { name: /Again/ })
-      expect(again.className).toMatch(/itera-accent/)
+      expect(again.className).toMatch(/border-itera-accent/)
     })
     const easy = screen.getByRole('button', { name: /Easy/ })
-    expect(easy.className).not.toMatch(/itera-accent/)
+    expect(easy.className).not.toMatch(/border-itera-accent/)
   })
 
   it('Space targeted at a focused interactive control is ignored by the page-level handler, not double-handled', () => {

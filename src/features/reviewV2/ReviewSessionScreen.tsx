@@ -1,8 +1,9 @@
-import { useEffect, useReducer, useState } from 'react'
+import { useEffect, useMemo, useReducer, useState } from 'react'
 import type { Rating, SchedulingState } from '@/types'
 import type { CardInteraction, CardV2, InteractionType } from '@/types/cardV2'
 import { cn } from '@/lib/cn'
 import { reviewService, type SubmitReviewResult } from '@/domain/scheduling/reviewService'
+import { formatInterval } from '@/domain/scheduling/format'
 import { ReviewTopBar } from './components/ReviewTopBar'
 import { TipPanel } from './components/TipPanel'
 import { ExplanationPanel } from './components/ExplanationPanel'
@@ -73,6 +74,16 @@ export function ReviewSessionScreen<T extends InteractionType>({
   const [response, setResponse] = useState<InteractionResponse>(initialResponse)
   const [presentedAt] = useState(() => Date.now())
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
+
+  const ratingIntervals = useMemo(() => {
+    const preview = reviewService.previewNextStates(schedulingBefore, presentedAt)
+    return {
+      1: formatInterval(presentedAt, preview[1].due),
+      2: formatInterval(presentedAt, preview[2].due),
+      3: formatInterval(presentedAt, preview[3].due),
+      4: formatInterval(presentedAt, preview[4].due),
+    } satisfies Record<Rating, string>
+  }, [presentedAt, schedulingBefore])
 
   // Callers remount this whole component per card (key={card.id}), so a
   // mount-only entrance animation naturally replays for every new card
@@ -233,6 +244,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
           <RatingControls
             selected={selectedRating}
             suggested={suggested}
+            intervals={ratingIntervals}
             disabled={phase.kind !== 'feedback'}
             onRate={rate}
             note={

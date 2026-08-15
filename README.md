@@ -58,7 +58,7 @@ Grading model: interactive types (MCQ, completion, ordering, matching) **auto-de
 - **Dashboard** — a greeting and an overview: due / total / deck counts, plus quick "Study due" and "Manage decks" actions.
 - **Decks** — the deck tree: create, nest to any depth, rename, delete, reparent, and open a deck. Click a deck **name** to open it; ▶ studies it, 📖 flips through it. Sidebar/bottom-nav badges show live due and draft counts.
 - **Deck page** (`/decks/:id`) — the deck's cards as a list. **Drag the handle** to reorder, open **Deck settings** to rename/describe/**reparent** the deck, and use each row's actions to **preview / edit / move / suspend / delete** a card.
-- **Review** — the due queue. Reveal, grade, undo. Order is driven by FSRS, independent of any manual card order.
+- **Review** — the due queue. Reveal, then rate with the icon-led Again / Hard / Good / Easy controls; each choice previews its real next FSRS interval. Grade and undo remain keyboard-friendly, and queue order is independent of manual card order.
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.
 - **Preview** — try cards with **no scheduling impact** through the same card surface as Review. Use the shared position/shortcut strip, reveal or submit the card, and move with Prev/Next or the arrow keys. Ratings are hidden and nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
