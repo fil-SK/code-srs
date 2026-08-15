@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { AlertTriangle, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
+import { isLongCardPrompt } from '@/features/reviewV2/components/promptLength'
 import { useIsWideEditor } from './useIsWideEditor'
 
 // Editor column width when the preview is closed (also the shell's own
@@ -27,6 +28,7 @@ const GAP = '1.5rem'
 export function CardEditorShell({
   mode,
   subtitle,
+  prompt,
   onCancel,
   onSave,
   canSave,
@@ -36,6 +38,7 @@ export function CardEditorShell({
 }: {
   mode: 'create' | 'edit'
   subtitle: string
+  prompt: string
   onCancel: () => void
   onSave: () => void
   canSave: boolean
@@ -47,6 +50,7 @@ export function CardEditorShell({
   const [tab, setTab] = useState<'editor' | 'preview'>('editor')
   const [previewOpen, setPreviewOpen] = useState(false)
   const title = mode === 'edit' ? 'Edit card' : 'Create card'
+  const promptIsLong = isLongCardPrompt(prompt)
 
   return (
     <div
@@ -91,6 +95,21 @@ export function CardEditorShell({
           </Button>
         </div>
       </header>
+
+      {promptIsLong && (
+        <div
+          role="status"
+          className="mb-4 flex items-start gap-3 rounded-itera-control border border-itera-warning/35 bg-itera-warning-soft px-4 py-3 text-sm text-itera-ink"
+        >
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-itera-warning" />
+          <div>
+            <p className="font-semibold text-itera-ink-brand">This prompt is unusually long.</p>
+            <p className="mt-0.5 text-itera-muted">
+              Review will use smaller text. Consider shortening it or splitting it into focused cards.
+            </p>
+          </div>
+        </div>
+      )}
 
       {isWide ? (
         <div className={cn('preview-shell-row flex items-start', previewOpen ? 'gap-6' : 'gap-0')}>

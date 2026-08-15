@@ -1,6 +1,7 @@
-import { Copy } from 'lucide-react'
 import { RichText } from '@/components/text/RichText'
+import { CardPrompt } from '../../components/CardPrompt'
 import { FlashcardSurface } from '../../components/FlashcardSurface'
+import { FlipCueIcon } from '../../components/FlipCueIcon'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
 
@@ -21,21 +22,20 @@ export function RecallView({
           : 'Recall card, click or press Space to reveal the answer'
       }
       front={
-        <>
-          <div className="flex flex-col items-center gap-4 text-center">
+        <div className="grid flex-1 grid-rows-[3.5rem_minmax(0,1fr)_3.5rem] text-center">
+          <div className="flex items-start justify-center">
             <InteractionLabel type="recall" />
-            <RichText
-              text={card.prompt.value}
-              className="text-2xl font-bold leading-snug text-itera-ink-brand sm:text-3xl"
-            />
           </div>
-          <div className="flex flex-col items-center gap-2 text-itera-muted">
-            <Copy size={20} />
+          <div className="flex items-center justify-center py-4">
+            <CardPrompt text={card.prompt.value} />
+          </div>
+          <div className="flex flex-col items-center justify-end gap-1.5 text-itera-muted">
+            <FlipCueIcon />
             <span className="text-sm font-medium">
               Click the card or press Space to flip
             </span>
           </div>
-        </>
+        </div>
       }
       back={
         <div className="flex flex-col gap-4">

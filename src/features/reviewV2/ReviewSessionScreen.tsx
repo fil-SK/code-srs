@@ -169,31 +169,35 @@ export function ReviewSessionScreen<T extends InteractionType>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, response, definition])
 
-  const shortcutHint = !definition.interactive
+  const feedbackHint: { key?: string; label: string } = hideRating
+    ? { label: 'Answer revealed' }
+    : { label: 'Rate your answer' }
+  const shortcut: { key?: string; label: string } = !definition.interactive
     ? phase.kind === 'presenting'
-      ? 'Space to reveal'
+      ? { key: 'Space', label: 'to flip' }
       : phase.kind === 'feedback'
-        ? '1–4 to rate'
-        : ''
+        ? feedbackHint
+        : { label: '' }
     : phase.kind === 'presenting'
       ? responseReady
-        ? 'Enter to submit'
-        : 'Select an answer'
+        ? { key: 'Enter', label: 'to submit' }
+        : { label: 'Select an answer' }
       : phase.kind === 'feedback'
-        ? '1–4 to rate'
-        : ''
+        ? feedbackHint
+        : { label: '' }
 
   const showExplanation = phase.kind !== 'presenting' && phase.kind !== 'submitting'
   const showRating = phase.kind !== 'presenting' && phase.kind !== 'submitting'
 
   return (
-    <div>
+    <div className={cn(!hideTopBar && 'pb-14')}>
       {!hideTopBar && (
         <ReviewTopBar
           current={current}
           total={total}
           onExit={onExit}
-          shortcutHint={shortcutHint}
+          shortcutKey={shortcut.key}
+          shortcutLabel={shortcut.label}
         />
       )}
 

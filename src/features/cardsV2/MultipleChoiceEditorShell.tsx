@@ -80,6 +80,7 @@ export function MultipleChoiceEditorShell({
     <CardEditorShell
       mode={mode}
       subtitle={editorSubtitle('multiple_choice', flatDecks, form.deckId)}
+      prompt={form.prompt}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

@@ -1,5 +1,6 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { cn } from '@/lib/cn'
 import { TopNav } from './TopNav'
 import { AccountMenu } from './AccountMenu'
 import { StreakBadge } from './StreakBadge'
@@ -16,6 +17,10 @@ import { primaryNavLinks } from './primaryNavLinks'
 // now (Itera has no dark palette yet), so the toggle would be inert under
 // ForceLightTheme. Not deleted — see ThemeToggle.tsx.
 export function AppShell() {
+  const { pathname } = useLocation()
+  const isCardPreview =
+    pathname === '/preview' || /^\/cards\/[^/]+\/study$/.test(pathname)
+
   return (
     <IteraSurface className="min-h-screen">
       <TopNav
@@ -27,7 +32,14 @@ export function AppShell() {
           </>
         }
       />
-      <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6">
+      <main
+        className={cn(
+          'w-full',
+          isCardPreview
+            ? 'py-0'
+            : 'mx-auto max-w-[1280px] px-4 py-8 sm:px-6',
+        )}
+      >
         <Outlet />
       </main>
     </IteraSurface>

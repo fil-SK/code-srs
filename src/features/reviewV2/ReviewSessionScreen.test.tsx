@@ -32,7 +32,7 @@ const fixture: CardV2 & { interaction: RecallInteraction } = {
   updatedAt: 0,
 }
 
-function renderScreen(onExit: () => void = () => {}) {
+function renderScreen(onExit: () => void = () => {}, hideRating = false) {
   return render(
     <ReviewSessionScreen
       card={fixture}
@@ -41,6 +41,7 @@ function renderScreen(onExit: () => void = () => {}) {
       total={1}
       onExit={onExit}
       schedulingBefore={initialSchedulingState()}
+      hideRating={hideRating}
     />,
   )
 }
@@ -56,6 +57,15 @@ describe('ReviewSessionScreen (via Recall)', () => {
       .closest('[aria-hidden]')
     return face?.getAttribute('aria-hidden') === 'true'
   }
+
+  it('renders the mockup-style session bar with a bold position and keycap', () => {
+    renderScreen()
+
+    expect(screen.getByRole('banner').className).toContain('border-b')
+    expect(screen.getByText('1 of 1').tagName).toBe('STRONG')
+    expect(screen.getByText('Space').tagName).toBe('KBD')
+    expect(screen.getByText('to flip')).toBeTruthy()
+  })
 
   it('Space reveals the answer', async () => {
     const user = userEvent.setup()
@@ -89,6 +99,18 @@ describe('ReviewSessionScreen (via Recall)', () => {
 
     expect(screen.getByText(fixture.explanation!.value)).toBeTruthy()
     expect(screen.getByRole('button', { name: /Good/ })).toBeTruthy()
+    expect(screen.getByText('Rate your answer')).toBeTruthy()
+    expect(screen.queryByText('1–4')).toBeNull()
+  })
+
+  it('describes the revealed state instead of suggesting hidden rating controls in preview', async () => {
+    const user = userEvent.setup()
+    renderScreen(() => {}, true)
+
+    await user.keyboard(' ')
+
+    expect(screen.getByText('Answer revealed')).toBeTruthy()
+    expect(screen.queryByText('Rate your answer')).toBeNull()
   })
 
   it('keys 1-4 select the expected rating, only after reveal, and grading completes', async () => {

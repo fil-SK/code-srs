@@ -8,11 +8,12 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { InlineText, RichText } from '@/components/text/RichText'
+import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import { gradeOrdering } from '@/domain/grading/ordering'
 import type { ID } from '@/types/common'
+import { CardPrompt } from '../../components/CardPrompt'
 import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
@@ -86,6 +87,7 @@ export function OrderingView({
     <FlashcardSurface
       flipped={flipped}
       onFlip={onPrimaryAction}
+      activateOnSurface={false}
       ariaLabel={
         flipped
           ? 'Ordering card, results showing'
@@ -96,10 +98,7 @@ export function OrderingView({
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2 text-center">
             <InteractionLabel type="ordering" />
-            <RichText
-              text={card.prompt.value}
-              className="mt-2 text-2xl font-bold leading-snug text-itera-ink-brand"
-            />
+            <CardPrompt text={card.prompt.value} className="mt-2" />
             {!locked && (
               <p className="text-sm text-itera-muted-light">
                 Drag items into the correct sequence.
@@ -155,10 +154,7 @@ export function OrderingView({
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2 text-center">
             <InteractionLabel type="ordering" />
-            <RichText
-              text={card.prompt.value}
-              className="mt-2 text-xl font-bold leading-snug text-itera-ink-brand"
-            />
+            <CardPrompt text={card.prompt.value} face="back" className="mt-2" />
           </div>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={() => {}}>

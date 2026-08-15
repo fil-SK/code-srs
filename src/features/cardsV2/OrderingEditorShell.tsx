@@ -80,6 +80,7 @@ export function OrderingEditorShell({
     <CardEditorShell
       mode={mode}
       subtitle={editorSubtitle('ordering', flatDecks, form.deckId)}
+      prompt={form.prompt}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

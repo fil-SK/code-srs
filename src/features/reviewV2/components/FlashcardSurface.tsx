@@ -9,12 +9,14 @@ import { FlipCard } from './FlipCard'
 export function FlashcardSurface({
   flipped,
   onFlip,
+  activateOnSurface = true,
   front,
   back,
   ariaLabel,
 }: {
   flipped: boolean
   onFlip: () => void
+  activateOnSurface?: boolean
   front: ReactNode
   back: ReactNode
   ariaLabel: string
@@ -23,6 +25,7 @@ export function FlashcardSurface({
     <FlipCard
       flipped={flipped}
       onFlip={onFlip}
+      activateOnSurface={activateOnSurface}
       front={front}
       back={back}
       ariaLabel={ariaLabel}

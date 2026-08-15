@@ -1,8 +1,8 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-15** (branch `app_redesign`, HEAD `0da06de`, plus the login visual refinement and app-wide typography alignment in this working tree).
+**Last verified against the working tree: 2026-08-15** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography and review-interaction refinements in this working tree).
 
-The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5 and makes its selected Inter Variable family the app-wide non-code default. These are presentation-only changes; auth, persistence, routes and product behavior are unchanged.
+The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5, makes its selected Inter Variable family the app-wide non-code default, and refines Review/preview chrome and card interactions. Auth, persistence and routes are unchanged.
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -116,10 +116,10 @@ Two axes matter: **Review** (rendering + grading a card) and **Authoring** (crea
 
 | Interaction | Review view | Grading | Authoring editor | Notes |
 |---|---|---|---|---|
-| **Recall** | `reviewV2/interactions/recall/RecallView.tsx` | self-graded (no grade function) | `RecallEditorShell` | Absorbs v1 `basic` / `codeReading` / `bugFinding`. |
+| **Recall** | `reviewV2/interactions/recall/RecallView.tsx` | self-graded (no grade function) | `RecallEditorShell` | Absorbs v1 `basic` / `codeReading` / `bugFinding`. Prompt is vertically centered between the type pill and the overlapping-card flip cue. |
 | **Multiple Choice** | `multipleChoice/MultipleChoiceView.tsx` | `domain/grading/multipleChoice.ts` (binary) | `MultipleChoiceEditorShell` | Option rows show no checkbox/radio glyph; state is colour + `aria-checked`. |
 | **Write Code** | `writeCode/WriteCodeView.tsx` | `domain/grading/writeCode.ts` (binary) | `WriteCodeEditorShell` | `WriteCodeInteraction.editableRegion?` is intentionally unconsumed — whole block is editable, documented inline. |
-| **Ordering** | `ordering/OrderingView.tsx` + `OrderingRow.tsx` | `domain/grading/ordering.ts` (partial credit) | `OrderingEditorShell` | Redesigned to `ordering-card.png`: card-shaped rows, grip right, up/down buttons faded until hover/focus but always in the DOM and tab order. `aria-live` position announcements. |
+| **Ordering** | `ordering/OrderingView.tsx` + `OrderingRow.tsx` | `domain/grading/ordering.ts` (partial credit) | `OrderingEditorShell` | Redesigned to `ordering-card.png`: card-shaped rows, grip right, up/down buttons faded until hover/focus but always in the DOM and tab order. `aria-live` position announcements. The card surface is deliberately inert; only **Submit answer** flips it. |
 | **Matching** | `matching/MatchingView.tsx` + `MatchingBoard.tsx` | `domain/grading/matching.ts` (partial credit) | `MatchingEditorShell` | Connected multi-column board with drawn connectors. **Capped at three columns.** The old accordion is deleted. |
 | **Walkthrough** | `walkthrough/WalkthroughView.tsx` + `StepResponse.tsx` | `domain/grading/walkthrough.ts` (partial credit) | `WalkthroughEditorShell` | Multi-step, multi-range code focus via `LazyCodeView`'s `highlightLines`. Absorbs v1 `story`. |
 
@@ -129,9 +129,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 11. Review integration state
 
-- `/review` is a **top-level, chrome-free route** (no `AppShell` ancestor), inside `RequireAuth`. It renders `ReviewSessionV2` → `ReviewSessionScreen`, the exact same shell `/design-preview/review/*` uses. One shell, not two.
+- `/review` is a **top-level, chrome-free route** (no `AppShell` ancestor), inside `RequireAuth`. It renders `ReviewSessionV2` → `ReviewSessionScreen`, the exact same shell `/design-preview/review/*` uses. One shell, not two. The shared width-safe Review strip follows `recall-card.png`: a literal **< Exit session** control left, bold position centered, and a bordered keyboard key plus action hint right. Exit and the right-side status/action use the same UI typography; Exit has the expected pointing-hand cursor. The strip's white background and border are full-bleed, while its controls share `TopNav`'s centered 1280px frame so the left/right controls align with the logo/profile edges. Session-backed surfaces also reserve 56px beneath their final content, matching the strip-to-card gap above.
 - Flow is strictly two-phase: Question → reveal → Answer → one FSRS grade. Objective types compute an `ObjectiveResult` from `src/domain/grading/*`, show a pass/fail banner, and pre-select a rating the user can override.
-- `/preview` renders the **real v2 card** (`migrateCard` + `ReviewSessionScreen` with `hideTopBar`/`hideRating`), not the v1 registry renderers. Its surrounding page chrome is still v1-styled.
+- `/preview` renders the **real v2 card** (`migrateCard` + `ReviewSessionScreen` with `hideRating`), not the v1 registry renderers. It now uses the shared Review strip instead of its former tag/jump-input header; `AppShell` gives preview routes a full-width, zero-top-padding main surface so the strip sits flush beneath and spans the same page width as the navbar, while prev/next remain page-local. `/cards/:id/study` uses the same treatment. After reveal, preview-only cards say **Answer revealed**; surfaces with rating controls say **Rate your answer** instead of the old `1–4 to rate` hint.
+- Every interaction front uses the shared `CardPrompt`: 24px normally, 20px only beyond 280 normalized characters or six non-empty lines. All six v2 editors warn authors when that fallback activates and recommend shortening or splitting the card.
 - **Known integration hole (the biggest one in the repo): `CardV2Record`s are never in the due queue.** `useDueCards` → `repo.cards.getDue()` reads v1 `Card` only. `repo.cardsV2.getDue()` is implemented in **both** backends but has **no hook and no caller**. A card authored through the new create flow can only ever be reviewed non-committingly (editor preview, `/cards/:id/study`). See §16.
 - Duplication that is known and accepted: `src/hooks/useReview.ts` (v1) still calls the scheduler functions directly instead of `src/domain/scheduling/reviewService.ts`. The v1 `ReviewSession.tsx` / `useReviewSession.ts` remain in the tree, unreferenced.
 
@@ -192,17 +193,17 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-15 on this working tree, after the login visual refinement:
+Measured 2026-08-15 on this working tree, after the current visual and Ordering-interaction refinements:
 
 ```
-npx vitest run     → 63 test files, 429 tests, all passing
+npx vitest run     → 64 test files, 438 tests, all passing
 npx tsc --noEmit   → clean, no errors
 npm run lint       → clean, zero warnings
 ```
 
 **This is a fully clean baseline.** Lint previously carried one warning from `.scratch-shot.cjs`; those three committed scratch scripts have been deleted, so there are now no warnings at all. Treat any new warning as a regression introduced by the change that caused it.
 
-**429 is the current correct test count.** The temporary login font-comparison test briefly raised it to 430, then was removed with the experiment. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
+**438 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling and the authoring warning. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 
@@ -240,7 +241,7 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 - `src/domain/migration/{cardMigration,cardStateBackfill,runner}.ts`
 
 **Review**
-- `src/features/reviewV2/{ReviewSessionScreen,reviewPhase}.tsx|ts`, `interactions/{registry,types}.ts`, `interactions/<type>/`, `components/{IteraSurface,ForceLightTheme,FlashcardSurface,FlipCard,TipPanel,ExplanationPanel,RatingControls,InteractionLabel,ReviewTopBar,CardPanel}.tsx`
+- `src/features/reviewV2/{ReviewSessionScreen,reviewPhase}.tsx|ts`, `interactions/{registry,types}.ts`, `interactions/<type>/`, `components/{IteraSurface,ForceLightTheme,FlashcardSurface,FlipCard,FlipCueIcon,CardPrompt,promptLength,TipPanel,ExplanationPanel,RatingControls,InteractionLabel,ReviewTopBar,CardPanel}.tsx|ts`
 - `src/domain/grading/{multipleChoice,writeCode,ordering,matching,walkthrough}.ts`
 - `src/domain/scheduling/reviewService.ts`, `src/features/review/{ReviewPage,ReviewSessionV2}.tsx`
 

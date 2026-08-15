@@ -80,6 +80,7 @@ export function WalkthroughEditorShell({
     <CardEditorShell
       mode={mode}
       subtitle={editorSubtitle('walkthrough', flatDecks, form.deckId)}
+      prompt={form.prompt}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

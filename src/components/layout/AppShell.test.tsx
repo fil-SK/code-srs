@@ -24,6 +24,8 @@ function renderAt(path: string) {
           { index: true, element: <div>Today content</div> },
           { path: 'decks', element: <div>Decks content</div> },
           { path: 'stats', element: <div>Stats content</div> },
+          { path: 'preview', element: <div>Preview content</div> },
+          { path: 'cards/:id/study', element: <div>Card preview content</div> },
         ],
       },
       { path: 'review', element: <div>Review content</div> },
@@ -70,6 +72,18 @@ describe('AppShell', () => {
     expect(screen.queryByText('Search')).toBeNull()
     expect(screen.queryByRole('button', { name: /Create/ })).toBeNull()
   })
+
+  it.each(['/preview', '/cards/card-1/study'])(
+    'gives the card preview route a full-width main surface at %s',
+    async (path) => {
+      renderAt(path)
+      const main = await screen.findByRole('main')
+      expect(main.className).toContain('w-full')
+      expect(main.className).toContain('py-0')
+      expect(main.className).not.toContain('max-w-[1280px]')
+      expect(main.className).not.toContain('px-4')
+    },
+  )
 
   it('does not render the shared shell around a route outside AppShell (Review)', async () => {
     renderAt('/review')

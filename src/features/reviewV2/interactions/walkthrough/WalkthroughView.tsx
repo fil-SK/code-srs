@@ -3,6 +3,7 @@ import { RichText } from '@/components/text/RichText'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { cn } from '@/lib/cn'
 import { gradeWalkthroughStep } from '@/domain/grading/walkthrough'
+import { CardPrompt } from '../../components/CardPrompt'
 import { CardPanel } from '../../components/CardPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
@@ -83,10 +84,7 @@ export function WalkthroughView({
     <CardPanel>
       <div className="flex flex-col items-center gap-1 text-center">
         <InteractionLabel type="walkthrough" />
-        <RichText
-          text={card.prompt.value}
-          className="mt-2 text-2xl font-bold leading-snug text-itera-ink-brand"
-        />
+        <CardPrompt text={card.prompt.value} className="mt-2" />
       </div>
       <RichText
         text={interaction.scenario.value}

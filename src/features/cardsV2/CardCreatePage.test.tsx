@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -58,5 +58,16 @@ describe('CardCreatePage under the shared AppShell', () => {
     expect(await screen.findAllByText('Create card')).toHaveLength(1)
     expect(screen.queryByText('Decks')).toBeNull()
     expect(screen.queryByRole('link', { name: /Study now/i })).toBeNull()
+  })
+
+  it('warns without blocking when a prompt is too long for a focused flashcard', async () => {
+    const user = userEvent.setup()
+    renderCreateFlow()
+
+    await user.click(await screen.findByRole('button', { name: 'Recall' }))
+    fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: 'A'.repeat(281) } })
+
+    expect(await screen.findByText('This prompt is unusually long.')).toBeTruthy()
+    expect(screen.getByText(/Consider shortening it or splitting it/)).toBeTruthy()
   })
 })

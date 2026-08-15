@@ -80,6 +80,7 @@ export function WriteCodeEditorShell({
     <CardEditorShell
       mode={mode}
       subtitle={editorSubtitle('write_code', flatDecks, form.deckId)}
+      prompt={form.prompt}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

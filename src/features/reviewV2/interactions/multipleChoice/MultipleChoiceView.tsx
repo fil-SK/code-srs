@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { Check, X } from 'lucide-react'
-import { InlineText, RichText } from '@/components/text/RichText'
+import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import { gradeMultipleChoice } from '@/domain/grading/multipleChoice'
+import { CardPrompt } from '../../components/CardPrompt'
 import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
@@ -53,10 +54,7 @@ export function MultipleChoiceView({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col items-center gap-1 text-center">
             <InteractionLabel type="multiple_choice" />
-            <RichText
-              text={card.prompt.value}
-              className="mt-2 text-2xl font-bold leading-snug text-itera-ink-brand"
-            />
+            <CardPrompt text={card.prompt.value} className="mt-2" />
             {interaction.selectionMode === 'multiple' && (
               <p className="text-xs font-medium text-itera-muted">Select all that apply.</p>
             )}
@@ -111,10 +109,7 @@ export function MultipleChoiceView({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col items-center gap-1 text-center">
             <InteractionLabel type="multiple_choice" />
-            <RichText
-              text={card.prompt.value}
-              className="mt-2 text-xl font-bold leading-snug text-itera-ink-brand"
-            />
+            <CardPrompt text={card.prompt.value} face="back" className="mt-2" />
           </div>
 
           <div className="space-y-2">

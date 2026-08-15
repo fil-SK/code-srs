@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
 import type { MatchingColumnItem } from '@/types/cardV2'
 import { gradeMatching, type MatchingResponse } from '@/domain/grading/matching'
+import { CardPrompt } from '../../components/CardPrompt'
 import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
@@ -65,13 +65,7 @@ export function MatchingView({
   const header = (size: 'front' | 'back') => (
     <div className="flex flex-col items-center gap-1 text-center">
       <InteractionLabel type="matching" />
-      <RichText
-        text={card.prompt.value}
-        className={cn(
-          'mt-2 font-bold leading-snug text-itera-ink-brand',
-          size === 'front' ? 'text-2xl' : 'text-xl',
-        )}
-      />
+      <CardPrompt text={card.prompt.value} face={size} className="mt-2" />
       {size === 'front' && !locked && (
         <p className="text-xs font-medium text-itera-muted">
           Tap a term, then tap the value it pairs with.

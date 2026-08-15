@@ -22,9 +22,10 @@ import { cn } from '@/lib/cn'
 // currently the "back" of the card so assistive tech doesn't see both faces'
 // text at once.
 //
-// Both faces are click/keyboard-activatable to flip (front -> back and back
-// -> front), so the card itself is always the thing you click, front or
-// back, rather than needing a separate "show question" control once flipped.
+// By default both faces are click/keyboard-activatable to flip (front -> back
+// and back -> front), so the card itself is the thing you click rather than
+// needing a separate "show question" control once flipped. Interactions such
+// as Ordering can opt out when the surface surrounds pointer-heavy controls.
 // Four of the six interaction types now put real controls (buttons, a code
 // editor, option rows) inside the front face, so a click or Enter/Space
 // originating on one of those must NOT also bubble up and re-trigger the
@@ -51,6 +52,7 @@ export function FlipCard({
   flipped,
   faceClassName,
   onFlip,
+  activateOnSurface = true,
   ariaLabel,
 }: {
   front: ReactNode
@@ -58,6 +60,7 @@ export function FlipCard({
   flipped: boolean
   faceClassName?: string
   onFlip: () => void
+  activateOnSurface?: boolean
   ariaLabel: string
 }) {
   function onFaceClick(e: MouseEvent<HTMLDivElement>) {
@@ -76,30 +79,34 @@ export function FlipCard({
   return (
     <div className={cn('itera-flip', flipped && 'is-flipped')}>
       <div
-        role="button"
-        tabIndex={flipped ? -1 : 0}
-        aria-pressed={flipped}
+        role={activateOnSurface ? 'button' : undefined}
+        tabIndex={activateOnSurface ? (flipped ? -1 : 0) : undefined}
+        aria-pressed={activateOnSurface ? flipped : undefined}
         aria-hidden={flipped}
-        aria-label={ariaLabel}
-        onClick={onFaceClick}
-        onKeyDown={onFaceKeyDown}
+        aria-label={activateOnSurface ? ariaLabel : undefined}
+        onClick={activateOnSurface ? onFaceClick : undefined}
+        onKeyDown={activateOnSurface ? onFaceKeyDown : undefined}
         className={cn(
-          'itera-flip-face itera-flip-front cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+          'itera-flip-face itera-flip-front',
+          activateOnSurface &&
+            'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
           faceClassName,
         )}
       >
         {front}
       </div>
       <div
-        role="button"
-        tabIndex={flipped ? 0 : -1}
-        aria-pressed={flipped}
+        role={activateOnSurface ? 'button' : undefined}
+        tabIndex={activateOnSurface ? (flipped ? 0 : -1) : undefined}
+        aria-pressed={activateOnSurface ? flipped : undefined}
         aria-hidden={!flipped}
-        aria-label={ariaLabel}
-        onClick={onFaceClick}
-        onKeyDown={onFaceKeyDown}
+        aria-label={activateOnSurface ? ariaLabel : undefined}
+        onClick={activateOnSurface ? onFaceClick : undefined}
+        onKeyDown={activateOnSurface ? onFaceKeyDown : undefined}
         className={cn(
-          'itera-flip-face itera-flip-back cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+          'itera-flip-face itera-flip-back',
+          activateOnSurface &&
+            'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
           faceClassName,
         )}
       >

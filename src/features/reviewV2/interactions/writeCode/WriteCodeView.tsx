@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { RichText } from '@/components/text/RichText'
 import { LazyCodeEditor } from '@/components/code/LazyCodeEditor'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { SUPPORTED_LANGUAGES } from '@/components/code/languageList'
 import { cn } from '@/lib/cn'
 import { matchesAcceptedAnswer } from '@/domain/grading/writeCode'
+import { CardPrompt } from '../../components/CardPrompt'
 import { FlashcardSurface } from '../../components/FlashcardSurface'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import type { InteractionViewProps } from '../types'
@@ -49,10 +49,7 @@ export function WriteCodeView({
     <div className="flex flex-col items-center gap-1 text-center">
       <InteractionLabel type="write_code" />
       <div className="mt-2 flex w-full items-center justify-center gap-2">
-        <RichText
-          text={card.prompt.value}
-          className={cn('font-bold leading-snug text-itera-ink-brand', size === 'front' ? 'text-2xl' : 'text-xl')}
-        />
+        <CardPrompt text={card.prompt.value} face={size} />
       </div>
       <span className="rounded-itera-pill bg-itera-navy-soft px-2.5 py-1 font-mono text-xs font-semibold text-itera-ink-brand">
         {languageLabel(interaction.language)}

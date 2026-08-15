@@ -67,14 +67,7 @@ export function PreviewPage() {
   const backTo =
     fromParam ||
     (deckParam ? `/decks/${deckParam}` : cardParam ? '/browse' : '/decks')
-  const back = {
-    to: backTo,
-    label: backTo.startsWith('/decks/')
-      ? '← Deck'
-      : backTo === '/browse'
-        ? '← Cards'
-        : '← Decks',
-  }
+  const back = { to: backTo }
 
   const [index, setIndex] = useState(0)
 
@@ -91,12 +84,6 @@ export function PreviewPage() {
 
   function go(delta: number) {
     setIndex(() => Math.min(cards.length - 1, Math.max(0, safeIndex + delta)))
-  }
-
-  // Jump to a 0-based card index (from the "Card N of M" input).
-  function jumpTo(target: number) {
-    if (!Number.isFinite(target)) return
-    setIndex(Math.min(cards.length - 1, Math.max(0, target)))
   }
 
   // Only prev/next lives here — reveal/submit/rating shortcuts belong to
@@ -139,40 +126,7 @@ export function PreviewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-4 flex items-center justify-between text-xs text-muted">
-        <span className="flex items-center gap-2">
-          <Link to={back.to} className="hover:text-text">
-            {back.label}
-          </Link>
-          {current.tags.map((tag) => (
-            <span key={tag} className="font-mono text-[11.5px] text-blue">
-              #{tag}
-            </span>
-          ))}
-        </span>
-        <span className="flex items-center gap-1">
-          {cardParam ? (
-            'Single card'
-          ) : (
-            <>
-              {scope ? `${scope.name} · ` : ''}Card{' '}
-              <input
-                type="number"
-                min={1}
-                max={cards.length}
-                value={safeIndex + 1}
-                onChange={(e) => jumpTo(Number(e.target.value) - 1)}
-                aria-label="Jump to card number"
-                className="w-12 rounded border border-border bg-panel-2 px-1 py-0.5 text-center text-text [appearance:textfield]"
-              />{' '}
-              of {cards.length}
-            </>
-          )}
-          <span className="text-faint"> · preview, no scheduling</span>
-        </span>
-      </div>
-
+    <div>
       <IteraSurface>
         <ReviewSessionScreen
           key={current.id}
@@ -182,13 +136,12 @@ export function PreviewPage() {
           total={cards.length}
           onExit={() => navigate(back.to)}
           schedulingBefore={initialSchedulingState()}
-          hideTopBar
           hideRating
         />
       </IteraSurface>
 
       {!cardParam && (
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex items-center justify-between px-4 sm:px-6">
           <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
             <ChevronLeft size={16} /> Prev
           </Button>

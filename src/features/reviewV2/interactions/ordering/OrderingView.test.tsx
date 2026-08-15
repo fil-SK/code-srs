@@ -109,6 +109,20 @@ describe('OrderingView', () => {
     expect(labels()).toEqual(['First', 'Second', 'Third'])
   })
 
+  it('does not submit or flip when the card surface is clicked', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    const front = document.querySelector<HTMLElement>('.itera-flip-front')
+    expect(front).toBeTruthy()
+    expect(front?.getAttribute('role')).toBeNull()
+
+    await user.click(front!)
+
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeTruthy()
+    expect(screen.queryByText('33% in the right position')).toBeNull()
+  })
+
   it('announces the moved item and its new position via an aria-live region', async () => {
     const user = userEvent.setup()
     renderScreen()

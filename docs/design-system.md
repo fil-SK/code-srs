@@ -109,12 +109,12 @@ These describe the *intended* scale. **IMPLEMENTED:** components use literal Tai
 
 | Surface | Intended (spec §5.3) | IMPLEMENTED |
 |---|---|---|
-| Global app content | 1440–1520px | **1280px** — `AppShell`'s `<main class="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6">`, matched by `TopNav`'s inner row so logo and content align |
+| Global app content | 1440–1520px | **1280px** — standard `AppShell` routes use a centered `max-w-[1280px]` main with responsive padding, matched by `TopNav`'s inner row so logo and content align. Study-preview routes deliberately receive a full-width, zero-top-padding main so their white Review strip can remain full-bleed. |
 | Review content | 1040–1120px | Narrower on purpose: the card is `max-w-2xl` (672px), or `max-w-4xl` (896px) for interactions whose definition reports `widthFor() === 'wide'` |
 | Editor + preview | 1440px | `CardEditorShell`'s own animated `max-width`, growing in step with the preview drawer |
 | Text-heavy panel | 760–840px | Followed by eye; no token |
 
-Top bars — **DESIGN RULE:** global nav 68–72px desktop, Review top bar 60–64px, mobile 56–60px. **IMPLEMENTED:** `TopNav` is `h-16` (64px).
+Top bars — **DESIGN RULE:** global nav 68–72px desktop; the immersive Review bar is an 80px full-width white strip at every width, following `recall-card.png`. "Full-width" means the available layout width, never `100vw`/`100dvw`, so a vertical scrollbar cannot create horizontal page overflow. Its background/border stay full-bleed, while its control grid uses the same centered 1280px frame as `TopNav`: Exit aligns with the Itera logo edge and the right hint aligns with the profile-control edge. Exit and the right-side action/status label share the same UI typography; only the keyboard keycap keeps its smaller semibold treatment. The Exit button uses `cursor: pointer` across its complete text target. **IMPLEMENTED:** `TopNav` is `h-16` (64px), while `ReviewTopBar` is `min-h-20` (80px).
 
 ---
 
@@ -237,11 +237,13 @@ The shape language is **structured softness**.
 
 ### The Review-shell exception — DESIGN RULE (locked)
 
-**Review renders none of the above.** It is immersive by construction: a thin top bar carrying only exit, position ("7 of 23") and a shortcut hint, then the card, tip, explanation and rating controls on open space.
+**Review renders none of the above.** It is immersive by construction: a full-width white top strip carrying only a literal **< Exit session** control (not an arrow icon), a bold position ("7 of 23") and a right-aligned shortcut whose key is drawn as a bordered `<kbd>`, then the narrow card column, tip, explanation and rating controls on open space. The same strip renders on the real study-preview routes; those routes receive a full-width, zero-top-padding `AppShell` main so the strip stays full-bleed and sits flush beneath `TopNav`. The strip's inner controls share the nav's centered 1280px frame. Session-backed surfaces use a symmetric 56px vertical frame: 56px from the strip to the card and 56px from the final rendered content (normally rating controls) to the surface bottom. Editor live previews deliberately keep their Question/Answer toggle instead because they have no deck/session position. Revealed preview-only cards say **Answer revealed**; when ratings are present, the hint becomes **Rate your answer** without repeating the numeric shortcuts already visible on the buttons.
 
 Never add to Review: global navigation, the Itera logo, a left sidebar, the upcoming queue, a card-information panel, a session-statistics panel, an explanation of spaced repetition, or persistent deck metadata. Those were tested and rejected because they distract from recall.
 
 **IMPLEMENTED:** `/review` is a **structurally separate top-level route with no `AppShell` ancestor** (`src/app/router.tsx`), so it is chrome-free by construction rather than by hiding the shell with CSS. `/login` and `/design-preview/*` use the same pattern. `ReviewTopBar.tsx` carries exit + counter + shortcut hint and nothing else. Because `AccountMenu` mounts from `AppShell`, Review has no account menu automatically.
+
+**Card prompt typography — DESIGN RULE.** Every interaction front uses `CardPrompt`: 24px, bold, and centered within that interaction's prompt area. Type-specific or viewport-specific prompt sizes are not allowed. Only genuinely long authored prompts (more than 280 normalized characters or six non-empty lines) drop to 20px. That fallback is a readability safety net, not an authoring target: every v2 editor shows a non-blocking warning recommending that the author shorten or split the card. Recall additionally uses balanced top/middle/bottom rows so its prompt is geometrically centered between the type pill and flip cue.
 
 ---
 

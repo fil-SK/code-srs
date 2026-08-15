@@ -80,6 +80,7 @@ export function MatchingEditorShell({
     <CardEditorShell
       mode={mode}
       subtitle={editorSubtitle('matching', flatDecks, form.deckId)}
+      prompt={form.prompt}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}

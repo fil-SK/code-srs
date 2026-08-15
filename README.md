@@ -37,7 +37,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 | **Code Reading** | Understanding a snippet | Read code + question, flip to reveal |
 | **Code Completion** | Writing the right code | Type the answer, auto-checked against accepted solutions |
 | **Bug Finding** | Spotting defects | Read code (optional hint), flip to reveal explanation |
-| **Ordering** | Correct sequence/steps | Drag items into order, auto-graded |
+| **Ordering** | Correct sequence/steps | Drag items into order, then submit explicitly for auto-grading |
 | **Matching** | Associating concepts | Match columns via dropdowns, auto-graded |
 | **Story** | Multi-step scenarios (e.g. tracing code execution) | Walk through steps one at a time, reveal each, self-grade at the end |
 
@@ -60,7 +60,7 @@ Grading model: interactive types (MCQ, completion, ordering, matching) **auto-de
 - **Deck page** (`/decks/:id`) — the deck's cards as a list. **Drag the handle** to reorder, open **Deck settings** to rename/describe/**reparent** the deck, and use each row's actions to **preview / edit / move / suspend / delete** a card.
 - **Review** — the due queue. Reveal, grade, undo. Order is driven by FSRS, independent of any manual card order.
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.
-- **Preview** — try cards with **no scheduling impact**: answer the interactive ones and **Check** to see if you were right, flip the self-graded ones, and **jump to any card by number**. Nothing is recorded.
+- **Preview** — try cards with **no scheduling impact** through the same card surface as Review. Use the shared position/shortcut strip, reveal or submit the card, and move with Prev/Next or the arrow keys. Ratings are hidden and nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
 - **Stats** — streak, retention, reviews/day, and upcoming load.
 - **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The other sections (profile, email & password, appearance, notifications, privacy, connected devices) are visible but greyed out: they are planned, not built. Sign-out lives in the avatar menu and only appears in cloud mode.

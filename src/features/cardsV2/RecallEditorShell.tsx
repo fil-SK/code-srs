@@ -82,6 +82,7 @@ export function RecallEditorShell({
     <CardEditorShell
       mode={mode}
       subtitle={editorSubtitle('recall', flatDecks, form.deckId)}
+      prompt={form.prompt}
       onCancel={() => navigate(backTo)}
       onSave={handleSave}
       canSave={canSave}
