@@ -102,6 +102,8 @@ Open the printed URL (default http://localhost:5173). With no `.env.local`, it r
 
 You land on `/login` first. There is no accounts backend in local mode, so it is a session boundary rather than authentication — **Continue with demo workspace** gets you straight in, or sign in with any email and password (the password is never stored, sent, or checked). Signing out from the avatar menu returns you here. With Supabase configured, the same page sends a real magic link instead.
 
+The login is a compact, mockup-driven split surface using Inter Variable throughout. Its product panel carries the real Itera mark, a three-card equal-width learning fan, and the Local-first / Private by default / Built for engineers principles; the form stays intentionally quieter on the right.
+
 ### Scripts
 
 | Command | Description |

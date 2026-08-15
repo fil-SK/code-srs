@@ -6,10 +6,10 @@ import { Code2, Database, Network, type LucideIcon } from 'lucide-react'
 //
 // Geometry rules the arrangement follows (the reason the numbers below are
 // hand-set rather than generated): every card keeps roughly the same
-// width/height ratio (~0.72), they all lean the same way so they read as one
-// object rather than scattered confetti, and the rotations stay under 10deg
-// so nothing looks like it is flying out of the page. Front-to-back the navy
-// card is nearest, then white, then orange, which is what the mockup draws.
+// width/height ratio (~0.72). Dynamic Programming leans left while the two
+// rear cards lean right, matching the fan in the locked mockup. Rotations stay
+// at or under 9deg so the group still reads as one object rather than scattered
+// confetti. Front-to-back the navy card is nearest, then white, then orange.
 //
 // The overlap is bounded by a hard rule, not taste: a card may never cover
 // the next card's *title*. Each card leans, so its right edge at the next
@@ -33,7 +33,7 @@ interface IllustrationCard {
   icon: LucideIcon
   /** The colored band behind the icon and title. `plain` is the white card. */
   header: 'navy' | 'plain' | 'orange'
-  /** Position within the 520x300 illustration box, plus its lean. */
+  /** Position within the 580x330 illustration box, plus its lean. */
   left: number
   top: number
   width: number
@@ -49,8 +49,8 @@ const CARDS: IllustrationCard[] = [
     tag: 'Algorithms',
     icon: Code2,
     header: 'navy',
-    left: 72,
-    top: 62,
+    left: 52,
+    top: 50,
     width: 176,
     height: 244,
     rotate: -9,
@@ -62,11 +62,11 @@ const CARDS: IllustrationCard[] = [
     tag: 'Databases',
     icon: Database,
     header: 'plain',
-    left: 246,
-    top: 26,
-    width: 156,
+    left: 226,
+    top: 40,
+    width: 176,
     height: 236,
-    rotate: -5,
+    rotate: 5,
     z: 2,
   },
   {
@@ -76,16 +76,16 @@ const CARDS: IllustrationCard[] = [
     icon: Network,
     header: 'orange',
     left: 396,
-    top: 16,
-    width: 162,
+    top: 30,
+    width: 176,
     height: 240,
-    rotate: -7,
+    rotate: 9,
     z: 1,
   },
 ]
 
 const CARD_SHADOW =
-  '0 18px 40px rgba(23, 32, 51, 0.10), 0 2px 8px rgba(23, 32, 51, 0.06)'
+  '0 22px 46px rgba(23, 32, 51, 0.14), 0 4px 12px rgba(23, 32, 51, 0.08)'
 
 // Faint dot fields, as in the mockup: pure decoration that gives the cards
 // something to sit against instead of empty canvas.
@@ -109,7 +109,7 @@ function Card({ card }: { card: IllustrationCard }) {
 
   return (
     <div
-      className="absolute overflow-hidden rounded-itera-card bg-itera-surface"
+      className="absolute overflow-hidden rounded-itera-card border border-itera-border/80 bg-itera-surface"
       style={{
         left: card.left,
         top: card.top,
@@ -132,8 +132,8 @@ function Card({ card }: { card: IllustrationCard }) {
         }}
       >
         <Icon
-          size={23}
-          strokeWidth={2.25}
+          size={24}
+          strokeWidth={2.1}
           style={{
             color:
               header === 'navy'
@@ -144,7 +144,7 @@ function Card({ card }: { card: IllustrationCard }) {
           }}
         />
         <div
-          className="mt-5 text-[13.5px] font-bold leading-tight tracking-tight"
+          className="mt-5 whitespace-nowrap text-[13.5px] font-semibold leading-[1.2] tracking-[-0.02em]"
           style={{ color: banded ? '#ffffff' : 'var(--itera-ink-brand)' }}
         >
           {card.title}
@@ -152,12 +152,12 @@ function Card({ card }: { card: IllustrationCard }) {
       </div>
 
       <div className="px-4 pt-3">
-        <p className="text-[10.5px] leading-[1.5] text-itera-muted">{card.body}</p>
+        <p className="text-[11px] font-normal leading-[1.5] text-itera-muted">{card.body}</p>
       </div>
 
       <div className="absolute inset-x-4 bottom-4 flex items-center justify-between">
         <span
-          className="rounded-itera-pill px-2 py-1 text-[10px] font-semibold"
+          className="rounded-itera-pill px-2 py-1 text-[10.5px] font-medium"
           style={
             header === 'orange'
               ? { background: 'var(--itera-accent-soft)', color: 'var(--itera-accent)' }

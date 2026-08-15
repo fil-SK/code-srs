@@ -87,6 +87,10 @@ Three families, no more. **Do not add a fourth, and do not mix decorative fonts.
 - **Inter Tight** — large expressive moments **only** (Today's greeting, a session-completion title). If you are reaching for it on a table header or a card title, use Inter.
 - **JetBrains Mono** — code, keyboard shortcuts, and selected technical metadata. Nothing else.
 
+**Login implementation:** `/login` uses `font-itera-sans` (Inter Variable) throughout, including its `Welcome back` and `Sign in` headings at weight 650. It does not use Inter Tight. The family was finalized after a controlled comparison against Manrope and Plus Jakarta Sans; those temporary font faces and the selector were removed. No global token or stack changed.
+
+**Login illustration implementation:** the locked fan is three real DOM cards, each 176px wide, inside a 580x330 decorative canvas. Dynamic Programming is left 52/top 50/−9°; SQL Joins is left 226/top 40/+5°; System Design is left 396/top 30/+9°. Heights remain slightly different, so the equal-width cards still form an intentional asymmetrical stack. Keep every title unobstructed and preserve the literal inline transforms when adjusting this composition.
+
 Hierarchy comes from **type scale, weight, spacing and composition**, not from wrapping things in more containers.
 
 Suggested line heights: UI labels `1.2–1.3`, body `1.45–1.6`, large titles `1.05–1.2`, code `1.5–1.7`.
@@ -355,7 +359,7 @@ The project is **mockup-driven**. Reference images are **not tracked in this rep
 ```
 C:\Users\SK\Desktop\itera-mockups\
     webapp\        # product mockups cited by filename throughout itera-decisions.md:
-                   #   login-v3.png, profile.png, profile-menu.png, progress.png,
+                   #   login-v3.png, login-icons.png, profile.png, profile-menu.png, progress.png,
                    #   library.png, all-decks.png, library-use.png, add-new-card.png,
                    #   recall-card.png, recall-card-revealed.png, mcq-card.png,
                    #   ordering-card.png, matching-card.png, walkthrough-card.png,

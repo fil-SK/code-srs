@@ -573,3 +573,41 @@ Context: the repository is now worked on by both Claude Code and OpenAI Codex. N
 **One measured contradiction left standing.** The 2026-08-12 login entry above records "447 tests pass"; a measured `npx vitest run` on this tree reports **63 files, 429 tests**. The decision log is append-only, so that entry was not edited; `CURRENT_STATE.md` section 16 now states the measured number and says explicitly that it supersedes the logged one.
 
 Verification for this pass: `npx vitest run` 429/429 passing, `npx tsc --noEmit` clean, `npm run lint` clean except the pre-existing `.scratch-shot.cjs` warning. Only doc-path strings inside comments changed in `src/` (`router.tsx`, `reviewService.ts`, `PreviewShell.tsx`, `fixtures.ts`, `TodayPage.tsx`, `index.css`, `types/cardV2.ts`, `types/index.ts`); no behavior, routes, schema, persistence or UI changed.
+
+## 2026-08-15 — Login visual refinement (`login-v3.png` + `login-icons.png`)
+
+**D150 (supersedes the principle-row styling recorded under D143). The login keeps the approved composition but lowers its visual volume.** The desktop shell is now capped at 1080px instead of 1180px; outer and inner padding, the logo, headings, inputs and buttons were reduced proportionally. The three-card illustration is uniformly scaled to 90% rather than having its hand-tuned card positions edited individually, so D143's title-overlap constraint remains intact. Typography continues to use the existing self-hosted Itera families: Inter Tight for the expressive brand and sign-in headings, Inter for UI and supporting copy.
+
+**`login-icons.png` is the locked treatment for the bottom principles.** The former bordered-circle icon-and-label row is replaced by three open columns with navy Lucide line icons, small orange check details where the reference uses them, labels, supporting copy and restrained vertical separators. This deliberately reverses the earlier call in D143 to omit descriptions and orange accents; the product owner explicitly requested the newer `login-icons.png` treatment. No raster icons or new icon package were added.
+
+**Auth and responsive behavior are unchanged.** Local sessions, Remember me storage selection, demo entry, redirect-back behavior, Supabase magic links, password visibility, validation and the honest Forgot password placeholder all retain their existing implementations. Below `lg` the CSS-card illustration remains hidden, and below `md` the principle row remains hidden; at 390x844 the compact brand introduction and full form fit without horizontal overflow.
+
+Verification: `npx vitest run` 429/429 passing, `npx tsc --noEmit` clean, `npm run lint` clean, and `npm run build` successful. Chromium at 1440x900 measured the shell at 1080x695 and preserved the complete keyboard order; Chromium at 390x844 measured 390px client/scroll width and no page height beyond the viewport.
+
+## 2026-08-15 — Login card fan and typography correction
+
+**D151 (supersedes D150's illustration scale and login-heading font). The CSS illustration returns to its full 580x330 authored size and matches the locked fan direction.** Dynamic Programming remains at −9°; SQL Joins changes from −5° to +5°; System Design changes from −7° to +9°, the direct right-leaning counterpart to the front card. Stronger layered shadows and a restrained card edge add depth without replacing the accessible, maintainable DOM illustration with a raster asset. Card titles, body copy and tags are larger in the rendered result; the long Dynamic Programming title remains one line.
+
+**The login page uses Inter Variable throughout.** `LoginPage` scopes `font-itera-sans` over the whole surface, removes `font-itera-display` from the brand, `Welcome back` and `Sign in`, and sets the two headings at weight 650. Body copy remains 400; labels and actions stay mainly 500–600. Letter spacing and line height were retuned for the softer optical density of `login-v3.png`. This is deliberately page-scoped: Inter Tight and JetBrains Mono remain installed and unchanged for their sanctioned uses elsewhere.
+
+The 1080px outer shell, `login-icons.png` principle row, auth behavior and responsive collapse rules from D150 remain in force.
+
+Verification: Chromium computed both headings as `Inter Variable` at weight 650 and the three card transforms as `rotate(-9deg)`, `rotate(5deg)` and `rotate(9deg)`; the long front-card title stays on one line. Chromium at 1440x900 and 390x844 reported no horizontal overflow, with Email still receiving the first keyboard focus and the demo action's hover state exercised. `npx vitest run` passed 429/429, `npx tsc --noEmit` and `npm run lint` were clean, and `npm run build` completed successfully.
+
+## 2026-08-15 — Equal-width card fan and controlled login font comparison
+
+**D152. All three illustration cards now share Dynamic Programming's 176px authored width.** Their heights remain slightly different, and their vertical positions deliberately do not align: Dynamic Programming stays at top 62, SQL Joins moves from 26 to 40, and System Design moves from 16 to 30. System Design also shifts right to left 416 so the wider SQL card never covers its title. The existing −9°/+5°/+9° fan, layer order and full-size 580x330 illustration stay intact.
+
+**The typography comparison is a temporary, family-only experiment on desktop `/login`.** A defaults to Inter, B selects Manrope, and C selects Plus Jakarta Sans. One inherited `fontFamily` on the login composition is the only value that changes: component classes continue to own the exact same sizes, weights, tracking and line heights for every option. The selector is not persisted and is hidden below `lg`; it is a decision aid, not a newly chosen product font. Manrope and Plus Jakarta Sans are self-hosted through page-local `@fontsource-variable` imports. No global font token or stack changed.
+
+No text shadow, blur, stroke, font-smoothing override or other raster-like treatment was introduced. Auth behavior is unchanged.
+
+Verification: Chromium confirmed all three cards have an authored width of 176px, with tops 62/40/30 and transforms −9°/+5°/+9°. For Inter, Manrope and Plus Jakarta Sans, Chromium computed identical heading sizes, 650 weights, tracking and line heights; only `font-family` changed. All three selectors reached their settled active style, the desktop page stayed within 1440x900, and the hidden mobile selector produced no overflow at 390x844. `npx vitest run` passed 430/430, `npx tsc --noEmit` was clean, `npm run lint` was clean after removing the throwaway browser script, and `npm run build` completed successfully.
+
+## 2026-08-15 — Inter selected for login; card fan repositioned
+
+**D153. Inter Variable is the final login-page family.** The controlled comparison made the existing Inter treatment the product-owner choice. The temporary selector, state, comparison test, Manrope/Plus Jakarta Sans imports and both font packages were removed. The accepted typography remains exactly as compared: `Welcome back` at 42px/650/−0.025em/1.1 and `Sign in` at 27px/650/−0.02em/1.15, with Inter inherited through the login surface. This finalizes a page choice without changing the global typography system.
+
+**The complete equal-width fan moves 20px left, and Dynamic Programming moves 12px up.** Authored positions are now Dynamic Programming left 52/top 50, SQL Joins left 226/top 40, and System Design left 396/top 30. Widths, rotations, heights, layer order and title-clearance geometry are unchanged.
+
+Verification: Chromium at 1440x900 computed Inter Variable/650 for both login headings, found no typography-comparison control, and confirmed the three authored positions above; 390x844 remained overflow-free. `npx vitest run` passed 429/429, `npx tsc --noEmit` and `npm run lint` were clean, and `npm run build` completed successfully with only the existing chunk-size advisory.

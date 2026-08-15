@@ -25,7 +25,7 @@ import { cn } from '@/lib/cn'
 // the subtle fill the editors use.
 const inputClass = cn(
   fieldClass,
-  'h-12 rounded-itera-control border-itera-border bg-itera-surface pl-11 text-[15px] placeholder:text-itera-muted-light',
+  'h-11 rounded-itera-control border-itera-border bg-itera-surface pl-10 text-[14px] placeholder:text-itera-muted-light',
   'focus:border-itera-accent focus-visible:ring-2 focus-visible:ring-itera-accent/25',
 )
 
@@ -47,7 +47,7 @@ function LeadingIcon({ icon: Icon }: { icon: typeof Mail }) {
     <Icon
       size={17}
       aria-hidden="true"
-      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-itera-muted-light"
+      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted-light"
     />
   )
 }
@@ -118,11 +118,13 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <div className="w-full rounded-[16px] border border-itera-border bg-itera-surface p-7 shadow-[0_1px_3px_rgba(23,32,51,0.04)] sm:p-8 lg:p-9">
-      <h2 className="font-itera-display text-[30px] font-extrabold tracking-tight text-itera-ink-brand">
+    <div className="w-full rounded-[15px] border border-itera-border bg-itera-surface p-6 shadow-[0_1px_3px_rgba(23,32,51,0.04)] sm:p-7">
+      <h2 className="text-[27px] font-[650] leading-[1.15] tracking-[-0.02em] text-itera-ink-brand">
         Sign in
       </h2>
-      <p className="mt-1.5 text-[15px] text-itera-muted">Access your Itera workspace</p>
+      <p className="mt-1 text-[14px] font-normal leading-[1.5] text-itera-muted">
+        Access your Itera workspace
+      </p>
 
       {magicLink === 'sent' ? (
         <div className="mt-7 rounded-itera-control border border-itera-success/30 bg-itera-success-soft p-4 text-sm text-itera-ink">
@@ -130,7 +132,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
           You can close this tab once you have clicked it.
         </div>
       ) : (
-        <form onSubmit={handleSubmit} noValidate className="mt-7">
+        <form onSubmit={handleSubmit} noValidate className="mt-5">
           <div>
             <Label htmlFor={emailId}>Email</Label>
             <div className="relative">
@@ -156,7 +158,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
           </div>
 
           {!isSupabaseConfigured && (
-            <div className="mt-5">
+            <div className="mt-4">
               <Label htmlFor={passwordId}>Password</Label>
               <div className="relative">
                 <LeadingIcon icon={Lock} />
@@ -197,7 +199,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
 
           {!isSupabaseConfigured && (
             <>
-              <div className="mt-5 flex items-center justify-between gap-3">
+              <div className="mt-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <input
                     id={rememberId}
@@ -244,7 +246,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             type="submit"
             variant="primary"
             disabled={magicLink === 'sending'}
-            className="mt-6 h-12 w-full rounded-itera-control text-[15px]"
+            className="mt-5 h-11 w-full rounded-itera-control text-[14px]"
           >
             {isSupabaseConfigured
               ? magicLink === 'sending'
@@ -257,7 +259,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
 
       {!isSupabaseConfigured && magicLink !== 'sent' && (
         <>
-          <div className="my-5 flex items-center gap-4">
+          <div className="my-4 flex items-center gap-4">
             <span aria-hidden="true" className="h-px flex-1 bg-itera-border" />
             <span className="text-[13px] text-itera-muted">or</span>
             <span aria-hidden="true" className="h-px flex-1 bg-itera-border" />
@@ -267,7 +269,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             type="button"
             variant="secondary"
             onClick={handleDemo}
-            className="h-12 w-full rounded-itera-control border-itera-border bg-itera-surface text-[15px] font-bold text-itera-ink-brand hover:border-itera-border-strong"
+            className="h-11 w-full rounded-itera-control border-itera-border bg-itera-surface text-[14px] font-semibold text-itera-ink-brand hover:border-itera-border-strong"
           >
             <FlaskConical size={17} aria-hidden="true" className="text-itera-muted" />
             Continue with demo workspace
@@ -275,7 +277,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
         </>
       )}
 
-      <p className="mt-6 flex items-center gap-2 text-[13px] text-itera-muted">
+      <p className="mt-5 flex items-center gap-2 text-[12px] text-itera-muted">
         <Lock size={14} aria-hidden="true" className="flex-none" />
         Local-first by design. Your learning stays with you.
       </p>

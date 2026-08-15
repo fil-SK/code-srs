@@ -1,8 +1,8 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-12** (branch `app_redesign`, HEAD `000a22f`, plus the uncommitted documentation/hygiene cleanup that produced this revision).
+**Last verified against the working tree: 2026-08-15** (branch `app_redesign`, HEAD `0da06de`, plus the login visual refinement in this working tree).
 
-The last commit to change **product code** is `9505921` ("Add the Itera login page and a real session boundary behind it"); `000a22f` and this revision are documentation and repository hygiene only, so every status claim below still describes `9505921`'s behavior.
+The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5. It changes only the `/login` presentation and leaves auth, persistence, routes and product behavior unchanged.
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -30,7 +30,7 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 The redesign has converged: one shared Itera app shell, one Library/Deck implementation, all six v2 review interactions built and production-integrated, all six v2 authoring editors shipped, a real Progress page, a real Account settings page, and a real auth gate in front of everything. The remaining work is no longer visual convergence — it is data-model completion (v2 cards in the real due queue, CardState read cutover, the Collection/Deck migration) and replacing Today's placeholder content with real product logic.
 
-Recent milestone sequence (newest first): Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
+Recent milestone sequence (newest first): Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
 
 ---
 
@@ -83,6 +83,7 @@ Real data, real behavior, production-routed:
 - `src/auth/localSession.ts` is the **single** storage seam for auth: one key (`itera.session`), `localStorage` when Remember me is checked, `sessionStorage` otherwise, every access in `try/catch`, a corrupt value reads as signed out. **Do not add a session/`localStorage` check anywhere else.**
 - With Supabase configured the only real authentication is **magic-link OTP**. The password field, Remember me and the demo divider are hidden; the button sends a link. No password auth exists.
 - `AuthGate` only blocks on the Supabase session bootstrap; it no longer decides what renders.
+- The visual shell is a compact, chrome-free 1080px desktop surface. **Inter Variable is the finalized login family**, with the approved headings at weight 650 and body/UI copy in the 400–600 range; the temporary Manrope/Plus Jakarta Sans comparison and packages are gone. The three illustration cards are all 176px wide and retain the `login-v3.png` fan (`Dynamic Programming` −9°/left 52/top 50, `SQL Joins` +5°/left 226/top 40, `System Design` +9°/left 396/top 30), shifted left as a group with the front card lifted slightly. The bottom principles follow `login-icons.png`; illustration and principles still collapse at the established responsive breakpoints.
 
 ## 6. Account / avatar menu state
 
@@ -191,17 +192,17 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-12 on this working tree, after the documentation/hygiene cleanup pass:
+Measured 2026-08-15 on this working tree, after the login visual refinement:
 
 ```
-npx vitest run     → 63 test files, 429 tests, all passing (~34s)
+npx vitest run     → 63 test files, 429 tests, all passing
 npx tsc --noEmit   → clean, no errors
 npm run lint       → clean, zero warnings
 ```
 
 **This is a fully clean baseline.** Lint previously carried one warning from `.scratch-shot.cjs`; those three committed scratch scripts have been deleted, so there are now no warnings at all. Treat any new warning as a regression introduced by the change that caused it.
 
-**429 is the correct test count.** The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; measured runs report 429. The decision log is append-only and was not edited — trust this re-measured number over the one recorded there.
+**429 is the current correct test count.** The temporary login font-comparison test briefly raised it to 430, then was removed with the experiment. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 
