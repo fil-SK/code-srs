@@ -611,3 +611,11 @@ Verification: Chromium confirmed all three cards have an authored width of 176px
 **The complete equal-width fan moves 20px left, and Dynamic Programming moves 12px up.** Authored positions are now Dynamic Programming left 52/top 50, SQL Joins left 226/top 40, and System Design left 396/top 30. Widths, rotations, heights, layer order and title-clearance geometry are unchanged.
 
 Verification: Chromium at 1440x900 computed Inter Variable/650 for both login headings, found no typography-comparison control, and confirmed the three authored positions above; 390x844 remained overflow-free. `npx vitest run` passed 429/429, `npx tsc --noEmit` and `npm run lint` were clean, and `npm run build` completed successfully with only the existing chunk-size advisory.
+
+## 2026-08-15 — Today typography aligned with login
+
+**D154 (supersedes the three-family typography rule and D151's page-scoped limitation). Inter Variable is the app-wide non-code font.** The finalized login family is now the default for every Itera surface, not a page-specific exception. `--font-itera-display` remains as a compatibility token but aliases the same Inter stack as `--font-sans`; this closes every existing display-class escape hatch at the token boundary instead of relying on a visual audit of individual components. Inter Tight is no longer imported or shipped. JetBrains Mono remains the code and technical-metadata family.
+
+Today's greeting and large session-card count now simply inherit the default. The shared navigation wordmark does too, and its former weight 800 is reduced to the login wordmark's 650. Sizes, tracking, layout, and the pixel-tuned session-card geometry are unchanged.
+
+Verification: Chromium computed `Inter Variable` for the login wordmark and heading, the Today wordmark/greeting/session count, and a still-`font-itera-display` Progress heading, confirming the compatibility alias at runtime. The navigation wordmark computes at weight 650; Library's Settings and Filter controls both remain the same Inter 14px/600 treatment. Desktop and 390x844 checks reported no horizontal overflow. `npx vitest run` passed 429/429, `npx tsc --noEmit` and `npm run lint` were clean, and `npm run build` completed successfully with only the existing chunk-size advisory.

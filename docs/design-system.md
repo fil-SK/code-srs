@@ -77,17 +77,18 @@ This re-pointing is the whole trick: every v1 component already used `bg-bg`/`te
 
 Radii: `--radius-itera-code: 8px`, `--radius-itera-control: 9px`, `--radius-itera-card: 14px`, `--radius-itera-dialog: 16px`, `--radius-itera-pill: 999px` (pills/tags/small labels only — don't round everything equally).
 
-Fonts: `font-itera-sans` (Inter), `font-itera-display` (Inter Tight, used **sparingly** — large expressive moments only, e.g. Today's greeting or a session-completion title), `font-itera-mono` (JetBrains Mono). All self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
+Fonts: `font-itera-sans` (Inter) and `font-itera-mono` (JetBrains Mono). The legacy `font-itera-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
 
 ### Typography rules — DESIGN RULE (locked)
 
-Three families, no more. **Do not add a fourth, and do not mix decorative fonts.**
+Two families, no more. **Do not add another family or mix decorative fonts.**
 
-- **Inter** — UI, body, and almost every heading.
-- **Inter Tight** — large expressive moments **only** (Today's greeting, a session-completion title). If you are reaching for it on a table header or a card title, use Inter.
+- **Inter** — all UI, body, headings, wordmarks, and expressive display text. Weight, size, tracking, and composition create hierarchy without a second sans-serif family.
 - **JetBrains Mono** — code, keyboard shortcuts, and selected technical metadata. Nothing else.
 
-**Login implementation:** `/login` uses `font-itera-sans` (Inter Variable) throughout, including its `Welcome back` and `Sign in` headings at weight 650. It does not use Inter Tight. The family was finalized after a controlled comparison against Manrope and Plus Jakarta Sans; those temporary font faces and the selector were removed. No global token or stack changed.
+**Login implementation:** `/login` inherits Inter Variable from `.itera-scope`, including its `Welcome back` and `Sign in` headings at weight 650. The family was finalized after a controlled comparison against Manrope and Plus Jakarta Sans; those temporary font faces and the selector were removed.
+
+**App-wide implementation:** `.itera-scope` inherits Inter Variable by default. `/` therefore uses it for the greeting and large session-card count without page-specific font classes, while the shared navigation wordmark inherits it at the login wordmark's weight 650. `font-itera-display` also resolves to Inter, covering existing explicit display usages without a page-by-page cleanup dependency.
 
 **Login illustration implementation:** the locked fan is three real DOM cards, each 176px wide, inside a 580x330 decorative canvas. Dynamic Programming is left 52/top 50/−9°; SQL Joins is left 226/top 40/+5°; System Design is left 396/top 30/+9°. Heights remain slightly different, so the equal-width cards still form an intentional asymmetrical stack. Keep every title unobstructed and preserve the literal inline transforms when adjusting this composition.
 
@@ -225,7 +226,7 @@ The shape language is **structured softness**.
 
 **IMPLEMENTED** (`src/components/layout/`):
 
-- `TopNav.tsx` is presentational only: logo, primary links, and a `rightSlot`. It holds no product logic and no per-route title slot.
+- `TopNav.tsx` is presentational only: logo, primary links, and a `rightSlot`. Its wordmark uses the same Inter Variable/650 treatment as login. It holds no product logic and no per-route title slot.
 - `primaryNavLinks.ts` is the single source of truth for the primary destinations, and there are exactly three: **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
 - The right side holds `StreakBadge` + `AccountMenu`. Nothing else.
 - **There is deliberately no global Search and no global `+ Create`.** The original locked IA included both; they were removed as a product call because each is a *scoped* concept — you search within a Library, you create a card within a deck — and a global affordance with no context to act on is worse than none. `CreateMenu.tsx` and `TopNav`'s search control were **deleted, not hidden**. Do not reintroduce either without a decision entry.

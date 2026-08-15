@@ -228,7 +228,7 @@ export function SuggestedSessionHero({
           <div className="text-[13px] font-semibold tracking-[0.06em] text-itera-accent uppercase">
             Today&rsquo;s session
           </div>
-          <div className="mt-4 font-itera-display text-[40px] leading-[0.95] font-bold tracking-tight text-white sm:text-[56px]">
+          <div className="mt-4 text-[40px] leading-[0.95] font-bold tracking-tight text-white sm:text-[56px]">
             {cardCount} cards
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-[16px] text-[rgba(248,250,252,0.72)]">

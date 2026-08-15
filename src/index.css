@@ -13,7 +13,6 @@
    before this redesign and were silently falling back to system-ui the whole
    time — this is a pre-existing bug fix, not a redesign decision. */
 @import '@fontsource-variable/inter/wght.css';
-@import '@fontsource-variable/inter-tight/wght.css';
 @import '@fontsource-variable/jetbrains-mono/wght.css';
 
 /* Dark mode driven by [data-theme="dark"] on <html>, not prefers-color-scheme,
@@ -117,12 +116,12 @@
   --color-itera-warning: var(--itera-warning);
   --color-itera-warning-soft: var(--itera-warning-soft);
 
-  /* One literal font stack per family, not two: --font-itera-sans/-mono just
-     alias the Tailwind-required --font-sans/--font-mono keys above rather
-     than repeating the same stack under a second name. --font-itera-display
-     (Inter Tight) has no legacy counterpart, so it's defined directly. */
+  /* One literal font stack per family, not two: the itera-prefixed font
+     utilities alias the Tailwind-required keys above. `display` remains as a
+     compatibility name for existing components, but deliberately resolves to
+     the same Inter family as every other non-code surface. */
   --font-itera-sans: var(--font-sans);
-  --font-itera-display: 'Inter Tight Variable', 'Inter Tight', var(--font-sans);
+  --font-itera-display: var(--font-sans);
   --font-itera-mono: var(--font-mono);
 
   --radius-itera-code: 8px;

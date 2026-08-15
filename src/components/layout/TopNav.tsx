@@ -30,7 +30,7 @@ export function TopNav({
       <div className="mx-auto flex h-16 max-w-[1280px] items-stretch gap-8 overflow-x-auto">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
           <img src="/itera-logo.png" alt="" className="h-10 w-10" />
-          <span className="font-itera-display text-2xl font-extrabold tracking-tight text-itera-ink-brand">
+          <span className="text-2xl font-[650] tracking-[-0.025em] text-itera-ink-brand">
             Itera
           </span>
         </Link>

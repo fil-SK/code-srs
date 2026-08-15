@@ -1,8 +1,8 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-15** (branch `app_redesign`, HEAD `0da06de`, plus the login visual refinement in this working tree).
+**Last verified against the working tree: 2026-08-15** (branch `app_redesign`, HEAD `0da06de`, plus the login visual refinement and app-wide typography alignment in this working tree).
 
-The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5. It changes only the `/login` presentation and leaves auth, persistence, routes and product behavior unchanged.
+The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5 and makes its selected Inter Variable family the app-wide non-code default. These are presentation-only changes; auth, persistence, routes and product behavior are unchanged.
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -67,7 +67,7 @@ Real data, real behavior, production-routed:
 ## 4. AppShell / navigation state
 
 - `src/components/layout/AppShell.tsx` = `IteraSurface` (`.itera-scope` + `ForceLightTheme`) → `TopNav` → `<main class="mx-auto max-w-[1280px]">` → `<Outlet/>`.
-- `TopNav` is presentational: logo, primary nav links, `rightSlot`. Primary destinations come from `primaryNavLinks.ts` and are exactly **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
+- `TopNav` is presentational: logo, primary nav links, `rightSlot`. Its wordmark matches the finalized login branding in Inter Variable at weight 650. Primary destinations come from `primaryNavLinks.ts` and are exactly **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
 - Right side of the nav: `StreakBadge` + `AccountMenu`. Nothing else.
 - **There is no global Search and no global Create action** — removed as a product call (both are scoped concepts; search lives inside Library, create inside a deck). `CreateMenu.tsx` and `TopNav`'s search affordance were deleted, not hidden.
 - No left sidebar, no bottom nav, no per-route topbar title slot. `Sidebar.tsx` / `BottomNav.tsx` / `navItems.ts` / `PageHeaderOverride.tsx` / `TodayShell.tsx` **were deleted**. A route that needs a heading renders it as ordinary page content.
@@ -94,7 +94,7 @@ Real data, real behavior, production-routed:
 
 ## 7. Today state
 
-Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, one column below 980px via a `matchMedia` hook) driven by inline `style`, because Tailwind has no grid-area utility. `SuggestedSessionHero.tsx` is a bespoke, pixel-tuned 4-layer stacked-card component — **do not adjust its offsets/rotations/colors incidentally**; they came from many rounds of measured product feedback.
+Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, one column below 980px via a `matchMedia` hook) driven by inline `style`, because Tailwind has no grid-area utility. Its page typography now uses Inter Variable throughout, matching the finalized login family, including the greeting and the large session-card count. `SuggestedSessionHero.tsx` is a bespoke, pixel-tuned 4-layer stacked-card component — **do not adjust its offsets/rotations/colors incidentally**; they came from many rounds of measured product feedback.
 
 ## 8. Library state
 
@@ -299,7 +299,7 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 
 Status only. Usage rules — families, weights, scale, icon conventions, the orange rule, portal mechanics, the full token and radius tables — are owned by [`design-system.md`](design-system.md).
 
-**Typography — implemented.** Inter, Inter Tight and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. `--font-itera-sans` / `--font-itera-mono` are aliases of `--font-sans` / `--font-mono`, not second stacks. **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
+**Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. Inter is the app-wide non-code default; `--font-itera-sans` and the compatibility `--font-itera-display` token both alias `--font-sans`, while `--font-itera-mono` aliases `--font-mono`. **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
 
 **Icons — implemented.** `lucide-react` is the only icon library, at a single version. There are no hand-drawn SVG icon files, with two one-off exceptions inside `SuggestedSessionHero.tsx` (a bracket motif and a logo-derived watermark).
 

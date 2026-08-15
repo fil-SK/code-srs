@@ -22,7 +22,7 @@ export function LoginPage() {
   if (isAuthenticated) return <Navigate to={redirectTo} replace />
 
   return (
-    <IteraSurface className="min-h-dvh font-itera-sans">
+    <IteraSurface className="min-h-dvh">
       <main className="flex min-h-dvh items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-[1080px] overflow-hidden rounded-[18px] border border-itera-border bg-itera-surface-subtle shadow-[var(--itera-shadow-card)] lg:grid lg:grid-cols-[1.4fr_1fr]">
           <LoginBrandPanel />
