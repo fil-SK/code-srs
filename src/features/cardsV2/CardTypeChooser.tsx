@@ -2,9 +2,8 @@ import type { InteractionType } from '@/types/cardV2'
 import { INTERACTION_META, INTERACTION_TYPES } from './shared/interactionTypeMeta'
 import { cn } from '@/lib/cn'
 
-// Spec §22.2: "restrained list/modules with a small interaction sketch,
-// avoid a rainbow icon grid." All six types render (matches the approved
-// mockup); all six now have editors built (Walkthrough completes the set).
+// All six existing icons stay sourced from INTERACTION_META. The create-flow
+// redesign changes only the tiles around them, following add-new-card.png.
 const ENABLED: InteractionType[] = [
   'recall',
   'multiple_choice',
@@ -23,10 +22,10 @@ export function CardTypeChooser({
 }) {
   return (
     <div>
-      <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-itera-muted">
+      <div className="mb-3 text-sm font-semibold text-itera-ink-brand">
         1. Choose interaction
       </div>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         {INTERACTION_TYPES.map((type) => {
           const meta = INTERACTION_META[type]
           const Icon = meta.icon
@@ -38,17 +37,22 @@ export function CardTypeChooser({
               type="button"
               disabled={!enabled}
               onClick={() => onSelect(type)}
+              aria-pressed={isSelected}
               className={cn(
-                'flex flex-col items-center gap-2 rounded-itera-card border px-3 py-4 text-center transition-colors',
+                'flex min-h-[90px] flex-col items-center justify-center gap-2 rounded-itera-control border bg-itera-surface px-2 py-3 text-center transition-colors',
                 enabled
                   ? isSelected
-                    ? 'border-itera-accent bg-itera-accent text-white shadow-sm'
-                    : 'border-itera-border bg-itera-surface text-itera-ink-brand hover:border-itera-navy hover:bg-itera-navy-soft'
+                    ? 'border-itera-accent text-itera-ink-brand shadow-[0_0_0_1px_var(--itera-accent)]'
+                    : 'border-itera-border text-itera-ink-brand hover:border-itera-border-strong hover:bg-itera-surface-subtle'
                   : 'cursor-not-allowed border-itera-border bg-itera-surface text-itera-muted opacity-60',
               )}
             >
-              <Icon size={20} className={isSelected ? 'text-white' : enabled ? 'text-itera-navy' : 'text-itera-muted'} />
-              <span className="text-sm font-semibold">{meta.label}</span>
+              <Icon
+                size={20}
+                className={isSelected ? 'text-itera-accent' : enabled ? 'text-itera-navy' : 'text-itera-muted'}
+                aria-hidden="true"
+              />
+              <span className="text-xs font-semibold">{meta.label}</span>
               {!enabled && <span className="text-[11px] text-itera-muted">Coming soon</span>}
             </button>
           )

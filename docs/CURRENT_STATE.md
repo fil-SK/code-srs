@@ -1,6 +1,6 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-15** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography and review-interaction refinements in this working tree).
+**Last verified against the working tree: 2026-08-16** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography, review-interaction and new-card authoring refinements in this working tree).
 
 The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5, makes its selected Inter Variable family the app-wide non-code default, and refines Review/preview chrome and card interactions, including step-scoped Walkthrough guidance and stable CodeMirror rendering. Auth, persistence and routes are unchanged.
 
@@ -125,6 +125,8 @@ Two axes matter: **Review** (rendering + grading a card) and **Authoring** (crea
 
 Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partial<Record<…>>` so a future 7th type fails loudly). Authoring shells live in `src/features/cardsV2/` with per-type pure form/save modules in `src/domain/cardsV2/`.
 
+**New-card composition:** `/decks/:deckId/cards/new` now follows the locked `add-new-card.png` reference as one continuous 880px surface, expanding to 1120px only while the desktop preview drawer is open. The page header is **Cancel | New card**; Recall is selected by default; the existing six interaction icons are unchanged; numbered Choose interaction / Card content / Organize sections use inset hairlines; Deck and Tags keep their existing values, gain identifying icons and share one explicit control height; Save and bordered Cancel live in the footer. Narrow screens retain Editor/Preview tabs. No character limits or counters were added.
+
 **The v1 8-type registry still exists and is still used** (`src/features/cards/registry/`) for `/cards/new`, `/browse`, and any v1 card not yet edited through the new flow. Editing a legacy v1 card through `/cards/:id/edit` migrates it to a `CardV2Record` on save, same id (so `ReviewLog` history survives), deleting the superseded v1 row.
 
 ## 11. Review integration state
@@ -194,10 +196,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-15 on this working tree, after the current visual, Review-rating, Ordering, Multiple Choice and Walkthrough interaction refinements:
+Measured 2026-08-16 on this working tree, after the current visual, Review-interaction and new-card authoring refinements:
 
 ```
-npx vitest run     → 65 test files, 444 tests, all passing
+npx vitest run     → 65 test files, 445 tests, all passing
 npx tsc --noEmit   → clean, no errors
 npm run lint       → clean, zero warnings
 npm run build      → successful (existing chunk-size advisory only)
@@ -205,7 +207,7 @@ npm run build      → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Lint previously carried one warning from `.scratch-shot.cjs`; those three committed scratch scripts have been deleted, so there are now no warnings at all. Treat any new warning as a regression introduced by the change that caused it.
 
-**444 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling, rating-control icons/intervals, Matching badge placement, the Multiple Choice selection/footer treatment, the authoring warning, and Walkthrough step-scoped guidance. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
+**445 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling, rating-control icons/intervals, Matching badge placement, the Multiple Choice selection/footer treatment, the authoring warning and reference-aligned create-flow structure, and Walkthrough step-scoped guidance. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 
@@ -248,7 +250,7 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 - `src/domain/scheduling/reviewService.ts`, `src/features/review/{ReviewPage,ReviewSessionV2}.tsx`
 
 **Authoring**
-- `src/features/cardsV2/` (all six `*EditorShell`s, `*Fields`, `*LivePreview`, `CardTypeChooser`, `CardEditorShell`, `CardRowV2`), `src/domain/cardsV2/` (pure form/save modules)
+- `src/features/cardsV2/` (all six `*EditorShell`s, `*Fields`, `*LivePreview`, `CardTypeChooser`, `CardEditorShell`, shared `CardOrganizeFields`, `CardRowV2`), `src/domain/cardsV2/` (pure form/save modules)
 - v1 registry, still live: `src/features/cards/registry/`, `src/features/cards/renderers/`, `src/features/cards/cardTypeMeta.ts`
 
 **Library / Progress / Settings / Today / Login**

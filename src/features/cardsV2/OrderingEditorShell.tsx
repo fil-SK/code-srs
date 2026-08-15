@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
 import { useDecks } from '@/hooks/useDecks'
 import type { CardV2Record } from '@/types/cardV2'
@@ -9,6 +8,7 @@ import { useSaveOrderingCard, type SaveOrderingCardTarget } from '@/hooks/useCar
 import { OrderingFields } from './OrderingFields'
 import { OrderingLivePreview } from './OrderingLivePreview'
 import { CardEditorShell } from './CardEditorShell'
+import { CardOrganizeFields } from './CardOrganizeFields'
 import { editorSubtitle } from './shared/editorSubtitle'
 
 // The Create/Edit shell for Ordering, built on the shared CardEditorShell
@@ -42,38 +42,19 @@ export function OrderingEditorShell({
   }
 
   const editorPane = (
-    <div className="space-y-4 rounded-itera-card border border-itera-border bg-itera-surface p-6">
-      <OrderingFields form={form} onChange={setForm} />
-
-      <div>
-        <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-itera-muted">
-          3. Organize
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Deck">
-            <select
-              className={selectClass}
-              value={form.deckId}
-              onChange={(e) => setForm({ ...form, deckId: e.target.value })}
-            >
-              {flatDecks.map((f) => (
-                <option key={f.deck.id} value={f.deck.id}>
-                  {f.path}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Tags">
-            <input
-              className={fieldClass}
-              value={form.tags}
-              onChange={(e) => setForm({ ...form, tags: e.target.value })}
-              placeholder="ssa, compilers"
-            />
-          </Field>
-        </div>
-      </div>
-    </div>
+    <>
+      <section className="p-5 sm:p-6">
+        <h2 className="mb-4 text-sm font-semibold text-itera-ink-brand">2. Card content</h2>
+        <OrderingFields form={form} onChange={setForm} />
+      </section>
+      <CardOrganizeFields
+        deckId={form.deckId}
+        tags={form.tags}
+        flatDecks={flatDecks}
+        onDeckChange={(deckId) => setForm({ ...form, deckId })}
+        onTagsChange={(tags) => setForm({ ...form, tags })}
+      />
+    </>
   )
 
   return (
