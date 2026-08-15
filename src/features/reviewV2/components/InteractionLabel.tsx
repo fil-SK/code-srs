@@ -9,7 +9,7 @@ import type { InteractionType } from '@/types/cardV2'
 export function InteractionLabel({ type }: { type: InteractionType }) {
   const { label, icon: Icon } = INTERACTION_META[type]
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-itera-pill bg-itera-surface-subtle px-3.5 py-1.5 text-sm font-semibold text-itera-ink-brand">
+    <div className="inline-flex items-center gap-1.5 rounded-itera-pill bg-itera-surface-subtle px-4 py-2 text-sm font-semibold text-itera-ink-brand">
       <Icon size={16} />
       {label}
     </div>
