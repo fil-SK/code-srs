@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   DndContext,
+  KeyboardSensor,
   PointerSensor,
   closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core'
-import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
@@ -58,18 +64,10 @@ export function OrderingView({
   const [announcement, setAnnouncement] = useState('')
   const grade = flipped ? gradeOrdering(interaction, order) : null
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
-
-  function move(index: number, direction: -1 | 1) {
-    const to = index + direction
-    if (to < 0 || to >= order.length) return // clean no-op at the boundary
-    const next = [...order]
-    const [id] = next.splice(index, 1)
-    next.splice(to, 0, id)
-    setResponse(next)
-    const label = itemById.get(id)?.content.value ?? ''
-    setAnnouncement(`${label} moved to position ${to + 1} of ${order.length}`)
-  }
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   function onDragEnd(e: DragEndEvent) {
     if (locked) return
@@ -119,14 +117,11 @@ export function OrderingView({
                       key={id}
                       id={id}
                       index={idx}
-                      total={order.length}
                       content={item?.content.value ?? ''}
                       locked={locked}
                       showFeedback={false}
                       correct={false}
                       expectedIndex={idx}
-                      onMoveUp={() => move(idx, -1)}
-                      onMoveDown={() => move(idx, 1)}
                     />
                   )
                 })}
@@ -168,14 +163,11 @@ export function OrderingView({
                       key={id}
                       id={id}
                       index={idx}
-                      total={order.length}
                       content={item?.content.value ?? ''}
                       locked
                       showFeedback
                       correct={cell?.correct ?? false}
                       expectedIndex={cell?.correctIndex ?? idx}
-                      onMoveUp={() => {}}
-                      onMoveDown={() => {}}
                     />
                   )
                 })}

@@ -98,6 +98,18 @@ describe('MultipleChoiceView', () => {
     expect(isChecked(optB)).toBe(true)
   })
 
+  it('shows selection indicators and mode-specific footer guidance', () => {
+    const { unmount } = renderScreen(multi)
+
+    const multiOption = screen.getByRole('checkbox', { name: 'A' })
+    expect(multiOption.firstElementChild?.getAttribute('aria-hidden')).toBe('true')
+    expect(screen.getByText('Choose one or more options')).toBeTruthy()
+
+    unmount()
+    renderScreen(single)
+    expect(screen.getByText('Choose one option')).toBeTruthy()
+  })
+
   it('rating is unavailable before submission, and Submit is disabled until a valid response exists', async () => {
     const user = userEvent.setup()
     renderScreen(single)

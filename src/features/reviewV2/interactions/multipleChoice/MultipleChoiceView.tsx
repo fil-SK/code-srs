@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, Info, X } from 'lucide-react'
 import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
@@ -51,7 +51,7 @@ export function MultipleChoiceView({
       }
       front={
         flipped ? null : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           <div className="flex flex-col items-center gap-1 text-center">
             <InteractionLabel type="multiple_choice" />
             <CardPrompt text={card.prompt.value} className="mt-2" />
@@ -60,7 +60,7 @@ export function MultipleChoiceView({
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {displayOptions.map((opt) => {
               const isSelected = selected.includes(opt.id)
               return (
@@ -78,28 +78,51 @@ export function MultipleChoiceView({
                     }
                   }}
                   className={cn(
-                    'cursor-pointer rounded-itera-control border px-3.5 py-3 text-center text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+                    'flex min-h-14 cursor-pointer items-center gap-4 rounded-itera-control border px-4 py-3 text-left text-sm outline-none transition-[border-color,background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
                     locked && 'cursor-default',
                     isSelected
-                      ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                      : 'border-itera-border bg-itera-surface text-itera-ink hover:border-itera-border-strong',
+                      ? 'border-itera-selection-border bg-itera-selection-soft text-itera-ink-brand shadow-[inset_0_0_0_1px_rgba(30,41,59,0.03)]'
+                      : 'border-itera-border bg-itera-surface text-itera-ink hover:border-itera-border-strong hover:bg-itera-surface-subtle',
                   )}
                 >
-                  <InlineText text={opt.content.value} />
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'flex size-8 shrink-0 items-center justify-center rounded-full border transition-[border-color,background-color,box-shadow]',
+                      isSelected
+                        ? 'border-itera-navy bg-itera-navy text-white shadow-[0_0_0_4px_var(--itera-navy-soft)]'
+                        : 'border-itera-border-strong bg-itera-surface',
+                    )}
+                  >
+                    {isSelected && <Check size={18} strokeWidth={2.5} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <InlineText text={opt.content.value} />
+                  </span>
                 </div>
               )
             })}
           </div>
 
           {!hideActions && (
-            <button
-              type="button"
-              onClick={onPrimaryAction}
-              disabled={!responseReady}
-              className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
-            >
-              Submit answer
-            </button>
+            <div className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2.5 text-sm text-itera-muted">
+                <Info aria-hidden="true" size={20} className="shrink-0 text-itera-accent" />
+                <span>
+                  {interaction.selectionMode === 'multiple'
+                    ? 'Choose one or more options'
+                    : 'Choose one option'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={onPrimaryAction}
+                disabled={!responseReady}
+                className="min-h-12 w-full rounded-itera-control bg-itera-accent px-6 py-3 text-sm font-semibold text-white transition-[background-color,opacity] hover:bg-itera-accent-hover disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:min-w-44"
+              >
+                Submit answer
+              </button>
+            </div>
           )}
         </div>
         )

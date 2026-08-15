@@ -331,8 +331,8 @@ Intended Review shortcuts: `Escape` exit/pause with confirmation, `Space` flip a
 **IMPLEMENTED, and worth copying:**
 
 - `reviewV2/components/FlipCard.tsx` is the accessible flip: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. **`src/components/ui/FlipCard.tsx` (v1) is a plain `<div onClick>` with no keyboard or ARIA support** — a known gap deliberately not fixed in place. Use the v2 one for new work.
-- **Ordering** provides Move up / Move down buttons alongside drag: they stay in the DOM and in tab order at all times, faded with `opacity-0` until hover or focus, **never `hidden`** (`OrderingRow.tsx`), and positions are announced via `aria-live`.
-- **Multiple Choice** option rows carry no checkbox/radio glyph; state is conveyed by color **and** `aria-checked`.
+- **Ordering** makes each complete row the pointer and keyboard drag target and shows a decorative 3×4 dot grip at its right edge. There are no separate arrow controls: focus a row, press Space to pick it up, use Arrow keys, then Space to drop. Positions are announced via `aria-live`.
+- **Multiple Choice** option rows pair a circular check marker with a navy selected-row tint and `aria-checked`; the marker is decorative to assistive technology because the row already owns the checkbox/radio semantics.
 - `FloatingPanel`'s `manageFocus` implements the menu keyboard contract; `dialogs.tsx` replaces the `window.*` builtins with focus-managed modals.
 - **A gap to respect:** `happy-dom` has no visibility semantics, so component tests cannot catch focus or layout bugs — `focus()` on a hidden element silently succeeds there and fails in Chromium. Anything focus-, popover- or overflow-related must be verified in a real browser.
 

@@ -117,9 +117,9 @@ Two axes matter: **Review** (rendering + grading a card) and **Authoring** (crea
 | Interaction | Review view | Grading | Authoring editor | Notes |
 |---|---|---|---|---|
 | **Recall** | `reviewV2/interactions/recall/RecallView.tsx` | self-graded (no grade function) | `RecallEditorShell` | Absorbs v1 `basic` / `codeReading` / `bugFinding`. Prompt is vertically centered between the type pill and the overlapping-card flip cue. |
-| **Multiple Choice** | `multipleChoice/MultipleChoiceView.tsx` | `domain/grading/multipleChoice.ts` (binary) | `MultipleChoiceEditorShell` | Option rows show no checkbox/radio glyph; state is colour + `aria-checked`. |
+| **Multiple Choice** | `multipleChoice/MultipleChoiceView.tsx` | `domain/grading/multipleChoice.ts` (binary) | `MultipleChoiceEditorShell` | Reference-aligned option rows use a circular selection marker plus navy tint and `aria-checked`; the footer pairs mode-specific guidance with a right-aligned Submit action. |
 | **Write Code** | `writeCode/WriteCodeView.tsx` | `domain/grading/writeCode.ts` (binary) | `WriteCodeEditorShell` | `WriteCodeInteraction.editableRegion?` is intentionally unconsumed — whole block is editable, documented inline. |
-| **Ordering** | `ordering/OrderingView.tsx` + `OrderingRow.tsx` | `domain/grading/ordering.ts` (partial credit) | `OrderingEditorShell` | Redesigned to `ordering-card.png`: card-shaped rows, grip right, up/down buttons faded until hover/focus but always in the DOM and tab order. `aria-live` position announcements. The card surface is deliberately inert; only **Submit answer** flips it. |
+| **Ordering** | `ordering/OrderingView.tsx` + `OrderingRow.tsx` | `domain/grading/ordering.ts` (partial credit) | `OrderingEditorShell` | Redesigned to `ordering-card.png`: each full row is the pointer and keyboard drag target, with a decorative 3×4 dot grip at right and no separate arrow controls. Keyboard flow is Space → arrows → Space; `aria-live` announces the result. The card surface is deliberately inert; only **Submit answer** flips it. |
 | **Matching** | `matching/MatchingView.tsx` + `MatchingBoard.tsx` | `domain/grading/matching.ts` (partial credit) | `MatchingEditorShell` | Connected multi-column board with drawn connectors. Check/X badges sit at each connection midpoint; colliding crossing-line midpoints move together to the nearest clear point on their curves. **Capped at three columns.** The old accordion is deleted. |
 | **Walkthrough** | `walkthrough/WalkthroughView.tsx` + `StepResponse.tsx` | `domain/grading/walkthrough.ts` (partial credit) | `WalkthroughEditorShell` | Multi-step, multi-range code focus via `LazyCodeView`'s `highlightLines`. Absorbs v1 `story`. |
 
@@ -194,10 +194,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-15 on this working tree, after the current visual, Review-rating and Ordering-interaction refinements:
+Measured 2026-08-15 on this working tree, after the current visual, Review-rating, Ordering and Multiple Choice interaction refinements:
 
 ```
-npx vitest run     → 65 test files, 441 tests, all passing
+npx vitest run     → 65 test files, 442 tests, all passing
 npx tsc --noEmit   → clean, no errors
 npm run lint       → clean, zero warnings
 npm run build      → successful (existing chunk-size advisory only)
@@ -205,7 +205,7 @@ npm run build      → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Lint previously carried one warning from `.scratch-shot.cjs`; those three committed scratch scripts have been deleted, so there are now no warnings at all. Treat any new warning as a regression introduced by the change that caused it.
 
-**441 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling, rating-control icons/intervals, Matching badge placement and the authoring warning. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
+**442 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling, rating-control icons/intervals, Matching badge placement, the Multiple Choice selection/footer treatment and the authoring warning. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 

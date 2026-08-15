@@ -58,44 +58,50 @@ describe('OrderingView', () => {
     expect(labels()).toEqual(['First', 'Second', 'Third'])
   })
 
-  it('moving an item down with the keyboard-accessible control updates the order and keeps focus on it', async () => {
-    const user = userEvent.setup()
+  it('renders a decorative three-column by four-row dot grip on each draggable row', () => {
     renderScreen()
 
-    const moveDown = screen.getByRole('button', { name: 'Move item 1 down' })
-    moveDown.focus()
-    await user.keyboard('{Enter}')
-
-    expect(labels()).toEqual(['Second', 'First', 'Third'])
-    // Same DOM node (key={id} reconciliation) - not merely "something" focused.
-    expect(document.activeElement).toBe(moveDown)
+    const grips = document.querySelectorAll('[data-ordering-grip]')
+    expect(grips).toHaveLength(3)
+    for (const grip of grips) {
+      expect(grip.getAttribute('aria-hidden')).toBe('true')
+      expect(grip.querySelectorAll('[data-ordering-grip-dot]')).toHaveLength(12)
+    }
   })
 
-  it('the up control at the top of the list is a clean no-op, not a crash or a swap', async () => {
-    const user = userEvent.setup()
+  it('exposes each unlocked row as a focusable keyboard drag target without arrow controls', () => {
     renderScreen()
-    const moveUp = screen.getByRole('button', { name: 'Move item 1 up' })
-    moveUp.focus()
-    await user.keyboard('{Enter}')
-    expect(labels()).toEqual(['First', 'Second', 'Third'])
-    expect(document.activeElement).toBe(moveUp)
+
+    const firstRow = screen.getByRole('button', { name: 'First' })
+    expect(firstRow.getAttribute('tabindex')).toBe('0')
+    expect(screen.queryByRole('button', { name: /Move item/ })).toBeNull()
   })
 
-  it('drag-and-drop is not the only way to reorder: the whole card is keyboard-operable end to end', async () => {
+  it('reorders a focused row with Space, Arrow, Space without submitting the card', async () => {
     const user = userEvent.setup()
     renderScreen()
 
-    // First is already correct at position 0; swap Second/Third into the
-    // right order using only Move up/down + Submit + a rating key.
-    const moveThirdUp = screen.getByRole('button', { name: 'Move item 3 up' })
-    await user.click(moveThirdUp)
-    expect(labels()).toEqual(['First', 'Third', 'Second'])
+    const thirdRow = screen.getByRole('button', { name: 'Third' })
+    thirdRow.focus()
+    await user.keyboard(' {ArrowUp} ')
 
-    await user.click(screen.getByRole('button', { name: 'Submit answer' }))
-    // "Correct" appears per-row and in the summary banner - assert the
-    // ambiguous banner state (not present) rather than a single "Correct".
-    await screen.findAllByText('Correct')
+    // happy-dom gives every sortable row a zero-sized rect, so the coordinate
+    // getter moves to the first eligible slot rather than the adjacent slot.
+    // Chromium verifies the real one-step geometry; this test pins the event
+    // path and the important fact that Space does not submit the card.
+    expect(labels()).toEqual(['Third', 'First', 'Second'])
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeTruthy()
     expect(screen.queryByText(/% in the right position/)).toBeNull()
+  })
+
+  it('an ordinary click on a row neither reorders nor submits it', async () => {
+    const user = userEvent.setup()
+    renderScreen()
+
+    await user.click(screen.getByRole('button', { name: 'Second' }))
+
+    expect(labels()).toEqual(['First', 'Second', 'Third'])
+    expect(screen.getByRole('button', { name: 'Submit answer' })).toBeTruthy()
   })
 
   it('grades by submitted position and preserves the submitted order during feedback', async () => {
@@ -123,23 +129,14 @@ describe('OrderingView', () => {
     expect(screen.queryByText('33% in the right position')).toBeNull()
   })
 
-  it('announces the moved item and its new position via an aria-live region', async () => {
+  it('announces a keyboard-moved item and its new position via an aria-live region', async () => {
     const user = userEvent.setup()
     renderScreen()
 
-    const moveDown = screen.getByRole('button', { name: 'Move item 1 down' })
-    await user.click(moveDown)
+    const thirdRow = screen.getByRole('button', { name: 'Third' })
+    thirdRow.focus()
+    await user.keyboard(' {ArrowUp} ')
 
-    expect(await screen.findByText('First moved to position 2 of 3')).toBeTruthy()
-  })
-
-  it('does not announce anything for a no-op move at a boundary', async () => {
-    const user = userEvent.setup()
-    renderScreen()
-
-    const moveUp = screen.getByRole('button', { name: 'Move item 1 up' })
-    await user.click(moveUp)
-
-    expect(screen.queryByText(/moved to position/)).toBeNull()
+    expect(await screen.findByText('Third moved to position 1 of 3')).toBeTruthy()
   })
 })
