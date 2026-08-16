@@ -15,8 +15,12 @@ export function Stat({
   accent?: boolean
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <Icon size={18} className={accent ? 'text-itera-accent' : 'text-itera-muted'} />
+    <div className="flex items-start gap-3.5">
+      <Icon
+        size={21}
+        strokeWidth={1.8}
+        className={`mt-0.5 flex-none ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}
+      />
       <div>
         <div className={`font-itera-display text-lg font-bold ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}>
           {value}

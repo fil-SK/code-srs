@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronRight, Folder, Inbox, Layers, Plus, Settings } from 'lucide-react'
+import { Archive, ChevronDown, ChevronRight, Folder, Plus, Server, Settings } from 'lucide-react'
 import type { ID } from '@/types'
 import {
   buildCollectionTree,
-  collectionDeckCount,
   subtreeCollectionIds,
   type CollectionNode,
   type LibraryCollection,
@@ -26,8 +25,14 @@ export interface NavDeck {
 // indicating selection — matches the reference mockup's selected-row style.
 function rowTone(active: boolean) {
   return active
-    ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-    : 'border-transparent text-itera-ink hover:bg-itera-surface-subtle hover:text-itera-ink-brand'
+    ? 'bg-itera-accent-soft text-itera-ink-brand'
+    : 'text-itera-ink hover:bg-itera-surface-subtle hover:text-itera-ink-brand'
+}
+
+function cardCountFor(collectionIds: string[], decks: NavDeck[]) {
+  return decks
+    .filter((deck) => deck.collectionId && collectionIds.includes(deck.collectionId))
+    .reduce((total, deck) => total + (deck.cardCount ?? 0), 0)
 }
 
 // The Collection tree now drills all the way down to individual decks (not
@@ -57,6 +62,8 @@ export function CollectionNav({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
   const [unfiledExpanded, setUnfiledExpanded] = useState(false)
   const unfiled = decks.filter((d) => !d.collectionId)
+  const totalCards = decks.reduce((total, deck) => total + (deck.cardCount ?? 0), 0)
+  const unfiledCards = unfiled.reduce((total, deck) => total + (deck.cardCount ?? 0), 0)
 
   function toggle(id: string) {
     setCollapsed((prev) => {
@@ -72,9 +79,9 @@ export function CollectionNav({
   }
 
   return (
-    <div className="flex h-full flex-col p-4">
+    <div className="flex h-full flex-col px-4 py-5">
       <nav aria-label="Collections">
-        <div className="mb-2 flex items-center justify-between px-1">
+        <div className="mb-3 flex items-center justify-between px-1.5">
           <span className="text-xs font-bold uppercase tracking-wider text-itera-muted">
             Collections
           </span>
@@ -83,9 +90,9 @@ export function CollectionNav({
               type="button"
               onClick={onCreateDeck}
               aria-label="Add deck"
-              className="grid h-6 w-6 flex-none place-items-center rounded-itera-control border border-itera-border text-itera-muted hover:border-itera-border-strong hover:bg-itera-surface-subtle hover:text-itera-ink"
+              className="grid h-8 w-8 flex-none place-items-center rounded-itera-control border border-itera-border-strong bg-itera-surface text-itera-ink-brand transition-colors hover:border-itera-accent hover:text-itera-accent"
             >
-              <Plus size={13} />
+              <Plus size={16} strokeWidth={1.8} />
             </button>
           )}
         </div>
@@ -93,16 +100,16 @@ export function CollectionNav({
         <button
           type="button"
           onClick={() => onSelect({ kind: 'all' })}
-          className="flex w-full items-center justify-between rounded-r-[9px] border-l-2 border-itera-accent bg-itera-accent-soft px-2.5 py-2 text-left text-sm font-semibold text-itera-ink-brand"
+          className="relative flex w-full items-center justify-between rounded-r-[9px] bg-itera-accent-soft px-3 py-2.5 text-left text-sm font-semibold text-itera-ink-brand before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-r-full before:bg-itera-accent"
         >
-          <span className="flex items-center gap-2">
-            <Layers size={15} className="text-itera-accent" />
+          <span className="flex items-center gap-3">
+            <Server size={17} strokeWidth={1.8} />
             All Decks
           </span>
-          <span className="text-xs font-medium text-itera-muted">{decks.length}</span>
+          <span className="text-xs font-medium text-itera-ink-brand">{totalCards}</span>
         </button>
 
-        <div className="mt-1">
+        <div className="mt-2 space-y-0.5">
           {tree.map((node) => (
             <CollectionRow
               key={node.collection.id}
@@ -136,18 +143,19 @@ export function CollectionNav({
               type="button"
               onClick={() => onSelect({ kind: 'unfiled' })}
               className={cn(
-                'flex flex-1 items-center justify-between rounded-r-[9px] border-l-2 py-1.5 pr-2 text-left text-sm font-semibold',
+                'flex flex-1 items-center justify-between rounded-[9px] py-2 pr-2 text-left text-sm font-semibold',
                 rowTone(selection.kind === 'unfiled'),
               )}
             >
-              <span className="flex items-center gap-2">
-                <Inbox
-                  size={15}
-                  className={selection.kind === 'unfiled' ? 'text-itera-accent' : 'text-itera-muted'}
+              <span className="flex items-center gap-3">
+                <Archive
+                  size={17}
+                  strokeWidth={1.8}
+                  className={selection.kind === 'unfiled' ? 'text-itera-accent' : 'text-itera-ink-brand'}
                 />
                 Unfiled Decks
               </span>
-              <span className="text-xs font-normal text-itera-muted">{unfiled.length}</span>
+              <span className="text-xs font-normal text-itera-muted">{unfiledCards}</span>
             </button>
           </div>
           {unfiledExpanded && (
@@ -170,9 +178,9 @@ export function CollectionNav({
 
       <Link
         to="/settings"
-        className="mt-auto flex items-center gap-2 rounded-itera-control px-2 py-1.5 pt-6 text-left text-sm font-semibold text-itera-muted hover:text-itera-ink-brand"
+        className="mt-auto flex items-center gap-3 rounded-itera-control px-3 pb-1 pt-8 text-left text-sm font-semibold text-itera-ink hover:text-itera-accent"
       >
-        <Settings size={15} />
+        <Settings size={17} strokeWidth={1.8} />
         Settings
       </Link>
     </div>
@@ -209,29 +217,19 @@ function CollectionRow({
   const expandable = hasChildren || leaves.length > 0
   const expanded = !collapsed.has(node.collection.id)
   const isSelected = selection.kind === 'collection' && selection.id === node.collection.id
-  const count = collectionDeckCount(subtreeCollectionIds(node), decks)
+  const collectionIds = subtreeCollectionIds(node)
+  const count = cardCountFor(collectionIds, decks)
 
   return (
     <div>
       <div
-        className={cn('flex items-center gap-1 rounded-r-[9px] border-l-2 py-1.5 pr-2 text-sm', rowTone(isSelected))}
-        style={{ paddingLeft: 8 + node.depth * 16 }}
+        className={cn('flex items-center gap-2 rounded-[9px] py-2 pr-2 text-sm', rowTone(isSelected))}
+        style={{ paddingLeft: 10 + node.depth * 16 }}
       >
-        {expandable ? (
-          <button
-            type="button"
-            onClick={() => onToggle(node.collection.id)}
-            aria-label={expanded ? 'Collapse' : 'Expand'}
-            className="grid h-5 w-5 flex-none place-items-center text-itera-muted hover:text-itera-ink"
-          >
-            {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-        ) : (
-          <span className="w-5 flex-none" />
-        )}
         <Folder
-          size={15}
-          className={cn('flex-none', isSelected ? 'text-itera-accent' : 'text-itera-muted')}
+          size={17}
+          strokeWidth={1.8}
+          className={cn('flex-none', isSelected ? 'text-itera-accent' : 'text-itera-ink-brand')}
         />
         <button
           type="button"
@@ -242,11 +240,23 @@ function CollectionRow({
           )}
         >
           <span className="truncate">{node.collection.name}</span>
-          <span className="flex-none text-xs font-normal text-itera-muted">{count}</span>
         </button>
+        {expandable ? (
+          <button
+            type="button"
+            onClick={() => onToggle(node.collection.id)}
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            className="grid h-5 w-5 flex-none place-items-center text-itera-ink-brand hover:text-itera-accent"
+          >
+            {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+        ) : (
+          <span className="w-5 flex-none" />
+        )}
+        <span className="w-6 flex-none text-right text-xs font-normal text-itera-muted">{count}</span>
       </div>
       {expandable && expanded && (
-        <div className="border-l border-itera-border" style={{ marginLeft: 17 + node.depth * 16 }}>
+        <div className="border-l border-itera-border" style={{ marginLeft: 18 + node.depth * 16 }}>
           {node.children.map((child) => (
             <CollectionRow
               key={child.collection.id}
@@ -293,8 +303,8 @@ function DeckLeafRow({
     <button
       type="button"
       onClick={onClick}
-      className={cn('flex w-full items-center gap-2 rounded-r-[9px] border-l-2 py-1.5 pr-2 text-left text-sm', rowTone(active))}
-      style={{ paddingLeft: 13 + depth * 16 }}
+      className={cn('relative flex w-full items-center gap-2.5 rounded-r-[9px] py-2 pr-2 text-left text-sm before:absolute before:left-0 before:top-1/2 before:h-px before:w-3 before:bg-itera-border', rowTone(active))}
+      style={{ paddingLeft: 14 + (depth - 1) * 16 }}
     >
       <span
         className={cn(

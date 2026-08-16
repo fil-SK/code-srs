@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { MoreVertical } from 'lucide-react'
+import { MoreHorizontal, MoreVertical } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { FloatingPanel } from '@/components/ui/FloatingPanel'
@@ -43,10 +43,10 @@ export function OverflowMenu({
         }}
         className={cn(
           'grid h-8 w-8 place-items-center rounded-itera-control text-itera-muted hover:bg-itera-surface-subtle hover:text-itera-ink',
-          bordered && 'h-10 w-10 border border-itera-border hover:border-itera-border-strong',
+          bordered && 'h-11 w-11 border border-itera-border hover:border-itera-border-strong',
         )}
       >
-        <MoreVertical size={16} />
+        {bordered ? <MoreHorizontal size={18} /> : <MoreVertical size={16} />}
       </button>
       {open && (
         <FloatingPanel

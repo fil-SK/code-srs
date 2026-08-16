@@ -25,22 +25,16 @@ function useReturnTo() {
 }
 
 // min-w guards the 1fr card column from being crushed to near-zero by the
-// fixed-width columns when the table is narrower than its content — the
-// overflow-x-auto ancestor scrolls instead. A leading 28px grip column is
-// only reserved when a row actually supplies a drag handle (manual sort).
-function gridClass(showGrip: boolean) {
-  return cn(
-    'grid items-center gap-3',
-    showGrip
-      ? 'grid-cols-[28px_minmax(220px,1fr)_170px_140px_110px_36px] min-w-[720px]'
-      : 'grid-cols-[minmax(220px,1fr)_170px_140px_110px_36px] min-w-[660px]',
-  )
+// fixed-width columns when the table is narrower than its content. The drag
+// handle floats in the row's left inset so card icons stay aligned close to
+// the list border in both manual and sorted views.
+function gridClass() {
+  return 'grid min-w-[660px] grid-cols-[minmax(220px,1fr)_170px_140px_110px_36px] items-center gap-2'
 }
 
-export function CardTableHeader({ showGrip = false }: { showGrip?: boolean }) {
+export function CardTableHeader() {
   return (
-    <div className={cn(gridClass(showGrip), 'pb-3 text-xs font-bold uppercase tracking-wider text-itera-muted')}>
-      {showGrip && <span />}
+    <div className={cn(gridClass(), 'pb-3 text-xs font-bold uppercase tracking-wider text-itera-muted')}>
       <span>Card</span>
       <span>Type</span>
       <span>Status</span>
@@ -159,9 +153,13 @@ export function CardTableRowV1({
     <div
       ref={containerRef}
       style={style}
-      className={cn(gridClass(showGrip), 'px-1', compact ? 'py-2' : 'py-4', card.suspended && 'opacity-55')}
+      className={cn('group relative', gridClass(), compact ? 'py-2' : 'py-4', card.suspended && 'opacity-55')}
     >
-      {showGrip && leading}
+      {showGrip && leading && (
+        <span className="absolute -left-2.5 top-1/2 z-10 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          {leading}
+        </span>
+      )}
       <Link
         to={`/preview?card=${card.id}&from=${encodeURIComponent(returnTo)}`}
         className="flex min-w-0 items-center gap-3 hover:text-itera-accent"
@@ -220,13 +218,11 @@ export function CardTableRowV2({
   decks,
   now,
   compact = false,
-  showGrip = false,
 }: {
   card: CardV2Record
   decks: FlatDeck[]
   now: number
   compact?: boolean
-  showGrip?: boolean
 }) {
   const navigate = useNavigate()
   const dialogs = useDialogs()
@@ -276,8 +272,7 @@ export function CardTableRowV2({
   ]
 
   return (
-    <div className={cn(gridClass(showGrip), 'px-1', compact ? 'py-2' : 'py-3', card.suspended && 'opacity-55')}>
-      {showGrip && <span />}
+    <div className={cn(gridClass(), compact ? 'py-2' : 'py-3', card.suspended && 'opacity-55')}>
       <Link to={`/cards/${card.id}/study`} className="flex min-w-0 items-center gap-3 hover:text-itera-accent">
         <div className={cn('grid h-8 w-8 flex-none place-items-center rounded-itera-control text-white', visual.tileClass)}>
           <Icon size={15} />

@@ -77,7 +77,7 @@ export function CardListFooter({
   const [showShortcuts, setShowShortcuts] = useState(false)
 
   return (
-    <div className="mt-8 space-y-5">
+    <div className="mt-5 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <span className="text-sm text-itera-muted">
           {count} {itemLabel}
@@ -122,7 +122,7 @@ export function CardListFooter({
       </div>
 
       {showTip && (
-        <div className="flex flex-wrap items-center gap-2.5 rounded-itera-card border border-itera-border bg-itera-surface-subtle px-5 py-4 text-sm text-itera-muted">
+        <div className="flex flex-wrap items-center gap-2.5 rounded-itera-card border border-itera-border bg-itera-surface px-5 py-4 text-sm text-itera-muted">
           <Keyboard size={21} className="text-itera-muted" />
           <span className="font-semibold text-itera-ink-brand">Tip:</span>
           <span>Press</span>

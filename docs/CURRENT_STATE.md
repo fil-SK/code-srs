@@ -2,7 +2,7 @@
 
 **Last verified against the working tree: 2026-08-16** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography, review-interaction and new-card authoring refinements in this working tree).
 
-The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5, makes its selected Inter Variable family the app-wide non-code default, and refines Review/preview chrome and card interactions, including step-scoped Walkthrough guidance and stable CodeMirror rendering. Auth, persistence and routes are unchanged.
+The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5, makes its selected Inter Variable family the app-wide non-code default, refines Review/preview chrome and card interactions, and brings the focused Deck page into closer alignment with the locked `library-use.png` reference. Auth, persistence and routes are unchanged.
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -98,11 +98,11 @@ Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with n
 
 ## 8. Library state
 
-All three views render inside `LibraryShell` + `CollectionNav` (a local sidebar that drills all the way to individual decks, with a `LibraryTip` aside below the tree).
+All three views render inside `LibraryShell` + `CollectionNav`: a centered, bordered white two-pane surface whose local sidebar drills all the way to individual decks. The sidebar uses restrained line icons, visible branch connectors, an enlarged add control, card-count rollups, and a footer Settings link; it collapses to `CollectionNavDrawer` below the wide-Library breakpoint.
 
 - **Default Library (`/decks`)** — `LibraryBrowserPage`. Collection nav sidebar, deck list with search / filter (due-only) / sort, create / rename / delete deck. Real `useDecks` + `useSearchCards` + `useSearchCardsV2` + `useDueCards` data; per-deck metrics (cards, due, mastery, last studied) from `deckMetrics.ts`.
 - **Parent / container ("Collection") view** — `LibraryCollectionView`, rendered by `LibraryBrowserPage` when the selection is a Collection. Identity header, rolled-up stats (`aggregateMetrics`), its child decks, and any cards filed directly on it. A direct `/decks/:id` navigation whose id resolves to a deck-with-children **redirects here** instead of rendering an incorrectly empty leaf page.
-- **Focused leaf-Deck view (`/decks/:id`)** — `LibraryDeckPage`. Cards / Insights tab split. The Cards tab's search / type / status / sort toolbar and pagination operate over a unified `RowMeta` computed for **both** v1 `Card` and `CardV2Record` rows; pagination only activates once a filter/search/non-manual sort is chosen, so the default view keeps the original unpaginated dnd-kit drag-reorder (v1) list. Clicking a row **opens the card in preview** (`/preview?card=…` for v1, `/cards/:id/study` for v2); Edit/Duplicate/Move/Suspend/Delete live in the row kebab menu. There is no separate read-only card detail screen, by decision.
+- **Focused leaf-Deck view (`/decks/:id`)** — `LibraryDeckPage`. Cards / Insights tab split inside the locked-reference composition: bold final breadcrumb, enlarged aligned metrics, wider 44px toolbar controls, reference-like non-card icons and white surfaces. The Cards tab's search / type / status / sort toolbar and **always-on seven-row pagination** operate over a unified `RowMeta` computed for **both** v1 `Card` and `CardV2Record` rows. Default manual ordering remains available for v1 cards within the visible page; the grip floats in the row inset so card-type tiles stay close to the list border. Clicking a row **opens the card in preview** (`/preview?card=…` for v1, `/cards/:id/study` for v2); Edit/Duplicate/Move/Suspend/Delete live in the row kebab menu. There is no separate read-only card detail screen, by decision. The identity header and metrics stack at phone widths; the table keeps its deliberate horizontal scroll.
 
 **"Collection" is UI-only.** It is derived structurally from the existing `Deck.parentId` tree in `src/features/library/collectionTree.ts` (any deck with children is a Collection node; childless decks are the browsable Library decks). **There is no `Collection` type, no table, and no migration** — see §13.
 

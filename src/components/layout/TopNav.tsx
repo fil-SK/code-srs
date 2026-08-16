@@ -26,7 +26,7 @@ export function TopNav({
   const badges = useNavBadges()
 
   return (
-    <header className="border-b border-itera-border bg-itera-canvas px-4 sm:px-6">
+    <header className="border-b border-itera-border bg-itera-surface px-4 sm:px-6">
       <div className="mx-auto flex h-16 max-w-[1280px] items-stretch gap-8 overflow-x-auto">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
           <img src="/itera-logo.png" alt="" className="h-10 w-10" />

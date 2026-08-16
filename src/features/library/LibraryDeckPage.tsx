@@ -19,12 +19,12 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import {
   BookOpen,
-  CalendarClock,
+  CalendarDays,
   ChevronRight,
-  Clock,
+  Clock3,
+  GalleryVerticalEnd,
   GripVertical,
   LayoutList,
-  Layers,
   Play,
   Plus,
   Rows3,
@@ -74,7 +74,7 @@ import { formatLastStudied } from '@/features/cardsV2/shared/format'
 import { Stat } from './shared/Stat'
 
 const byOrder = (a: Card, b: Card) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt)
-const PAGE_SIZE = 10
+const PAGE_SIZE = 7
 
 type SortKey = 'manual' | 'dueSoon' | 'name' | 'type' | 'status'
 type StatusFilter = 'all' | SchedulingStateKind | 'suspended'
@@ -148,11 +148,11 @@ function SortableCardTableRow({
     <button
       type="button"
       aria-label="Drag to reorder"
-      className="grid h-8 w-6 cursor-grab touch-none place-items-center rounded text-itera-muted-light hover:text-itera-ink"
+      className="grid h-8 w-3 cursor-grab touch-none place-items-center rounded text-itera-muted-light hover:text-itera-ink"
       {...attributes}
       {...listeners}
     >
-      <GripVertical size={16} />
+      <GripVertical size={13} />
     </button>
   )
   return (
@@ -322,7 +322,7 @@ export function LibraryDeckPage() {
   )
 
   const filtersActive = search.trim() !== '' || typeFilter !== 'all' || statusFilter !== 'all'
-  const paginating = filtersActive || sort !== 'manual'
+  const manualReorder = !filtersActive && sort === 'manual'
 
   const filteredMeta = useMemo(() => {
     let result = combinedMeta
@@ -335,12 +335,10 @@ export function LibraryDeckPage() {
     return result
   }, [combinedMeta, typeFilter, statusFilter, search])
 
-  const sortedMeta = useMemo(
-    () => (paginating ? sortRows(filteredMeta, sort) : filteredMeta),
-    [filteredMeta, sort, paginating],
-  )
+  const sortedMeta = useMemo(() => sortRows(filteredMeta, sort), [filteredMeta, sort])
   const totalPages = Math.max(1, Math.ceil(sortedMeta.length / PAGE_SIZE))
-  const pageMeta = paginating ? sortedMeta.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) : sortedMeta
+  const pageMeta = sortedMeta.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  useEffect(() => setPage((current) => Math.min(current, totalPages)), [totalPages])
 
   if (!decksQuery.isLoading && !deck) {
     return (
@@ -383,14 +381,14 @@ export function LibraryDeckPage() {
       onSelect={(next) => navigate(`/decks?${selectionToSearchParams(next)}`)}
       onCreateDeck={newDeck}
     >
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex items-center gap-1.5 text-sm text-itera-muted">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <nav className="flex items-center gap-2 text-sm text-itera-muted">
           <button type="button" onClick={() => navigate('/decks')} className="hover:text-itera-ink">
             Library
           </button>
           {path.map((c) => (
-            <span key={c.id} className="flex items-center gap-1.5">
-              <ChevronRight size={13} />
+            <span key={c.id} className="flex items-center gap-2">
+              <ChevronRight size={14} strokeWidth={1.8} />
               <button
                 type="button"
                 onClick={() => navigate(`/decks?${selectionToSearchParams({ kind: 'collection', id: c.id })}`)}
@@ -400,8 +398,8 @@ export function LibraryDeckPage() {
               </button>
             </span>
           ))}
-          <ChevronRight size={13} />
-          <span className="font-medium text-itera-ink">{deck.name}</span>
+          <ChevronRight size={14} strokeWidth={1.8} />
+          <span className="font-bold text-itera-ink-brand">{deck.name}</span>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -421,23 +419,23 @@ export function LibraryDeckPage() {
             onClick={() => setSettingsOpen((o) => !o)}
             aria-expanded={settingsOpen}
             className={cn(
-              'inline-flex h-10 items-center gap-1.5 rounded-itera-control border px-3.5 text-sm font-semibold transition-colors',
+              'inline-flex h-11 items-center gap-2 rounded-itera-control border px-4 text-sm font-semibold transition-colors',
               settingsOpen
                 ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
                 : 'border-itera-border-strong text-itera-ink hover:border-itera-accent hover:text-itera-ink-brand',
             )}
           >
-            <Settings size={15} /> Deck settings
+            <Settings size={17} strokeWidth={1.8} /> Deck settings
           </button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-start justify-between gap-8">
-        <div className="flex min-w-0 flex-1 items-start gap-6">
+      <div className="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-8">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-5 sm:flex-row sm:gap-7">
           <DeckMark label={markLabel} size="xl" />
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="font-itera-display text-3xl font-bold tracking-tight text-itera-ink-brand">
+              <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand sm:text-3xl">
                 {deck.name}
               </h1>
               <Star size={20} className="text-itera-muted-light" />
@@ -449,22 +447,22 @@ export function LibraryDeckPage() {
             </div>
             {deck.description && <p className="mt-2 max-w-md text-sm text-itera-muted">{deck.description}</p>}
 
-            <div className="mt-7 flex flex-wrap items-center divide-x divide-itera-border">
-              <div className="pr-6">
-                <Stat icon={Layers} label="cards" value={String(totalCards)} />
+            <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-y-0 sm:divide-x sm:divide-itera-border">
+              <div className="sm:pr-4">
+                <Stat icon={GalleryVerticalEnd} label="cards" value={String(totalCards)} />
               </div>
-              <div className="px-6">
+              <div className="sm:px-4">
                 <Stat
-                  icon={CalendarClock}
+                  icon={CalendarDays}
                   label="due today"
                   value={String(metrics.dueCount)}
                   accent={metrics.dueCount > 0}
                 />
               </div>
-              <div className="px-6">
-                <Stat icon={Clock} label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
+              <div className="sm:px-4">
+                <Stat icon={Clock3} label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
               </div>
-              <div className="flex items-center gap-3 pl-6">
+              <div className="flex items-center gap-3.5 sm:pl-4">
                 <MasteryRing value={metrics.masteryFraction} />
                 <div>
                   <div className="font-itera-display text-lg font-bold text-itera-ink-brand">
@@ -477,17 +475,17 @@ export function LibraryDeckPage() {
           </div>
         </div>
 
-        <div className="flex w-56 flex-none flex-col items-stretch gap-2.5">
+        <div className="flex w-full flex-none flex-col items-stretch gap-3 sm:w-56">
           {totalCards > 0 && (
             <Link to={`/review?deck=${id}`}>
-              <Button variant="primary" className="w-full justify-center py-2.5 text-sm">
-                <Play size={15} /> Study Now
+              <Button variant="primary" className="w-full justify-center py-3 text-sm">
+                <Play size={16} strokeWidth={1.8} /> Study Now
               </Button>
             </Link>
           )}
           <Link to={`/decks/${id}/cards/new`}>
-            <Button variant="secondary" className="w-full justify-center py-2.5 text-sm">
-              <Plus size={15} /> Add Card
+            <Button variant="secondary" className="w-full justify-center py-3 text-sm">
+              <Plus size={17} strokeWidth={1.8} /> Add Card
             </Button>
           </Link>
         </div>
@@ -495,7 +493,7 @@ export function LibraryDeckPage() {
 
       {settingsOpen && <DeckSettings deck={deck} decks={decks} />}
 
-      <div className="mb-5 mt-9 flex items-center gap-6 border-b border-itera-border text-sm font-semibold">
+      <div className="mb-6 mt-10 flex items-center gap-8 border-b border-itera-border text-base font-semibold">
         {(['cards', 'insights'] as const).map((key) => (
           <button
             key={key}
@@ -503,8 +501,8 @@ export function LibraryDeckPage() {
             onClick={() => setTab(key)}
             className={
               tab === key
-                ? 'border-b-2 border-itera-accent pb-2.5 text-itera-ink-brand'
-                : 'border-b-2 border-transparent pb-2.5 text-itera-muted hover:text-itera-ink'
+                ? 'min-w-24 border-b-2 border-itera-accent px-4 pb-3.5 text-itera-ink-brand'
+                : 'min-w-24 border-b-2 border-transparent px-4 pb-3.5 text-itera-muted hover:text-itera-ink'
             }
           >
             {key === 'cards' ? 'Cards' : 'Insights'}
@@ -516,17 +514,18 @@ export function LibraryDeckPage() {
         <InsightsTab meta={combinedMeta} />
       ) : (
         <>
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
             <div className="relative w-full max-w-[280px]">
               <Search
-                size={15}
+                size={18}
+                strokeWidth={1.8}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted"
               />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search cards..."
-                className={`${fieldClass} pl-9`}
+                className={`${fieldClass} h-11 bg-itera-surface pl-10`}
               />
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -562,20 +561,20 @@ export function LibraryDeckPage() {
                   { value: 'status', label: 'Status' },
                 ]}
               />
-              <div className="flex items-center gap-1 rounded-itera-control border border-itera-border bg-itera-surface-subtle p-1">
+              <div className="flex h-11 items-center gap-0 rounded-itera-control border border-itera-border bg-itera-surface p-1">
                 <button
                   type="button"
                   aria-label="Comfortable rows"
                   aria-pressed={!compact}
                   onClick={() => setCompact(false)}
                   className={cn(
-                    'grid h-7 w-7 place-items-center rounded-[7px] transition-colors',
+                    'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
                     !compact
-                      ? 'bg-itera-accent text-white shadow-sm'
+                      ? 'bg-itera-accent-soft text-itera-accent'
                       : 'text-itera-muted hover:text-itera-ink',
                   )}
                 >
-                  <LayoutList size={15} />
+                  <LayoutList size={18} />
                 </button>
                 <button
                   type="button"
@@ -583,13 +582,13 @@ export function LibraryDeckPage() {
                   aria-pressed={compact}
                   onClick={() => setCompact(true)}
                   className={cn(
-                    'grid h-7 w-7 place-items-center rounded-[7px] transition-colors',
+                    'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
                     compact
-                      ? 'bg-itera-accent text-white shadow-sm'
+                      ? 'bg-itera-accent-soft text-itera-accent'
                       : 'text-itera-muted hover:text-itera-ink',
                   )}
                 >
-                  <Rows3 size={15} />
+                  <Rows3 size={18} />
                 </button>
               </div>
             </div>
@@ -616,42 +615,46 @@ export function LibraryDeckPage() {
 
           {sortedMeta.length > 0 && (
             <div className="overflow-x-auto">
-              <div className="px-5">
-                <CardTableHeader showGrip={!paginating} />
+              <div className="px-2">
+                <CardTableHeader />
               </div>
-              <div className="rounded-itera-card border border-itera-border bg-itera-surface px-4">
+              <div className="rounded-itera-card border border-itera-border bg-itera-surface px-2">
                 <div className="divide-y divide-itera-border">
-                  {!paginating ? (
-                    <>
-                      {v2Cards.map((card) => (
-                        <CardTableRowV2 key={card.id} card={card} decks={flatDecks} now={now} compact={compact} showGrip />
-                      ))}
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                          {cards.map((card) => (
-                            <SortableCardTableRow
-                              key={card.id}
-                              card={card}
-                              onToggleSuspend={toggleSuspend}
-                              onDelete={remove}
-                              decks={flatDecks}
-                              onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
-                              now={now}
-                              compact={compact}
-                            />
-                          ))}
-                        </SortableContext>
-                      </DndContext>
-                    </>
-                  ) : (
-                    pageMeta.map((meta) => {
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                    <SortableContext
+                      items={pageMeta.filter((meta) => meta.kind === 'v1').map((meta) => meta.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {pageMeta.map((meta) => {
                       if (meta.kind === 'v2') {
                         const card = v2ById.get(meta.id)
                         if (!card) return null
-                        return <CardTableRowV2 key={meta.id} card={card} decks={flatDecks} now={now} compact={compact} />
+                        return (
+                          <CardTableRowV2
+                            key={meta.id}
+                            card={card}
+                            decks={flatDecks}
+                            now={now}
+                            compact={compact}
+                          />
+                        )
                       }
                       const card = v1ById.get(meta.id)
                       if (!card) return null
+                      if (manualReorder) {
+                        return (
+                          <SortableCardTableRow
+                            key={meta.id}
+                            card={card}
+                            onToggleSuspend={toggleSuspend}
+                            onDelete={remove}
+                            decks={flatDecks}
+                            onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
+                            now={now}
+                            compact={compact}
+                          />
+                        )
+                      }
                       return (
                         <CardTableRowV1
                           key={meta.id}
@@ -664,8 +667,9 @@ export function LibraryDeckPage() {
                           compact={compact}
                         />
                       )
-                    })
-                  )}
+                      })}
+                    </SortableContext>
+                  </DndContext>
                 </div>
               </div>
             </div>
@@ -675,7 +679,7 @@ export function LibraryDeckPage() {
             <CardListFooter
               count={sortedMeta.length}
               page={page}
-              totalPages={paginating ? totalPages : 1}
+              totalPages={totalPages}
               onPageChange={setPage}
             />
           )}

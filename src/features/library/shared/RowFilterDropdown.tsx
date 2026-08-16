@@ -55,14 +55,15 @@ export function RowFilterDropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'inline-flex items-center gap-1.5 whitespace-nowrap rounded-itera-control border px-3 py-2 text-sm font-medium',
+          'inline-flex h-11 items-center justify-between gap-3 whitespace-nowrap rounded-itera-control border bg-itera-surface px-4 text-sm font-medium',
+          label === 'Sort' ? 'min-w-[164px]' : 'min-w-[112px]',
           isDefault
             ? 'border-itera-border text-itera-ink hover:border-itera-border-strong'
             : 'border-itera-border-strong text-itera-ink-brand',
         )}
       >
         {triggerText}
-        <ChevronDown size={14} className="text-itera-muted" />
+        <ChevronDown size={15} strokeWidth={1.8} className="text-itera-ink-brand" />
       </button>
       {open && (
         <div
