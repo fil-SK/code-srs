@@ -57,7 +57,7 @@ Grading model: interactive types (MCQ, completion, ordering, matching) **auto-de
 ## Using the app
 
 - **Dashboard** — a greeting and an overview: due / total / deck counts, plus quick "Study due" and "Manage decks" actions.
-- **Decks** — the deck tree: create, nest to any depth, rename, delete, reparent, and open a deck. Click a deck **name** to open it; ▶ studies it, 📖 flips through it. Sidebar/bottom-nav badges show live due and draft counts.
+- **Library / All Decks** (`/decks`) — browse descriptive deck rows with card, due, last-studied and progress metrics; search, filter, sort and move through ten-deck pages with visible-range counts. Create decks from the orange header action or use Import Deck to open the app's JSON Import & Export settings. The local Collection tree supports nesting, rename, delete and reparenting.
 - **Deck page** (`/decks/:id`) — Cards/Insights with search and filters, seven cards per page, and Deck settings for rename/description/reparenting. Click a row to preview it; its action menu handles edit/duplicate/move/suspend/delete. V1 cards can still be drag-reordered within the visible manual-order page.
 - **Review** — the due queue. Reveal, then rate with the icon-led Again / Hard / Good / Easy controls; each choice previews its real next FSRS interval. Grade and undo remain keyboard-friendly, and queue order is independent of manual card order.
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.

@@ -681,6 +681,7 @@ export function LibraryDeckPage() {
               page={page}
               totalPages={totalPages}
               onPageChange={setPage}
+              pageSize={PAGE_SIZE}
             />
           )}
         </>

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { getRepository } from '@/data'
@@ -51,6 +51,42 @@ describe('LibraryBrowserPage', () => {
     expect(await screen.findByText('Odds and Ends')).toBeTruthy()
     const rows = screen.getAllByRole('button', { name: 'Deck actions' })
     expect(rows).toHaveLength(2) // Type Deduction + Odds and Ends, not C++
+  })
+
+  it('renders the All Decks identity and links Import Deck to the working JSON importer', async () => {
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'All Decks' })).toBeTruthy()
+    expect(screen.getByText('View and manage all your decks.')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Import Deck' }).getAttribute('href')).toBe(
+      '/settings/import-export',
+    )
+  })
+
+  it('paginates All Decks at ten rows per page', async () => {
+    const repo = getRepository()
+    await Promise.all(
+      Array.from({ length: 11 }, (_, index) =>
+        repo.decks.put({
+          id: `deck-${index}`,
+          name: `Deck ${String(index).padStart(2, '0')}`,
+          description: index === 0 ? 'The first deck description' : undefined,
+          createdAt: index,
+          updatedAt: index,
+        }),
+      ),
+    )
+
+    renderPage()
+
+    expect(await screen.findAllByRole('button', { name: 'Deck actions' })).toHaveLength(10)
+    expect(screen.getByText('The first deck description')).toBeTruthy()
+    expect(screen.getByText('Showing 1-10 of 11 decks')).toBeTruthy()
+    screen.getByRole('button', { name: '2', exact: true }).click()
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: 'Deck actions' })).toHaveLength(1)
+      expect(screen.getByText('Showing 11-11 of 11 decks')).toBeTruthy()
+    })
   })
 
   it('filters the deck list down to a selected collection', async () => {

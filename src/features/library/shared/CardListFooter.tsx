@@ -66,6 +66,7 @@ export function CardListFooter({
   onPageChange,
   itemLabel = 'card',
   showTip = true,
+  pageSize,
 }: {
   count: number
   page: number
@@ -73,15 +74,19 @@ export function CardListFooter({
   onPageChange: (page: number) => void
   itemLabel?: string
   showTip?: boolean
+  pageSize?: number
 }) {
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const rangeStart = pageSize ? (page - 1) * pageSize + 1 : 1
+  const rangeEnd = pageSize ? Math.min(page * pageSize, count) : count
 
   return (
     <div className="mt-5 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <span className="text-sm text-itera-muted">
-          {count} {itemLabel}
-          {count === 1 ? '' : 's'}
+          {totalPages > 1 && pageSize
+            ? `Showing ${rangeStart}-${rangeEnd} of ${count} ${itemLabel}s`
+            : `${count} ${itemLabel}${count === 1 ? '' : 's'}`}
         </span>
 
         {totalPages > 1 && (

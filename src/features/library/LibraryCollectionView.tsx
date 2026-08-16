@@ -371,6 +371,7 @@ export function LibraryCollectionView({
             onPageChange={setPage}
             itemLabel="deck"
             showTip={false}
+            pageSize={PAGE_SIZE}
           />
         </>
       )}

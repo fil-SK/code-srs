@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronDown, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, Funnel, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 // Compact dropdown-style Filter control, same open/outside-click-close idiom
@@ -7,9 +7,11 @@ import { cn } from '@/lib/cn'
 export function FilterMenu({
   dueOnly,
   onDueOnlyChange,
+  referenceStyle = false,
 }: {
   dueOnly: boolean
   onDueOnlyChange: (value: boolean) => void
+  referenceStyle?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -20,8 +22,15 @@ export function FilterMenu({
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [open])
 
   return (
@@ -29,17 +38,22 @@ export function FilterMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-itera-control border px-3 py-2 text-sm font-semibold',
+          'inline-flex items-center rounded-itera-control border text-sm font-semibold',
+          referenceStyle
+            ? 'h-11 min-w-[136px] justify-between gap-3 bg-itera-surface px-4'
+            : 'gap-1.5 px-3 py-2',
           activeCount > 0
             ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
             : 'border-itera-border text-itera-ink hover:border-itera-border-strong',
         )}
       >
-        <SlidersHorizontal size={14} />
+        {referenceStyle ? <Funnel size={17} strokeWidth={1.8} /> : <SlidersHorizontal size={14} />}
         Filter
         {activeCount > 0 && <span className="text-itera-accent">· {activeCount}</span>}
-        <ChevronDown size={14} />
+        <ChevronDown size={referenceStyle ? 15 : 14} strokeWidth={referenceStyle ? 1.8 : 2} />
       </button>
       {open && (
         <div className="absolute left-0 z-10 mt-1 w-48 rounded-itera-control border border-itera-border bg-itera-surface p-2 shadow-[var(--itera-shadow-float)]">

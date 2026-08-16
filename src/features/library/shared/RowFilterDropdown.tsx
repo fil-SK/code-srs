@@ -24,12 +24,14 @@ export function RowFilterDropdown({
   value,
   onChange,
   showValueWhenDefault = false,
+  wide = false,
 }: {
   label: string
   options: DropdownOption[]
   value: string
   onChange: (value: string) => void
   showValueWhenDefault?: boolean
+  wide?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -39,8 +41,15 @@ export function RowFilterDropdown({
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [open])
 
   const current = options.find((o) => o.value === value)
@@ -56,7 +65,7 @@ export function RowFilterDropdown({
         aria-expanded={open}
         className={cn(
           'inline-flex h-11 items-center justify-between gap-3 whitespace-nowrap rounded-itera-control border bg-itera-surface px-4 text-sm font-medium',
-          label === 'Sort' ? 'min-w-[164px]' : 'min-w-[112px]',
+          label === 'Sort' ? (wide ? 'min-w-[192px]' : 'min-w-[164px]') : 'min-w-[112px]',
           isDefault
             ? 'border-itera-border text-itera-ink hover:border-itera-border-strong'
             : 'border-itera-border-strong text-itera-ink-brand',
