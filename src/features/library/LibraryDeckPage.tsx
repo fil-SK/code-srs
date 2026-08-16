@@ -491,7 +491,9 @@ export function LibraryDeckPage() {
         </div>
       </div>
 
-      {settingsOpen && <DeckSettings deck={deck} decks={decks} />}
+      {settingsOpen && (
+        <DeckSettings deck={deck} decks={decks} onClose={() => setSettingsOpen(false)} />
+      )}
 
       <div className="mb-6 mt-10 flex items-center gap-8 border-b border-itera-border text-base font-semibold">
         {(['cards', 'insights'] as const).map((key) => (

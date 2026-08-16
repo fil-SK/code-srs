@@ -84,8 +84,12 @@ describe('AccountMenu', () => {
     expect(items.map((i) => i.textContent?.replace('Soon', '').trim())).toEqual([
       'Account settings',
       'Preferences',
+      'Study settings',
+      'Spaced repetition (FSRS)',
+      'Import / Export',
       'Keyboard shortcuts',
       'Help & documentation',
+      "What's new",
       'About Itera',
       'Sign out',
     ])
@@ -106,7 +110,14 @@ describe('AccountMenu', () => {
     renderMenu()
 
     await user.click(trigger())
-    const placeholders = ['Preferences', 'Keyboard shortcuts', 'Help & documentation', 'About Itera']
+    const placeholders = [
+      'Preferences',
+      'Study settings',
+      'Keyboard shortcuts',
+      'Help & documentation',
+      "What's new",
+      'About Itera',
+    ]
     for (const label of placeholders) {
       const item = screen.getByRole('menuitem', { name: new RegExp(label) })
       expect(item.getAttribute('aria-disabled')).toBe('true')
@@ -133,5 +144,19 @@ describe('AccountMenu', () => {
     expect(screen.getByTestId('pathname').textContent).toBe('/settings')
     expect(screen.getByText('Account settings page')).toBeTruthy()
     expect(screen.queryByRole('menu')).toBeNull()
+  })
+
+  it('links the working scheduling and import sections directly', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+
+    await user.click(trigger())
+
+    expect(
+      screen.getByRole('menuitem', { name: 'Spaced repetition (FSRS)' }).getAttribute('href'),
+    ).toBe('/settings/card-scheduling')
+    expect(screen.getByRole('menuitem', { name: 'Import / Export' }).getAttribute('href')).toBe(
+      '/settings/import-export',
+    )
   })
 })

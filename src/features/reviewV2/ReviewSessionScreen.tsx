@@ -46,6 +46,10 @@ export function ReviewSessionScreen<T extends InteractionType>({
   initialResponse,
   hideTopBar,
   hideRating,
+  onPrevious,
+  onNext,
+  previousDisabled,
+  nextDisabled,
 }: {
   card: CardV2 & { interaction: Extract<CardInteraction, { type: T }> }
   definition: InteractionDefinition<T>
@@ -73,6 +77,13 @@ export function ReviewSessionScreen<T extends InteractionType>({
   // chrome — see docs/itera-decisions.md.
   hideTopBar?: boolean
   hideRating?: boolean
+  // Deck flip-through adds navigation around the position in the shared
+  // strip. Real review sessions omit it because their queue advances only
+  // after grading.
+  onPrevious?: () => void
+  onNext?: () => void
+  previousDisabled?: boolean
+  nextDisabled?: boolean
 }) {
   const [phase, dispatch] = useReducer(reviewPhaseReducer, initialReviewPhase)
   const [response, setResponse] = useState<InteractionResponse>(initialResponse)
@@ -213,6 +224,10 @@ export function ReviewSessionScreen<T extends InteractionType>({
           onExit={onExit}
           shortcutKey={shortcut.key}
           shortcutLabel={shortcut.label}
+          onPrevious={onPrevious}
+          onNext={onNext}
+          previousDisabled={previousDisabled}
+          nextDisabled={nextDisabled}
         />
       )}
 

@@ -12,7 +12,15 @@ import { useSaveDeck } from '@/hooks/useDecks'
 // as the parent is exactly how a new Collection gets created (see
 // collectionTree.ts — Collections are derived from Deck.parentId, not
 // authored directly).
-export function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
+export function DeckSettings({
+  deck,
+  decks,
+  onClose,
+}: {
+  deck: Deck
+  decks: Deck[]
+  onClose: () => void
+}) {
   const save = useSaveDeck()
   const [name, setName] = useState(deck.name)
   const [description, setDescription] = useState(deck.description ?? '')
@@ -32,17 +40,20 @@ export function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
 
   function handleSave() {
     if (!name.trim()) return
-    save.mutate({
-      ...deck,
-      name: name.trim(),
-      description: description.trim() || undefined,
-      parentId: parentId || undefined,
-      language: language || undefined,
-    })
+    save.mutate(
+      {
+        ...deck,
+        name: name.trim(),
+        description: description.trim() || undefined,
+        parentId: parentId || undefined,
+        language: language || undefined,
+      },
+      { onSuccess: onClose },
+    )
   }
 
   return (
-    <div className="mb-4 space-y-4 rounded-itera-card border border-itera-border bg-itera-surface p-5">
+    <div className="mb-4 mt-6 space-y-4 rounded-itera-card border border-itera-border bg-itera-surface p-5">
       <Field label="Name">
         <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
@@ -75,9 +86,14 @@ export function DeckSettings({ deck, decks }: { deck: Deck; decks: Deck[] }) {
           ))}
         </select>
       </Field>
-      <Button variant="primary" onClick={handleSave} disabled={!dirty || !name.trim() || save.isPending}>
-        {save.isPending ? 'Saving…' : 'Save deck'}
-      </Button>
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Button variant="primary" onClick={handleSave} disabled={!dirty || !name.trim() || save.isPending}>
+          {save.isPending ? 'Saving…' : 'Save deck'}
+        </Button>
+        <Button variant="secondary" onClick={onClose} disabled={save.isPending}>
+          Cancel
+        </Button>
+      </div>
     </div>
   )
 }

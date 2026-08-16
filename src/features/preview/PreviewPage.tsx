@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { migrateCard } from '@/domain/migration/cardMigration'
 import { initialSchedulingState } from '@/domain/scheduling/state'
@@ -11,12 +10,12 @@ import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
 
-// Don't let card shortcuts (arrows) fire while typing in an input, select, or
-// the code editor.
-function isEditingTarget(target: EventTarget | null): boolean {
-  const el = target as HTMLElement | null
+// Don't let deck navigation steal arrows from an interaction or an editor.
+function isInteractiveTarget(target: EventTarget | null): boolean {
   return Boolean(
-    el?.closest('input, textarea, select, [contenteditable="true"], .cm-editor'),
+    target instanceof Element && target.closest(
+      'button, [role="button"], [role="radio"], [role="checkbox"], input, textarea, select, [contenteditable="true"], .cm-editor',
+    ),
   )
 }
 
@@ -82,22 +81,27 @@ export function PreviewPage() {
   // every v1 card renders through the v2 interaction registry here.
   const cardV2 = useMemo(() => (current ? migrateCard(current) : undefined), [current])
 
-  function go(delta: number) {
+  const go = useCallback((delta: number) => {
     setIndex(() => Math.min(cards.length - 1, Math.max(0, safeIndex + delta)))
-  }
+  }, [cards.length, safeIndex])
 
   // Only prev/next lives here — reveal/submit/rating shortcuts belong to
   // ReviewSessionScreen's own listener, which is mounted below.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (isEditingTarget(e.target)) return
-      if (e.key === 'ArrowRight') go(1)
-      else if (e.key === 'ArrowLeft') go(-1)
+      if (e.repeat || isInteractiveTarget(e.target)) return
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        go(1)
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        go(-1)
+      }
     }
+    if (cardParam || cards.length < 2) return
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cards.length, safeIndex])
+  }, [cardParam, cards.length, go])
 
   if (allCards.isLoading || (deckParam && decks.isLoading)) {
     return <p className="text-sm text-muted">Loading…</p>
@@ -137,22 +141,12 @@ export function PreviewPage() {
           onExit={() => navigate(back.to)}
           schedulingBefore={initialSchedulingState()}
           hideRating
+          onPrevious={!cardParam ? () => go(-1) : undefined}
+          onNext={!cardParam ? () => go(1) : undefined}
+          previousDisabled={safeIndex === 0}
+          nextDisabled={safeIndex === cards.length - 1}
         />
       </IteraSurface>
-
-      {!cardParam && (
-        <div className="mt-4 flex items-center justify-between px-4 sm:px-6">
-          <Button onClick={() => go(-1)} disabled={safeIndex === 0}>
-            <ChevronLeft size={16} /> Prev
-          </Button>
-          <Button
-            onClick={() => go(1)}
-            disabled={safeIndex === cards.length - 1}
-          >
-            Next <ChevronRight size={16} />
-          </Button>
-        </div>
-      )}
     </div>
   )
 }

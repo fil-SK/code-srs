@@ -58,13 +58,13 @@ Grading model: interactive types (MCQ, completion, ordering, matching) **auto-de
 
 - **Dashboard** — a greeting and an overview: due / total / deck counts, plus quick "Study due" and "Manage decks" actions.
 - **Library / All Decks** (`/decks`) — browse descriptive deck rows with card, due, last-studied and progress metrics; search, filter, sort and move through ten-deck pages with visible-range counts. Create decks from the orange header action or use Import Deck to open the app's JSON Import & Export settings. The local Collection tree supports nesting, rename, delete and reparenting.
-- **Deck page** (`/decks/:id`) — Cards/Insights with search and filters, seven cards per page, and Deck settings for rename/description/reparenting. Click a row to preview it; its action menu handles edit/duplicate/move/suspend/delete. V1 cards can still be drag-reordered within the visible manual-order page.
+- **Deck page** (`/decks/:id`) — Cards/Insights with search and filters, seven cards per page, and Deck settings for rename/description/reparenting. Settings closes after Save, Cancel, or clicking Deck settings again. Click a row to preview it; its action menu handles edit/duplicate/move/suspend/delete. V1 cards can still be drag-reordered within the visible manual-order page.
 - **Review** — the due queue. Reveal, then rate with the icon-led Again / Hard / Good / Easy controls; each choice previews its real next FSRS interval. Grade and undo remain keyboard-friendly, and queue order is independent of manual card order.
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.
-- **Preview** — try cards with **no scheduling impact** through the same card surface as Review. Use the shared position/shortcut strip, reveal or submit the card, and move with Prev/Next or the arrow keys. Ratings are hidden and nothing is recorded.
+- **Preview** — try cards with **no scheduling impact** through the same card surface as Review. In deck flip-through, Prev and Next flank the position in the white strip; the Left/Right arrow keys perform the same navigation. Ratings are hidden and nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
 - **Stats** — streak, retention, reviews/day, and upcoming load.
-- **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The other sections (profile, email & password, appearance, notifications, privacy, connected devices) are visible but greyed out: they are planned, not built. Sign-out lives in the avatar menu and only appears in cloud mode.
+- **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The avatar menu also links those two working sections directly and shows Study settings, What's new, keyboard/help and profile destinations as clearly marked upcoming items. Sign-out is available there for local, demo and cloud sessions.
 
 **Markdown** works in every card's prose: `` `inline code` ``, `**bold**`, `*italic*`, and:
 

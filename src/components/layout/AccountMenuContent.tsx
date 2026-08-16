@@ -1,10 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
+  ArrowUpDown,
   CircleQuestionMark,
+  Gift,
+  GraduationCap,
   Info,
   Keyboard,
   LogOut,
   SlidersHorizontal,
+  TrendingUp,
   User,
   type LucideIcon,
 } from 'lucide-react'
@@ -15,19 +19,15 @@ import { cn } from '@/lib/cn'
 // narrow-viewport bottom sheet (AccountMenu.tsx) so there is exactly one
 // definition of what the menu contains.
 //
-// Deliberately a *quick navigation* menu, not a second settings sidebar: the
-// full set of settings sections (study settings, FSRS, import/export,
-// appearance, privacy, notifications, devices) lives inside the Account
-// settings page, reachable from the first row here.
+// Deliberately a *quick navigation* menu, not a second settings sidebar. It
+// carries only the profile-menu reference's requested shortcuts; the full set
+// of settings sections still lives inside the Account settings page.
 //
 // Sign out is live whenever any session is (local, demo, or Supabase) — it is
-// the exit half of the /login loop. Everything except that and Account
-// settings renders disabled, because none of it
-// exists yet — the rows are here to state the intended IA, and each one is
-// marked "Soon" so the greying is explicit rather than something the user has
-// to infer from a color. They stay focusable (aria-disabled, not `disabled`)
-// so keyboard users reach them and hear the state instead of skipping past a
-// row they can see.
+// the exit half of the /login loop. Account settings, FSRS/Card scheduling and
+// Import / Export are real routes. Rows without a backing page remain marked
+// "Soon" and focusable (aria-disabled, not `disabled`) so keyboard users hear
+// their state instead of skipping visible content.
 
 interface MenuRow {
   label: string
@@ -42,7 +42,9 @@ function MenuItem({ row, onNavigate }: { row: MenuRow; onNavigate: () => void })
   const { pathname } = useLocation()
   const { label, icon: Icon, to, onSelect, accent } = row
   const disabled = !to && !onSelect
-  const active = to !== undefined && (pathname === to || pathname.startsWith(`${to}/`))
+  const active =
+    to !== undefined &&
+    (to === '/settings' ? pathname === to : pathname === to || pathname.startsWith(`${to}/`))
 
   const shared = 'flex w-full items-center gap-3 px-3 py-2 text-left text-sm rounded-itera-control'
   const tone = disabled
@@ -137,10 +139,22 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
       { label: 'Preferences', icon: SlidersHorizontal },
     ],
     [
+      { label: 'Study settings', icon: GraduationCap },
+      {
+        label: 'Spaced repetition (FSRS)',
+        icon: TrendingUp,
+        to: '/settings/card-scheduling',
+      },
+      { label: 'Import / Export', icon: ArrowUpDown, to: '/settings/import-export' },
+    ],
+    [
       { label: 'Keyboard shortcuts', icon: Keyboard },
       { label: 'Help & documentation', icon: CircleQuestionMark },
     ],
-    [{ label: 'About Itera', icon: Info }],
+    [
+      { label: "What's new", icon: Gift },
+      { label: 'About Itera', icon: Info },
+    ],
     [
       {
         label: 'Sign out',

@@ -7,7 +7,8 @@ import { FloatingPanel } from '@/components/ui/FloatingPanel'
 import { AccountMenuContent } from './AccountMenuContent'
 import { useIsNarrowShell } from './useIsNarrowShell'
 
-const PANEL_CLASS = 'w-[300px] max-w-[calc(100vw-16px)] rounded-itera-dialog py-0'
+const PANEL_CLASS =
+  'max-h-[calc(100vh-16px)] w-[300px] max-w-[calc(100vw-16px)] overflow-y-auto rounded-itera-dialog py-0'
 
 // The global account menu: the avatar in the top-right of the shared top nav
 // opens a compact floating popover anchored to it. Mounted once, from

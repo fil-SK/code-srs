@@ -280,7 +280,9 @@ export function LibraryCollectionView({
         </div>
       </div>
 
-      {settingsOpen && <DeckSettings deck={deck} decks={decks} />}
+      {settingsOpen && (
+        <DeckSettings deck={deck} decks={decks} onClose={() => setSettingsOpen(false)} />
+      )}
 
       <h2 className="mb-5 mt-9 border-b border-itera-border pb-2.5 text-sm font-bold text-itera-ink-brand">
         Decks
