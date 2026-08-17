@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCard } from '@/hooks/useCards'
 import { useCardV2 } from '@/hooks/useCardsV2'
 import { cardV2RecordToForm, legacyCardToForm } from '@/domain/cardsV2/recallForm'
@@ -22,7 +22,7 @@ import {
   cardV2RecordToWalkthroughForm,
   legacyStoryCardToForm,
 } from '@/domain/cardsV2/walkthroughForm'
-import { CardEditorPage } from '@/features/cards/CardEditorPage'
+import { Button } from '@/components/ui/Button'
 import { RecallEditorShell } from './RecallEditorShell'
 import { MultipleChoiceEditorShell } from './MultipleChoiceEditorShell'
 import { WriteCodeEditorShell } from './WriteCodeEditorShell'
@@ -32,17 +32,19 @@ import { WalkthroughEditorShell } from './WalkthroughEditorShell'
 
 const RECALL_SHAPED_V1_TYPES = new Set(['basic', 'codeReading', 'bugFinding'])
 
-// Route: cards/:id/edit. Branches between the new Recall/Multiple
-// Choice/Write Code/Ordering/Matching/Walkthrough editors and the untouched
-// v1 registry editor, since both still coexist during the transition (see
-// docs/itera-decisions.md): a v1 basic/codeReading/bugFinding card opens the
-// Recall editor, a v1 mcq card opens the Multiple Choice editor, a v1
+// Route: cards/:id/edit. Every card, both models, is authored through a v2
+// editor shell: a v1 basic/codeReading/bugFinding card opens the Recall
+// editor, a v1 mcq card opens the Multiple Choice editor, a v1
 // codeCompletion card opens the Write Code editor, a v1 ordering card opens
 // the Ordering editor, a v1 matching card opens the Matching editor, a v1
 // story card opens the Walkthrough editor (all six migrate to a
 // CardV2Record on save); a CardV2Record opens its editor directly by
-// interaction type; anything else falls through to the old CardEditorPage,
-// unmodified.
+// interaction type.
+//
+// The branches below cover all 8 members of the v1 CardType union, so the
+// final return is reachable only when `id` resolves to neither model — a
+// deleted or mistyped card id. There is deliberately no v1-editor escape
+// hatch left: the v1 registry editor was deleted (docs/itera-decisions.md).
 export function CardEditEntry() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -50,7 +52,7 @@ export function CardEditEntry() {
   const v2 = useCardV2(id)
 
   if (v1.isLoading || v2.isLoading) {
-    return <p className="text-sm text-muted">Loading…</p>
+    return <p className="text-sm text-itera-muted">Loading…</p>
   }
 
   if (v1.data && RECALL_SHAPED_V1_TYPES.has(v1.data.type)) {
@@ -209,5 +211,15 @@ export function CardEditEntry() {
     )
   }
 
-  return <CardEditorPage />
+  return (
+    <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
+      <div className="text-lg font-semibold text-itera-ink-brand">Card not found</div>
+      <p className="mt-2 text-sm text-itera-muted">
+        This card may have been deleted, or the link may be out of date.
+      </p>
+      <Link to="/decks" className="mt-4 inline-block">
+        <Button variant="primary">Back to Library</Button>
+      </Link>
+    </div>
+  )
 }

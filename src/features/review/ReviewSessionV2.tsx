@@ -19,9 +19,8 @@ interface UndoEntry {
 // one lazy/on-read migration this codebase allows) and rendered through the
 // same shared v2 shell used by /design-preview/* - no separate "production"
 // copy of ReviewSessionScreen, the phase reducer, or the interaction
-// registry. `ReviewSession`/`useReviewSession` (v1) are untouched and still
-// in the tree, unreferenced from this route — swapping back is a one-line
-// revert in ReviewPage.tsx if needed.
+// registry. The v1 `ReviewSession`/`useReviewSession` pair this replaced has
+// been deleted, so this is the only Review surface.
 //
 // Scheduling still lives on `Card.scheduling` (Phase D, CardState
 // extraction, hasn't happened): `schedulingBefore` is the real, current
@@ -79,7 +78,7 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
               to="/"
               className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105"
             >
-              Back to dashboard
+              Back to Today
             </Link>
           </div>
         </div>

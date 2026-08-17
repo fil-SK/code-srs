@@ -50,17 +50,21 @@ export function ReviewPage() {
           <div className="text-lg font-semibold text-itera-ink-brand">Nothing due 🎯</div>
           <p className="mt-2 text-sm text-itera-muted">
             {scope
-              ? `No cards due in “${scope.name}”.`
-              : 'No cards are due right now. Create some or come back later.'}
+              ? `No cards due in “${scope.name}”. Open the deck to add cards or study ahead.`
+              : 'No cards are due right now. Add cards from a deck, or come back later.'}
           </p>
+          {/* Creating a card requires a deck (/decks/:deckId/cards/new), so the
+              CTA points at a deck page or the Library rather than a bare create
+              route. The scoped deck page also handles the
+              deck-with-children redirect on its own. */}
           <div className="mt-4 flex justify-center gap-2.5">
             {scope && (
               <Link to="/review">
                 <Button>All decks</Button>
               </Link>
             )}
-            <Link to="/cards/new">
-              <Button variant="primary">New card</Button>
+            <Link to={deckParam ? `/decks/${deckParam}` : '/decks'}>
+              <Button variant="primary">{deckParam ? 'Open deck' : 'Go to Library'}</Button>
             </Link>
           </div>
         </div>

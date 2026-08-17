@@ -51,7 +51,7 @@ export function PreviewPage() {
 
   const cards = useMemo(() => {
     const list = allCards.data ?? []
-    // Single-card mode (opened from Browse) shows just that card; otherwise
+    // Single-card mode (opened from a card row) shows just that card; otherwise
     // browse the whole library or a deck subtree.
     if (cardParam) return list.filter((c) => c.id === cardParam)
     const scoped = scope ? list.filter((c) => scope.ids.has(c.deckId)) : list
@@ -59,14 +59,6 @@ export function PreviewPage() {
       (a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt),
     )
   }, [allCards.data, scope, cardParam])
-
-  // The back link returns to where the user came from (the `from` param), with
-  // sensible defaults: a single card → the deck it belongs to here is unknown,
-  // so Browse; a deck flip-through → that deck's page.
-  const backTo =
-    fromParam ||
-    (deckParam ? `/decks/${deckParam}` : cardParam ? '/browse' : '/decks')
-  const back = { to: backTo }
 
   const [index, setIndex] = useState(0)
 
@@ -76,6 +68,19 @@ export function PreviewPage() {
 
   const safeIndex = Math.min(index, Math.max(0, cards.length - 1))
   const current = cards[safeIndex]
+
+  // The back link returns to where the user came from (the `from` param, which
+  // every in-app caller passes), with sensible defaults: a deck flip-through →
+  // that deck's page; a single card → the deck that card belongs to, which
+  // `current` carries. Library is the fallback when nothing resolves.
+  const backTo =
+    fromParam ||
+    (deckParam
+      ? `/decks/${deckParam}`
+      : current
+        ? `/decks/${current.deckId}`
+        : '/decks')
+  const back = { to: backTo }
 
   // The one lazy/on-read migration this codebase allows (see cardMigration.ts):
   // every v1 card renders through the v2 interaction registry here.
@@ -104,26 +109,26 @@ export function PreviewPage() {
   }, [cardParam, cards.length, go])
 
   if (allCards.isLoading || (deckParam && decks.isLoading)) {
-    return <p className="text-sm text-muted">Loading…</p>
+    return <p className="text-sm text-itera-muted">Loading…</p>
   }
 
   if (cards.length === 0 || !current || !cardV2) {
     return (
-      <div className="mx-auto max-w-md rounded-card border border-dashed border-border bg-panel p-10 text-center">
-        <div className="text-lg font-semibold">
+      <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
+        <div className="text-lg font-semibold text-itera-ink-brand">
           {cardParam ? 'Card not found' : 'No cards here'}
         </div>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-itera-muted">
           {cardParam
             ? 'That card could not be loaded.'
             : scope
               ? `“${scope.name}” has no cards yet.`
               : 'No cards to browse yet.'}
         </p>
+        {/* `backTo` resolves to Library when the card/deck did not load, so the
+            label stays neutral rather than promising a specific destination. */}
         <Link to={back.to} className="mt-4 inline-block">
-          <Button variant="primary">
-            {cardParam ? 'Back to cards' : 'Back to decks'}
-          </Button>
+          <Button variant="primary">Go back</Button>
         </Link>
       </div>
     )
