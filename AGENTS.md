@@ -36,13 +36,15 @@ npm run preview         # serve the production build
 npm run lint            # oxlint (config in .oxlintrc.json)
 npm run test            # vitest run (single pass)
 npm run test:watch      # vitest watch
-npx tsc --noEmit        # typecheck only (faster while iterating)
+npx tsc -b --force      # the real typecheck; `tsc --noEmit` checks NOTHING here
 npx vitest run path/to/file.test.ts     # one test file
 npx vitest run -t "autoGrade"           # tests matching a name
 npx playwright install chromium         # once, before any browser verification
 ```
 
-Before calling a change done: `npx vitest run`, `npx tsc --noEmit`, and `npm run lint` must all be clean (current baseline in `docs/CURRENT_STATE.md` §16).
+Before calling a change done: `npx vitest run`, `npx tsc -b --force`, and `npm run lint` must all be clean (current baseline in `docs/CURRENT_STATE.md` §16).
+
+**`npx tsc --noEmit` is a no-op in this repo** — `tsconfig.json` is solution-style (`"files": []` + `references`), so it checks zero files. Use `npx tsc -b --force`. Test files are excluded from typechecking entirely, so a dangling import in a test surfaces only at Vitest run time.
 
 ### Test conventions
 
@@ -57,11 +59,11 @@ Component tests opt into a DOM per file with `// @vitest-environment happy-dom` 
 - **One storage seam.** Everything depends on `Repository` (`src/data/repository.ts`); `getRepository()` (`src/data/index.ts`) picks `DexieRepository` or `SupabaseRepository`. **Never import a backend from a component, hook or page.**
 - **All data access goes through the TanStack Query hooks in `src/hooks/`**, with keys centralized in `src/hooks/queryKeys.ts`.
 - **Entities are opaque JSON blobs** keyed by an inline `id`; Supabase's few generated columns exist only for indexing, and all text/tag/type filtering happens **in memory identically in both backends**. Adding a field to a type needs no migration.
-- **Two card models coexist on purpose.** `src/types/card.ts` (v1, 8-type union, its own registry in `src/features/cards/registry/`) and `src/types/cardV2.ts` (v2, 6-type `CardInteraction`, registry in `src/features/reviewV2/interactions/registry.ts`). When grepping for "Card", check which model you are in.
-- **Adding a v1 card type** means: content interface + union member in `src/types/card.ts`, a `src/features/cards/renderers/<type>/` folder, registration in the exhaustive registry, then satisfying the exhaustive switches the compiler flags (`cardTypeMeta.ts`, `searchableText.ts`, `seedContent.ts`).
+- **Two card models coexist on purpose.** `src/types/card.ts` (v1, 8-type union — **storage only**; its registry and renderers were deleted) and `src/types/cardV2.ts` (v2, 6-type `CardInteraction`, registry in `src/features/reviewV2/interactions/registry.ts`). A v1 card reaches a screen only via `migrateCard`. When grepping for "Card", check which model you are in.
+- **Do not add a v1 card type** — there is no v1 renderer or editor left to add one to. New card types are v2 interactions; see `docs/architecture.md`.
 - **Adding an entity** means: a `CrudRepo<T>` line in *both* backends + a Dexie `version()` bump + a Supabase table block + a hook + `queryKeys` + inclusion in the backup.
 - **No new dependencies for things this repo builds by hand**: no markdown library (`src/components/text/RichText.tsx` is a deliberate XSS-safe subset), no charting library (charts are hand-rolled SVG/CSS), no graph library (roadmap canvas is hand-built SVG), no popover library (`src/components/ui/FloatingPanel.tsx`). CodeMirror must stay lazy-loaded via `LazyCodeView`/`LazyCodeEditor`.
-- **The app is light-only right now** — `.itera-scope` has no dark palette. `ThemeProvider`/`ThemeToggle` still exist and are unchanged; do not delete them, and do not add dark-mode styling without a dark palette existing first.
+- **The app is light-only and says so** — `.itera-scope` has no dark palette; `index.html`, `getInitialTheme()` both say light, and the dark token block plus `ThemeToggle.tsx` are deleted. Keep `ThemeProvider`/`useTheme` (CodeView/CodeEditor read `Theme` for their syntax palette); do not add dark-mode styling without a dark palette existing first.
 
 ## Data-safety constraints
 

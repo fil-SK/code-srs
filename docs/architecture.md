@@ -34,8 +34,8 @@ src/
 ├── auth/         session boundary: AuthProvider, AuthGate, RequireAuth, localSession
 ├── components/
 │   ├── layout/   AppShell, TopNav, primaryNavLinks.ts, AccountMenu(+Content), StreakBadge, useNavBadges.ts
-│   ├── ui/       Button, Field, FloatingPanel, dialogs, FlipCard (v1) — shared, generic UI primitives
-│   ├── code/     CodeView, LazyCodeView, LazyCodeEditor, lineRanges.ts
+│   ├── ui/       Button, Field, FloatingPanel, dialogs — shared, generic UI primitives
+│   ├── code/     CodeView, CodeEditor, LazyCodeView, LazyCodeEditor, languageExtensions/languageList
 │   └── text/     RichText, InlineText (the markdown-subset renderer)
 ├── data/         repository.ts (the interface), index.ts (getRepository), dexie/, supabase/, backup.ts
 ├── domain/       pure logic, no React:
@@ -46,21 +46,18 @@ src/
 │   ├── migration/    cardMigration.ts (v1→v2), cardStateBackfill.ts, runner.ts
 │   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, cardState.ts
 │   ├── search/       searchableText.ts
-│   └── stats/        computeStats.ts
+│   └── stats/        dateRange.ts, progressMetrics.ts
 ├── features/
-│   ├── cards/          registry/ (v1 CardTypeDefinition registry), renderers/<type>/, BrowsePage, CardEditorPage, cardTypeMeta.ts
-│   ├── dashboard/      DashboardPage — the old '/' page; unrouted, still in the tree
-│   ├── decks/          DecksPage, DeckDetailPage — unrouted since the App Shell convergence (superseded by features/library/), kept until parity is re-confirmed
-│   ├── design-preview/ /design-preview/* routes exercising real v2 components against fixtures;
-│   │                   also library-shared/library-browser/library-deck (the preview slice `features/library/` was adapted from — still isolated, untouched)
-│   ├── drafts/         DraftsPage, seedContent.ts
+│   ├── cards/          cardTypeMeta.ts ONLY — the v1 registry, renderers and pages were deleted
+│   ├── cardsV2/        the v2 authoring UI — see "Card creation" below
+│   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
+│   │                   production ReviewSessionScreen, so they cannot drift from /review
 │   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, sortDecks, useIsWideLibrary)
 │   ├── preview/        PreviewPage — flip through cards, no scheduling impact (renders the v2 shell)
-│   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2), legacy ReviewSession/useReviewSession (v1, unrouted)
+│   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2)
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
 │   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG) — hidden from primary nav, route/data preserved
 │   ├── settings/       AccountSettingsPage, SettingsNav, settingsSections.ts, sections/*, CardStateMigrationSection
-│   ├── stats/          StatsPage
 │   └── today/          TodayPage, SuggestedSessionHero, MomentumPanel, ContinueLearningList, PaceChart — renders through the shared AppShell now, no separate TodayShell
 ├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
 ├── lib/          cn.ts (clsx+twMerge), id.ts (newId), lazyWithRetry.ts
@@ -188,7 +185,7 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 |---|---|---|---|---|---|
 | **Card** (v1) | `src/types/card.ts` | `CardRepo` | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/type) |
 | **Deck** | `src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
-| **Draft** | `src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | conversion via `src/features/drafts/seedContent.ts` |
+| **Draft** | `src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
 | **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized) |
 | **Roadmap** | `src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
 | **CardState** (v2, Phase D) | `src/types/cardV2.ts` | `CrudRepo<CardState>` (keyed by `cardId`) | `cardStates` (v3) | `card_states` (unverified against a live DB — see D42) | `src/domain/scheduling/cardState.ts`: `cardStateFromCard`, `cardStatesEqual` |
@@ -200,42 +197,18 @@ Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `vers
 
 ---
 
-## Card type registry (v1)
+## The v1 card model (storage only)
 
 `src/types/card.ts` is a discriminated union on `type`, 8 members: `basic`, `mcq`, `codeReading`, `codeCompletion`, `bugFinding`, `ordering`, `matching`, `story`. Each is `CardBase & { type: T; content: TContent }`, where `CardBase` is `{id, deckId, tags, createdAt, updatedAt, order?, suspended, scheduling}`.
 
-`src/features/cards/registry/types.ts`'s `CardTypeDefinition<T>` is everything needed to render/edit/(optionally) auto-grade one type:
+**This is now a storage format, not a UI subsystem.** The v1 `CardTypeDefinition` registry and all 8 `renderers/<type>/` families (`Question`/`Answer`/`Editor`) were **deleted** on 2026-08-17 along with the routes that used them. There is exactly one rendering path and one authoring path for every card:
 
-```ts
-interface CardTypeDefinition<T extends CardType> {
-  type: T
-  interactive: boolean        // requires a response before reveal (MCQ, ordering, matching)
-  reveal?: 'flip' | 'slide'   // 'flip' for short cards, 'slide' (default) for tall/code/interactive
-  emptyContent: () => CardOfType<T>['content']
-  isComplete: (content) => boolean
-  Question: ComponentType<QuestionProps<T>>
-  Answer: ComponentType<AnswerProps<T>>
-  Editor: ComponentType<EditorProps<T>>
-  autoGrade?: (content, response) => { correct: boolean } | null
-  isResponseReady?: (response, content) => boolean
-}
-```
+- **Render:** `migrateCard` (`src/domain/migration/cardMigration.ts`) adapts a v1 `Card` into a `CardV2` on read, and `reviewV2/interactions/` renders it. This is the one lazy/on-read migration this codebase allows.
+- **Author:** `CardEditEntry` opens a v2 editor shell for all 8 v1 types, migrating to a `CardV2Record` on save.
 
-`src/features/cards/registry/index.ts` registers all 8 as a **full** `{ [T in CardType]: CardTypeDefinition<T> }` — a new `CardType` fails to compile until it's registered here. `CardView` and `ReviewSession` render generically through this registry with no per-type branching. Neither is routed any more: `/review` renders `ReviewSessionV2` and `/preview` renders `ReviewSessionScreen`, both migrating v1 cards on read into the v2 interaction registry instead (`itera-decisions.md` D128).
+`src/features/cards/` therefore contains exactly one file: **`cardTypeMeta.ts`**, which survives because `features/library/shared/rowVisuals.ts` reads its per-type icon, label and tile color to render card-table rows for both models.
 
-### Checklist: adding a new v1 card type
-
-| # | What | File | Enforcement |
-|---|---|---|---|
-| 1 | Add the content interface + union member | `src/types/card.ts` | compiler forces every consumer below to handle it |
-| 2 | Author `Question`/`Answer`/`Editor` + register | `src/features/cards/renderers/<type>/`, `src/features/cards/registry/index.ts` | full `Record` — compile error if missing |
-| 3 | `getCardTitle` | `src/features/cards/cardTypeMeta.ts` | `switch` + `const _exhaustive: never = card` — true exhaustiveness |
-| 4 | `cardTypeMeta` record itself (label + badge class) | `src/features/cards/cardTypeMeta.ts` | full `Record<CardType, ...>` |
-| 5 | `searchableText` | `src/domain/search/searchableText.ts` | same `_exhaustive: never` pattern |
-| 6 | `seedContent` | `src/features/drafts/seedContent.ts` | **not exhaustive** — ends in `default: return base`, a silent fallback, not a compile error. The one soft spot in this list. |
-| 7 | `migrateCard` (if the type should also work in the v2 Review shell) | `src/domain/migration/cardMigration.ts` | `switch` + `_exhaustive: never` |
-
-The Browse filter and editor type picker both derive from `cardTypeMeta`, so they need no separate update.
+**There is no longer a "how to add a v1 card type" checklist, because you should not add one.** New card types are v2 interactions — see "Adding a v2 interaction" below. If a v1 type ever did need adding, the compiler-enforced touchpoints are now only: the union in `src/types/card.ts`, `getCardTitle` + the `cardTypeMeta` record (both `src/features/cards/cardTypeMeta.ts`), `searchableText` (`src/domain/search/searchableText.ts`), and `migrateCard`. The former soft spot — `seedContent.ts`'s silent `default:` fallback — no longer exists, because that file was deleted with the drafts UI.
 
 ---
 
@@ -243,11 +216,11 @@ The Browse filter and editor type picker both derive from `cardTypeMeta`, so the
 
 `src/app/router.tsx` uses `createBrowserRouter` with **three structurally separate top-level entries** (not one nested tree) — since the App Shell convergence milestone (2026-07-27), Today and Review have swapped places in this list relative to earlier docs:
 
-1. `{ path: '/', element: <AppShell />, children: [...] }` — a **pathless layout route** whose `index` child is `TodayPage` (Today no longer has its own separate shell — see below), plus `decks` and `decks/:id` (the real `LibraryBrowserPage`/`LibraryDeckPage`, not the old `DecksPage`/`DeckDetailPage`), `decks/:deckId/cards/new`, `roadmaps`, `roadmaps/:id`, `preview`, `browse`, `cards/new`, `cards/:id/edit` (branches between the new Recall editor and the old `CardEditorPage` — see "Card creation" below), `cards/:id/study`, `drafts`, `stats`, `settings`, `settings/:section`. All children resolve at the top level with unchanged URLs.
+1. `{ path: '/', element: <AppShell />, children: [...] }` — a **pathless layout route** whose `index` child is `TodayPage` (Today no longer has its own separate shell — see below), plus `decks` and `decks/:id` (`LibraryBrowserPage`/`LibraryDeckPage`), `decks/:deckId/cards/new`, `roadmaps`, `roadmaps/:id`, `preview`, `cards/:id/edit` (a v2 editor shell per type — see "Card creation" below), `cards/:id/study`, `progress`, `settings`, `settings/:section`. All children resolve at the top level with unchanged URLs. An unmatched path renders `RouteError`'s 404 branch.
 2. `{ path: 'review', element: <ReviewPage /> }` — a separate top-level entry, **not** nested under `AppShell`. Before this milestone `/review` was actually a plain `AppShell` child (full sidebar chrome and all, contrary to earlier docs); it is now genuinely chrome-free by construction.
 3. `{ path: 'design-preview', children: [...] }` — unchanged: one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library-empty`, `library/:deckId` (the Phase H preview slice `features/library/` was adapted from, not replaced by it — still isolated, fixture-driven).
 
-`AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` → `TopNav` (logo, `Today · Library · Progress`, then a `rightSlot` holding `StreakBadge` + `AccountMenu`; there is deliberately no global Search or `+Create`, both removed as unscoped actions) → `<Outlet/>` — no sidebar, no bottom nav, no per-route topbar (`Sidebar.tsx`/`BottomNav.tsx`/`navItems.ts`/`PageHeaderOverride.tsx` were all deleted, not deprecated in place). Standard children render inside the centered, padded 1280px `<main>`; `/preview` and `/cards/:id/study` switch that main to full-width with zero top padding so `ReviewTopBar` can sit flush beneath `TopNav` and paint a full-bleed strip without viewport-unit overflow. This is the mechanism by which every route it wraps picks up the Itera visual system and the shared nav automatically, since pages already use the shared semantic Tailwind classes `.itera-scope` re-points. `ThemeToggle` is deliberately not rendered (light-only for now).
+`AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` → `TopNav` (logo, `Today · Library · Progress`, then a `rightSlot` holding `StreakBadge` + `AccountMenu`; there is deliberately no global Search or `+Create`, both removed as unscoped actions) → `<Outlet/>` — no sidebar, no bottom nav, no per-route topbar (`Sidebar.tsx`/`BottomNav.tsx`/`navItems.ts`/`PageHeaderOverride.tsx` were all deleted, not deprecated in place). Standard children render inside the centered, padded 1280px `<main>`; `/preview` and `/cards/:id/study` switch that main to full-width with zero top padding so `ReviewTopBar` can sit flush beneath `TopNav` and paint a full-bleed strip without viewport-unit overflow. This is the mechanism by which every route it wraps picks up the Itera visual system and the shared nav automatically, since pages already use the shared semantic Tailwind classes `.itera-scope` re-points. There is no theme toggle at all — the app is light-only and `ThemeToggle.tsx` was deleted.
 
 `AccountMenu` (`src/components/layout/AccountMenu.tsx`) is the shell's only global right-side action: an avatar button (`aria-haspopup="menu"`, `aria-expanded`, "Open account menu") opening a 300px anchored, viewport-height-capped popover through `FloatingPanel` with `manageFocus`, or — below 480px (`useIsNarrowShell`) — the same `AccountMenuContent` in a bottom sheet. It is grouped quick navigation (account/preferences; study/FSRS/import; keyboard/help; What's new/About; sign out). **Account settings, Spaced repetition (to `/settings/card-scheduling`), Import / Export and Sign out are live** — Sign out whenever any session exists, local, demo or Supabase — while every unbuilt row is an `aria-disabled` placeholder marked "Soon". Since it is mounted from `AppShell`, `/review` has no account menu by construction.
 
@@ -262,7 +235,7 @@ The Browse filter and editor type picker both derive from `cardTypeMeta`, so the
 
 Local mode is gated: a fresh browser lands on `/login` and must sign in or continue with a demo workspace. **In local mode the password is a dev/demo shell — never stored, sent or verified.** With Supabase configured, the only real authentication is magic-link OTP: the password field and Remember me are hidden and the button mails a link. No password authentication exists anywhere in this codebase.
 
-`IteraSurface`/`ForceLightTheme` (`src/features/reviewV2/components/`) are the shared root used by `AppShell`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared — reuses `IteraSurface` directly, not `PreviewShell`, since its two-pane layout needs a wider container and it deliberately omits `PreviewShell`'s "not part of the live app" banner), and `ReviewSessionV2` — one mechanism, not separate "real" vs. "preview" copies. See [`docs/design-system.md`](design-system.md) for what they do and why. See `docs/itera-decisions.md`'s "App Shell and Visual Foundation Convergence" entry for the full rationale.
+`IteraSurface`/`ForceLightTheme` (`src/features/reviewV2/components/`) are the shared root used by `AppShell`, `PreviewShell` (design-preview), `ReviewPage`/`ReviewSessionV2` and `RouteError` — one mechanism, not separate "real" vs. "preview" copies. See [`docs/design-system.md`](design-system.md) for what they do and why. See `docs/itera-decisions.md`'s "App Shell and Visual Foundation Convergence" entry for the full rationale.
 
 ---
 
@@ -324,7 +297,7 @@ Production wiring: `src/features/review/ReviewSessionV2.tsx` migrates each v1 `C
 ### `src/features/reviewV2/` — the v2 Review shell
 
 - `ReviewSessionScreen.tsx` — owns the phase state machine (`reviewPhase.ts`): `presenting -> submitting -> feedback -> rating -> transitioning`, with a `RESET` back to `presenting`. Self-graded types (Recall) skip `submitting`. `ObjectiveResult = {correct: boolean, score?: number}` — `score` supports partial credit (Matching/Ordering/Walkthrough), which v1's `autoGrade` has no equivalent for.
-- `components/` — `IteraSurface`/`ForceLightTheme`, an accessible `FlipCard` (deliberately separate from `src/components/ui/FlipCard.tsx`, which lacks keyboard/ARIA support), `FlashcardSurface`, `TipPanel`/`ExplanationPanel`, `RatingControls`, `ReviewTopBar` (exit, position counter, shortcut hint — no logo/nav/deck metadata, "tested and rejected because they distract from recall"), `InteractionLabel`.
+- `components/` — `IteraSurface`/`ForceLightTheme`, an accessible `FlipCard` (the only one; it replaced an earlier shared FlipCard that lacked keyboard/ARIA support, since deleted), `FlashcardSurface`, `TipPanel`/`ExplanationPanel`, `RatingControls`, `ReviewTopBar` (exit, position counter, shortcut hint — no logo/nav/deck metadata, "tested and rejected because they distract from recall"), `InteractionLabel`.
 - `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting an `InteractionDefinition`. `matching/` renders through `MatchingBoard.tsx`: columns side by side, with each relationship drawn as measured SVG connectors (a chain of hops when the card has two value columns). A Matching card is capped at three columns — `MAX_MATCHING_VALUE_COLUMNS` in `domain/cardsV2/matchingForm.ts`, enforced in `addMatchingColumn`, `validateMatchingForm`, and the editor's Add-column control. A **shared** (`fixed`) column is how one value serves several terms at once; an unshared column stays one-to-one, and assigning its value to another term moves it. See `itera-decisions.md` D118-D127. `ordering/` renders through `OrderingRow.tsx`: each unlocked row is the complete pointer and keyboard drag target, with a decorative 3×4 dot grip at right; see D164-D165. `walkthrough/` shows only the active step's optional tip before its first submission, then that step's optional explanation after submission; card-wide guidance remains owned by `ReviewSessionScreen`. Code-backed Walkthrough cards opt out of the shell's scale/rotation entrance transform so their always-visible CodeMirror content stays crisp. See D166.
 
 `interactions/types.ts`:
@@ -359,10 +332,10 @@ interface InteractionDefinition<T extends InteractionType> {
 - Six thin type shells — `RecallEditorShell.tsx` / `MultipleChoiceEditorShell.tsx` / `WriteCodeEditorShell.tsx` / `OrderingEditorShell.tsx` / `MatchingEditorShell.tsx` / `WalkthroughEditorShell.tsx` — each own only form state, validation/save wiring, their `*Fields.tsx`, and their `*LivePreview.tsx`. Shared composition lives in `CardEditorShell.tsx`; shared Deck/Tags controls live in `CardOrganizeFields.tsx`. The create route wraps them in the locked `add-new-card.png` composition: a top Cancel/divider/**New card** row, one 880px bordered surface, the persistent six-tile chooser, numbered Card content and Organize sections with inset rules, then Save/Cancel in the footer. Recall is selected on first paint. Desktop preview is an opt-in 420px drawer that temporarily expands the surface to 1120px; below `useIsWideEditor`'s ~980px breakpoint, Editor/Preview tabs replace it. The preview still renders the production interaction view through the existing `*LivePreview` components, never a hand-authored lookalike. Walkthrough retains its step-aware preview path.
 - `src/domain/cardsV2/{recallForm,multipleChoiceForm,writeCodeForm,orderingForm,matchingForm,walkthroughForm}.ts` — pure conversions between each editor's form state and: a throwaway preview `CardV2`, a persisted `CardV2Record`, and (via a `legacy*CardToForm` helper wrapping `migrateCard`) a legacy v1 card being hydrated for edit. Each also exports its own `validate*Form` pure validator (e.g. `validateWalkthroughForm` checks shared prompt/scenario, per-step response requirements, and highlighted-range well-formedness against the shared code's actual line count). Walkthrough conversion also round-trips optional per-step tip/explanation fields; missing fields from older blobs hydrate as empty editor values.
 - `src/domain/cardsV2/{saveRecallCard,saveMultipleChoiceCard,saveWriteCodeCard,saveOrderingCard,saveMatchingCard,saveWalkthroughCard}.ts` — the single save path per type (unit-tested directly against a repository, independent of the `useSave*Card` hooks that wrap them), each covering three targets: `new` (fresh `CardV2Record`), `v2` (update in place, same id/scheduling), and `v1` (the **legacy cutover** — builds a `CardV2Record` reusing the original v1 card's `id`/`createdAt`/`scheduling`/`suspended` so `ReviewLog` history keeps resolving, writes it to `cardsV2`, then deletes the superseded `cards` row and its `cardStates` mirror).
-- `CardEditEntry.tsx` (the element at `cards/:id/edit`) — branches: a `CardV2Record` opens its matching editor by `interaction.type`; a legacy v1 `basic`/`codeReading`/`bugFinding` card opens `RecallEditorShell`, a legacy v1 `mcq` card opens `MultipleChoiceEditorShell`, a legacy v1 `codeCompletion` card opens `WriteCodeEditorShell`, a legacy v1 `ordering`/`matching` card opens the matching v2 editor, and a legacy v1 `story` card opens `WalkthroughEditorShell`; any other v1 type falls through to the untouched `CardEditorPage`. Legacy cards only migrate to `CardV2Record` when actually edited-and-saved this way — not in bulk.
+- `CardEditEntry.tsx` (the element at `cards/:id/edit`) — branches: a `CardV2Record` opens its matching editor by `interaction.type`; a legacy v1 `basic`/`codeReading`/`bugFinding` card opens `RecallEditorShell`, a legacy v1 `mcq` card opens `MultipleChoiceEditorShell`, a legacy v1 `codeCompletion` card opens `WriteCodeEditorShell`, a legacy v1 `ordering`/`matching` card opens the matching v2 editor, and a legacy v1 `story` card opens `WalkthroughEditorShell`. All 8 v1 types are covered, so the final return is a "Card not found" state for an id matching neither model. Legacy cards only migrate to `CardV2Record` when actually edited-and-saved this way — not in bulk.
 - `CardStudyPreviewPage.tsx` (`cards/:id/study`) — the Deck row's primary click target: the same non-committing `ReviewSessionScreen` embedding as the editor's live preview, dispatched by `card.interaction.type` (`getInteractionDefinition(card.interaction.type)`), seeded from the real record but a fresh scheduling baseline.
-- `CardRowV2.tsx` — the compact v2 card row. It is rendered only by the **unrouted** legacy `features/decks/DeckDetailPage.tsx`; production's `/decks/:id` renders both v1 and v2 rows through `features/library/shared/CardTable.tsx` instead, over a unified `RowMeta`. `CardRowV2` is kept because `DeckDetailPage` is kept. The interaction tile reads `card.interaction.type` generically (no per-type branching in the row itself), with one small exception: a Walkthrough card shows a quiet `"N steps"` count next to its tags (no other type shows a count). The row body opens the study preview directly; an inline Edit (pencil) button and an overflow menu (Duplicate/Move/Suspend/Delete, the last two using a local `MovePopover`) live on the row itself — there is no separate read-only detail/overview screen (`CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow, all of which now live one level up; see `itera-decisions.md`).
-- `shared/{StatusBadge,format,interactionTypeMeta,InteractionTypeBadge,OverflowMenu}.tsx` — the first four promoted out of `design-preview/library-shared/` once a real consumer needed them (they were already built against real `SchedulingStateKind`/`InteractionType`, not fixture types); `OverflowMenu` is a new shared primitive, since two independent ad hoc kebab-menu implementations already existed in the codebase before this one. Its panel is rendered through `src/components/ui/FloatingPanel.tsx` (portal + fixed positioning + flip-above), not as an `absolute` child — see `itera-decisions.md` D112.
+  (`CardRowV2.tsx` and `shared/InteractionTypeBadge.tsx` were deleted with the unrouted `DeckDetailPage` that was their only consumer; `features/library/shared/CardTable.tsx` renders both card kinds over a unified `RowMeta`. There is still no separate read-only card detail screen — `CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow; see `itera-decisions.md`.)
+- `shared/{StatusBadge,format,interactionTypeMeta,OverflowMenu}.tsx` — the first three promoted into production once a real consumer needed them (they were already built against real `SchedulingStateKind`/`InteractionType`, not fixture types); `OverflowMenu` is a new shared primitive, since two independent ad hoc kebab-menu implementations already existed in the codebase before this one. Its panel is rendered through `src/components/ui/FloatingPanel.tsx` (portal + fixed positioning + flip-above), not as an `absolute` child — see `itera-decisions.md` D112.
 
 **Known gap:** `CardV2Record`s aren't in the global due queue yet (`useDueCards`/`ReviewPage` only read v1 `cards`) — real, scheduling-affecting review of a `CardV2Record` isn't wired up; only the non-committing editor preview and "Study this Card" exist so far.
 
@@ -378,8 +351,7 @@ One pure function per v2 auto-gradable interaction type, each with a colocated `
 | `multipleChoice.ts` | Multiple Choice | Exact-set: correct only if every correct option is selected and no incorrect one is. Shared by `autoGrade` and the feedback view so pass/fail and highlighting never drift apart. |
 | `ordering.ts` | Ordering | Position-wise — an item is correct only if it's at its authored index, not "valid somewhere." |
 | `walkthrough.ts` | Walkthrough, per-step | Dispatches by the step's own `response.type` (`recall` self-graded, `multiple_choice` via `gradeMultipleChoice`, `exact_input` via `writeCode.ts`). |
-| `writeCode.ts` | Write Code (v2) | Line-ending normalization + outer-trim + per-line trailing-whitespace trim. |
-| `normalize.ts` | (v1 only, not a grader) | `normalizeCode`/`matchesAnySolution` used by v1's `codeCompletion` renderer. **Deliberately not reused** by v2's `write_code` — v1's normalization collapses all internal whitespace, too lenient for code (could mask indentation bugs). |
+| `writeCode.ts` | Write Code (v2) | Line-ending normalization + outer-trim + per-line trailing-whitespace trim. The v1 `normalize.ts` it deliberately did **not** reuse (that one collapsed all internal whitespace — too lenient for code, and able to mask indentation bugs) was deleted with the v1 renderers. |
 
 ---
 
@@ -391,9 +363,12 @@ Component tests are the exception: opt into a DOM per-file with `// @vitest-envi
 
 ---
 
-## Two things that coexist on purpose (not stale code)
+## Things that coexist on purpose (not stale code)
 
-- **Two Review UIs**: v1 (`ReviewSession.tsx`/`useReviewSession.ts`) is unreferenced from routing but present and functional; `ReviewPage` routes to `ReviewSessionV2` in production. Reverting is a one-line router change.
-- **Two `FlipCard` components**: `src/components/ui/FlipCard.tsx` (v1, no keyboard/ARIA support, a known gap deliberately not fixed in place) and `src/features/reviewV2/components/FlipCard.tsx` (accessible replacement, used everywhere v2 renders).
+- **Two card models**: v1 `src/types/card.ts` (8 types, storage only) and v2 `src/types/cardV2.ts` (6 interactions). Both are live storage formats; `migrateCard` bridges them on read. **When grepping for "Card", check which one you are in.**
+- **Two grade-persistence paths**: `src/hooks/useReview.ts`'s `usePersistReviewResult` (what production calls) alongside `src/domain/scheduling/reviewService.ts` (which computes the result). The hook deliberately does not recompute what `reviewService.submit` already did.
+- **`src/hooks/useDrafts.ts` with no caller**: the drafts UI was deleted but the `Draft` entity, its Dexie store and its backup array were kept, so the hook is retained rather than removed. Deleting it is the first step toward dropping data that backup files still round-trip.
 
-Both are documented, deliberate states — see `itera-decisions.md` before "cleaning up" either.
+The earlier entries here — "two Review UIs" and "two `FlipCard` components" — are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `src/components/ui/FlipCard.tsx` were deleted on 2026-08-17. There is one Review surface and one flip primitive.
+
+See `itera-decisions.md` before "cleaning up" anything above.

@@ -175,8 +175,9 @@ src/
   auth/        session boundary (provider, route guard, local/demo session)
   components/  shared UI (buttons, fields, code views, RichText markdown)
   data/        repository interface + Dexie and Supabase backends
-  domain/      pure logic: scheduling, grading, search, stats, decks, io
-  features/    cards, decks, drafts, library, login, preview, review, settings, today
+  domain/      pure logic: scheduling, grading, search, stats, decks, migration, io
+  features/    cardsV2, library, login, preview, progress, review, reviewV2,
+               roadmaps, settings, today
   hooks/       TanStack Query hooks
   types/       entity types (Card discriminated union, Deck, Draft, ReviewLog)
 supabase/      schema.sql + migrations/ for cloud setup

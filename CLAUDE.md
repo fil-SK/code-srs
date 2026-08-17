@@ -22,7 +22,7 @@ Codex reads [`AGENTS.md`](AGENTS.md), which points at the **same** shared docume
 1. Read [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md), then the canonical doc that owns the area you are touching, then the newest relevant `itera-decisions.md` entries — most surfaces already have a decision recording what was deliberately *not* done and why.
 2. Check the repository before trusting any document. The code outranks every doc on what exists.
 3. Do not treat anything in `docs/archive/` as an instruction. It describes an application state that no longer exists.
-4. Before finishing: `npx vitest run`, `npx tsc --noEmit` and `npm run lint` must all be clean, and UI work must be verified in a real browser.
+4. Before finishing: `npx vitest run`, `npx tsc -b --force` and `npm run lint` must all be clean, and UI work must be verified in a real browser.
 5. When the change reaches finalized state, update the docs in the same pass (see Conventions at the bottom).
 
 ## What this is
@@ -40,13 +40,15 @@ npm run preview         # serve the production build locally
 npm run lint            # oxlint (config in .oxlintrc.json)
 npm run test            # vitest run (single pass)
 npm run test:watch      # vitest watch mode
-npx vitest run src/features/cards/renderers/matching/matching.test.ts   # one test file
+npx vitest run src/domain/grading/matching.test.ts                      # one test file
 npx vitest run -t "autoGrade"                                           # tests matching a name
-npx tsc --noEmit        # typecheck only (faster than full build when iterating)
+npx tsc -b --force      # the real typecheck (see the warning below)
 npx playwright install chromium                                         # once, before browser verification
 ```
 
-`npx vitest run`, `npx tsc --noEmit` and `npm run lint` must all be clean before a change is done (current baseline: `docs/CURRENT_STATE.md` §16).
+`npx vitest run`, `npx tsc -b --force` and `npm run lint` must all be clean before a change is done (current baseline: `docs/CURRENT_STATE.md` §16).
+
+**Do not use `npx tsc --noEmit` as the typecheck gate — it checks nothing here.** `tsconfig.json` is solution-style (`"files": []` + `references`), so that command is trivially "clean" and proves nothing. Use `npx tsc -b --force` (or `npm run build`). Also: `tsconfig.app.json` excludes `*.test.ts(x)`, so **test files are never typechecked** — a dangling import in a test only fails at Vitest run time.
 
 Tests are colocated as `*.test.ts`/`*.test.tsx`. The suite is **hermetic**: `vitest.config.ts` sets `environment: 'node'` globally (no DOM, fast) and blanks the `VITE_SUPABASE_*` env vars so tests always hit the local Dexie backend (via `fake-indexeddb`), regardless of a developer's `.env.local`. `globals` is **not** enabled — every test file imports `describe`/`it`/`expect` explicitly from `vitest`.
 
@@ -58,7 +60,7 @@ Terse rules only. The mechanisms behind them — the seam, both registries, the 
 
 - **One storage seam.** Everything depends on `Repository` (`src/data/repository.ts`); `getRepository()` (`src/data/index.ts`) picks Dexie or Supabase. **Never import a backend from a component, hook or page**, and never bypass the TanStack Query hooks in `src/hooks/` (keys centralized in `queryKeys.ts`).
 - **Two card models coexist on purpose** — `src/types/card.ts` (v1, 8 types) and `src/types/cardV2.ts` (v2, 6 interactions). **When grepping for "Card", check which one you're in.**
-- **Adding a v1 card type / a v2 interaction / a whole entity** each has a fixed checklist — follow the one in `docs/architecture.md` rather than improvising; the compiler enforces most of it, with `seedContent.ts`'s silent `default` the one soft spot.
+- **Do not add a v1 card type.** The v1 registry and renderers are deleted; v1 is a storage format only, rendered through `migrateCard` into the v2 registry. New types are v2 interactions — follow the checklist in `docs/architecture.md`, which the compiler enforces.
 - **Scheduling ownership:** `Card.scheduling` is the sole source of truth; `Repository.cardStates` is dual-written and read by nothing; `CardV2Record` carries its own embedded `scheduling`. Do not drop either side of the dual write or point a read at `cardStates` outside a deliberate cutover (`docs/CURRENT_STATE.md` §12–13).
 - **Review is generic.** `ReviewSessionScreen` contains no per-type logic, and the flow is strictly two-phase (Question → reveal → Answer → one FSRS grade).
 - **Auth lives in one place.** `RequireAuth` is one pathless layout route wrapping every product route; `localSession.ts` is the **only** file that may touch auth storage — do not add a `localStorage` session check anywhere else.
@@ -72,7 +74,7 @@ Terse rules only. The mechanisms behind them — the seam, both registries, the 
 - The Supabase **publishable** key (`sb_publishable_…`) is the value for `VITE_SUPABASE_ANON_KEY`; the secret key must never reach the frontend.
 - **A CSS `transition` on `transform` doesn't reliably animate when that transform is composed from Tailwind utility classes** (`scale-*`, `rotate-*`, `translate-*`, including `group-hover:` variants) — those utilities each write a separate CSS custom property that a shared rule combines, and transitioning that composed value was measured snapping instantly in Chromium despite a correct `transition-duration`. Compute such transforms as one literal `style.transform` string in JS (see `SuggestedSessionHero.tsx`).
 - **Anything portaled into `document.body` sits outside `.itera-scope`** and must re-apply the `itera-scope` class on its own root plus cancel that class's canvas background with an inline `background: transparent`, or its `itera-*` tokens resolve to nothing.
-- **The app is light-only** — `.itera-scope` has no dark palette. `ThemeProvider`/`useTheme`/`ThemeToggle.tsx` are unchanged and unrendered; don't delete them, and don't add dark styling before a dark palette exists.
+- **The app is light-only, and declares it** — `.itera-scope` has no dark palette, `index.html` and `getInitialTheme()` both say light, and the dark token block, the `dark` variant and `ThemeToggle.tsx` are deleted. Keep `ThemeProvider`/`useTheme` and `Theme`'s `'dark'` member (CodeView/CodeEditor pick their syntax palette from it), and don't add dark styling before a dark palette exists.
 
 ## Safety and approval boundaries
 
@@ -80,7 +82,7 @@ Ask before doing any of these; none of them is implied by an ordinary feature re
 
 - **Never delete or rewrite persisted rows as a side effect of a UI change.** Migrations that touch real user data are explicit, dry-run-able and reportable via `src/domain/migration/runner.ts`; the only migration permitted to run lazily on read is `migrateCard`, and no second one may be added.
 - **Do not start a not-started migration** (CardState read cutover, the Collection/Deck split) incidentally. See [`docs/itera-migration-plan.md`](docs/itera-migration-plan.md).
-- **Do not delete legacy code or routes** kept on purpose — `/browse`, `/drafts`, `/stats`, `/cards/new`, `DashboardPage`, `decks/{DecksPage,DeckDetailPage}`, v1 `ReviewSession`/`useReviewSession`, and all Roadmaps data. Each is listed in `docs/CURRENT_STATE.md` §15/§19 with the reason.
+- **Do not delete the code still kept on purpose** — all Roadmaps routes/data, and `src/hooks/useDrafts.ts` + `repo.drafts` + the Dexie drafts store + drafts in backup (the drafts UI was deleted on 2026-08-17, the data deliberately was not). Each is listed in `docs/CURRENT_STATE.md` §15/§19 with the reason. The v1 legacy surface that used to be on this list is gone — do not resurrect it.
 - **Do not add a dependency** for anything in the hand-built list above without asking.
 - **`docs/itera-decisions.md` is append-only** and `docs/archive/*` is history — never edit either in place to make it agree with new work.
 - Schema changes need the user to run SQL in the Supabase editor (`supabase/schema.sql` is not auto-applied), so hand them the exact block.
@@ -94,8 +96,7 @@ Read the module comment before editing these; each encodes measured product feed
 - `src/features/login/LearningCardsIllustration.tsx` — a card may never cover the next card's title; the leaning geometry means this must be re-checked in a browser, not in the numbers.
 - `src/features/reviewV2/interactions/ordering/OrderingRow.tsx` — the up/down buttons stay in the DOM and in tab order at all times (faded with `opacity-0`, never `hidden`).
 - `src/components/layout/AccountMenuContent.tsx` — quick navigation only; new settings go to `src/features/settings/`.
-- `src/components/ui/FlipCard.tsx` (v1) vs `src/features/reviewV2/components/FlipCard.tsx` (v2, accessible) — two on purpose; see `docs/CURRENT_STATE.md` §15.
-- `src/features/design-preview/*` — independent of production `src/features/library/*` by design (pieces were adapted, not imported); keep them decoupled.
+- `src/features/design-preview/*` — only the six review-interaction previews remain, and they import the **production** `ReviewSessionScreen` so they cannot drift. The Library preview fork was deleted once production overtook it; don't recreate a fork here.
 
 ## Visual work
 

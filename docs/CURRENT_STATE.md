@@ -1,8 +1,8 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-17** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography, review-interaction, new-card authoring and Progress visual refinements in this working tree).
+**Last verified against the working tree: 2026-08-17** (branch `app_redesign`, HEAD `fdaad9f`).
 
-The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5, makes its selected Inter Variable family the app-wide non-code default, refines Review/preview chrome and card interactions, and brings the focused Deck page into closer alignment with the locked `library-use.png` reference. Auth, persistence and routes are unchanged.
+The most recent milestone **deleted the v1 legacy surface**: `/browse`, `/cards/new`, `/drafts` and `/stats` are gone along with the entire v1 card registry and all 8 renderer families, and the `/design-preview/library*` fork is gone with them. The app is now declared light-only, and `window.confirm`/`prompt`/`alert` appear nowhere in `src/`. **Persisted data was not touched** — drafts rows, the Dexie store and backup import/export all survive; only the drafts UI was removed. Six capabilities went with that surface and were deliberately not restored; they are listed in [`features.md`](features.md). See §15 and the 2026-08-17 entries in [`itera-decisions.md`](itera-decisions.md).
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -26,11 +26,13 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Milestone reached: "Login page and a real session boundary" (2026-08-12).**
+**Milestone reached: "The v1 legacy surface is deleted" (2026-08-17).**
 
-The redesign has converged: one shared Itera app shell, one Library/Deck implementation, all six v2 review interactions built and production-integrated, all six v2 authoring editors shipped, a real Progress page, a real Account settings page, and a real auth gate in front of everything. The remaining work is no longer visual convergence — it is data-model completion (v2 cards in the real due queue, CardState read cutover, the Collection/Deck migration) and replacing Today's placeholder content with real product logic.
+The redesign has converged *and* the retreat is finished. Previously the redesign was complete but the pages it replaced were still mounted-but-unlinked, so a user could reach a pre-redesign screen by URL and two redesigned pages still linked into them. Those pages, their entire transitive closure, and the `/design-preview` Library fork are now gone: 78 production files and 7 test files, leaving exactly one implementation of every surface.
 
-Recent milestone sequence (newest first): Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
+What is real: one shared Itera app shell, one Library/Deck implementation, one Review surface, one flip primitive, one card-rendering path (`migrateCard` → the v2 registry), all six v2 authoring editors, a real Progress page, a real Account settings page, and a real auth gate in front of everything. The remaining work is data-model completion (v2 cards in the real due queue, CardState read cutover, the Collection/Deck migration), replacing Today's placeholder content with real product logic, and the one remaining reskinned-only surface (Roadmaps).
+
+Recent milestone sequence (newest first): v1 legacy surface deleted → Progress iconography → Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
 
 ---
 
@@ -60,7 +62,7 @@ Real data, real behavior, production-routed:
 | **Progress** (`/progress`) | KPI tiles, heat map, retention chart, deck-performance table, milestones — all computed from real `ReviewLog`/`Card`/`Deck` via `src/domain/stats/{dateRange,progressMetrics}.ts`. "Sessions" are gap-clustered from review timestamps, not a persisted entity. | 7 of 8 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Only Overview is live. |
 | **Account settings** (`/settings`) | **Import / Export** (JSON backup) and **Card scheduling** (the Phase D CardState backfill dry-run/apply) are fully functional. | Profile, Email & password, Appearance, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
 | **Login** (`/login`) | Page, session minting, redirect-back-to-requested-route, Supabase magic link. | In local mode the password is a dev/demo shell: never stored, sent, or verified. "Forgot password" is a deliberate `aria-disabled` placeholder — no reset backend. |
-| **Browse / Drafts / Stats / Card editor (v1)** (`/browse`, `/drafts`, `/stats`, `/cards/new`) | Fully working v1 features. | Visually only reskinned by `.itera-scope`; not redesigned. `/browse` and `/drafts` are **mounted but not linked from any nav** (see §15). |
+| **Roadmaps** (`/roadmaps`, `/roadmaps/:id`) | Create / rename / delete / canvas editing all work, now through `useDialogs()` rather than `window.prompt`, and the list page has a real `<h1>`. | Still **reskinned only** — pre-redesign layout and density, carrying Itera colors solely through `.itera-scope`'s token re-point. Deliberately out of primary nav (D11/D17), reachable by direct URL. |
 
 ---
 
@@ -73,7 +75,7 @@ Real data, real behavior, production-routed:
 - No left sidebar, no bottom nav, no per-route topbar title slot. `Sidebar.tsx` / `BottomNav.tsx` / `navItems.ts` / `PageHeaderOverride.tsx` / `TodayShell.tsx` **were deleted**. A route that needs a heading renders it as ordinary page content.
 - Local (page-level) sidebars do exist and are the convention for section navigation: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`.
 - Roadmaps (`/roadmaps`) is deliberately absent from primary nav but still routed and functional.
-- **The app is light-only.** `.itera-scope` has no dark palette (spec §36 defers dark mode). `ThemeProvider`/`useTheme`/`ThemeToggle.tsx` still exist and are unchanged; `ThemeToggle` is simply not rendered anywhere. Reversible the moment a dark palette exists.
+- **The app is light-only, and now says so.** `.itera-scope` has no dark palette (spec §36 defers dark mode). `index.html` declares `data-theme="light"` with no pre-paint restore script, and `getInitialTheme()` falls back to `'light'` — previously both said `dark`, which darkened the pre-router `AuthGate` screen because it renders outside `.itera-scope` and reads `--bg` from `:root`. `ThemeToggle.tsx`, the inert `dark` custom-variant and the unreachable `[data-theme='dark']` token block are **deleted**. `ThemeProvider`/`useTheme` are retained, and `Theme` keeps its `'dark'` member, because `CodeView`/`CodeEditor` select the `oneDark` syntax palette from it. Re-adding dark mode means re-authoring those 16 tokens.
 
 ## 5. Login / auth state
 
@@ -127,7 +129,9 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 **New-card composition:** `/decks/:deckId/cards/new` now follows the locked `add-new-card.png` reference as one continuous 880px surface, expanding to 1120px only while the desktop preview drawer is open. The page header is **Cancel | New card**; Recall is selected by default; the existing six interaction icons are unchanged; numbered Choose interaction / Card content / Organize sections use inset hairlines; Deck and Tags keep their existing values, gain identifying icons and share one explicit control height; Save and bordered Cancel live in the footer. Narrow screens retain Editor/Preview tabs. No character limits or counters were added.
 
-**The v1 8-type registry still exists and is still used** (`src/features/cards/registry/`) for `/cards/new`, `/browse`, and any v1 card not yet edited through the new flow. Editing a legacy v1 card through `/cards/:id/edit` migrates it to a `CardV2Record` on save, same id (so `ReviewLog` history survives), deleting the superseded v1 row.
+**The v1 registry and all 8 renderer families are deleted.** `src/types/card.ts` remains the storage model for un-migrated v1 rows, but there is no longer any v1 *authoring or rendering* path: `migrateCard` is the only way a v1 card reaches a screen, and every editor is a v2 shell. `src/features/cards/` now contains exactly one file, `cardTypeMeta.ts`, kept because `library/shared/rowVisuals.ts` reads its per-type icon/label/tile for card table rows.
+
+`/cards/:id/edit` handles all 8 v1 types through the six v2 editor shells and migrates to a `CardV2Record` on save, same id (so `ReviewLog` history survives), deleting the superseded v1 row. Its final fallthrough is a **"Card not found"** state, reachable only for an id matching neither model.
 
 ## 11. Review integration state
 
@@ -137,7 +141,7 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 - `/preview` renders the **real v2 card** (`migrateCard` + `ReviewSessionScreen` with `hideRating`), not the v1 registry renderers. It uses the shared Review strip instead of its former tag/jump-input header; `AppShell` gives preview routes a full-width, zero-top-padding main surface so the strip sits flush beneath and spans the same page width as the navbar. In deck flip-through, bordered Prev/Next controls sit immediately around the centered `X of Y`; Left/Right arrows perform the same navigation unless focus is inside an interactive card control or editor. At phone widths the redundant shortcut hint yields its space to this centered navigation group. `/cards/:id/study` uses the same strip treatment without deck navigation. After reveal, preview-only cards say **Answer revealed**; surfaces with rating controls say **Rate your answer** instead of the old `1–4 to rate` hint.
 - Every interaction front uses the shared `CardPrompt`: 24px normally, 20px only beyond 280 normalized characters or six non-empty lines. All six v2 editors warn authors when that fallback activates and recommend shortening or splitting the card.
 - **Known integration hole (the biggest one in the repo): `CardV2Record`s are never in the due queue.** `useDueCards` → `repo.cards.getDue()` reads v1 `Card` only. `repo.cardsV2.getDue()` is implemented in **both** backends but has **no hook and no caller**. A card authored through the new create flow can only ever be reviewed non-committingly (editor preview, `/cards/:id/study`). See §16.
-- Duplication that is known and accepted: `src/hooks/useReview.ts` (v1) still calls the scheduler functions directly instead of `src/domain/scheduling/reviewService.ts`. The v1 `ReviewSession.tsx` / `useReviewSession.ts` remain in the tree, unreferenced.
+- Duplication that is known and accepted: `src/hooks/useReview.ts` (v1) still calls the scheduler functions directly instead of `src/domain/scheduling/reviewService.ts`. (The v1 `ReviewSession.tsx` / `useReviewSession.ts` that used to sit unreferenced beside it are now deleted, so `ReviewSessionScreen` is the only Review surface.)
 
 ---
 
@@ -170,17 +174,15 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 - **`InteractionLabel` is a grey pill; the locked mockups draw it orange** (a soft-orange pill in `matching-card.png`, plain orange text in `ordering-card.png`). Left alone deliberately — the label is shared by all six interaction types, so changing it is a six-card decision, not a per-card one. **Open.**
 - **Matching on narrow viewports:** a two-column card now lays out side by side at 390px (verified live). Cards with 3+ columns fall back to the stacked flow. The spec's "stepwise pairing flow on mobile" is only partly satisfied.
 - **Today's placeholder numbers** are visible product surface that reads as real data (streak 7, weekly goal, recall %, pace chart). Same for `StreakBadge` in the top nav.
-- Roadmaps, Browse, Drafts, Stats and the v1 card editor are **reskinned only** — they carry Itera colors but pre-redesign layout/density.
+- **Roadmaps is the last reskinned-only surface** — it carries Itera colors but pre-redesign layout/density. It is the only one left; Browse, Drafts, Stats and the v1 card editor were deleted rather than redesigned.
 
 ## 15. Known problems — technical, compatibility and data-risk debt
 
-**Compatibility debt** (v1 code and routes kept deliberately):
+**Compatibility debt** (what remains after the v1 surface was deleted):
 
-- **`/browse` and `/drafts` are mounted but unreachable from any navigation** after the nav rewrite (the old 8-item sidebar was deleted). Direct URL only. Needs an entry-point decision.
-- **`/stats` is likewise unlinked** — superseded by `/progress` in primary nav, deliberately left mounted as a direct-URL safety net.
-- **Unrouted legacy code kept on purpose:** `src/features/decks/{DecksPage,DeckDetailPage}.tsx` (pending independent re-confirmation of feature parity), `src/features/dashboard/DashboardPage.tsx` (the pre-Itera `/`), `src/features/review/{ReviewSession,useReviewSession}.tsx`. None are dead-code candidates without an explicit decision.
-- **Two `FlipCard` implementations.** `src/components/ui/FlipCard.tsx` (v1) has a known accessibility gap — plain `<div onClick>`, no `tabIndex`/role/key handling — and was deliberately **not** fixed in place. `src/features/reviewV2/components/FlipCard.tsx` is the accessible replacement used everywhere v2 renders. Whether to converge them is open.
-- **`CardRowV2.tsx` is only rendered by the unrouted `DeckDetailPage`** — production's deck page renders both card kinds through `library/shared/CardTable.tsx`. It survives because `DeckDetailPage` survives.
+- **`/roadmaps*` is routed and working but out of primary nav** (D11/D17), so it is direct-URL only, and it is still visually pre-redesign (§14). **Do not delete it** — the data, repository member and Supabase table are untouched.
+- **`src/hooks/useDrafts.ts` is a deliberately retained orphan.** The drafts UI was deleted, but the entity survives end to end: `repo.drafts`, the Dexie store, and the `drafts` array in backup import/export. The hook has no caller. **Do not "clean it up"** — deleting it would be the first step toward dropping user data that a backup file still round-trips.
+- **`repo.cardsV2.getDue()` is implemented in both backends and called by nothing.** This is the §17 milestone's entry point, not dead code.
 
 **Data / migration risk:**
 
@@ -192,19 +194,24 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 - **Component tests cannot catch focus/visibility bugs.** `happy-dom` has no visibility semantics, so `HTMLElement.focus()` on a `visibility: hidden` element silently no-ops there but fails in Chromium. Anything focus- or layout-dependent needs a real browser pass.
 - **Transitioning a Tailwind-composed `transform` does not animate reliably.** `scale-*`/`rotate-*`/`translate-*` (including `group-hover:` variants) each write a separate custom property; transitioning the composed value snaps instantly in Chromium. Compute such transforms as one literal `style.transform` string in JS.
+- **`npx tsc --noEmit` is a no-op in this repo and must not be used as the typecheck gate.** `tsconfig.json` is solution-style (`"files": []` plus `references`), so that command checks zero files and is trivially "clean" — every doc and decision entry that cites it as evidence is citing nothing. The real gate is **`npx tsc -b --force`** (what `npm run build` runs). Related: `tsconfig.app.json` excludes `*.test.ts(x)`, so **test files are never typechecked** — a dangling import inside a test surfaces only as a Vitest resolve error at run time, never as a type error. Delete test files *before* the modules they cover.
 
 ## 16. Tests / build status
 
-Measured 2026-08-16 on this working tree, after the current visual, Review-interaction and new-card authoring refinements:
+Measured 2026-08-17 at HEAD `fdaad9f`, after the v1-legacy-surface deletion:
 
 ```
-npx vitest run     → 67 test files, 451 tests, all passing
-npx tsc --noEmit   → clean, no errors
-npm run lint       → clean, zero warnings
-npm run build      → successful (existing chunk-size advisory only)
+npx vitest run       → 62 test files, 415 tests, all passing
+npx tsc -b --force   → clean, no errors
+npm run lint         → clean, zero warnings
+npm run build        → successful (existing chunk-size advisory only)
 ```
 
-**This is a fully clean baseline.** Lint previously carried one warning from `.scratch-shot.cjs`; those three committed scratch scripts have been deleted, so there are now no warnings at all. Treat any new warning as a regression introduced by the change that caused it.
+**This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
+
+**415 is the current correct test count**, down from 451 and then back up. The deletion removed 7 files / 42 tests that covered the v1 renderers — not a coverage loss, since `src/domain/grading/*.test.ts` already covers the v2 equivalents that production actually runs. Six tests were then added: `CardEditEntry`'s not-found state and its v1-editor branch, `PreviewPage`'s back-link resolution (derived deck, and `from` taking precedence), and `ReviewPage`'s empty-state CTA targets for the scoped and unscoped cases.
+
+One caveat worth knowing: a single run during this pass reported one failure that four consecutive re-runs could not reproduce, and which the summary output did not name. It is an unidentified flake, not a known-failing test. If it resurfaces, capture the file name.
 
 **451 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling and navigation, Deck-settings dismissal, account-menu shortcuts, rating-control icons/intervals, Matching badge placement, the Multiple Choice selection/footer treatment, the authoring warning and reference-aligned create-flow structure, and Walkthrough step-scoped guidance. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
 
@@ -226,6 +233,8 @@ Concrete scope:
 6. Tests: mixed-queue ordering, deck scoping across both kinds, grade → persisted scheduling → no longer due, undo.
 
 Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's read cutover, and Today's real product logic. Those are the next three candidates after it, in that order.
+
+**The 2026-08-17 deletion did not change this recommendation.** It removed surfaces, not the data model; `repo.cardsV2.getDue()` is still implemented in both backends and still called by nothing. One item did get slightly smaller: `useNavBadges` now returns a single `'/'` due count, since the `/drafts` badge it also computed had no nav link left to attach to.
 
 ## 18. Important implementation files and directories
 
@@ -249,21 +258,21 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 - `src/domain/scheduling/reviewService.ts`, `src/features/review/{ReviewPage,ReviewSessionV2}.tsx`
 
 **Authoring**
-- `src/features/cardsV2/` (all six `*EditorShell`s, `*Fields`, `*LivePreview`, `CardTypeChooser`, `CardEditorShell`, shared `CardOrganizeFields`, `CardRowV2`), `src/domain/cardsV2/` (pure form/save modules)
-- v1 registry, still live: `src/features/cards/registry/`, `src/features/cards/renderers/`, `src/features/cards/cardTypeMeta.ts`
+- `src/features/cardsV2/` (all six `*EditorShell`s, `*Fields`, `*LivePreview`, `CardTypeChooser`, `CardEditorShell`, shared `CardOrganizeFields`), `src/domain/cardsV2/` (pure form/save modules)
+- `src/features/cards/cardTypeMeta.ts` — all that remains of the v1 feature directory, kept for `library/shared/rowVisuals.ts`'s row icons/labels.
 
 **Library / Progress / Settings / Today / Login**
 - `src/features/library/` (`LibraryBrowserPage`, `LibraryCollectionView`, `LibraryDeckPage`, `collectionTree.ts`, `deckMetrics.ts`, `shared/*`)
-- `src/features/progress/`, `src/domain/stats/{dateRange,progressMetrics,computeStats}.ts`
+- `src/features/progress/`, `src/domain/stats/{dateRange,progressMetrics}.ts`
 - `src/features/settings/` (`AccountSettingsPage`, `settingsSections.ts`, `sections/*`, `CardStateMigrationSection`)
 - `src/features/today/`, `src/features/login/`
 
 **Design system**
-- `src/index.css` — both token systems: the general `[data-theme]` tokens and the namespaced `.itera-scope` / `.itera-flip*` Itera set, plus `@theme inline` exposure of `itera-`-prefixed Tailwind utilities.
-- `src/components/ui/{Button,Field,FloatingPanel,dialogs,FlipCard}.tsx`, `src/components/text/RichText.tsx`, `src/components/code/`, `src/lib/{cn,id,lazyWithRetry}.ts`
+- `src/index.css` — both token systems: the general light-only tokens and the namespaced `.itera-scope` / `.itera-flip*` Itera set, plus `@theme inline` exposure of `itera-`-prefixed Tailwind utilities.
+- `src/components/ui/{Button,Field,FloatingPanel,dialogs}.tsx`, `src/components/text/RichText.tsx`, `src/components/code/`, `src/lib/{cn,id,lazyWithRetry}.ts`
 
 **Preview infrastructure**
-- `src/features/design-preview/` — chrome-free fixture routes for the six review interactions and the Library slice. Kept structurally independent from `src/features/library/` (pieces were *adapted*, not imported), so production changes never silently break the previews or vice versa.
+- `src/features/design-preview/` — chrome-free fixture routes for the six review interactions, and nothing else. Each imports the **production** `ReviewSessionScreen`, so a preview cannot drift from `/review`. The Library slice that once lived here was an adapted-not-imported fork; production overtook it and it was deleted.
 
 ---
 
@@ -279,37 +288,35 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 | `/decks/:deckId/cards/new` | v2 card create |
 | `/roadmaps`, `/roadmaps/:id` | Roadmaps (v1; not in primary nav) |
 | `/preview` | Card flip-through preview |
-| `/browse` | v1 Browse (**unlinked**) |
-| `/cards/new` | v1 card editor (**unlinked**) |
-| `/cards/:id/edit` | v2 editor entry (with legacy branch) |
+| `/cards/:id/edit` | v2 editor entry (all 8 v1 types + all 6 v2 interactions; not-found state otherwise) |
 | `/cards/:id/study` | Non-committing study preview |
-| `/drafts` | Drafts inbox (**unlinked**) |
-| `/stats` | v1 stats (**unlinked**, superseded by `/progress`) |
 | `/progress` | Progress |
 | `/settings`, `/settings/:section` | Account settings |
 
 **Behind `RequireAuth`, outside `AppShell`:** `/review` (immersive, chrome-free by construction).
 
-**Outside `RequireAuth`:** `/login`; `/design-preview` and `/design-preview/review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}`, `/design-preview/library`, `/design-preview/library-empty`, `/design-preview/library/:deckId`.
+**Outside `RequireAuth`:** `/login`; `/design-preview` and `/design-preview/review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}`.
+
+An unmatched path renders `RouteError`'s **"Page not found"** branch (`isRouteErrorResponse` + status 404) with a link to Today, rather than the generic "the app may have just updated, reload" copy — reloading a deleted route only lands there again.
 
 ### Legacy routes and code still preserved
 
-- `/stats`, `/browse`, `/drafts`, `/cards/new` — routed, working, unlinked.
 - `/roadmaps*` — routed and working, deliberately out of primary nav (spec §36 defers it). **Do not delete**; the data, repository member and Supabase table are untouched.
-- Unrouted but retained: `DashboardPage.tsx`, `decks/{DecksPage,DeckDetailPage}.tsx`, `review/{ReviewSession,useReviewSession}`.
+- Retained with no caller, on purpose: `src/hooks/useDrafts.ts` (+ `repo.drafts`, the Dexie store, and `drafts` in backup import/export). The drafts *UI* was deleted; the *data* was not. See §15.
 - Deleted for good (do not resurrect): `Sidebar.tsx`, `BottomNav.tsx`, `navItems.ts`, `PageHeaderOverride.tsx`, `TodayShell.tsx`, `CreateMenu.tsx`, `ProfileMenu.tsx`, `SettingsPage.tsx`, `src/auth/LoginPage.tsx`, `CardDetailPage`.
+- **Deleted 2026-08-17 with the v1 legacy surface** (do not resurrect): the `/browse`, `/cards/new`, `/drafts` and `/stats` routes and their pages; `src/features/cards/{registry,renderers}/` (all 8 families), `CardRow.tsx`, `CardTypeBadge.tsx`, `CardView.tsx`; `src/features/{dashboard,decks,drafts,stats}/` entirely; `src/features/review/{ReviewSession,GradeBar,useReviewSession}`; `src/components/ui/FlipCard.tsx`; `src/components/layout/ThemeToggle.tsx`; `src/components/code/{CodeBlockField,lineRanges}`; `src/domain/grading/normalize.ts`; `src/domain/stats/computeStats.ts`; `src/features/cardsV2/{CardRowV2,shared/InteractionTypeBadge}.tsx`; and the entire `design-preview/library-{browser,deck,shared}/` fork.
 
 ## 20. Visual system status
 
 Status only. Usage rules — families, weights, scale, icon conventions, the orange rule, portal mechanics, the full token and radius tables — are owned by [`design-system.md`](design-system.md).
 
-**Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. Inter is the app-wide non-code default; `--font-itera-sans` and the compatibility `--font-itera-display` token both alias `--font-sans`, while `--font-itera-mono` aliases `--font-mono`. **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
+**Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. Inter is the app-wide non-code default; `--font-itera-sans` and the compatibility `--font-itera-display` token both alias `--font-sans`. (The `--font-itera-mono` alias was deleted — it had no consumers; code surfaces use `font-mono`.) **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
 
 **Icons — implemented.** `lucide-react` remains the only icon library, at a single version. The small one-off SVG exceptions are the bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx`, plus `StreakFlameIcon.tsx`: one shared brand glyph added because Lucide's thin generic flame did not match the locked Progress reference at nav/KPI sizes.
 
-**Tokens — implemented, light-only.** Two systems layer in `src/index.css`: the theme-aware general tokens (`:root` / `[data-theme]`), and an additive `.itera-scope` namespace applied through `IteraSurface`. The Itera scope defines the locked `--itera-*` palette **and re-points the general tokens to Itera values inside the scope** — that re-pointing is the compatibility mechanism by which every pre-existing v1 component reskins with zero edits, so do not "simplify" it away. There is no dark palette (see §4).
+**Tokens — implemented, light-only.** Two systems layer in `src/index.css`: the general tokens (`:root, [data-theme='light']`), and an additive `.itera-scope` namespace applied through `IteraSurface`. The Itera scope defines the locked `--itera-*` palette **and re-points the general tokens to Itera values inside the scope** — that re-pointing is the compatibility mechanism by which every pre-existing component reskins with zero edits, so do not "simplify" it away. There is no dark palette, and the unreachable `[data-theme='dark']` block plus the inert `dark` custom-variant have been deleted (see §4).
 
-**Shared UI foundation — implemented:** `Button`, `Field`, `FloatingPanel`, `dialogs`, `FlipCard` (v1) in `src/components/ui/`; `RichText`/`InlineText`; `LazyCodeView`/`LazyCodeEditor`; `cn()` and `newId()` in `src/lib/`. Contracts and props are in [`design-system.md`](design-system.md) §3; the hand-built-on-purpose rule (no markdown, chart, graph or popover dependency) is in [`architecture.md`](architecture.md).
+**Shared UI foundation — implemented:** `Button`, `Field`, `FloatingPanel`, `dialogs` in `src/components/ui/` (the v1 `FlipCard` is deleted; `reviewV2/components/FlipCard.tsx` is the only one); `RichText`/`InlineText`; `LazyCodeView`/`LazyCodeEditor`; `cn()` and `newId()` in `src/lib/`. Contracts and props are in [`design-system.md`](design-system.md) §3; the hand-built-on-purpose rule (no markdown, chart, graph or popover dependency) is in [`architecture.md`](architecture.md).
 
 ## 21. Visual-reference workflow
 

@@ -16,7 +16,7 @@ There are **two token systems** layered on top of each other. Understanding the 
 
 ## 1. The two token systems
 
-**General app tokens** — theme-aware (light/dark), defined on `:root`/`[data-theme='light']`/`[data-theme='dark']` in `src/index.css`, driven by a `data-theme` attribute on `<html>` (not `prefers-color-scheme`, so the in-app toggle controls it):
+**General app tokens** — defined on `:root, [data-theme='light']` in `src/index.css`. The app is light-only: the `[data-theme='dark']` block and the `dark` custom-variant were deleted (nothing could match them, and zero `dark:` utilities exist), and `<html>` is stamped `data-theme="light"` statically:
 
 | Token | Light | Dark | Tailwind utility |
 |---|---|---|---|
@@ -39,14 +39,14 @@ There are **two token systems** layered on top of each other. Understanding the 
 
 `--radius-card: 12px` (`rounded-card`). Fonts: `--font-sans` (Inter stack), `--font-mono` (JetBrains Mono stack) — same names in both themes.
 
-These are exposed to Tailwind via `@theme inline` in `src/index.css`, which makes utilities emit `var(--…)` directly, so `bg-bg`/`text-muted`/etc. swap live the instant `[data-theme]` flips — no rebuild needed.
+These are exposed to Tailwind via `@theme inline` in `src/index.css`, which makes utilities emit `var(--…)` directly — which is what lets `.itera-scope` re-point them at runtime (below) rather than needing a rebuild. Mappings whose utilities had no consumers left (`bg-bg`, `bg-bg-elev`, `bg-itera-canvas`, `font-itera-mono`, `rounded-itera-code`) have been removed.
 
 **Itera-scope tokens** — an additive, **light-only** namespace (`.itera-scope` in `src/index.css`), applied via `IteraSurface`. It does two things at once:
 
 1. Defines the actual `--itera-*` custom properties (the locked brand palette).
 2. **Re-points the general tokens above** (`--bg`, `--panel`, `--text`, `--accent`, `--green`, `--amber`, `--red`, `--blue`, `--shadow`, `--code-bg`, ...) to the Itera values, scoped to `.itera-scope` and its descendants only.
 
-This re-pointing is the whole trick: every v1 component already used `bg-bg`/`text-muted`/`bg-accent`-style utilities. Wrapping a subtree in `.itera-scope` reskins it completely with **zero edits to any component inside it** — the global `:root`/`[data-theme]` rules outside the scope are untouched.
+This re-pointing is the whole trick: every pre-redesign component already used `bg-panel`/`text-muted`/`bg-accent`-style utilities. Wrapping a subtree in `.itera-scope` reskins it completely with **zero edits to any component inside it** — the global `:root` rules outside the scope are untouched. Note the corollary: **on-brand colors are not evidence that a surface was redesigned.** Roadmaps still has pre-redesign layout and density while looking broadly correct.
 
 ### Itera token table (all light-only)
 
@@ -132,9 +132,9 @@ export function IteraSurface({ children, className }) {
 }
 ```
 
-Used by `AppShell` (whole app), `ReviewPage`, `LoginPage`, `PreviewShell` (design-preview), `LibraryPreviewShell` (design-preview/library-shared — the fixture-driven Library preview slice the production Library was adapted from), and `ReviewSessionV2` — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the Itera visual system needs to be wrapped in `IteraSurface`** (or already be a descendant of one of the above).
+Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `RouteError` and `PreviewShell` (design-preview) — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the Itera visual system needs to be wrapped in `IteraSurface`** (or already be a descendant of one of the above).
 
-`ForceLightTheme` locally overrides `ThemeContext` (from `src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light Itera code background paired with a dark syntax palette. Only light values are defined in `.itera-scope` (spec §36 defers dark mode), so the app is light-only for now; `ThemeToggle` is unrendered but not deleted, reversible the moment a dark palette exists.
+`ForceLightTheme` locally overrides `ThemeContext` (from `src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light Itera code background paired with a dark syntax palette. Only light values are defined in `.itera-scope` (spec §36 defers dark mode), so the app is light-only. `ThemeToggle.tsx` has been deleted and there is no theme toggle anywhere, but `Theme` keeps its `'dark'` member precisely because `CodeView`/`CodeEditor` select the `oneDark` palette from it.
 
 ---
 
@@ -144,7 +144,6 @@ Used by `AppShell` (whole app), `ReviewPage`, `LoginPage`, `PreviewShell` (desig
 |---|---|---|
 | `Button.tsx` | Base button | `variant?: 'primary' \| 'secondary' \| 'ghost' \| 'danger'` (default `secondary`). `primary`: `bg-accent text-white hover:brightness-110`. `secondary`: `border border-border bg-panel-2 hover:border-accent`. `ghost`: `text-muted hover:bg-panel`. `danger`: `bg-red text-white hover:brightness-110` (`--red` re-points to `--itera-error` inside `.itera-scope`, so it reads as the Itera error color without needing an itera-only token). Base radius `rounded-[9px]`, disabled → `opacity-50 pointer-events-none`. Props are `ComponentPropsWithRef<'button'>`, so `ref` passes through (React 19 ref-as-prop). |
 | `Field.tsx` | Labeled form field + shared input classes | Exports `fieldClass`/`selectClass` strings (`rounded-[9px] border border-border bg-code-bg ... focus:border-accent`) used across every card-type editor. `<Field label>` renders an uppercase, tracked-out `text-xs font-semibold text-muted` caption above its children. |
-| `FlipCard.tsx` (v1) | CSS-only 3D flip via `.flip`/`.flip-face` in `index.css` | `front`, `back`, `flipped`, `faceClassName?`, `onFrontClick?`. **Known gap:** the front face is a plain `<div onClick>` — no `tabIndex`/role/keyboard handling. Deliberately not fixed in place; see `reviewV2`'s `FlipCard` below for the accessible version used wherever v2 renders. |
 | `FloatingPanel.tsx` | Portaled, viewport-aware popover panel anchored to a trigger | `anchor: HTMLElement \| null`, `onClose`, `align?: 'start' \| 'end'` (default `end`), `className?`, `role?`, `ariaLabel?`, `manageFocus?`, `returnFocusTo?`. Positions itself `fixed` against the anchor's rect, flips **above** the anchor when it would not fit below, clamps to 8px from every viewport edge, re-places on scroll (capture) / resize, and closes on outside `mousedown` or Escape. `manageFocus` (default **off**, so the pointer-driven row kebab menus are unchanged) adds real menu keyboard semantics: focus moves to the first non-`aria-disabled` `role="menuitem"` once the panel has been *measured* (focusing it earlier is a silent no-op — the panel is `visibility: hidden` until then), Arrow/Home/End walk the items with wrapping, Tab closes, and on unmount focus returns to `returnFocusTo` unless the user has already moved it elsewhere. |
 | `dialogs.tsx` | In-app replacements for `window.confirm` / `window.prompt` / `window.alert` | `<DialogProvider>` (mounted in `src/app/providers.tsx`) + `useDialogs()` → `{ confirm, prompt, alert }`, all promise-based so call sites read like the blocking builtins: `if (await dialogs.confirm({ title, description, danger }))`. `prompt` resolves the trimmed value or `null`; its submit button is disabled while empty. Rendered as a portaled modal with a `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape/scrim-click to dismiss, autofocus on the input (or the confirm button). |
 
@@ -265,7 +264,7 @@ Never add to Review: global navigation, the Itera logo, a left sidebar, the upco
 
 - Deck rows (`src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-itera-accent`.
 - Card rows (`src/features/library/shared/CardTable.tsx`) render both v1 `Card` and v2 `CardV2Record` rows through one unified `RowMeta`, and clicking the row **opens the card in preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
-- Shared row furniture: `MasteryRing`, `MeterBar`, `Stat`, `DeckMark`, `EmptyState`, `StatusBadge`, `InteractionTypeBadge`, `OverflowMenu`.
+- Shared row furniture: `MasteryRing`, `MeterBar`, `Stat`, `DeckMark`, `EmptyState`, `StatusBadge`, `OverflowMenu`.
 - **Deck marks are restrained, never rainbow icon art.** A designed deck-cover system is **FUTURE**, not something to improvise per deck.
 
 ### Library's local sidebar
@@ -330,7 +329,7 @@ Intended Review shortcuts: `Escape` exit/pause with confirmation, `Space` flip a
 
 **IMPLEMENTED, and worth copying:**
 
-- `reviewV2/components/FlipCard.tsx` is the accessible flip: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. **`src/components/ui/FlipCard.tsx` (v1) is a plain `<div onClick>` with no keyboard or ARIA support** — a known gap deliberately not fixed in place. Use the v2 one for new work.
+- `reviewV2/components/FlipCard.tsx` is **the** flip primitive and the only one: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. It replaced an earlier `src/components/ui/FlipCard.tsx` that was a plain `<div onClick>` with no keyboard or ARIA support; that file and its `.flip*` CSS have been deleted.
 - **Ordering** makes each complete row the pointer and keyboard drag target and shows a decorative 3×4 dot grip at its right edge. There are no separate arrow controls: focus a row, press Space to pick it up, use Arrow keys, then Space to drop. Positions are announced via `aria-live`.
 - **Multiple Choice** option rows pair a circular check marker with a navy selected-row tint and `aria-checked`; the marker is decorative to assistive technology because the row already owns the checkbox/radio semantics.
 - **Walkthrough** keeps card-wide Tip/Explanation panels and may also render a step-scoped panel inside the active step: the step tip is pre-answer only, while the step explanation appears after that step is submitted and remains visible when revisited. Code-backed Walkthrough cards use opacity-only entrance motion so CodeMirror glyphs are never scaled or rotated during rasterization.
