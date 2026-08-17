@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useRouteError } from 'react-router-dom'
+import { Link, isRouteErrorResponse, useRouteError } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 
@@ -37,20 +37,36 @@ export function RouteError() {
     if (isChunkError(error)) reloadOnce()
   }, [error])
 
+  // An unmatched path is not a crash, and "reloading usually fixes it" is false
+  // advice for one — reloading a deleted route just lands here again. Several
+  // routes were removed with the v1 legacy surface, so a bookmark to one is an
+  // expected way to arrive here.
+  const notFound = isRouteErrorResponse(error) && error.status === 404
+
   return (
     <IteraSurface className="grid min-h-screen place-items-center px-4">
       <div className="mx-auto max-w-md rounded-itera-card border border-itera-border bg-itera-surface p-8 text-center">
-        <div className="text-lg font-semibold text-itera-ink-brand">Something went wrong</div>
+        <div className="text-lg font-semibold text-itera-ink-brand">
+          {notFound ? 'Page not found' : 'Something went wrong'}
+        </div>
         <p className="mt-2 text-sm text-itera-muted">
-          The app may have just updated. Reloading usually fixes it.
+          {notFound
+            ? 'This page does not exist. It may have been removed, or the link may be out of date.'
+            : 'The app may have just updated. Reloading usually fixes it.'}
         </p>
-        <Button
-          variant="primary"
-          className="mt-4"
-          onClick={() => window.location.reload()}
-        >
-          Reload
-        </Button>
+        {notFound ? (
+          <Link to="/" className="mt-4 inline-block">
+            <Button variant="primary">Back to Today</Button>
+          </Link>
+        ) : (
+          <Button
+            variant="primary"
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </Button>
+        )}
       </div>
     </IteraSurface>
   )
