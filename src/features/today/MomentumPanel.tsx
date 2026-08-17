@@ -1,5 +1,6 @@
-import { Flag, Flame, Target, TrendingUp } from 'lucide-react'
+import { Flag, Target, TrendingUp } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 
 function MetricIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -44,7 +45,7 @@ export function MomentumPanel() {
 
       <div className="mt-5 flex flex-1 flex-col gap-5">
         <div className="flex items-center gap-3">
-          <MetricIcon icon={Flame} />
+          <MetricIcon icon={StreakFlameIcon} />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-itera-ink-brand">7-day streak</div>
             <div className="mt-0.5 text-xs text-itera-muted">Keep it going!</div>

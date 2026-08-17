@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BarChart3, BookOpen, Flame, RefreshCcw, Star } from 'lucide-react'
+import { CopyCheck, RefreshCw, Scan, Star } from 'lucide-react'
+import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { useReviewLogs } from '@/hooks/useReview'
 import { useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
@@ -106,7 +107,7 @@ export function ProgressPage() {
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <KpiTile
-                icon={BarChart3}
+                icon={Scan}
                 label="Total sessions"
                 value={`${kpis.totalSessions.value}`}
                 variant="dark"
@@ -114,27 +115,32 @@ export function ProgressPage() {
                 footer={<KpiDelta delta={kpis.totalSessions.deltaPct} comparisonLabel={comparisonLabel} dark />}
               />
               <KpiTile
-                icon={BookOpen}
+                icon={CopyCheck}
                 label="Cards reviewed"
                 value={kpis.cardsReviewed.value.toLocaleString()}
+                iconTone="navy"
                 footer={<KpiDelta delta={kpis.cardsReviewed.deltaPct} comparisonLabel={comparisonLabel} />}
               />
               <KpiTile
-                icon={RefreshCcw}
+                icon={RefreshCw}
                 label="Retention rate"
                 value={kpis.retention.value === null ? '—' : `${Math.round(kpis.retention.value * 100)}%`}
+                iconTone="success"
                 footer={<KpiDelta delta={kpis.retention.deltaPp} comparisonLabel={comparisonLabel} />}
               />
               <KpiTile
                 icon={Star}
                 label="Avg. accuracy"
                 value={kpis.accuracy.value === null ? '—' : `${Math.round(kpis.accuracy.value * 100)}%`}
+                iconTone="warning"
+                iconFilled
                 footer={<KpiDelta delta={kpis.accuracy.deltaPp} comparisonLabel={comparisonLabel} />}
               />
               <KpiTile
-                icon={Flame}
+                icon={StreakFlameIcon}
                 label="Current streak"
                 value={`${kpis.streak} day${kpis.streak === 1 ? '' : 's'}`}
+                iconTone="accent"
                 footer={<span className="text-itera-muted">Best: {kpis.bestStreak} days</span>}
               />
             </div>

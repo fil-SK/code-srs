@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Info } from 'lucide-react'
 import type { Deck } from '@/types'
 import type { DeckPerformanceRow } from '@/domain/stats/progressMetrics'
 import { DeckMark } from '@/features/library/shared/DeckMark'
@@ -26,13 +26,17 @@ export function DeckPerformanceTable({
   const visible = rows.slice(0, limit)
 
   return (
-    <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
-      <h3 className="text-sm font-semibold text-itera-ink-brand">Deck performance</h3>
+    <div className="overflow-hidden rounded-itera-card border border-itera-border bg-itera-surface shadow-[var(--itera-shadow-card)]">
+      <div className="p-5 pb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base font-semibold text-itera-ink-brand">Deck performance</h3>
+          <Info size={14} strokeWidth={1.9} className="text-itera-muted" aria-hidden="true" />
+        </div>
 
-      {visible.length === 0 ? (
-        <p className="mt-4 text-sm text-itera-muted">No reviews in this range yet.</p>
-      ) : (
-        <div className="mt-4 overflow-x-auto">
+        {visible.length === 0 ? (
+          <p className="mt-4 text-sm text-itera-muted">No reviews in this range yet.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
           <div className={cn(GRID, 'px-1 pb-2 text-xs font-bold uppercase tracking-wide text-itera-muted')}>
             <span>Deck</span>
             <span>Reviewed</span>
@@ -73,12 +77,13 @@ export function DeckPerformanceTable({
               )
             })}
           </div>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <Link
         to="/decks"
-        className="mt-4 inline-flex items-center gap-0.5 text-sm font-semibold text-itera-accent hover:text-itera-accent-hover"
+        className="flex items-center justify-center gap-1 border-t border-itera-border px-5 py-3.5 text-sm font-semibold text-itera-ink-brand hover:bg-itera-surface-subtle"
       >
         View all decks
         <ChevronRight size={14} />

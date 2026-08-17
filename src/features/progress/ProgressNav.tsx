@@ -1,14 +1,14 @@
 import { NavLink, Link } from 'react-router-dom'
 import {
-  Activity,
-  Award,
-  BarChart3,
-  Clock,
-  FileText,
+  ChartNoAxesColumn,
+  ChartNoAxesCombined,
+  ClipboardList,
   Flag,
-  Layers,
+  ScanSearch,
+  Server,
   Settings,
   TrendingUp,
+  Trophy,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -34,23 +34,23 @@ const NAV_GROUPS: NavGroup[] = [
   {
     heading: 'Learning',
     items: [
-      { label: 'Decks', icon: Layers },
-      { label: 'Activity', icon: Activity },
-      { label: 'Review lag', icon: Clock },
+      { label: 'Decks', icon: Server },
+      { label: 'Activity', icon: ChartNoAxesCombined },
+      { label: 'Review lag', icon: ScanSearch },
     ],
   },
   {
     heading: 'Achievements',
     items: [
       { label: 'Milestones', icon: Flag },
-      { label: 'Achievements', icon: Award },
+      { label: 'Achievements', icon: Trophy },
     ],
   },
   {
     heading: 'Analytics',
     items: [
-      { label: 'Stats', icon: BarChart3 },
-      { label: 'Reports', icon: FileText },
+      { label: 'Stats', icon: ChartNoAxesColumn },
+      { label: 'Reports', icon: ClipboardList },
     ],
   },
 ]
@@ -80,7 +80,7 @@ export function ProgressNav() {
                       )
                     }
                   >
-                    <item.icon size={15} className="text-itera-accent" />
+                    <item.icon size={17} strokeWidth={2} className="text-itera-accent" aria-hidden="true" />
                     {item.label}
                   </NavLink>
                 ) : (
@@ -90,7 +90,7 @@ export function ProgressNav() {
                     className="flex items-center justify-between gap-2 rounded-r-[9px] border-l-2 border-transparent px-2.5 py-2 text-sm font-medium text-itera-muted-light"
                   >
                     <span className="flex items-center gap-2">
-                      <item.icon size={15} />
+                      <item.icon size={17} strokeWidth={1.9} aria-hidden="true" />
                       {item.label}
                     </span>
                     <span className="rounded-itera-pill bg-itera-surface-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-itera-muted-light">

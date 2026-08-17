@@ -1,6 +1,6 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-16** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography, review-interaction and new-card authoring refinements in this working tree).
+**Last verified against the working tree: 2026-08-17** (branch `app_redesign`, HEAD `0da06de`, plus the login, typography, review-interaction, new-card authoring and Progress visual refinements in this working tree).
 
 The checked-in product baseline is `0da06de`; this working tree adds the finalized login visual refinement described in §5, makes its selected Inter Variable family the app-wide non-code default, refines Review/preview chrome and card interactions, and brings the focused Deck page into closer alignment with the locked `library-use.png` reference. Auth, persistence and routes are unchanged.
 
@@ -108,7 +108,7 @@ All three views render inside `LibraryShell` + `CollectionNav`: a centered, bord
 
 ## 9. Progress state
 
-Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. Five KPI tiles with period-over-period deltas, an activity heat map with its own 7D/30D/3M/1Y toggle, a deck-scopable retention chart, a deck-performance table, and derived recent milestones — all from real `ReviewLog`/`Card`/`Deck` data. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.** Chart colors deliberately use the locked Itera navy/orange/success/warning tokens, not the mockup's blue/purple.
+Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. Five KPI tiles with period-over-period deltas, an activity heat map with its own 7D/30D/3M/1Y toggle, a deck-scopable retention chart, a deck-performance table, and derived recent milestones — all from real `ReviewLog`/`Card`/`Deck` data. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.** Chart colors deliberately use the locked Itera navy/orange/success/warning tokens, not the mockup's blue/purple. The reference-alignment pass now uses the mockup's icon concepts, larger token-colored KPI badges, quieter 30px/500 KPI values, reference-like section title/info rows and a centered Deck-performance footer. Streak surfaces share the bespoke `StreakFlameIcon` instead of Lucide's thin generic flame.
 
 ## 10. Card interaction status
 
@@ -305,7 +305,7 @@ Status only. Usage rules — families, weights, scale, icon conventions, the ora
 
 **Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. Inter is the app-wide non-code default; `--font-itera-sans` and the compatibility `--font-itera-display` token both alias `--font-sans`, while `--font-itera-mono` aliases `--font-mono`. **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
 
-**Icons — implemented.** `lucide-react` is the only icon library, at a single version. There are no hand-drawn SVG icon files, with two one-off exceptions inside `SuggestedSessionHero.tsx` (a bracket motif and a logo-derived watermark).
+**Icons — implemented.** `lucide-react` remains the only icon library, at a single version. The small one-off SVG exceptions are the bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx`, plus `StreakFlameIcon.tsx`: one shared brand glyph added because Lucide's thin generic flame did not match the locked Progress reference at nav/KPI sizes.
 
 **Tokens — implemented, light-only.** Two systems layer in `src/index.css`: the theme-aware general tokens (`:root` / `[data-theme]`), and an additive `.itera-scope` namespace applied through `IteraSurface`. The Itera scope defines the locked `--itera-*` palette **and re-points the general tokens to Itera values inside the scope** — that re-pointing is the compatibility mechanism by which every pre-existing v1 component reskins with zero edits, so do not "simplify" it away. There is no dark palette (see §4).
 

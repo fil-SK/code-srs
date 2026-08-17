@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Info } from 'lucide-react'
 import type { RetentionPoint } from '@/domain/stats/progressMetrics'
 import { DeckScopeDropdown, type DropdownOption } from './DeckScopeDropdown'
 
@@ -66,7 +67,10 @@ export function RetentionChart({
     <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-itera-ink-brand">Retention over time</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-semibold text-itera-ink-brand">Retention over time</h3>
+            <Info size={14} strokeWidth={1.9} className="text-itera-muted" aria-hidden="true" />
+          </div>
           <p className="text-xs text-itera-muted">Your ability to recall cards</p>
         </div>
         <DeckScopeDropdown

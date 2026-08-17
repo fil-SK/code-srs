@@ -1,5 +1,6 @@
-import { BookOpen, Calendar, Camera, Clock, ExternalLink, Flame, User } from 'lucide-react'
+import { BookOpen, Calendar, Camera, Clock, ExternalLink, User } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { NotBuiltYet, Panel, SectionShell } from './SectionShell'
 
 // The landing section, laid out from the reference mockup (avatar + identity
@@ -84,7 +85,7 @@ export function ProfileSection() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={BookOpen} label="Cards reviewed" caption="All time" />
           <Stat icon={Calendar} label="Study sessions" caption="All time" />
-          <Stat icon={Flame} label="Day streak" caption="Current" />
+          <Stat icon={StreakFlameIcon} label="Day streak" caption="Current" />
           <Stat icon={Clock} label="Study time" caption="All time" />
         </div>
         <p className="mt-4 text-xs text-itera-muted-light">

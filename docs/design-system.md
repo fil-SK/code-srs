@@ -158,7 +158,7 @@ Both `FloatingPanel` and `dialogs` portal into `document.body`, which sits **out
 
 ## 4. Icon conventions
 
-Icons come from **`lucide-react`** — there are no custom hand-drawn SVG icon files in this app (the one exception is a small bracket motif and a logo-derived watermark inside `SuggestedSessionHero.tsx`, both explicitly one-off, see §6). To add a new "icon," pick one from lucide's set — its stroke width/style matches automatically — and drop it into the same wrapper pattern already used nearby.
+Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lucide's set so its stroke width and geometry stay consistent. The deliberate SVG exceptions are a small bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx` (see §6), and `src/components/icons/StreakFlameIcon.tsx`: the one shared streak glyph used by the top nav, Progress, Today and Profile because Lucide's thin generic flame did not match the locked `progress.png` silhouette at small sizes.
 
 **The circular badge pattern** (`src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
 
@@ -171,7 +171,7 @@ Icons come from **`lucide-react`** — there are no custom hand-drawn SVG icon f
 A 32px soft-orange circle with an orange glyph, used for the compact grouped metrics in Momentum — lucide icons inherit `currentColor`, so the wrapper's `text-itera-accent` is what colors the icon, not a prop on the icon itself.
 
 Other conventions seen across `src/features/today/*.tsx`:
-- **Sizes**: 14–16px for inline/list icons, 15px for nav/chrome icons (search, plus, play). No larger icon sizes in current use.
+- **Sizes**: 14–17px for ordinary inline/list icons and 15px for most nav/action chrome. The branded streak flame is 24px in the top nav, and Progress KPI badges use 17px glyphs inside 36px circles because those are compact data-visualization marks rather than inline controls.
 - **Inline chrome icons** (nav search, "Create" button) sit at `gap-1.5`–`gap-2` next to text, not inside a circular badge — badges are reserved for list-row icons, not nav/action chrome.
 - **Trailing affordance**: `ChevronRight` at 14–16px, colored `text-itera-muted` (decorative) or `text-itera-accent` (a clickable "Continue"/"View more" link).
 - **Non-icon badges**: `ContinueLearningList.tsx` uses short text/glyph badges (`'C++'`, `'⚙'`, `'IR'`) inside a square `rounded-itera-control` navy tile with white mono text — a variant of the same wrapper idea for content that isn't a lucide icon.
