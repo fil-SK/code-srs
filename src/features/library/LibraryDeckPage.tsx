@@ -172,11 +172,11 @@ function SortableCardTableRow({
   )
 }
 
-// The focused Deck page (/decks/:id), promoted from design-preview's
-// library-deck preview into the real Library. A deck with children is
-// reachable here too (a "Collection" is UI-only — see collectionTree.ts) and
+// The focused Deck page (/decks/:id), promoted out of a fixture preview into
+// the real Library (that preview has since been deleted). A deck with children
+// is reachable here too (a "Collection" is UI-only — see collectionTree.ts) and
 // behaves exactly like any other deck: its own cards, not its children (deck
-// nesting is browsed from the Library list, same as the old DecksPage tree).
+// nesting is browsed from the Library list).
 export function LibraryDeckPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()

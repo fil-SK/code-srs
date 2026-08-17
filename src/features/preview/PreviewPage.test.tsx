@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, useLocation } from 'react-router-dom'
 import { getRepository } from '@/data'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import type { Card, Deck } from '@/types'
@@ -30,12 +30,17 @@ function card(id: string, front: string, order: number): Card {
   }
 }
 
-function renderPage() {
+function LocationProbe() {
+  return <div data-testid="location">{useLocation().pathname}</div>
+}
+
+function renderPage(entry = '/preview?deck=deck-1') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={['/preview?deck=deck-1']}>
+      <MemoryRouter initialEntries={[entry]}>
         <PreviewPage />
+        <LocationProbe />
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -86,5 +91,27 @@ describe('PreviewPage deck navigation', () => {
 
     screen.getByRole('button', { name: 'Next card' }).click()
     await waitFor(() => expect(screen.getByText('2 of 2')).toBeTruthy())
+  })
+
+  // Single-card mode used to fall back to the v1 /browse page, which no longer
+  // exists. The card carries its own deckId, so Exit returns to that deck.
+  it('exits a single-card preview to the card’s own deck when no `from` is given', async () => {
+    renderPage('/preview?card=card-2')
+
+    await screen.findByRole('banner')
+    screen.getByRole('button', { name: /Exit session/ }).click()
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location').textContent).toBe('/decks/deck-1'),
+    )
+  })
+
+  it('prefers an explicit `from` over the derived deck', async () => {
+    renderPage('/preview?card=card-2&from=%2Fdecks')
+
+    await screen.findByRole('banner')
+    screen.getByRole('button', { name: /Exit session/ }).click()
+
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/decks'))
   })
 })

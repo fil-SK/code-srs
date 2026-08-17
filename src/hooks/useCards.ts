@@ -47,7 +47,7 @@ export function useCreateCard() {
   })
 }
 
-// Also used to toggle `suspended` (see BrowsePage/DeckDetailPage) — dual-write
+// Also used to toggle `suspended` (see library/shared/CardTable) — dual-write
 // unconditionally rather than trying to detect which fields changed;
 // rewriting CardState with unchanged values is harmless and idempotent.
 export function useSaveCard() {

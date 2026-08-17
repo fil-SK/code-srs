@@ -3,9 +3,9 @@ import type { LucideIcon } from 'lucide-react'
 import type { InteractionType } from '@/types/cardV2'
 
 // One consistent, distinguishing tint per interaction type (icon + solid
-// tile color), modeled after v1's cardTypeMeta.ts shape but for the new
-// 6-type CardV2 union. Promoted out of design-preview/library-shared once the
-// real Deck page needed it too (see docs/itera-decisions.md). Also the single
+// tile color), modeled after cardTypeMeta.ts's shape but for the new 6-type
+// CardV2 union. Promoted into production once the real Deck page needed it too
+// (see docs/itera-decisions.md). Also the single
 // source of truth for reviewV2's per-card pill icon (InteractionLabel), so
 // the flashcard and the "Choose interaction" tile always agree.
 export const INTERACTION_META: Record<InteractionType, { label: string; icon: LucideIcon; tileClass: string }> = {

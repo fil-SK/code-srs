@@ -1,12 +1,12 @@
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
-// Itera's flip primitive. NOT the shared src/components/ui/FlipCard.tsx —
-// that one's front face is a plain <div onClick>, with no tabIndex, role, or
-// keyboard handler, so it fails keyboard activation and accessible semantics.
-// Rather than edit the file production imports, this is a small, separate
-// replacement using the same underlying mechanism (.itera-flip* in
-// src/index.css — a namespaced duplicate of production's .flip rules):
+// Itera's flip primitive, and now the only one. It replaced an earlier shared
+// FlipCard whose front face was a plain <div onClick> with no tabIndex, role,
+// or keyboard handler, so it failed keyboard activation and accessible
+// semantics; rather than edit that file in place, this was written as a
+// separate accessible replacement, and the original has since been deleted.
+// The underlying mechanism is .itera-flip* in src/index.css:
 //   - content-driven height: both faces share one grid cell (grid-area: 1/1),
 //     so the container sizes to the taller face with no JS measuring.
 //   - backface-visibility: hidden, so only the front face is present while

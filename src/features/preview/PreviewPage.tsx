@@ -26,10 +26,11 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 // The card itself is the real Review experience — `migrateCard` into the v2
 // model, then `ReviewSessionScreen` with its session-only chrome hidden — the
 // same path `/review` (ReviewSessionV2) and `cards/:id/study`
-// (CardStudyPreviewPage) already take. It previously rendered the v1
-// `CardView`/registry instead, which is why a card here could look nothing
-// like the same card in a real session: two independent renderers for one
-// card. Only this page's own chrome (back link, card counter, prev/next) is
+// (CardStudyPreviewPage) already take. It previously rendered the v1 card
+// registry instead, which is why a card here could look nothing like the same
+// card in a real session: two independent renderers for one card. That
+// registry is now deleted, so there is only one.
+// Only this page's own chrome (back link, card counter, prev/next) is
 // still local; reveal/flip/submit/grading/tip/explanation all belong to the
 // shared shell now, which is also what retired this page's separate
 // FlipCard/"Check answer"/result-banner/"Show question" controls.

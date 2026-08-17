@@ -58,8 +58,8 @@ function TypeCell({ kind, type }: { kind: 'v1' | 'v2'; type: string }) {
 }
 
 // A button + popover for moving a card to another deck — shared by both row
-// kinds, toggled from the overflow menu's "Move" item (same UX CardRowV2
-// established) rather than a separate always-visible icon button.
+// kinds, toggled from the overflow menu's "Move" item rather than a separate
+// always-visible icon button.
 function MovePopover({
   anchor,
   decks,
@@ -209,9 +209,9 @@ export function CardTableRowV1({
   )
 }
 
-// The v2-CardV2Record table row — same shape as CardTableRowV1 but v2's own
-// mutations (self-contained, matching how CardRowV2 already worked) and an
-// extra Duplicate action. Never drag-sortable (v2 has no manual order UI
+// The v2-CardV2Record table row — same shape as CardTableRowV1 but with v2's
+// own self-contained mutations and an extra Duplicate action. Never
+// drag-sortable (v2 has no manual order UI
 // yet), so it never reserves the grip column.
 export function CardTableRowV2({
   card,

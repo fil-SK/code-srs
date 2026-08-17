@@ -1,10 +1,9 @@
 // Expands the richer multi-range `focus` shape (an array of {startLine,
 // endLine} ranges - see cardV2.ts's WalkthroughStep) into the flat line-number
-// list LazyCodeView/CodeView already accepts via `highlightLines`. Not the
-// same job as lineRanges.ts's parseLineRanges (that parses a human-typed
-// spec string like "26-34, 40"); this adapts already-structured ranges to
-// the same flat consumer, reusing the existing highlighting mechanism rather
-// than adding a second one.
+// list LazyCodeView/CodeView already accepts via `highlightLines`. This adapts
+// already-structured ranges to that flat consumer, reusing the existing
+// highlighting mechanism rather than adding a second one. (It is not a parser:
+// the v1 editor's human-typed "26-34, 40" spec strings went away with it.)
 export function focusToHighlightLines(
   focus: Array<{ startLine: number; endLine: number }> | undefined,
 ): number[] | undefined {

@@ -7,15 +7,16 @@ import { StreakBadge } from './StreakBadge'
 import { primaryNavLinks } from './primaryNavLinks'
 
 // The one shared shell for every standard product route (Today, Library,
-// focused Deck, Browse, Drafts, Stats, Settings, Card create/edit) — see
+// focused Deck, Roadmaps, Progress, Settings, Card create/edit/preview) — see
 // docs/itera-decisions.md's App Shell convergence entry. Review is NOT a
 // child of this route (router.tsx moves it to its own top-level, chrome-free
 // entry, the same structural pattern Today/design-preview already used
 // before this milestone) — there is no CSS-hiding involved.
 //
-// ThemeToggle is intentionally not rendered here: the app is light-only for
-// now (Itera has no dark palette yet), so the toggle would be inert under
-// ForceLightTheme. Not deleted — see ThemeToggle.tsx.
+// There is no theme toggle: the app is light-only (Itera has no dark palette
+// yet) and ForceLightTheme pins this tree to light, so a toggle would be
+// inert. ThemeProvider/useTheme survive only because CodeView/CodeEditor read
+// the theme to choose their syntax palette.
 export function AppShell() {
   const { pathname } = useLocation()
   const isCardPreview =

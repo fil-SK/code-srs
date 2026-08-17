@@ -1,18 +1,13 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<!-- The app is light-only (no dark palette exists), so the theme is declared
+     statically here. There is no pre-paint theme script: it existed to restore
+     a saved dark/light choice, and with no toggle there is nothing to restore. -->
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/itera-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Itera</title>
-    <script>
-      // Apply saved theme before first paint to avoid a flash.
-      try {
-        var t = localStorage.getItem('code-srs-theme')
-        if (t === 'light' || t === 'dark')
-          document.documentElement.setAttribute('data-theme', t)
-      } catch (e) {}
-    </script>
   </head>
   <body>
     <div id="root"></div>

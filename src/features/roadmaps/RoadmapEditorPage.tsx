@@ -4,6 +4,7 @@ import { ArrowLeft, Pencil, Plus } from 'lucide-react'
 import type { Roadmap } from '@/types'
 import { newId } from '@/lib/id'
 import { selectClass } from '@/components/ui/Field'
+import { useDialogs } from '@/components/ui/dialogs'
 import { useDecks } from '@/hooks/useDecks'
 import { useRoadmap, useSaveRoadmap } from '@/hooks/useRoadmaps'
 import { RoadmapCanvas } from './RoadmapCanvas'
@@ -20,6 +21,7 @@ export function RoadmapEditorPage() {
   const query = useRoadmap(id)
   const decks = useDecks()
   const save = useSaveRoadmap()
+  const dialogs = useDialogs()
 
   // Local draft is the source of truth while editing; seed it once per roadmap
   // so a save's refetch never clobbers an in-flight change.
@@ -33,9 +35,14 @@ export function RoadmapEditorPage() {
     save.mutate(next)
   }
 
-  function renameRoadmap() {
+  async function renameRoadmap() {
     if (!draft) return
-    const title = window.prompt('Roadmap title', draft.title)?.trim()
+    const title = await dialogs.prompt({
+      title: 'Rename roadmap',
+      label: 'Title',
+      initialValue: draft.title,
+      confirmLabel: 'Save',
+    })
     if (title && title !== draft.title) commit({ ...draft, title })
   }
 

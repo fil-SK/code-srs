@@ -2,9 +2,9 @@ import type { WriteCodeInteraction } from '@/types/cardV2'
 
 type Comparison = WriteCodeInteraction['comparison']
 
-// Deliberately not the same normalization as v1's
-// src/domain/grading/normalize.ts (which collapses *all* whitespace under
-// `ignoreWhitespace`): the v2 spec wants line-ending normalization, trimming
+// Deliberately not the same normalization as the deleted v1 grader (which
+// collapsed *all* whitespace under `ignoreWhitespace`): the v2 spec wants
+// line-ending normalization, trimming
 // only the outer edges, and ignoring only *trailing* per-line whitespace —
 // collapsing all internal whitespace would be too lenient for code and could
 // mask real indentation differences. A separate function, not an overload.

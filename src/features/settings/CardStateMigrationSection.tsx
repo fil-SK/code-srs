@@ -1,33 +1,34 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { useDialogs } from '@/components/ui/dialogs'
 import { getRepository } from '@/data'
 import { createCardStateBackfill } from '@/domain/migration/cardStateBackfill'
 import type { MigrationReport } from '@/domain/migration/runner'
 
 function ReportSummary({ report }: { report: MigrationReport }) {
   return (
-    <div className="mt-3 space-y-1 rounded-[10px] border border-border bg-panel-2 p-3 text-xs text-muted">
+    <div className="mt-3 space-y-1 rounded-[10px] border border-itera-border bg-itera-surface-subtle p-3 text-xs text-itera-muted">
       <div>
-        Cards: <span className="font-semibold text-text">{report.beforeCounts.cards}</span>
+        Cards: <span className="font-semibold text-itera-ink">{report.beforeCounts.cards}</span>
       </div>
       <div>
         CardState rows:{' '}
-        <span className="font-semibold text-text">{report.beforeCounts.cardStates}</span> →{' '}
-        <span className="font-semibold text-text">{report.afterCounts.cardStates}</span>
+        <span className="font-semibold text-itera-ink">{report.beforeCounts.cardStates}</span> →{' '}
+        <span className="font-semibold text-itera-ink">{report.afterCounts.cardStates}</span>
       </div>
       <div>
         Would write / wrote:{' '}
-        <span className="font-semibold text-text">{report.changed.length}</span> · already up
-        to date: <span className="font-semibold text-text">{report.skipped.length}</span>
+        <span className="font-semibold text-itera-ink">{report.changed.length}</span> · already up
+        to date: <span className="font-semibold text-itera-ink">{report.skipped.length}</span>
       </div>
       {report.orphans.length > 0 && (
-        <div className="text-amber">
+        <div className="text-itera-warning">
           {report.orphans.length} orphaned CardState row(s) (no matching card) — not deleted,
           only reported.
         </div>
       )}
       {report.warnings.length > 0 && (
-        <div className="text-amber">{report.warnings.join('; ')}</div>
+        <div className="text-itera-warning">{report.warnings.join('; ')}</div>
       )}
     </div>
   )
@@ -44,6 +45,7 @@ export function CardStateMigrationSection() {
   const [applyReport, setApplyReport] = useState<MigrationReport | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const dialogs = useDialogs()
 
   async function runDryRun() {
     setBusy(true)
@@ -61,11 +63,13 @@ export function CardStateMigrationSection() {
 
   async function runApply() {
     if (!dryRunReport) return
-    const proceed = window.confirm(
-      `Write ${dryRunReport.changed.length} CardState row(s)? This only adds/updates rows in ` +
-        'the new CardState store — Card.scheduling is not touched, and nothing reads from ' +
-        'CardState yet. Safe to run more than once.',
-    )
+    const proceed = await dialogs.confirm({
+      title: `Write ${dryRunReport.changed.length} CardState row(s)?`,
+      description:
+        'This only adds or updates rows in the new CardState store — Card.scheduling is not ' +
+        'touched, and nothing reads from CardState yet. Safe to run more than once.',
+      confirmLabel: 'Write rows',
+    })
     if (!proceed) return
     setBusy(true)
     setError(null)
@@ -83,7 +87,7 @@ export function CardStateMigrationSection() {
 
   return (
     <div>
-      <p className="mb-3 text-sm text-muted">
+      <p className="mb-3 text-sm text-itera-muted">
         Backfills a CardState row per card — the Itera redesign's Phase D groundwork
         (docs/itera-decisions.md D38–D43). Additive and idempotent: nothing reads from
         these rows yet, so running it (or re-running it) is always safe.
@@ -98,13 +102,13 @@ export function CardStateMigrationSection() {
         </Button>
       </div>
 
-      {error && <p className="mt-3 text-sm text-red">{error}</p>}
+      {error && <p className="mt-3 text-sm text-itera-error">{error}</p>}
 
       {applyReport && (
-        <p className="mt-3 text-sm font-semibold text-green">Applied.</p>
+        <p className="mt-3 text-sm font-semibold text-itera-success">Applied.</p>
       )}
       {!applyReport && dryRunReport && (
-        <p className="mt-3 text-sm text-muted">Dry run only — nothing written yet.</p>
+        <p className="mt-3 text-sm text-itera-muted">Dry run only — nothing written yet.</p>
       )}
       {report && <ReportSummary report={report} />}
     </div>

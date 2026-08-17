@@ -14,9 +14,9 @@ function inRange(logs: ReviewLog[], range: DateRange): ReviewLog[] {
 }
 
 // Mature-card recall: of reviews on cards already in FSRS's review/relearning
-// state, the share rated Hard/Good/Easy (not Again). Matches
-// computeStats.ts's definition, just parametrized by an arbitrary window
-// instead of a fixed trailing 30 days.
+// state, the share rated Hard/Good/Easy (not Again). Inherited from the
+// deleted v1 stats module's definition, but parametrized by an arbitrary
+// window instead of a fixed trailing 30 days.
 function retentionOf(logs: ReviewLog[]): number | null {
   const mature = logs.filter((l) => l.state === 'review' || l.state === 'relearning')
   if (!mature.length) return null

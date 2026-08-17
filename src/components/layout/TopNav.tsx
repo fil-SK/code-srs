@@ -4,10 +4,10 @@ import { cn } from '@/lib/cn'
 import { useNavBadges } from './useNavBadges'
 import type { PrimaryNavLink } from './primaryNavLinks'
 
-// The one shared top-nav chrome for the whole app (replaces the old
-// sidebar+bottombar AppShell, and folds in what were three independent
-// near-duplicate copies of this same JSX: TodayShell, design-preview's
-// LibraryTopNav, and PreviewShell's banner header). overflow-x-auto +
+// The one shared top-nav chrome for the whole app. It replaced the old
+// sidebar+bottombar AppShell and absorbed what were three independent
+// near-duplicate copies of this same JSX, all since deleted.
+// overflow-x-auto +
 // shrink-0 on every child is a real narrow-viewport fix (not decoration):
 // without shrink-0, flex's default shrink:1 let the logo block compress
 // below its own content's width, which then visually overflowed into the

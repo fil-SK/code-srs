@@ -31,17 +31,15 @@ function useIsWideToday(): boolean {
   return isWide
 }
 
-// Replaces DashboardPage.tsx as the '/' route (docs/itera-decisions.md,
-// docs/archive/itera-redesign-plan.md's "whole-app visual pass" aside). DashboardPage
-// itself is untouched and still in the tree, unreferenced — reversible via
-// router.tsx if needed. Built from a reference mockup the product owner
-// supplied; most content here is placeholder (no streak/momentum/pace/
-// suggested-session data exists yet) — see the per-component comments and
-// the decisions log for exactly what's real versus illustrative.
+// The '/' route, replacing the pre-Itera dashboard (which has since been
+// deleted). Built from a reference mockup the product owner supplied; most
+// content here is placeholder (no streak/momentum/pace/suggested-session data
+// exists yet) — see the per-component comments and the decisions log for
+// exactly what's real versus illustrative.
 //
-// Renders through the shared AppShell/TopNav now (App Shell convergence
-// milestone) rather than its own private TodayShell — the page just returns
-// its content, AppShell supplies IteraSurface/nav/width.
+// Renders through the shared AppShell/TopNav (App Shell convergence milestone)
+// rather than a private per-page shell — the page just returns its content,
+// AppShell supplies IteraSurface/nav/width.
 export function TodayPage() {
   const isWide = useIsWideToday()
   // Picked once per mount, not per render — see greetings.ts.

@@ -27,10 +27,10 @@ import { CardListFooter } from './shared/CardListFooter'
 
 const ALL_DECKS_PAGE_SIZE = 10
 
-// The default Library destination (/decks). Replaces DecksPage's flat/nested
-// tree browser with the redesigned Collection-nav + Deck-list layout,
-// promoted from design-preview/library-browser — same visual system, wired
-// to real Deck/Card data instead of fixtures. Collections are UI-only,
+// The default Library destination (/decks). Replaced the pre-Itera flat/nested
+// deck-tree browser with the redesigned Collection-nav + Deck-list layout,
+// promoted out of a fixture preview and wired to real Deck/Card data (the
+// preview it came from has since been deleted). Collections are UI-only,
 // derived from Deck.parentId (see collectionTree.ts) — no schema change.
 export function LibraryBrowserPage() {
   const dialogs = useDialogs()
