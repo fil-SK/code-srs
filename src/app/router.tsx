@@ -10,13 +10,9 @@ import { RoadmapsPage } from '@/features/roadmaps/RoadmapsPage'
 import { RoadmapEditorPage } from '@/features/roadmaps/RoadmapEditorPage'
 import { ReviewPage } from '@/features/review/ReviewPage'
 import { PreviewPage } from '@/features/preview/PreviewPage'
-import { BrowsePage } from '@/features/cards/BrowsePage'
-import { CardEditorPage } from '@/features/cards/CardEditorPage'
 import { CardCreatePage } from '@/features/cardsV2/CardCreatePage'
 import { CardEditEntry } from '@/features/cardsV2/CardEditEntry'
 import { CardStudyPreviewPage } from '@/features/cardsV2/CardStudyPreviewPage'
-import { DraftsPage } from '@/features/drafts/DraftsPage'
-import { StatsPage } from '@/features/stats/StatsPage'
 import { ProgressPage } from '@/features/progress/ProgressPage'
 import { AccountSettingsPage } from '@/features/settings/AccountSettingsPage'
 import { DesignPreviewIndex } from '@/features/design-preview/DesignPreviewIndex'
@@ -26,8 +22,6 @@ import { WriteCodePreviewPage } from '@/features/design-preview/review-write-cod
 import { OrderingPreviewPage } from '@/features/design-preview/review-ordering/OrderingPreviewPage'
 import { MatchingPreviewPage } from '@/features/design-preview/review-matching/MatchingPreviewPage'
 import { WalkthroughPreviewPage } from '@/features/design-preview/review-walkthrough/WalkthroughPreviewPage'
-import { LibraryBrowserPreviewPage } from '@/features/design-preview/library-browser/LibraryBrowserPreviewPage'
-import { LibraryDeckPreviewPage } from '@/features/design-preview/library-deck/LibraryDeckPreviewPage'
 
 export const router = createBrowserRouter([
   // Every product route sits behind one guard (a pathless layout route), so
@@ -54,12 +48,8 @@ export const router = createBrowserRouter([
           { path: 'roadmaps', element: <RoadmapsPage /> },
           { path: 'roadmaps/:id', element: <RoadmapEditorPage /> },
           { path: 'preview', element: <PreviewPage /> },
-          { path: 'browse', element: <BrowsePage /> },
-          { path: 'cards/new', element: <CardEditorPage /> },
           { path: 'cards/:id/edit', element: <CardEditEntry /> },
           { path: 'cards/:id/study', element: <CardStudyPreviewPage /> },
-          { path: 'drafts', element: <DraftsPage /> },
-          { path: 'stats', element: <StatsPage /> },
           { path: 'progress', element: <ProgressPage /> },
           { path: 'settings', element: <AccountSettingsPage /> },
           { path: 'settings/:section', element: <AccountSettingsPage /> },
@@ -81,7 +71,12 @@ export const router = createBrowserRouter([
   },
   // Design-preview routes are a structurally separate top-level entry, not
   // children of AppShell — chrome-free by construction, not by hiding
-  // AppShell's chrome with CSS. See docs/archive/itera-redesign-plan.md Phase B (historical).
+  // AppShell's chrome with CSS.
+  //
+  // Only the six review-interaction previews remain, and they render the
+  // production ReviewSessionScreen against fixtures, so they cannot drift from
+  // /review. The Library previews that used to live here were a fork of
+  // src/features/library and were deleted once production overtook them.
   {
     path: 'design-preview',
     errorElement: <RouteError />,
@@ -93,9 +88,6 @@ export const router = createBrowserRouter([
       { path: 'review/ordering', element: <OrderingPreviewPage /> },
       { path: 'review/matching', element: <MatchingPreviewPage /> },
       { path: 'review/walkthrough', element: <WalkthroughPreviewPage /> },
-      { path: 'library', element: <LibraryBrowserPreviewPage /> },
-      { path: 'library-empty', element: <LibraryBrowserPreviewPage collections={[]} decks={[]} /> },
-      { path: 'library/:deckId', element: <LibraryDeckPreviewPage /> },
     ],
   },
 ])
