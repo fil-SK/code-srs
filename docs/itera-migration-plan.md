@@ -11,7 +11,7 @@
 | Migration | Status |
 |---|---|
 | §1 — Card payload 8 → 6 (lazy on read) | **Void.** Superseded by the single-card-model convergence: there is no v1 payload left to adapt, and `migrateCard` is deleted. |
-| §2 — Schema versioning / `BACKUP_VERSION` bump | **Done, differently.** `BACKUP_VERSION` is `2`, and `parseBackup` also enforces a `MIN_SUPPORTED_BACKUP_VERSION` of 2 — version-1 files are refused outright rather than auto-migrated, because their card shape no longer exists. `Card.schemaVersion` is on every card. |
+| §2 — Schema versioning / `BACKUP_VERSION` bump | **Done, differently.** `BACKUP_VERSION` is `2`, and `parseBackup` also enforces a `MIN_SUPPORTED_BACKUP_VERSION` of 2 — version-1 files are refused outright rather than auto-migrated, because their card shape no longer exists. `Card.schemaVersion` is on every card, and since 2026-08-18 an imported card's `schemaVersion` is checked against `CARD_SCHEMA_VERSION` rather than merely being present, so a card written for another model is refused at the entity level too (`src/domain/io/validateBackupEntities.ts`; see `itera-decisions.md` D198-D201). |
 | §4 — CardState extraction | **Void.** The `cardStates` store, its backfill runner and its Settings UI were removed with the convergence; nothing had ever read from them. Scheduling lives on `Card.scheduling`. Re-separating content from learning state is still a legitimate future goal (`architecture.md` principle 4) but would be designed fresh, against real data. |
 | §5 — Preserve richer Matching/Walkthrough capability | **Completed and honored** in the shipped types, editors and graders. |
 | §6 — Deck → Collection + Deck split | **Not started.** Even the read-only preflight report (§6.1) has never been run. The Library ships against a UI-only `parentId` derivation instead. **This is the only live migration left in this plan.** |
@@ -79,6 +79,8 @@ Every old type's optional `explanation` field maps to the new `explanation` fiel
 - Bump `BACKUP_VERSION` in `src/domain/io/backup.ts` from `1` to `2` once the v2 `CardV2`/`Deck`/`Collection` types are wired into the app (not yet — only the types and the pure migrator exist so far).
 - Add `schemaVersion` to each `Card` (already present on `CardV2`; the current v1 `Card` has no per-entity version, only the backup-envelope version). Cards without a `schemaVersion` are treated as `1` (implicit) and run through `migrateCard` on read.
 - `parseBackup()` already rejects `obj.version > BACKUP_VERSION` with a friendly error — this guard stays unchanged. Add the mirror-image behavior: a v1 backup imports successfully into a v2 app (auto-migrated via `migrateCard`, not rejected). See the required test in §9.
+
+> **Superseded — read the status table above, not the three bullets in this section.** They describe the plan as written before the convergence. What actually shipped: `BACKUP_VERSION` is `2`; `Card.schemaVersion` is required and checked against `CARD_SCHEMA_VERSION`; and a v1 backup is **refused, not auto-migrated**, because `migrateCard` and the shape it produced are both deleted (D195, D201). The bullets are kept because §9's test list references them.
 
 ## 3. Why only §1 is lazy-on-read
 

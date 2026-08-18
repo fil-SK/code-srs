@@ -21,7 +21,7 @@ Each owns one concern. If two of them say different things about the same thing,
 
 ## Other current material
 
-- **[`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)** — a copy-paste prompt for generating flashcard-import JSON via an external LLM chat, loaded through **Account settings → Import / Export → Import JSON → Merge**. Active and user-facing. It still describes the **v1 / 8-type backup schema** (`BACKUP_VERSION` is still `1`), which is correct today and will need updating when the backup version bumps.
+- **[`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)** — a copy-paste prompt for generating flashcard-import JSON via an external LLM chat, loaded through **Account settings → Import / Export → Import JSON → Merge**. Active and user-facing. Rewritten on 2026-08-18 against the **current** contract: `BACKUP_VERSION` is `2`, cards are the single `Card` model with `schemaVersion: 2`, embedded `scheduling` and one of the six `CardInteraction` types, and every prose field is a `RichContent` object. It must be updated in the same pass as any change to `src/types/card.ts` or `src/domain/io/backup.ts`. The envelope's `"app": "code-srs"` marker is a **legacy backup-format identifier, not the product name** — renaming it would invalidate every previously exported file.
 
 ## Visual references
 

@@ -1,4 +1,5 @@
 import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
+import { assertValidCards, assertValidDecks } from './validateBackupEntities'
 
 // 2 = the single card model. Version 1 files hold the old 8-type v1 cards and
 // a separate second card array; that format is prototype-era and unsupported, so
@@ -15,15 +16,20 @@ export interface BackupData {
   roadmaps?: Roadmap[] // added later; optional so older backups still import
 }
 
+// `app` is a legacy/compatibility format identifier, not the product name. It
+// stays literally 'code-srs' so every backup exported before the Itera rebrand
+// still imports; renaming it would silently invalidate every existing file.
+export const BACKUP_APP_MARKER = 'code-srs'
+
 export interface BackupFile {
-  app: 'code-srs'
+  app: typeof BACKUP_APP_MARKER
   version: number
   exportedAt: number
   data: BackupData
 }
 
 export function buildBackup(data: BackupData): BackupFile {
-  return { app: 'code-srs', version: BACKUP_VERSION, exportedAt: Date.now(), data }
+  return { app: BACKUP_APP_MARKER, version: BACKUP_VERSION, exportedAt: Date.now(), data }
 }
 
 export function serializeBackup(backup: BackupFile): string {
@@ -44,8 +50,8 @@ export function parseBackup(json: string): BackupFile {
   }
   const obj = parsed as Record<string, unknown>
 
-  if (obj.app !== 'code-srs') {
-    throw new Error('This does not look like a code-srs backup.')
+  if (obj.app !== BACKUP_APP_MARKER) {
+    throw new Error('This does not look like an Itera backup.')
   }
   if (typeof obj.version !== 'number') {
     throw new Error('Backup is missing a version.')
@@ -75,6 +81,14 @@ export function parseBackup(json: string): BackupFile {
       throw new Error(`Backup is missing or has an invalid "${key}" list.`)
     }
   }
+
+  // Entity-level structure. Cards and decks are the only two the app reads on
+  // every screen, and a malformed one reaches Review as a crash rather than a
+  // refusal; drafts/reviewLogs/roadmaps keep list-presence validation only.
+  // Referential integrity (card.deckId) needs repository state and therefore
+  // lives in the import layer, src/data/backup.ts.
+  assertValidDecks(data.decks as unknown[])
+  assertValidCards(data.cards as unknown[])
 
   return parsed as BackupFile
 }

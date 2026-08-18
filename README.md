@@ -152,7 +152,9 @@ Every push to `main` then auto-deploys. The PWA (`registerType: 'autoUpdate'`) r
 
 ## Generating cards with AI
 
-Want to bulk-create cards from study material? [`docs/prompts/ai-card-prompt.md`](docs/prompts/ai-card-prompt.md) is a ready-made prompt you can give another AI chat: it explains the full JSON backup schema and every card-content shape. Paste your notes, get back a JSON file, and load it via **Account settings → Import / Export → Import JSON → Merge** (additive — it won't overwrite existing cards).
+Want to bulk-create cards from study material? [`docs/prompts/ai-card-prompt.md`](docs/prompts/ai-card-prompt.md) is a ready-made prompt you can give another AI chat: it explains the current JSON backup schema (version 2) and all six interaction shapes. Paste your notes, get back a JSON file, and load it via **Account settings → Import / Export → Import JSON → Merge** (additive — it only overwrites an entity whose `id` already exists).
+
+Imports are validated before anything is written. If a generated file has an unsupported interaction type, a malformed card or scheduling block, or a card whose deck does not exist, the import is refused with a message naming the offending entity, and nothing is stored.
 
 ---
 

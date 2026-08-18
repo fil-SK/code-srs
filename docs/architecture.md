@@ -42,11 +42,12 @@ src/
 │   ├── cards/        factory.ts (createCard)
 │   ├── decks/        tree.ts (nesting/flattening helpers)
 │   ├── grading/      one grade*/matches* fn per v2 interaction type
-│   ├── io/           backup.ts (versioned backup envelope + validation)
-│   ├── migration/    cardMigration.ts (v1→v2), cardStateBackfill.ts, runner.ts
-│   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, cardState.ts
+│   ├── io/           backup.ts (versioned envelope), validateBackupEntities.ts
+│   │                 (structural card/deck validation), backupFixtures.ts
+│   ├── migration/    runner.ts (the contract; nothing implements it today)
+│   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, state.ts, format.ts
 │   ├── search/       searchableText.ts
-│   └── stats/        dateRange.ts, progressMetrics.ts
+│   └── stats/        dateRange.ts, progressMetrics.ts, cardDeckIndex.ts, reviewHistory.ts
 ├── features/
 │   ├── cards/          the authoring UI — see "Card creation" below
 │   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
@@ -112,7 +113,7 @@ export function getRepository(): Repository {
 
 A lazily-constructed singleton, chosen purely by whether `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` are set (`isSupabaseConfigured` in `src/data/supabase/client.ts`). Every hook calls `getRepository()` once at module scope, so the whole app shares one instance.
 
-**Dexie backend** (`src/data/dexie/db.ts` + `DexieRepository.ts`) — database name is still literally `'code-srs'` (not renamed for the rebrand). Schema is additive/incremental:
+**Dexie backend** (`src/data/dexie/db.ts` + `DexieRepository.ts`) — the database is named `'itera'`; it was renamed from `'code-srs'` when the card models converged, and `db.ts` fire-and-forget `Dexie.delete('code-srs')`s the superseded prototype database to reclaim its storage. (The *backup file's* `app` marker is a separate thing and deliberately still reads `code-srs` — see "Backup" below.) Schema is additive/incremental:
 
 ```ts
 // Database 'itera'. One version on purpose: it was renamed from 'code-srs'
@@ -186,7 +187,14 @@ A `ReviewLog` stores only a `cardId`, so every deck-scoped read joins through th
 
 Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
 
-**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `parseBackup()` rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2) — without that lower bound a prototype-era version-1 file would be read as though its v1 cards were the current shape.
+**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `BACKUP_APP_MARKER` is the constant behind that `app` field: it is a **legacy backup-format identifier, not the product name**, and must stay `'code-srs'` so files exported before the Itera rebrand still import — do not rename it during branding cleanup.
+
+**Import validation runs in two layers, and neither may be skipped:**
+
+1. `parseBackup()` (pure) rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2) — without that lower bound a prototype-era version-1 file would be read as though its v1 cards were the current shape — then calls `src/domain/io/validateBackupEntities.ts` (`assertValidDecks`, `assertValidCards`). That module is hand-written and dependency-free: it checks each card's envelope, its `schemaVersion` against `CARD_SCHEMA_VERSION`, its complete `SchedulingState` (a `Record<keyof Required<SchedulingState>, …>` table, so adding a scheduling field fails the build until it is classified), its `interaction.type` against the six members, and the container shape of that type's payload. Errors name the entity by position and id. `drafts`/`reviewLogs`/`roadmaps` keep list-presence validation only.
+2. `importBackup()` (`src/data/backup.ts`) applies the one rule that needs repository state: every `card.deckId` must resolve. Under **Merge** that means the file's decks *plus* the decks already in the library; under **Replace**, the file's decks only, since replace discards the library first. It runs **before** the replace-mode `clear()`, so a rejected import never leaves the store half-written. `deck.parentId` is deliberately *not* checked referentially — `useDeleteDeck` does not reparent children and `collectionTree.ts` already tolerates a dangling parent, so rejecting one would refuse a legitimate export.
+
+`src/domain/io/backupFixtures.ts` holds a valid deck plus one valid card of every interaction type. It lives in a non-test module on purpose: `tsconfig.app.json` excludes `*.test.ts`, so a fixture written inline in a test can rot silently (`src/data/backup.test.ts` carried a deleted v1 card shape for exactly that reason).
 
 ---
 
@@ -225,11 +233,11 @@ Compiler-enforced touchpoints first; the build fails until each is handled.
 
 1. `{ path: '/', element: <AppShell />, children: [...] }` — a **pathless layout route** whose `index` child is `TodayPage` (Today no longer has its own separate shell — see below), plus `decks` and `decks/:id` (`LibraryBrowserPage`/`LibraryDeckPage`), `decks/:deckId/cards/new`, `roadmaps`, `roadmaps/:id`, `preview`, `cards/:id/edit` (a v2 editor shell per type — see "Card creation" below), `cards/:id/study`, `progress`, `settings`, `settings/:section`. All children resolve at the top level with unchanged URLs. An unmatched path renders `RouteError`'s 404 branch.
 2. `{ path: 'review', element: <ReviewPage /> }` — a separate top-level entry, **not** nested under `AppShell`. Before this milestone `/review` was actually a plain `AppShell` child (full sidebar chrome and all, contrary to earlier docs); it is now genuinely chrome-free by construction.
-3. `{ path: 'design-preview', children: [...] }` — unchanged: one `index` route plus `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}` and `library`, `library-empty`, `library/:deckId` (the Phase H preview slice `features/library/` was adapted from, not replaced by it — still isolated, fixture-driven).
+3. `{ path: 'design-preview', children: [...] }` — one `index` route plus exactly six fixture routes, `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}`, each rendering the **production** `ReviewSessionScreen`. The `library`, `library-empty` and `library/:deckId` preview routes and their whole adapted fork were deleted (D180).
 
 `AppShell` (`src/components/layout/AppShell.tsx`) wraps its subtree in `IteraSurface` → `TopNav` (logo, `Today · Library · Progress`, then a `rightSlot` holding `StreakBadge` + `AccountMenu`; there is deliberately no global Search or `+Create`, both removed as unscoped actions) → `<Outlet/>` — no sidebar, no bottom nav, no per-route topbar (`Sidebar.tsx`/`BottomNav.tsx`/`navItems.ts`/`PageHeaderOverride.tsx` were all deleted, not deprecated in place). Standard children render inside the centered, padded 1280px `<main>`; `/preview` and `/cards/:id/study` switch that main to full-width with zero top padding so `ReviewTopBar` can sit flush beneath `TopNav` and paint a full-bleed strip without viewport-unit overflow. This is the mechanism by which every route it wraps picks up the Itera visual system and the shared nav automatically, since pages already use the shared semantic Tailwind classes `.itera-scope` re-points. There is no theme toggle at all — the app is light-only and `ThemeToggle.tsx` was deleted.
 
-`AccountMenu` (`src/components/layout/AccountMenu.tsx`) is the shell's only global right-side action: an avatar button (`aria-haspopup="menu"`, `aria-expanded`, "Open account menu") opening a 300px anchored, viewport-height-capped popover through `FloatingPanel` with `manageFocus`, or — below 480px (`useIsNarrowShell`) — the same `AccountMenuContent` in a bottom sheet. It is grouped quick navigation (account/preferences; study/FSRS/import; keyboard/help; What's new/About; sign out). **Account settings, Spaced repetition (to `/settings/card-scheduling`), Import / Export and Sign out are live** — Sign out whenever any session exists, local, demo or Supabase — while every unbuilt row is an `aria-disabled` placeholder marked "Soon". Since it is mounted from `AppShell`, `/review` has no account menu by construction.
+`AccountMenu` (`src/components/layout/AccountMenu.tsx`) is the shell's only global right-side action: an avatar button (`aria-haspopup="menu"`, `aria-expanded`, "Open account menu") opening a 300px anchored, viewport-height-capped popover through `FloatingPanel` with `manageFocus`, or — below 480px (`useIsNarrowShell`) — the same `AccountMenuContent` in a bottom sheet. It is grouped quick navigation (account/preferences; study/FSRS/import; keyboard/help; What's new/About; sign out). **Account settings, Import / Export and Sign out are the live rows** — Sign out whenever any session exists, local, demo or Supabase — while every unbuilt row is an `aria-disabled` placeholder marked "Soon". **Spaced repetition (FSRS) is one of those placeholders**: it used to link to `/settings/card-scheduling`, which is not a slug in `settingsSections.ts`, so `resolveSection` silently landed the user on Profile. Its header block shows only what a session actually knows (the email, or "Demo workspace"; plus where the data lives) — there is no profile record and therefore no display name. Since it is mounted from `AppShell`, `/review` has no account menu by construction.
 
 ### Auth / session boundary
 

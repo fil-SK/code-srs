@@ -113,6 +113,7 @@ describe('AccountMenu', () => {
     const placeholders = [
       'Preferences',
       'Study settings',
+      'Spaced repetition',
       'Keyboard shortcuts',
       'Help & documentation',
       "What's new",
@@ -146,17 +147,44 @@ describe('AccountMenu', () => {
     expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  it('links the working scheduling and import sections directly', async () => {
+  it('links the Import / Export section directly', async () => {
     const user = userEvent.setup()
     renderMenu()
 
     await user.click(trigger())
 
-    expect(
-      screen.getByRole('menuitem', { name: 'Spaced repetition (FSRS)' }).getAttribute('href'),
-    ).toBe('/settings/card-scheduling')
     expect(screen.getByRole('menuitem', { name: 'Import / Export' }).getAttribute('href')).toBe(
       '/settings/import-export',
     )
+  })
+
+  // /settings/card-scheduling is not a section in settingsSections.ts, so this
+  // row used to navigate to Profile while looking like a real destination.
+  it('offers Spaced repetition as a placeholder, not a link to a section that does not exist', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+
+    await user.click(trigger())
+    const row = screen.getByRole('menuitem', { name: /Spaced repetition/ })
+
+    expect(row.getAttribute('href')).toBeNull()
+    expect(row.getAttribute('aria-disabled')).toBe('true')
+    expect(row.textContent).toContain('Soon')
+
+    await user.click(row)
+    expect(screen.getByTestId('pathname').textContent).toBe('/decks')
+  })
+
+  it('shows a real identity instead of a fabricated display name', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+
+    await user.click(trigger())
+
+    // No session in this test environment, so the block says exactly that
+    // rather than rendering a placeholder person.
+    expect(screen.queryByText('Your name')).toBeNull()
+    expect(screen.getByText('Not signed in')).toBeTruthy()
+    expect(screen.getByText('Local data only')).toBeTruthy()
   })
 })

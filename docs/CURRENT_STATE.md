@@ -26,7 +26,9 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Milestone reached: "Single card model" (2026-08-18).**
+**Milestone reached: "MVP integrity cleanup" (2026-08-18), on top of "Single card model" (2026-08-18).**
+
+The integrity pass removed the MVP-adjacent surfaces that were telling the user something untrue: the AI card-generation prompt now emits the real v2 single-card import contract instead of the deleted 8-type schema; imported backups are validated structurally (and referentially, per import mode) before anything is written; the account menu's Spaced repetition row no longer navigates to a non-existent settings section; the fabricated "Your name" identity line is gone; and the Library empty state no longer promises an automatic Inbox deck. No page was redesigned and no new feature system was added.
 
 The redesign has converged *and* the retreat is finished. Previously the redesign was complete but the pages it replaced were still mounted-but-unlinked, so a user could reach a pre-redesign screen by URL and two redesigned pages still linked into them. Those pages, their entire transitive closure, and the `/design-preview` Library fork are now gone: 78 production files and 7 test files, leaving exactly one implementation of every surface.
 
@@ -92,7 +94,8 @@ Real data, real behavior, production-routed:
 
 - `AccountMenu` + `AccountMenuContent` (`src/components/layout/`). Built on the existing `FloatingPanel` — **no popover dependency was added.** 300px anchored, viewport-height-capped panel with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger). Below 480px (`useIsNarrowShell`) the identical content renders as a bottom sheet.
 - Live rows: **Account settings**, **Import / Export**, and **Sign out** (enabled whenever any session exists — local, demo, or Supabase).
-- Placeholder rows: Preferences, Study settings, Keyboard shortcuts, Help & documentation, What's new, About Itera — focusable `aria-disabled` rows with a "Soon" pill (never `disabled`, never hidden).
+- Placeholder rows: Preferences, Study settings, **Spaced repetition (FSRS)**, Keyboard shortcuts, Help & documentation, What's new, About Itera — focusable `aria-disabled` rows with a "Soon" pill (never `disabled`, never hidden). Spaced repetition joined that list on 2026-08-18: it used to link to `/settings/card-scheduling`, which is not a slug in `settingsSections.ts`, so `resolveSection` silently landed the user on Profile.
+- The header block shows **real identity only**. There is no profile record and no display name in this product, so it renders the session's email (or "Demo workspace" for the demo identity, matching `AccountSettingsPage`'s subtitle) over a line saying where the data lives — "Stored in this browser" / "Synced with Supabase" / "Local data only". The former hardcoded **"Your name"** line is gone; it read as fabricated account data.
 - The grouped menu follows `profile-menu.png`: account/preferences; a divided study group; keyboard/help; What's new/About; Sign out. **It remains quick navigation only.** New settings still belong in `src/features/settings/`; the menu links only the requested high-value shortcuts.
 
 ## 7. Today state
@@ -103,7 +106,7 @@ Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with n
 
 All three views render inside `LibraryShell` + `CollectionNav`: a centered, bordered white two-pane surface whose local sidebar drills all the way to individual decks. The sidebar uses restrained line icons, visible branch connectors, an enlarged add control, card-count rollups, and a footer Settings link; it collapses to `CollectionNavDrawer` below the wide-Library breakpoint.
 
-- **Default Library / All Decks (`/decks`)** — `LibraryBrowserPage`. The All Decks scope follows the locked `all-decks.png` composition: identity title/description and divider, an orange New Deck action plus an Import Deck shortcut to the real JSON Import & Export settings section, 44px search/filter/sort controls, descriptive deck rows with bold metric values, and always-on ten-deck pagination whose count reports the visible range. These proportions are deliberately scoped to **All Decks only**; Unfiled and Collection identity views retain their own compositions. Real `useDecks` + `useSearchCards` + `useSearchCardsV2` + `useDueCards` data drives per-deck cards, due, mastery and last-studied metrics from `deckMetrics.ts`; create / rename / delete remain live.
+- **Default Library / All Decks (`/decks`)** — `LibraryBrowserPage`. The All Decks scope follows the locked `all-decks.png` composition: identity title/description and divider, an orange New Deck action plus an Import Deck shortcut to the real JSON Import & Export settings section, 44px search/filter/sort controls, descriptive deck rows with bold metric values, and always-on ten-deck pagination whose count reports the visible range. These proportions are deliberately scoped to **All Decks only**; Unfiled and Collection identity views retain their own compositions. Real `useDecks` + `useSearchCards` + `useDueCards` data drives per-deck cards, due, mastery and last-studied metrics from `deckMetrics.ts`; create / rename / delete remain live.
 - **Parent / container ("Collection") view** — `LibraryCollectionView`, rendered by `LibraryBrowserPage` when the selection is a Collection. Identity header, rolled-up stats (`aggregateMetrics`), its child decks, and any cards filed directly on it. A direct `/decks/:id` navigation whose id resolves to a deck-with-children **redirects here** instead of rendering an incorrectly empty leaf page.
 - **Focused leaf-Deck view (`/decks/:id`)** — `LibraryDeckPage`. Cards / Insights tab split inside the locked-reference composition: bold final breadcrumb, enlarged aligned metrics, wider 44px toolbar controls, reference-like non-card icons and white surfaces. The Cards tab's search / type / status / sort toolbar and **always-on seven-row pagination** operate over a `RowMeta` projection of the one card list; multi-page footers report the visible card range. Manual drag ordering applies to every card within the visible page; the grip floats in the row inset so card-type tiles stay close to the list border. Clicking a row **opens the card in study preview** (`/cards/:id/study`); Edit/Duplicate/Move/Suspend/Delete live in the row kebab menu. There is no separate read-only card detail screen, by decision. Deck settings opens with a 24px separation from the identity/action area and closes on a successful save, Cancel, or a second click of its toggle. The identity header and metrics stack at phone widths; the table keeps its deliberate horizontal scroll.
 
@@ -153,12 +156,12 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 - **One seam: `Repository` (`src/data/repository.ts`).** `getRepository()` (`src/data/index.ts`) returns `DexieRepository` by default, or `SupabaseRepository` when `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` are set. **No component, hook, or page may import a backend directly.**
 - Members: `cards`, `decks`, `drafts`, `reviews`, `roadmaps`.
 - **Every entity is stored as one opaque JSON blob** keyed by an inline `id` (`data jsonb` in Postgres, a plain object in Dexie). Supabase adds a few generated columns (`due`, `suspended`, `deck_id`) purely for indexing; **all text/tag/type filtering happens in memory identically in both backends** so results match. Adding a field to a type therefore needs no migration.
-- **All data access goes through TanStack Query hooks in `src/hooks/`** (`useCards`, `useCardsV2`, `useDecks`, `useDrafts`, `useReview`, `useRoadmaps`, `useBackup`). Query keys are centralized in `src/hooks/queryKeys.ts`.
+- **All data access goes through TanStack Query hooks in `src/hooks/`** (`useCards`, `useDecks`, `useDrafts`, `useReview`, `useRoadmaps`, `useBackup` — there is one card hook family, not two). Query keys are centralized in `src/hooks/queryKeys.ts`.
 - **`Card.scheduling` is the sole source of truth for scheduling**, embedded on the card itself. The half-built `CardState` extraction (a write-only store nothing read) was removed with the card-model convergence; separating content from scheduling again is a deliberate schema change with its own migration, not a refactor.
 - **Dexie schema changes require a `version()` bump** in `src/data/dexie/db.ts` (declare only new/changed stores).
 - **Supabase tables need GRANTs, not just RLS.** Postgres denies before RLS runs: RLS-without-grant = **403 on every request**; RLS-without-policy = empty 200. Every table in `supabase/schema.sql` needs table + `enable row level security` + an `own rows` policy + `grant select, insert, update, delete … to authenticated`. `schema.sql` is **not** auto-applied — a human runs it in the SQL editor.
 - The Supabase **publishable** key (`sb_publishable_…`) is `VITE_SUPABASE_ANON_KEY`. The secret key must never reach the frontend.
-- Backup files (`src/domain/io/backup.ts`, `src/data/backup.ts`) are versioned; new entity arrays are added **optional** so older backups still import.
+- Backup files (`src/domain/io/backup.ts`, `src/data/backup.ts`) are versioned; new entity arrays are added **optional** so older backups still import. **Imports are validated in two layers before any write**: `parseBackup` checks the envelope and then every card/deck's structure via `src/domain/io/validateBackupEntities.ts` (envelope fields, `schemaVersion` against `CARD_SCHEMA_VERSION`, the complete `SchedulingState`, the six interaction types plus each payload's container shape), while `importBackup` applies the one rule needing repository state — every `card.deckId` must resolve, against the file's decks under Replace and against the file's decks plus the existing library under Merge — **before** the replace-mode `clear()`, so a rejected import never half-writes. `deck.parentId` is deliberately not checked referentially (deck deletion does not reparent, and `collectionTree` tolerates a dangling parent). The `app: 'code-srs'` marker inside every backup is a legacy format identifier, not the product name; renaming it would invalidate every existing file.
 
 ## 13. Migrations that have NOT happened
 
@@ -190,14 +193,14 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 - **Component tests cannot catch focus/visibility bugs.** `happy-dom` has no visibility semantics, so `HTMLElement.focus()` on a `visibility: hidden` element silently no-ops there but fails in Chromium. Anything focus- or layout-dependent needs a real browser pass.
 - **Transitioning a Tailwind-composed `transform` does not animate reliably.** `scale-*`/`rotate-*`/`translate-*` (including `group-hover:` variants) each write a separate custom property; transitioning the composed value snaps instantly in Chromium. Compute such transforms as one literal `style.transform` string in JS.
-- **`npx tsc --noEmit` is a no-op in this repo and must not be used as the typecheck gate.** `tsconfig.json` is solution-style (`"files": []` plus `references`), so that command checks zero files and is trivially "clean" — every doc and decision entry that cites it as evidence is citing nothing. The real gate is **`npx tsc -b --force`** (what `npm run build` runs). Related: `tsconfig.app.json` excludes `*.test.ts(x)`, so **test files are never typechecked** — a dangling import inside a test surfaces only as a Vitest resolve error at run time, never as a type error. Delete test files *before* the modules they cover.
+- **`npx tsc --noEmit` is a no-op in this repo and must not be used as the typecheck gate.** `tsconfig.json` is solution-style (`"files": []` plus `references`), so that command checks zero files and is trivially "clean" — every doc and decision entry that cites it as evidence is citing nothing. The real gate is **`npx tsc -b --force`** (what `npm run build` runs). Related: `tsconfig.app.json` excludes `*.test.ts(x)`, so **test files are never typechecked** — a dangling import inside a test surfaces only as a Vitest resolve error at run time, never as a type error, and an inline fixture can silently rot into a shape that no longer exists (`src/data/backup.test.ts` carried a deleted v1 card until 2026-08-18). Delete test files *before* the modules they cover, and for entity fixtures that must stay true to a type, put them in a non-test module — `src/domain/io/backupFixtures.ts` is the pattern.
 
 ## 16. Tests / build status
 
-Measured 2026-08-18, after the single-card-model pass (the previous baseline was 64 files / 432 tests):
+Measured 2026-08-18, after the MVP integrity cleanup:
 
 ```
-npx vitest run       → 61 test files, 390 tests, all passing
+npx vitest run       → 62 test files, 425 tests, all passing (35-55s)
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -205,11 +208,11 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**390 is the current correct test count**, down from 432. The card-model convergence deleted the migration and CardState suites outright (their subjects no longer exist) and removed the six per-type "migrates a legacy v1 card" cases plus the legacy form-hydration cases — not a coverage loss, since none of that code remains. The v1 card fixtures in the Dexie, Preview, Review and CardEditEntry suites were rewritten against the single model rather than deleted.
+**425 is the current correct test count.** Earlier revisions of this section carried two contradictory numbers (390 and 451); 390 was the measured count immediately after the single-card-model pass, and 451 was a stale carry-over from before it. Both are superseded. The single-card-model pass had brought the count down from 432 by deleting the migration and CardState suites outright (their subjects no longer exist) and removing the six per-type "migrates a legacy v1 card" cases plus the legacy form-hydration cases — not a coverage loss, since none of that code remains. This milestone then added 35: backup entity validation, deck-reference validation across Merge/Replace, and the account-menu placeholder/identity assertions.
 
-One caveat worth knowing, carried over from the 2026-08-17 pass: a single run then reported one failure that four consecutive re-runs could not reproduce, and which the summary output did not name. It is an unidentified flake, not a known-failing test. It did not resurface during the Review history pass. If it does, capture the file name.
+Older counts quoted in [`itera-decisions.md`](itera-decisions.md) (429, 445, 447) remain historical, because that log is append-only.
 
-**451 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling and navigation, Deck-settings dismissal, account-menu shortcuts, rating-control icons/intervals, Matching badge placement, the Multiple Choice selection/footer treatment, the authoring warning and reference-aligned create-flow structure, and Walkthrough step-scoped guidance. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
+**The `MatchingEditorShell.test.tsx` timeout reported in an earlier audit does not reproduce.** Three full `npx vitest run` passes on 2026-08-18 (one before this milestone's changes, two after) completed in 36.0s, 35.5s and 54.7s with zero failures and no timeout; the slowest was simply a busier machine, and no individual test approached its limit. No test-timeout value was changed, and Vitest's global timeout was not raised. The unidentified single-run flake noted on 2026-08-17 has not resurfaced either; if it ever does, capture the file name.
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 
@@ -219,7 +222,7 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 Today is now the only surface that shows numbers a user would reasonably believe and that are not real: streak, weekly goal, recall %, the milestone line, the Continue Learning rows and the pace-chart series are all illustrative constants, and "Adjust session" has no behavior. Every other primary surface (Library, Review, Progress, Review history, Settings) reads real data.
 
-The previous recommendation here — bringing `CardV2Record`s into the real due queue — is **superseded, not skipped**: the card-model convergence closed that hole by construction, since there is now one store and `/review` reads it directly.
+An older recommendation in this slot — bringing the second card store's records into the real due queue — is **superseded, not skipped**: the card-model convergence closed that hole by construction, since there is now one store and `/review` reads it directly.
 
 Concrete scope:
 
@@ -231,9 +234,11 @@ Concrete scope:
 
 Explicitly **not** in this milestone: the Collection/Deck split (Phase G) and the Roadmaps reskin. Those are the next two candidates, in that order.
 
+The 2026-08-18 MVP integrity cleanup found **no blocker in front of this work.** Today remains the only primary surface showing numbers a user would believe and that are not real.
+
 ---
 
-## 19. Routes
+## 18. Routes
 
 **Behind `RequireAuth` → inside `AppShell`:**
 
@@ -242,10 +247,10 @@ Explicitly **not** in this milestone: the Collection/Deck split (Phase G) and th
 | `/` | Today (index route) |
 | `/decks` | Library browser (+ Collection view) |
 | `/decks/:id` | Focused Deck page (redirects to the Collection view if the id has children) |
-| `/decks/:deckId/cards/new` | v2 card create |
+| `/decks/:deckId/cards/new` | Card create |
 | `/roadmaps`, `/roadmaps/:id` | Roadmaps (v1; not in primary nav) |
 | `/preview` | Card flip-through preview |
-| `/cards/:id/edit` | v2 editor entry (all 8 v1 types + all 6 v2 interactions; not-found state otherwise) |
+| `/cards/:id/edit` | Card editor entry — one switch over the six `interaction.type` members; a "Card not found" state otherwise |
 | `/cards/:id/study` | Non-committing study preview |
 | `/progress` | Progress |
 | `/progress/history` | Review history |
@@ -264,7 +269,7 @@ An unmatched path renders `RouteError`'s **"Page not found"** branch (`isRouteEr
 - Deleted for good (do not resurrect): `Sidebar.tsx`, `BottomNav.tsx`, `navItems.ts`, `PageHeaderOverride.tsx`, `TodayShell.tsx`, `CreateMenu.tsx`, `ProfileMenu.tsx`, `SettingsPage.tsx`, `src/auth/LoginPage.tsx`, `CardDetailPage`.
 - **Deleted 2026-08-17 with the v1 legacy surface** (do not resurrect): the `/browse`, `/cards/new`, `/drafts` and `/stats` routes and their pages; `src/features/cards/{registry,renderers}/` (all 8 families), `CardRow.tsx`, `CardTypeBadge.tsx`, `CardView.tsx`; `src/features/{dashboard,decks,drafts,stats}/` entirely; `src/features/review/{ReviewSession,GradeBar,useReviewSession}`; `src/components/ui/FlipCard.tsx`; `src/components/layout/ThemeToggle.tsx`; `src/components/code/{CodeBlockField,lineRanges}`; `src/domain/grading/normalize.ts`; `src/domain/stats/computeStats.ts`; `src/features/cards/{CardRowV2,shared/InteractionTypeBadge}.tsx`; and the entire `design-preview/library-{browser,deck,shared}/` fork.
 
-## 20. Visual system status
+## 19. Visual system status
 
 Status only. Usage rules — families, weights, scale, icon conventions, the orange rule, portal mechanics, the full token and radius tables — are owned by [`design-system.md`](design-system.md).
 
@@ -276,10 +281,14 @@ Status only. Usage rules — families, weights, scale, icon conventions, the ora
 
 **Shared UI foundation — implemented:** `Button`, `Field`, `FloatingPanel`, `dialogs` in `src/components/ui/` (the v1 `FlipCard` is deleted; `reviewV2/components/FlipCard.tsx` is the only one); `RichText`/`InlineText`; `LazyCodeView`/`LazyCodeEditor`; `cn()` and `newId()` in `src/lib/`. Contracts and props are in [`design-system.md`](design-system.md) §3; the hand-built-on-purpose rule (no markdown, chart, graph or popover dependency) is in [`architecture.md`](architecture.md).
 
-## 21. Visual-reference workflow
+## 20. Visual-reference workflow
 
 Reference mockups are **not tracked in this repository** — there is deliberately no `docs/references/` directory. They live at `C:\Users\SK\Desktop\itera-mockups\`, and [`design-system.md`](design-system.md) §14 defines the LOCKED / DIRECTION / CONCEPT tiers, the two standing exceptions, and the browser-verification requirement. Read it before implementing against any image.
 
-## 22. Where the rest of the documentation lives
+## 21. Where the rest of the documentation lives
 
 [`README.md`](README.md) is the index and states the source-of-truth hierarchy. In short: **the repository outranks every document**, this file outranks the reference docs on questions of status, and everything under [`archive/`](archive/) is history that never overrides a canonical doc.
+
+## 22. TODO
+
+- `supabase/migrations/0002_single_card_model.sql` needs running in the SQL editor. It's destructive by design and drops card_states before cards (that FK cascades).

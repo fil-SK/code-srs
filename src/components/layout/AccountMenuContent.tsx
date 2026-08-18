@@ -24,10 +24,15 @@ import { cn } from '@/lib/cn'
 // of settings sections still lives inside the Account settings page.
 //
 // Sign out is live whenever any session is (local, demo, or Supabase) — it is
-// the exit half of the /login loop. Account settings, FSRS/Card scheduling and
-// Import / Export are real routes. Rows without a backing page remain marked
-// "Soon" and focusable (aria-disabled, not `disabled`) so keyboard users hear
-// their state instead of skipping visible content.
+// the exit half of the /login loop. Account settings and Import / Export are
+// the only real routes here. Rows without a backing page remain marked "Soon"
+// and focusable (aria-disabled, not `disabled`) so keyboard users hear their
+// state instead of skipping visible content.
+//
+// Spaced repetition (FSRS) is one of those placeholders on purpose: it used to
+// link to /settings/card-scheduling, which is not a section in
+// settingsSections.ts, so resolveSection silently landed the user on Profile.
+// A row that navigates somewhere unrelated is worse than one that says "Soon".
 
 interface MenuRow {
   label: string
@@ -127,11 +132,24 @@ function Divider() {
 export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
   const { identity, isAuthenticated, signOut } = useAuth()
 
-  // Whatever session is live (Supabase or local) supplies the email. There is
-  // still no display name anywhere in the product, so that line stays a greyed
-  // placeholder rather than inventing one.
+  // There is no profile record and no display name anywhere in this product, so
+  // this block shows only what a live session actually knows: who is signed in,
+  // and where their data lives. The demo workspace names itself rather than
+  // showing its synthetic address, matching AccountSettingsPage's subtitle.
   const displayEmail = identity?.email
-  const initial = displayEmail?.[0]?.toUpperCase()
+  const title =
+    identity === null
+      ? 'Not signed in'
+      : identity.kind === 'demo'
+        ? 'Demo workspace'
+        : identity.email
+  const detail =
+    identity === null
+      ? 'Local data only'
+      : identity.kind === 'supabase'
+        ? 'Synced with Supabase'
+        : 'Stored in this browser'
+  const initial = identity?.kind === 'demo' ? undefined : displayEmail?.[0]?.toUpperCase()
 
   const groups: MenuRow[][] = [
     [
@@ -140,11 +158,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
     ],
     [
       { label: 'Study settings', icon: GraduationCap },
-      {
-        label: 'Spaced repetition (FSRS)',
-        icon: TrendingUp,
-        to: '/settings/card-scheduling',
-      },
+      { label: 'Spaced repetition (FSRS)', icon: TrendingUp },
       { label: 'Import / Export', icon: ArrowUpDown, to: '/settings/import-export' },
     ],
     [
@@ -178,18 +192,18 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
           <div
             className={cn(
               'truncate text-[15px] font-semibold',
-              displayEmail ? 'text-itera-ink-brand' : 'text-itera-muted-light',
+              identity ? 'text-itera-ink-brand' : 'text-itera-muted-light',
             )}
           >
-            Your name
+            {title}
           </div>
           <div
             className={cn(
               'truncate text-[13px]',
-              displayEmail ? 'text-itera-muted' : 'text-itera-muted-light',
+              identity ? 'text-itera-muted' : 'text-itera-muted-light',
             )}
           >
-            {displayEmail ?? 'Not signed in'}
+            {detail}
           </div>
         </div>
       </div>

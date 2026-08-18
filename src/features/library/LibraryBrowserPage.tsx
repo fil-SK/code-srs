@@ -246,7 +246,7 @@ export function LibraryBrowserPage() {
           {leaves.length === 0 ? (
             <EmptyState
               title="No decks yet"
-              description="Create one (and nest subdecks inside it), or just make a card — an “Inbox” deck is created automatically."
+              description="Create your first deck, then add cards to it. Decks can nest, so a broad subject can hold subdecks."
               action={
                 <Button variant="primary" onClick={newDeck}>
                   + New Deck
