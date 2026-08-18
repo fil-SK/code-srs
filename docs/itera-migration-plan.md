@@ -1,27 +1,28 @@
 # Itera — Migration Plan
 
-**Canonical, living document.** The data-migration and data-safety contract for moving from the 8-card-type, unified-Deck model to the 6-interaction-type, Collection/Deck-split model. Covers both storage backends (Dexie in every user's browser; Supabase in production) — they must move in lockstep or they will silently diverge.
+**Canonical, living document.** The data-migration and data-safety contract for this project. Covers both storage backends (Dexie in every user's browser; Supabase in production) — they must move in lockstep or they will silently diverge.
 
-**Revised after a correction pass** — see `itera-decisions.md` D14–D16 for what changed and why. The headline change: only the old-Card-payload adaptation (§1) is allowed to run lazily on read. CardState extraction and the Collection/Deck split are explicit, run-once, reportable, reversible migrations, defined by the shared contract in §0.
+**Most of this plan is now history.** The card-model half of it is finished, but not the way it was designed: on 2026-08-18 the v1/v2 split was resolved by **converging on one `Card` model and resetting the prototype card data**, rather than by migrating it (see `itera-decisions.md` D190-D196). §1 (lazy card-payload adaptation) and §4 (CardState extraction) describe code and entities that no longer exist. What remains live is §0's contract, §6's Collection/Deck split, and the §7/§8 conventions.
 
-## Status at a glance (verified against the working tree, 2026-08-12)
+**No migration may run lazily on read.** That exemption existed solely for `migrateCard`, which is deleted.
+
+## Status at a glance (verified against the working tree, 2026-08-18)
 
 | Migration | Status |
 |---|---|
-| §1 — Card payload 8 → 6 (lazy on read) | **Completed as designed.** `migrateCard` is pure, total across all 8 v1 types, tested including idempotence, and runs on read. Two follow-on tests in §9 remain unwritten. |
-| §2 — Schema versioning / `BACKUP_VERSION` bump | **Not started.** `BACKUP_VERSION` is still `1`; no per-entity `schemaVersion` was added to v1 `Card`. |
-| §4 — CardState extraction, steps 1–3 (additive schema, backfill, dual-write) | **Completed.** |
-| §4 — CardState extraction, steps 4–6 (parity verification, read cutover, cleanup) | **Not started.** `Card.scheduling` is still the sole source of truth; nothing reads `cardStates`. |
-| §5 — Preserve richer Matching/Walkthrough capability | **Completed and honored** in the shipped v2 types, editors and graders. |
-| §6 — Deck → Collection + Deck split | **Not started.** Even the read-only preflight report (§6.1) has never been run. The Library ships against a UI-only `parentId` derivation instead. |
-| §8 — Versioned Supabase migration files | **Partially implemented.** `supabase/migrations/0001_card_states.sql` exists; **`cards_v2` was added to `schema.sql` with no matching migration file** — a real gap in this process, not a decision. |
-| §9 — Required test coverage | **Partially implemented.** See the annotations in that section. |
+| §1 — Card payload 8 → 6 (lazy on read) | **Void.** Superseded by the single-card-model convergence: there is no v1 payload left to adapt, and `migrateCard` is deleted. |
+| §2 — Schema versioning / `BACKUP_VERSION` bump | **Done, differently.** `BACKUP_VERSION` is `2`, and `parseBackup` also enforces a `MIN_SUPPORTED_BACKUP_VERSION` of 2 — version-1 files are refused outright rather than auto-migrated, because their card shape no longer exists. `Card.schemaVersion` is on every card. |
+| §4 — CardState extraction | **Void.** The `cardStates` store, its backfill runner and its Settings UI were removed with the convergence; nothing had ever read from them. Scheduling lives on `Card.scheduling`. Re-separating content from learning state is still a legitimate future goal (`architecture.md` principle 4) but would be designed fresh, against real data. |
+| §5 — Preserve richer Matching/Walkthrough capability | **Completed and honored** in the shipped types, editors and graders. |
+| §6 — Deck → Collection + Deck split | **Not started.** Even the read-only preflight report (§6.1) has never been run. The Library ships against a UI-only `parentId` derivation instead. **This is the only live migration left in this plan.** |
+| §8 — Versioned Supabase migration files | **Implemented.** `0001_card_states.sql` and `0002_single_card_model.sql`. The latter drops `card_states`/`cards_v2` and recreates one `cards` table; it is destructive by design (see its header). |
+| §9 — Required test coverage | **Partially implemented.** The v1-backup-import items are void along with §1. |
 
 **Do not rewrite a completed row above as though it were future work**, and do not start a "not started" migration as a side effect of a UI change. The current implementation snapshot lives in [`CURRENT_STATE.md`](CURRENT_STATE.md) §13.
 
 ## 0. Shared migration-runner contract
 
-Every migration in this plan **except** §1 (Card payload adaptation — see §3 for why that one is different) must conform to this contract before it is implemented. This is a specification for the migration modules referenced in §4 and §6, not code that exists yet.
+Every migration in this plan must conform to this contract before it is implemented. The contract itself lives in `src/domain/migration/runner.ts`; nothing implements it today, since the two migrations that did were retired with the card-model convergence.
 
 ```ts
 interface MigrationReport {

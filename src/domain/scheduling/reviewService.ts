@@ -4,20 +4,17 @@ import { buildReviewLog, previewStates, reviewState } from './scheduler'
 // The boundary between Review UI and the FSRS scheduler (spec §9.5): UI never
 // calls scheduler.ts directly, it goes through this service.
 //
-// Deliberately still shaped around SchedulingState (the same shape embedded
-// in v1 Card.scheduling today), not a separate CardState — per
-// docs/itera-migration-plan.md section 4, CardState extraction changes *where*
-// this state is read from and written to (a CardState table instead of
-// Card.scheduling), not what gets computed. Keeping this service's public
-// shape stable across that migration means Review UI built against it now
-// does not need to change when Phase D lands — only this file's internals do
-// (a repository lookup/write added to `submit`, most likely).
+// Shaped around SchedulingState, which every Card embeds directly. If
+// scheduling is ever extracted into its own entity, that changes *where* this
+// state is read from and written to, not what gets computed — so keeping this
+// service's public shape stable means the Review UI built against it would not
+// need to change, only this file's internals.
 //
-// This service does not persist anything today. There is no CardV2
+// This service does not persist anything today. There is no Card
 // repository yet (explicitly out of scope for this milestone — no schema
 // changes), so callers (the design-preview routes) pass in whatever
 // SchedulingState they have (a fresh baseline for a fixture) and get back the
-// computed next state + log; nothing is written anywhere. Once CardV2 has a
+// computed next state + log; nothing is written anywhere. Once Card has a
 // real backing store, `submit` starts persisting `after` and appending `log`,
 // with no change to the function's signature.
 

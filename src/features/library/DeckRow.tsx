@@ -5,8 +5,8 @@ import { DeckMark } from './shared/DeckMark'
 import { MeterBar } from './shared/MeterBar'
 import { markLabelFor } from './deckMark'
 import type { DeckMetrics } from './deckMetrics'
-import { formatLastStudied } from '@/features/cardsV2/shared/format'
-import { OverflowMenu } from '@/features/cardsV2/shared/OverflowMenu'
+import { formatLastStudied } from '@/features/cards/shared/format'
+import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
 import { cn } from '@/lib/cn'
 
 const GRID =

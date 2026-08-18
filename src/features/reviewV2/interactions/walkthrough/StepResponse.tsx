@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { InlineText, RichText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { ObjectiveResult } from '@/features/reviewV2/reviewPhase'
-import type { McOption } from '@/types/cardV2'
-import type { WalkthroughStep } from '@/types/cardV2'
+import type { McOption } from '@/types/card'
+import type { WalkthroughStep } from '@/types/card'
 import type { WalkthroughStepAnswer } from '@/domain/grading/walkthrough'
 
 function ResultNote({ result }: { result: ObjectiveResult | null | undefined }) {

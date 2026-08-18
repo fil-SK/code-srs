@@ -1,130 +1,156 @@
-import type { CodeBlock, ID, Millis } from './common'
+import type { ID, Millis } from './common'
 import type { SchedulingState } from './review'
 
-// Shared envelope for every card, regardless of type.
-export interface CardBase {
+// The card model. One shape for every card in the app: content plus its own
+// embedded FSRS scheduling. The v1 8-type union and the Card/Card
+// content-vs-record split it required were deleted when the two models
+// converged (see docs/itera-decisions.md) - there is no second card type and
+// no on-read migration.
+//
+// Deliberately uses Millis (not ISO strings) and the existing SchedulingState
+// field names (`reps`, `due`, `scheduledDays`, ...), matching this codebase's
+// conventions rather than the spec's illustrative examples literally.
+
+export interface RichContent {
+  format: 'markdown'
+  value: string
+}
+
+export function richText(value: string): RichContent {
+  return { format: 'markdown', value }
+}
+
+// ---- Interaction payloads (spec §31) ----
+
+export type AuthoringPreset =
+  | 'standard'
+  | 'code_reading'
+  | 'find_the_bug'
+  | 'predict_output'
+  | 'explain_code'
+
+export interface RecallInteraction {
+  type: 'recall'
+  answer: RichContent
+  authoringPreset?: AuthoringPreset
+}
+
+export interface McOption {
   id: ID
+  content: RichContent
+  correct: boolean
+}
+
+export interface MultipleChoiceInteraction {
+  type: 'multiple_choice'
+  selectionMode: 'single' | 'multiple'
+  randomizeOptions: boolean
+  options: McOption[]
+}
+
+export interface WriteCodeInteraction {
+  type: 'write_code'
+  language: string
+  starterCode: string
+  // MVP: one editable region (spec §31.3 explicitly allows this simplification).
+  editableRegion?: { startLine: number; endLine: number }
+  acceptedAnswers: string[]
+  comparison: {
+    trimOuterWhitespace: boolean
+    normalizeLineEndings: boolean
+    ignoreTrailingWhitespace: boolean
+    caseSensitive: boolean
+  }
+}
+
+export interface OrderingItemV2 {
+  id: ID
+  content: RichContent
+}
+
+export interface OrderingInteraction {
+  type: 'ordering'
+  randomize: boolean
+  items: OrderingItemV2[] // stored in correct order
+  correctOrder: ID[]
+}
+
+export interface MatchingColumnItem {
+  id: ID
+  content: RichContent
+}
+
+export interface MatchingColumn {
+  id: ID // e.g. 'source' | 'target' | a third custom column id
+  label?: string
+  items: MatchingColumnItem[]
+  // A fixed column shares one value list across rows, graded by value equality —
+  // this codebase's existing matching feature already goes beyond the spec's
+  // two-column MVP (3-part matching, fixed-option columns); extended here rather
+  // than downgraded. See docs/itera-migration-plan.md §5.
+  fixed?: boolean
+}
+
+export interface MatchingInteraction {
+  type: 'matching'
+  columns: MatchingColumn[] // first column is the fixed "source" side
+  relationships: Array<Record<string, ID>> // one row: columnId -> itemId
+}
+
+export type WalkthroughStepResponse =
+  | { type: 'recall'; answer: RichContent }
+  | {
+      type: 'multiple_choice'
+      selectionMode: 'single' | 'multiple'
+      options: McOption[]
+    }
+  | { type: 'exact_input'; acceptedAnswers: string[] }
+
+export interface WalkthroughStep {
+  id: ID
+  // Multiple ranges (not spec's single {startLine,endLine}) — preserves this
+  // codebase's existing multi-range highlight capability. See migration §5.
+  focus?: Array<{ startLine: number; endLine: number }>
+  prompt: RichContent
+  tip?: RichContent
+  explanation?: RichContent
+  response: WalkthroughStepResponse
+}
+
+export interface WalkthroughInteraction {
+  type: 'walkthrough'
+  scenario: RichContent
+  code?: { language: string; value: string }
+  image?: string // data URL, matching the existing Story card's approach
+  steps: WalkthroughStep[]
+}
+
+export type CardInteraction =
+  | RecallInteraction
+  | MultipleChoiceInteraction
+  | WriteCodeInteraction
+  | OrderingInteraction
+  | MatchingInteraction
+  | WalkthroughInteraction
+
+export type InteractionType = CardInteraction['type']
+
+// ---- Card ----
+
+export const CARD_SCHEMA_VERSION = 2
+
+export interface Card {
+  id: ID
+  schemaVersion: number
   deckId: ID
+  prompt: RichContent
+  tip?: RichContent
+  explanation?: RichContent
+  interaction: CardInteraction
   tags: string[]
   createdAt: Millis
   updatedAt: Millis
-  order?: number // manual position within a deck (for browsing); review ignores it
-  suspended: boolean // excluded from the queue without deleting
+  suspended: boolean
   scheduling: SchedulingState
+  order?: number // manual position within a deck; review ignores it
 }
-
-// ---- Per-type content payloads ----
-
-export interface BasicContent {
-  front: string // markdown (may embed code fences)
-  back: string
-  explanation?: string
-}
-
-export interface McqOption {
-  id: ID
-  text: string
-}
-
-export interface McqContent {
-  prompt: string
-  options: McqOption[]
-  correct: ID[] // length 1 = single answer, >1 = multiple
-  multiple: boolean // UI hint: checkbox vs radio
-  explanation?: string
-}
-
-export interface CodeReadingContent {
-  code: CodeBlock
-  question: string
-  answer: string // markdown, revealed
-  explanation?: string
-}
-
-export type CodeValidationMode = 'none' | 'normalizedMatch' // 'run' deferred
-
-export interface CodeCompletionContent {
-  prompt?: string // optional prose question shown above the answer box
-  scaffold: CodeBlock // code with a blank region/marker; may be empty
-  solutions: string[] // accepted answers for auto-check
-  validation: {
-    mode: CodeValidationMode
-    ignoreWhitespace: boolean
-    caseSensitive: boolean
-  }
-  explanation?: string
-}
-
-export interface BugFindingContent {
-  code: CodeBlock
-  question?: string // defaults to "Find the bug" in the UI
-  bugHint?: string // optional progressive hint
-  explanation: string // the answer
-}
-
-export interface OrderingItem {
-  id: ID
-  text: string
-  code?: CodeBlock
-}
-
-export interface OrderingContent {
-  prompt: string
-  items: OrderingItem[] // stored in CORRECT order; presented shuffled
-  explanation?: string
-}
-
-export interface MatchingPair {
-  id: ID
-  left: string
-  right: string
-  third?: string // optional third column, used when content.triple is set
-}
-
-export interface MatchingContent {
-  prompt: string
-  pairs: MatchingPair[] // left<->right (and <->third when triple) is the truth
-  triple?: boolean // 3-part matching: each row also matches a third value
-  headers?: { left?: string; right?: string; third?: string } // optional column titles
-  // When a column has a defined option list, its dropdown uses those fixed,
-  // shared values and is graded by value equality (so several rows can share an
-  // answer like Yes/No). Otherwise the column uses unique per-row matching:
-  // options are the row values, graded by pairing.
-  options?: { right?: string[]; third?: string[] }
-  explanation?: string
-}
-
-export interface StoryStep {
-  id: ID
-  prompt: string // markdown question for this step
-  answer: string // markdown answer, revealed on demand
-  code?: CodeBlock // optional per-step code focus (e.g. specific lines)
-  highlight?: string // line spec (e.g. "26-34, 40") emphasized in the shared code
-}
-
-export interface StoryContent {
-  intro?: string // optional framing prose shown above the context
-  code?: CodeBlock // shared code context, pinned while stepping
-  image?: string // shared image as a data URL, pinned while stepping
-  // Walked one step at a time. Reveal-only per step; the whole story earns one
-  // grade at the end (self-assessed, no auto-grading).
-  steps: StoryStep[]
-  explanation?: string // optional wrap-up shown with the final grade
-}
-
-// ---- The discriminated union ----
-
-export type Card =
-  | (CardBase & { type: 'basic'; content: BasicContent })
-  | (CardBase & { type: 'mcq'; content: McqContent })
-  | (CardBase & { type: 'codeReading'; content: CodeReadingContent })
-  | (CardBase & { type: 'codeCompletion'; content: CodeCompletionContent })
-  | (CardBase & { type: 'bugFinding'; content: BugFindingContent })
-  | (CardBase & { type: 'ordering'; content: OrderingContent })
-  | (CardBase & { type: 'matching'; content: MatchingContent })
-  | (CardBase & { type: 'story'; content: StoryContent })
-
-export type CardType = Card['type']
-
-// Narrow a Card to a specific variant, e.g. CardOfType<'basic'>.
-export type CardOfType<T extends CardType> = Extract<Card, { type: T }>

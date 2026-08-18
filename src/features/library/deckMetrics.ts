@@ -12,16 +12,10 @@ const EMPTY: DeckMetrics = { cardCount: 0, dueCount: 0, masteryFraction: 0 }
 // Per-deck metrics derived from real data — no separate "mastery"/"last
 // studied" concept exists yet (see docs/itera-decisions.md), so
 // masteryFraction is an honest proxy (share of non-suspended cards that have
-// reached FSRS's "review" state) rather than a fabricated number. v2
-// (CardV2Record) cards count toward cardCount (matching what the focused
-// Deck page already shows) but not dueCount: /review's due queue is v1-only
-// today (a pre-existing gap this milestone doesn't change — see
-// ReviewPage.tsx's useDueCards), so dueCount stays honest about what
-// "Study now" will actually pick up.
+// reached FSRS's "review" state) rather than a fabricated number.
 export function computeDeckMetrics(
   allCards: Card[],
   dueCards: Card[],
-  v2CountByDeck: Map<ID, number>,
 ): Map<ID, DeckMetrics> {
   const byDeck = new Map<ID, DeckMetrics>()
 
@@ -51,9 +45,6 @@ export function computeDeckMetrics(
   }
   for (const card of dueCards) {
     entry(card.deckId).dueCount += 1
-  }
-  for (const [deckId, count] of v2CountByDeck) {
-    entry(deckId).cardCount += count
   }
   for (const [deckId, m] of byDeck) {
     const n = eligible.get(deckId) ?? 0

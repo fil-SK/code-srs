@@ -6,6 +6,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom'
 import { getRepository } from '@/data'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import type { Card, Deck } from '@/types'
+import { richText } from '@/types/card'
 import { PreviewPage } from './PreviewPage'
 
 const deck: Deck = {
@@ -18,9 +19,10 @@ const deck: Deck = {
 function card(id: string, front: string, order: number): Card {
   return {
     id,
+    schemaVersion: 2,
     deckId: deck.id,
-    type: 'basic',
-    content: { front, back: `${front} answer` },
+    prompt: richText(front),
+    interaction: { type: 'recall', answer: richText(`${front} answer`) },
     tags: [],
     createdAt: order,
     updatedAt: order,

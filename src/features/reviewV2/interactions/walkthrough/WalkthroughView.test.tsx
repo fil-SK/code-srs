@@ -6,8 +6,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CardV2, WalkthroughInteraction, WalkthroughStep } from '@/types/cardV2'
-import { richText } from '@/types/cardV2'
+import type { Card, WalkthroughInteraction, WalkthroughStep } from '@/types/card'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { walkthroughDefinition } from './index'
 import { ReviewSessionScreen } from '../../ReviewSessionScreen'
@@ -41,7 +41,7 @@ const interaction: WalkthroughInteraction = {
   steps: [step1, step2],
 }
 
-const fixture: CardV2 & { interaction: WalkthroughInteraction } = {
+const fixture: Card & { interaction: WalkthroughInteraction } = {
   id: 'test-walkthrough-1',
   schemaVersion: 2,
   deckId: 'deck-1',

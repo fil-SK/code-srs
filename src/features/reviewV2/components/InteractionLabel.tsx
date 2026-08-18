@@ -1,5 +1,5 @@
-import { INTERACTION_META } from '@/features/cardsV2/shared/interactionTypeMeta'
-import type { InteractionType } from '@/types/cardV2'
+import { INTERACTION_META } from '@/features/cards/shared/interactionTypeMeta'
+import type { InteractionType } from '@/types/card'
 
 // Small, quiet pill naming the active interaction type ("Recall", "Multiple
 // Choice", ...), placed near the card's top edge per spec §16.1/§17.1/etc.

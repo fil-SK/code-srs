@@ -1,10 +1,10 @@
-// Shared contract every migration except card-payload adaptation (§1) must
-// conform to — see docs/itera-migration-plan.md §0. Card-payload adaptation
-// (migrateCard) is the one exception, allowed to run lazily on read because
-// it's a pure content reshape that never changes where an entity lives or
-// what references it. Anything that changes storage location or entity
-// identity (CardState extraction, the Collection/Deck split) goes through
-// this instead: dry-run-able, idempotent, deterministic, and reportable.
+// Shared contract every data migration must conform to — see
+// docs/itera-migration-plan.md §0. Anything that changes storage location or
+// entity identity (e.g. the Collection/Deck split) goes through this:
+// dry-run-able, idempotent, deterministic, and reportable.
+//
+// Nothing implements it today — the migrations that did were retired with the
+// card-model convergence. It is kept as the standard the next one must meet.
 
 export interface MigrationReport {
   beforeCounts: Record<string, number>

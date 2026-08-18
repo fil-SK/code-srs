@@ -40,19 +40,14 @@ import { cn } from '@/lib/cn'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
 import { languageLabel } from '@/domain/decks/languages'
 import {
-  useDeleteCard,
   useDueCards,
-  useMoveCard,
   useReorderCards,
-  useSaveCard,
   useSearchCards,
 } from '@/hooks/useCards'
-import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
-import { cardTypeMeta, getCardTitle } from '@/features/cards/cardTypeMeta'
-import { INTERACTION_META } from '@/features/cardsV2/shared/interactionTypeMeta'
-import { OverflowMenu } from '@/features/cardsV2/shared/OverflowMenu'
-import { CardTableHeader, CardTableRowV1, CardTableRowV2 } from './shared/CardTable'
+import { INTERACTION_META } from '@/features/cards/shared/interactionTypeMeta'
+import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
+import { CardTableHeader, CardTableRow } from './shared/CardTable'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
 import { CardListFooter } from './shared/CardListFooter'
 import { DeckMark } from './shared/DeckMark'
@@ -70,7 +65,7 @@ import {
   selectionToSearchParams,
 } from './collectionTree'
 import { computeDeckMetrics, metricsFor } from './deckMetrics'
-import { formatLastStudied } from '@/features/cardsV2/shared/format'
+import { formatLastStudied } from '@/features/cards/shared/format'
 import { Stat } from './shared/Stat'
 
 const byOrder = (a: Card, b: Card) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt)
@@ -80,13 +75,10 @@ type SortKey = 'manual' | 'dueSoon' | 'name' | 'type' | 'status'
 type StatusFilter = 'all' | SchedulingStateKind | 'suspended'
 
 // One row's worth of the data the toolbar (search/type/status/sort) and
-// pagination need, regardless of whether it's a v1 Card or a CardV2Record -
-// the two rendering components (CardTableRowV1/CardTableRowV2) stay untouched,
-// this is only the metadata used to filter/sort/paginate before picking
-// which of the two components to render for a given id.
+// pagination need. CardTableRow stays untouched; this is only the metadata
+// used to filter/sort/paginate before looking the card back up by id.
 interface RowMeta {
   id: string
-  kind: 'v1' | 'v2'
   title: string
   typeLabel: string
   state: SchedulingStateKind
@@ -117,22 +109,16 @@ function sortRows(rows: RowMeta[], sort: SortKey): RowMeta[] {
   }
 }
 
-// A CardTableRowV1 made draggable: the grip handle carries the drag
-// listeners and the row container gets the sortable ref/transform.
+// A CardTableRow made draggable: the grip handle carries the drag listeners
+// and the row container gets the sortable ref/transform.
 function SortableCardTableRow({
   card,
-  onToggleSuspend,
-  onDelete,
   decks,
-  onMove,
   now,
   compact,
 }: {
   card: Card
-  onToggleSuspend: (card: Card) => void
-  onDelete: (card: Card) => void
   decks: ReturnType<typeof flattenDeckTree>
-  onMove: (card: Card, deckId: string) => void
   now: number
   compact: boolean
 }) {
@@ -156,12 +142,9 @@ function SortableCardTableRow({
     </button>
   )
   return (
-    <CardTableRowV1
+    <CardTableRow
       card={card}
-      onToggleSuspend={onToggleSuspend}
-      onDelete={onDelete}
       decks={decks}
-      onMove={onMove}
       leading={handle}
       containerRef={setNodeRef}
       style={style}
@@ -189,15 +172,8 @@ export function LibraryDeckPage() {
   const now = useMemo(() => Date.now(), [])
 
   const cardsQuery = useSearchCards({ deckId: id, includeSuspended: true })
-  const cardsV2Query = useSearchCardsV2({ deckId: id, includeSuspended: true })
   const allCards = useSearchCards({ includeSuspended: true })
-  const allCardsV2 = useSearchCardsV2({ includeSuspended: true })
   const dueCardsQuery = useDueCards({ now })
-
-  const v2Cards = useMemo(
-    () => [...(cardsV2Query.data ?? [])].sort((a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt)),
-    [cardsV2Query.data],
-  )
 
   const sorted = useMemo(() => [...(cardsQuery.data ?? [])].sort(byOrder), [cardsQuery.data])
   const [cards, setCards] = useState<Card[]>(sorted)
@@ -228,23 +204,6 @@ export function LibraryDeckPage() {
     [decksQuery.data],
   )
 
-  const saveCard = useSaveCard()
-  const deleteCard = useDeleteCard()
-  const moveCard = useMoveCard()
-
-  function toggleSuspend(card: Card) {
-    saveCard.mutate({ ...card, suspended: !card.suspended })
-  }
-
-  async function remove(card: Card) {
-    const ok = await dialogs.confirm({
-      title: 'Delete this card?',
-      description: `“${getCardTitle(card)}” will be removed permanently. This cannot be undone.`,
-      danger: true,
-    })
-    if (ok) deleteCard.mutate(card.id)
-  }
-
   async function newDeck() {
     const name = await dialogs.prompt({
       title: 'New deck',
@@ -257,14 +216,9 @@ export function LibraryDeckPage() {
 
   const deck = decks.find((d) => d.id === id)
 
-  const v2CountByDeck = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const c of allCardsV2.data ?? []) map.set(c.deckId, (map.get(c.deckId) ?? 0) + 1)
-    return map
-  }, [allCardsV2.data])
   const metricsMap = useMemo(
-    () => computeDeckMetrics(allCards.data ?? [], dueCardsQuery.data ?? [], v2CountByDeck),
-    [allCards.data, dueCardsQuery.data, v2CountByDeck],
+    () => computeDeckMetrics(allCards.data ?? [], dueCardsQuery.data ?? []),
+    [allCards.data, dueCardsQuery.data],
   )
 
   const navDecks = useMemo(
@@ -286,36 +240,20 @@ export function LibraryDeckPage() {
   const [page, setPage] = useState(1)
   useEffect(() => setPage(1), [search, typeFilter, statusFilter, sort])
 
-  const v2ById = useMemo(() => new Map(v2Cards.map((c) => [c.id, c])), [v2Cards])
-  const v1ById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards])
+  const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards])
 
-  const v2Meta: RowMeta[] = useMemo(
+  const combinedMeta: RowMeta[] = useMemo(
     () =>
-      v2Cards.map((c) => ({
+      cards.map((c) => ({
         id: c.id,
-        kind: 'v2' as const,
         title: c.prompt.value.split('\n')[0]?.trim() || '(untitled)',
         typeLabel: INTERACTION_META[c.interaction.type].label,
         state: c.scheduling.state,
         suspended: c.suspended,
         due: c.scheduling.due,
       })),
-    [v2Cards],
-  )
-  const v1Meta: RowMeta[] = useMemo(
-    () =>
-      cards.map((c) => ({
-        id: c.id,
-        kind: 'v1' as const,
-        title: getCardTitle(c),
-        typeLabel: cardTypeMeta[c.type].label,
-        state: c.scheduling.state,
-        suspended: c.suspended,
-        due: c.scheduling.due,
-      })),
     [cards],
   )
-  const combinedMeta = useMemo(() => [...v2Meta, ...v1Meta], [v2Meta, v1Meta])
   const typeOptions = useMemo(
     () => Array.from(new Set(combinedMeta.map((r) => r.typeLabel))).sort(),
     [combinedMeta],
@@ -368,7 +306,7 @@ export function LibraryDeckPage() {
   const cid = collectionIdFor(deck, collections)
   const path = collectionPathFor(collections, cid)
   const metrics = metricsFor(metricsMap, deck.id)
-  const totalCards = cards.length + v2Cards.length
+  const totalCards = cards.length
   const markLabel =
     path.length > 0 ? markLabelFor(path[path.length - 1].name, 3) : markLabelFor(deck.name, 3)
 
@@ -596,7 +534,7 @@ export function LibraryDeckPage() {
             </div>
           </div>
 
-          {!cardsQuery.isLoading && !cardsV2Query.isLoading && combinedMeta.length === 0 && (
+          {!cardsQuery.isLoading && combinedMeta.length === 0 && (
             <EmptyState
               title="No cards yet"
               description="This deck doesn't have any cards yet."
@@ -608,7 +546,7 @@ export function LibraryDeckPage() {
             />
           )}
 
-          {!cardsQuery.isLoading && !cardsV2Query.isLoading && combinedMeta.length > 0 && sortedMeta.length === 0 && (
+          {!cardsQuery.isLoading && combinedMeta.length > 0 && sortedMeta.length === 0 && (
             <EmptyState
               title="No cards match"
               description="Try a different search, type, or status filter."
@@ -624,15 +562,15 @@ export function LibraryDeckPage() {
                 <div className="divide-y divide-itera-border">
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                     <SortableContext
-                      items={pageMeta.filter((meta) => meta.kind === 'v1').map((meta) => meta.id)}
+                      items={pageMeta.map((meta) => meta.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       {pageMeta.map((meta) => {
-                      if (meta.kind === 'v2') {
-                        const card = v2ById.get(meta.id)
+                        const card = cardById.get(meta.id)
                         if (!card) return null
+                        const Row = manualReorder ? SortableCardTableRow : CardTableRow
                         return (
-                          <CardTableRowV2
+                          <Row
                             key={meta.id}
                             card={card}
                             decks={flatDecks}
@@ -640,35 +578,6 @@ export function LibraryDeckPage() {
                             compact={compact}
                           />
                         )
-                      }
-                      const card = v1ById.get(meta.id)
-                      if (!card) return null
-                      if (manualReorder) {
-                        return (
-                          <SortableCardTableRow
-                            key={meta.id}
-                            card={card}
-                            onToggleSuspend={toggleSuspend}
-                            onDelete={remove}
-                            decks={flatDecks}
-                            onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
-                            now={now}
-                            compact={compact}
-                          />
-                        )
-                      }
-                      return (
-                        <CardTableRowV1
-                          key={meta.id}
-                          card={card}
-                          onToggleSuspend={toggleSuspend}
-                          onDelete={remove}
-                          decks={flatDecks}
-                          onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
-                          now={now}
-                          compact={compact}
-                        />
-                      )
                       })}
                     </SortableContext>
                   </DndContext>

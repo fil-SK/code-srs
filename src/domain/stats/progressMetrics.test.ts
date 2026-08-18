@@ -35,8 +35,6 @@ function card(overrides: Partial<Card>): Card {
   return {
     id: overrides.id ?? 'card-1',
     deckId: 'deck-1',
-    type: 'recall',
-    content: {} as never,
     scheduling: {
       due: Date.now(),
       stability: 1,
@@ -157,7 +155,7 @@ describe('computeRetentionSeries', () => {
       log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
       log({ cardId: 'b', reviewedAt: now - DAY, rating: 1, state: 'review' }),
     ]
-    const series = computeRetentionSeries(logs, range, buildCardDeckMap(cards, []), 'deck-a')
+    const series = computeRetentionSeries(logs, range, buildCardDeckMap(cards), 'deck-a')
     const bucketWithData = series.find((p) => p.retention !== null)
     expect(bucketWithData?.retention).toBe(1)
   })
@@ -173,30 +171,11 @@ describe('computeDeckPerformance', () => {
       log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
       log({ cardId: 'deleted-card', reviewedAt: now - DAY, rating: 3, state: 'review' }),
     ]
-    const rows = computeDeckPerformance(logs, buildCardDeckMap(cards, []), range)
+    const rows = computeDeckPerformance(logs, buildCardDeckMap(cards), range)
     expect(rows).toHaveLength(1)
     expect(rows[0].deckId).toBe('deck-a')
     expect(rows[0].reviewed).toBe(2)
     expect(rows[0].retention).toBe(1)
-  })
-
-  // A legacy card edited in the Recall editor loses its `cards` row and gains a
-  // `cardsV2` one under the same id. Attribution used to be v1-only, so those
-  // cards' reviews silently vanished from this table.
-  it('attributes reviews for a card that now lives only in the v2 store', () => {
-    const now = Date.now()
-    const range = buildRange('7d', now)
-    const cardsV2 = [
-      { id: 'a', deckId: 'deck-a' } as unknown as import('@/types/cardV2').CardV2Record,
-    ]
-    const logs = [
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
-    ]
-    const rows = computeDeckPerformance(logs, buildCardDeckMap([], cardsV2), range)
-    expect(rows).toHaveLength(1)
-    expect(rows[0].deckId).toBe('deck-a')
-    expect(rows[0].reviewed).toBe(2)
   })
 
   it('sorts rows by reviewed count descending', () => {
@@ -208,7 +187,7 @@ describe('computeDeckPerformance', () => {
       log({ cardId: 'b', reviewedAt: now - DAY }),
       log({ cardId: 'b', reviewedAt: now - DAY }),
     ]
-    const rows = computeDeckPerformance(logs, buildCardDeckMap(cards, []), range)
+    const rows = computeDeckPerformance(logs, buildCardDeckMap(cards), range)
     expect(rows[0].deckId).toBe('deck-b')
     expect(rows[0].reviewed).toBe(2)
   })

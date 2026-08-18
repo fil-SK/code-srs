@@ -1,18 +1,19 @@
 import { newId } from '@/lib/id'
 import type {
-  CardV2,
+  Card,
   MatchingInteraction,
   MultipleChoiceInteraction,
   OrderingInteraction,
   RecallInteraction,
   WalkthroughInteraction,
   WriteCodeInteraction,
-} from '@/types/cardV2'
-import { CARD_V2_SCHEMA_VERSION, richText } from '@/types/cardV2'
+} from '@/types/card'
+import { CARD_SCHEMA_VERSION, richText } from '@/types/card'
+import { initialSchedulingState } from '@/domain/scheduling/state'
 
-// Every fixture below is typed as `CardV2 & { interaction: <SpecificType> }`,
-// not plain `CardV2` - ReviewSessionScreen's `card` prop is that same
-// intersection, generic over the interaction type. A plain `CardV2` has
+// Every fixture below is typed as `Card & { interaction: <SpecificType> }`,
+// not plain `Card` - ReviewSessionScreen's `card` prop is that same
+// intersection, generic over the interaction type. A plain `Card` has
 // `interaction: CardInteraction` (the full 6-member union), which is not
 // assignable to a single narrowed member, so passing an unnarrowed fixture
 // only ever typechecked by accident of tsc -b's incremental cache never
@@ -22,9 +23,9 @@ import { CARD_V2_SCHEMA_VERSION, richText } from '@/types/cardV2'
 // Representative Recall content for /design-preview/review/recall: real
 // Markdown (bold/italic/inline code) plus a formatted C++ fenced code block,
 // so the preview exercises the same rendering path real content will use.
-export const recallFixture: CardV2 & { interaction: RecallInteraction } = {
+export const recallFixture: Card & { interaction: RecallInteraction } = {
   id: 'preview-recall-1',
-  schemaVersion: CARD_V2_SCHEMA_VERSION,
+  schemaVersion: CARD_SCHEMA_VERSION,
   deckId: 'preview-deck',
   prompt: richText(
     'What does `std::move` actually *do* at runtime?\n\n' +
@@ -50,14 +51,16 @@ export const recallFixture: CardV2 & { interaction: RecallInteraction } = {
   tags: ['cpp', 'move-semantics'],
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  suspended: false,
+  scheduling: initialSchedulingState(0),
 }
 
 // Representative Multiple Choice content for /design-preview/review/multiple-choice.
 // Multi-select, so the "select all that apply" hint and the missed/incorrect
 // feedback states all get exercised.
-export const multipleChoiceFixture: CardV2 & { interaction: MultipleChoiceInteraction } = {
+export const multipleChoiceFixture: Card & { interaction: MultipleChoiceInteraction } = {
   id: 'preview-mcq-1',
-  schemaVersion: CARD_V2_SCHEMA_VERSION,
+  schemaVersion: CARD_SCHEMA_VERSION,
   deckId: 'preview-deck',
   prompt: richText(
     'Which of these are true about `const` member functions in C++?',
@@ -95,12 +98,14 @@ export const multipleChoiceFixture: CardV2 & { interaction: MultipleChoiceIntera
   tags: ['cpp', 'const-correctness'],
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  suspended: false,
+  scheduling: initialSchedulingState(0),
 }
 
 // Representative Write Code content for /design-preview/review/write-code.
-export const writeCodeFixture: CardV2 & { interaction: WriteCodeInteraction } = {
+export const writeCodeFixture: Card & { interaction: WriteCodeInteraction } = {
   id: 'preview-write-code-1',
-  schemaVersion: CARD_V2_SCHEMA_VERSION,
+  schemaVersion: CARD_SCHEMA_VERSION,
   deckId: 'preview-deck',
   prompt: richText(
     'Complete the function so it returns the sum of all elements in `v`.',
@@ -128,12 +133,14 @@ export const writeCodeFixture: CardV2 & { interaction: WriteCodeInteraction } = 
   tags: ['cpp', 'algorithms'],
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  suspended: false,
+  scheduling: initialSchedulingState(0),
 }
 
 // Representative Ordering content for /design-preview/review/ordering.
-export const orderingFixture: CardV2 & { interaction: OrderingInteraction } = {
+export const orderingFixture: Card & { interaction: OrderingInteraction } = {
   id: 'preview-ordering-1',
-  schemaVersion: CARD_V2_SCHEMA_VERSION,
+  schemaVersion: CARD_SCHEMA_VERSION,
   deckId: 'preview-deck',
   prompt: richText(
     'Put these steps in order for what happens when `push_back` triggers a `std::vector` reallocation.',
@@ -159,6 +166,8 @@ export const orderingFixture: CardV2 & { interaction: OrderingInteraction } = {
   tags: ['cpp', 'vector', 'reallocation'],
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  suspended: false,
+  scheduling: initialSchedulingState(0),
 }
 
 // Representative Matching content for /design-preview/review/matching.
@@ -212,9 +221,9 @@ const matchingInteraction: MatchingInteraction = {
   ],
 }
 
-export const matchingFixture: CardV2 & { interaction: MatchingInteraction } = {
+export const matchingFixture: Card & { interaction: MatchingInteraction } = {
   id: 'preview-matching-1',
-  schemaVersion: CARD_V2_SCHEMA_VERSION,
+  schemaVersion: CARD_SCHEMA_VERSION,
   deckId: 'preview-deck',
   prompt: richText('Match each container to its memory layout and random-access guarantee.'),
   explanation: richText(
@@ -224,6 +233,8 @@ export const matchingFixture: CardV2 & { interaction: MatchingInteraction } = {
   tags: ['cpp', 'containers'],
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  suspended: false,
+  scheduling: initialSchedulingState(0),
 }
 
 // Representative Walkthrough content for /design-preview/review/walkthrough.
@@ -237,9 +248,9 @@ const walkthroughCode =
   '    return copy;\n' +
   '}\n'
 
-export const walkthroughFixture: CardV2 & { interaction: WalkthroughInteraction } = {
+export const walkthroughFixture: Card & { interaction: WalkthroughInteraction } = {
   id: 'preview-walkthrough-1',
-  schemaVersion: CARD_V2_SCHEMA_VERSION,
+  schemaVersion: CARD_SCHEMA_VERSION,
   deckId: 'preview-deck',
   prompt: richText('Walk through what happens to the buffer as this function runs.'),
   explanation: richText(
@@ -322,4 +333,6 @@ export const walkthroughFixture: CardV2 & { interaction: WalkthroughInteraction 
   tags: ['cpp', 'vector', 'walkthrough'],
   createdAt: Date.now(),
   updatedAt: Date.now(),
+  suspended: false,
+  scheduling: initialSchedulingState(0),
 }

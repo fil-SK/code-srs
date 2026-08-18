@@ -1,5 +1,5 @@
 import type { ID } from '@/types/common'
-import type { MatchingInteraction } from '@/types/cardV2'
+import type { MatchingInteraction } from '@/types/card'
 
 // sourceItemId -> columnId -> chosen itemId. Only non-source columns appear as
 // keys; the source column's own id never does (it's the row key, not a cell).

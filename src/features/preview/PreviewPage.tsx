@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
-import { migrateCard } from '@/domain/migration/cardMigration'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { subtreeIds } from '@/domain/decks/tree'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
@@ -23,13 +22,10 @@ function isInteractiveTarget(target: EventTarget | null): boolean {
 // interactive cards and reveal how you did, but nothing is recorded: no
 // grading, no review logs, no scheduling.
 //
-// The card itself is the real Review experience — `migrateCard` into the v2
-// model, then `ReviewSessionScreen` with its session-only chrome hidden — the
-// same path `/review` (ReviewSessionV2) and `cards/:id/study`
-// (CardStudyPreviewPage) already take. It previously rendered the v1 card
-// registry instead, which is why a card here could look nothing like the same
-// card in a real session: two independent renderers for one card. That
-// registry is now deleted, so there is only one.
+// The card itself is the real Review experience — `ReviewSessionScreen` with
+// its session-only chrome hidden — the same path `/review` (ReviewSessionV2)
+// and `cards/:id/study` (CardStudyPreviewPage) already take, so a card here
+// cannot look different from the same card in a real session.
 // Only this page's own chrome (back link, card counter, prev/next) is
 // still local; reveal/flip/submit/grading/tip/explanation all belong to the
 // shared shell now, which is also what retired this page's separate
@@ -83,9 +79,7 @@ export function PreviewPage() {
         : '/decks')
   const back = { to: backTo }
 
-  // The one lazy/on-read migration this codebase allows (see cardMigration.ts):
-  // every v1 card renders through the v2 interaction registry here.
-  const cardV2 = useMemo(() => (current ? migrateCard(current) : undefined), [current])
+  const card = useMemo(() => current, [current])
 
   const go = useCallback((delta: number) => {
     setIndex(() => Math.min(cards.length - 1, Math.max(0, safeIndex + delta)))
@@ -113,7 +107,7 @@ export function PreviewPage() {
     return <p className="text-sm text-itera-muted">Loading…</p>
   }
 
-  if (cards.length === 0 || !current || !cardV2) {
+  if (cards.length === 0 || !current || !card) {
     return (
       <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
         <div className="text-lg font-semibold text-itera-ink-brand">
@@ -140,8 +134,8 @@ export function PreviewPage() {
       <IteraSurface>
         <ReviewSessionScreen
           key={current.id}
-          card={cardV2}
-          definition={getInteractionDefinition(cardV2.interaction.type)}
+          card={card}
+          definition={getInteractionDefinition(card.interaction.type)}
           current={safeIndex + 1}
           total={cards.length}
           onExit={() => navigate(back.to)}

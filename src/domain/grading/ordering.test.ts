@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { OrderingInteraction } from '@/types/cardV2'
+import type { OrderingInteraction } from '@/types/card'
 import { gradeOrdering, isOrderingResponseReady } from './ordering'
 
 const interaction: OrderingInteraction = {

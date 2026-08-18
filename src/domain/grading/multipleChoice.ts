@@ -1,4 +1,4 @@
-import type { MultipleChoiceInteraction } from '@/types/cardV2'
+import type { MultipleChoiceInteraction } from '@/types/card'
 
 export interface MultipleChoiceGrade {
   correct: boolean

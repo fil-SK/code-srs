@@ -12,7 +12,6 @@ import {
   PrivacySection,
 } from './sections/PlaceholderSections'
 import { ImportExportSection } from './sections/ImportExportSection'
-import { CardSchedulingSection } from './sections/CardSchedulingSection'
 
 // The full Account settings page the avatar menu's first row opens. Its own
 // internal navigation lives here (as the mockup draws it) rather than in the
@@ -79,8 +78,6 @@ function SectionBody({ slug }: { slug: string }) {
       return <ConnectedDevicesSection />
     case 'import-export':
       return <ImportExportSection />
-    case 'card-scheduling':
-      return <CardSchedulingSection />
     default:
       return <ProfileSection />
   }

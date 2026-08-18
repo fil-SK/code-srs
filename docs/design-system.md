@@ -263,7 +263,7 @@ Never add to Review: global navigation, the Itera logo, a left sidebar, the upco
 **IMPLEMENTED:**
 
 - Deck rows (`src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-itera-accent`.
-- Card rows (`src/features/library/shared/CardTable.tsx`) render both v1 `Card` and v2 `CardV2Record` rows through one unified `RowMeta`, and clicking the row **opens the card in preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
+- Card rows (`src/features/library/shared/CardTable.tsx`) render every card through one `RowMeta` projection, and clicking the row **opens the card in study preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
 - Shared row furniture: `MasteryRing`, `MeterBar`, `Stat`, `DeckMark`, `EmptyState`, `StatusBadge`, `OverflowMenu`.
 - **Deck marks are restrained, never rainbow icon art.** A designed deck-cover system is **FUTURE**, not something to improvise per deck.
 

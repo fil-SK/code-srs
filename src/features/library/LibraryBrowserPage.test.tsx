@@ -28,7 +28,7 @@ const misc: Deck = { id: 'misc', name: 'Odds and Ends', createdAt: 0, updatedAt:
 describe('LibraryBrowserPage', () => {
   beforeEach(async () => {
     const repo = getRepository()
-    await Promise.all([repo.decks.clear(), repo.cards.clear(), repo.cardsV2.clear()])
+    await Promise.all([repo.decks.clear(), repo.cards.clear()])
   })
 
   afterEach(() => cleanup())

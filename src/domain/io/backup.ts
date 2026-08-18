@@ -1,7 +1,11 @@
 import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
-import type { CardState, CardV2Record } from '@/types/cardV2'
 
-export const BACKUP_VERSION = 1
+// 2 = the single card model. Version 1 files hold the old 8-type v1 cards and
+// a separate second card array; that format is prototype-era and unsupported, so
+// parseBackup rejects it outright rather than importing rows of the wrong
+// shape into the unified `cards` store.
+export const BACKUP_VERSION = 2
+export const MIN_SUPPORTED_BACKUP_VERSION = 2
 
 export interface BackupData {
   cards: Card[]
@@ -9,12 +13,6 @@ export interface BackupData {
   drafts: Draft[]
   reviewLogs: ReviewLog[]
   roadmaps?: Roadmap[] // added later; optional so older backups still import
-  // Itera Phase D (CardState extraction) — additive, dual-written alongside
-  // Card.scheduling, optional for the same reason as roadmaps above.
-  cardStates?: CardState[]
-  // Itera Phase F (Create/Edit) — real, persisted CardV2 storage, optional
-  // for the same reason as roadmaps above.
-  cardsV2?: CardV2Record[]
 }
 
 export interface BackupFile {
@@ -55,6 +53,16 @@ export function parseBackup(json: string): BackupFile {
   if (obj.version > BACKUP_VERSION) {
     throw new Error(
       `Backup version ${obj.version} is newer than this app supports (${BACKUP_VERSION}).`,
+    )
+  }
+  // Without this the guard above would let a version-1 file through, and its
+  // v1 cards would be written into the unified store as if they were the new
+  // shape — silent corruption rather than a clear refusal.
+  if (obj.version < MIN_SUPPORTED_BACKUP_VERSION) {
+    throw new Error(
+      `Backup version ${obj.version} was created in an unsupported prototype data ` +
+        `format and can no longer be imported (this app supports version ` +
+        `${MIN_SUPPORTED_BACKUP_VERSION} and up).`,
     )
   }
 

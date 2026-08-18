@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CardV2, MultipleChoiceInteraction } from '@/types/cardV2'
-import { richText } from '@/types/cardV2'
+import type { Card, MultipleChoiceInteraction } from '@/types/card'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { multipleChoiceDefinition } from './index'
 import { ReviewSessionScreen } from '../../ReviewSessionScreen'
@@ -30,7 +30,7 @@ const multi: MultipleChoiceInteraction = {
   ],
 }
 
-function fixture(interaction: MultipleChoiceInteraction): CardV2 & { interaction: MultipleChoiceInteraction } {
+function fixture(interaction: MultipleChoiceInteraction): Card & { interaction: MultipleChoiceInteraction } {
   return {
     id: 'test-mc-1',
     schemaVersion: 2,

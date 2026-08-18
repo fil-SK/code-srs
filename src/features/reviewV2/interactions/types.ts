@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { CardInteraction, CardV2, InteractionType } from '@/types/cardV2'
+import type { CardInteraction, Card, InteractionType } from '@/types/card'
 import type { ObjectiveResult, ReviewPhase } from '../reviewPhase'
 
 // The response shape is interaction-specific (string[] of option ids for
@@ -9,7 +9,7 @@ import type { ObjectiveResult, ReviewPhase } from '../reviewPhase'
 export type InteractionResponse = unknown
 
 export interface InteractionViewProps<T extends InteractionType> {
-  card: CardV2 & { interaction: Extract<CardInteraction, { type: T }> }
+  card: Card & { interaction: Extract<CardInteraction, { type: T }> }
   phase: ReviewPhase
   response: InteractionResponse
   setResponse: (response: InteractionResponse) => void
@@ -30,8 +30,7 @@ export interface InteractionViewProps<T extends InteractionType> {
 }
 
 // Everything needed to render and (if auto-graded) grade one interaction
-// type. Mirrors the v1 CardTypeDefinition's shape deliberately — same
-// registry philosophy, adapted for the phase-driven v2 shell. One View
+// type. One View
 // component (not separate Presenting/Feedback components) because a
 // self-graded type like Recall needs one continuous element across the
 // reveal — swapping components at that boundary would break the flip

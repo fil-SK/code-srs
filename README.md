@@ -14,7 +14,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Highlights
 
-- **8 focused card types**, several with code-aware variants (see below).
+- **6 focused card interactions**, several with code-aware variants (see below).
 - **FSRS scheduling** (via `ts-fsrs`) with a 4-button self-grade bar and auto-grading where it makes sense.
 - **Nested decks** of arbitrary depth, with drag-and-drop **card reordering**, deck **reparenting**, and **move-card-between-decks**.
 - **Light markdown** in every card: inline `` `code` ``, **bold**, *italic*, and fenced ```code``` blocks rendered with real syntax highlighting.
@@ -30,27 +30,27 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Card types
 
-| Type | What it drills | Interaction |
+| Interaction | What it drills | How you answer |
 | --- | --- | --- |
-| **Basic** | Free-form Q&A | Flip to reveal, self-grade |
-| **MCQ** | Single- or multi-correct multiple choice | Select answer(s), auto-graded |
-| **Code Reading** | Understanding a snippet | Read code + question, flip to reveal |
-| **Code Completion** | Writing the right code | Type the answer, auto-checked against accepted solutions |
-| **Bug Finding** | Spotting defects | Read code (optional hint), flip to reveal explanation |
+| **Recall** | Free-form Q&A, reading a snippet, or spotting a defect | Flip to reveal, self-grade |
+| **Multiple Choice** | Single- or multi-correct choice | Select answer(s), auto-graded |
+| **Write Code** | Writing the right code | Type the answer, auto-checked against accepted solutions |
 | **Ordering** | Correct sequence/steps | Drag items into order, then submit explicitly for auto-grading |
-| **Matching** | Associating concepts | Match columns via dropdowns, auto-graded |
-| **Walkthrough** (legacy Story) | Multi-step scenarios (e.g. tracing code execution) | Walk through steps one at a time, reveal or submit each, then rate once at the end |
+| **Matching** | Associating concepts | Pair items across columns, auto-graded |
+| **Walkthrough** | Multi-step scenarios (e.g. tracing code execution) | Walk through steps one at a time, reveal or submit each, then rate once at the end |
+
+Recall covers what used to be three separate types (plain Q&A, code reading, bug finding); an authoring preset picks the right editor layout for each.
 
 Notable variants:
 
-- **MCQ** prompts support fenced code blocks, so you can ask "what does this print?" with a real snippet, and options can themselves be inline code. Toggle **multiple correct answers**, which shows a "Select all that apply" hint to the learner.
-- **Code Completion** can be a classic "fill the blank in this scaffold" card, **or** a plain prose question with an empty scaffold ("How do you reverse a list in Python?" → type `lst[::-1]`). Accepts multiple solutions with whitespace/case normalization.
+- **Multiple Choice** prompts support fenced code blocks, so you can ask "what does this print?" with a real snippet, and options can themselves be inline code. Toggle **multiple correct answers**, which shows a "Select all that apply" hint to the learner.
+- **Write Code** can be a classic "fill the blank in this scaffold" card, **or** a plain prose question with an empty scaffold ("How do you reverse a list in Python?" → type `lst[::-1]`). Accepts multiple solutions with whitespace/case normalization.
 - **Matching** supports an optional **third column** (3-part: `A → B → C`), optional **bold column headers**, and per-column **fixed-option ("dropdown") columns** — a column can share one value list (e.g. Yes/No) graded by value, so rows can repeat answers. Rows are reshuffled each open so the answer pattern can't be memorized by position.
 - **Walkthrough** supports optional card-wide Tip/Explanation fields plus optional guidance for each individual step. A step's tip appears before its answer is submitted; its explanation replaces the tip afterward and remains available when that step is revisited.
 
-Every type also has an **optional Explanation** rendered on reveal, all prose fields accept the markdown above, and you can **change a card's type while editing** (it resets the content).
+Every interaction also has an **optional Tip** (shown before you answer) and **optional Explanation** (shown on reveal), and all prose fields accept the markdown above.
 
-Grading model: interactive types (MCQ, completion, ordering, matching) **auto-decide** pass/fail, then you can still override on the grade bar. Self-graded types (basic, code reading, bug finding) flip to reveal and you rate yourself **Again / Hard / Good / Easy**.
+Grading model: interactive interactions (Multiple Choice, Write Code, Ordering, Matching, Walkthrough) **auto-decide** pass/fail, then you can still override on the grade bar. Recall flips to reveal and you rate yourself **Again / Hard / Good / Easy**.
 
 ---
 
@@ -176,7 +176,7 @@ src/
   components/  shared UI (buttons, fields, code views, RichText markdown)
   data/        repository interface + Dexie and Supabase backends
   domain/      pure logic: scheduling, grading, search, stats, decks, migration, io
-  features/    cardsV2, library, login, preview, progress, review, reviewV2,
+  features/    cards, library, login, preview, progress, review, reviewV2,
                roadmaps, settings, today
   hooks/       TanStack Query hooks
   types/       entity types (Card discriminated union, Deck, Draft, ReviewLog)

@@ -1,54 +1,58 @@
 import type { Card } from '@/types'
 
 // Flatten a card's content into one lowercased string for substring search.
-// Tags are always included. The exhaustive switch means a new card type will
-// fail to compile here until its searchable fields are declared.
+// Tags and the shared prompt/tip/explanation are always included; the
+// exhaustive switch means a new interaction fails to compile here until its
+// searchable fields are declared.
+//
+// This is the single implementation, used by both backends. The two private
+// copies that previously lived in DexieRepository/SupabaseRepository indexed
+// only recall answers, multiple-choice options and write-code answers, so text
+// inside ordering, matching and walkthrough cards was silently unfindable.
 export function searchableText(card: Card): string {
-  const parts: string[] = [...card.tags]
+  const parts: string[] = [
+    ...card.tags,
+    card.prompt.value,
+    card.tip?.value ?? '',
+    card.explanation?.value ?? '',
+  ]
 
-  switch (card.type) {
-    case 'basic':
-      parts.push(card.content.front, card.content.back)
+  const interaction = card.interaction
+  switch (interaction.type) {
+    case 'recall':
+      parts.push(interaction.answer.value)
       break
-    case 'mcq':
-      parts.push(card.content.prompt, card.content.explanation ?? '')
-      parts.push(...card.content.options.map((o) => o.text))
+    case 'multiple_choice':
+      parts.push(...interaction.options.map((o) => o.content.value))
       break
-    case 'codeReading':
-      parts.push(card.content.code.code, card.content.question, card.content.answer)
-      break
-    case 'codeCompletion':
-      parts.push(card.content.scaffold.code, card.content.explanation ?? '')
-      parts.push(...card.content.solutions)
-      break
-    case 'bugFinding':
-      parts.push(
-        card.content.code.code,
-        card.content.question ?? '',
-        card.content.bugHint ?? '',
-        card.content.explanation,
-      )
+    case 'write_code':
+      parts.push(interaction.starterCode, ...interaction.acceptedAnswers)
       break
     case 'ordering':
-      parts.push(card.content.prompt)
-      parts.push(...card.content.items.map((i) => i.text))
+      parts.push(...interaction.items.map((i) => i.content.value))
       break
     case 'matching':
-      parts.push(card.content.prompt)
-      for (const pair of card.content.pairs) parts.push(pair.left, pair.right)
+      for (const column of interaction.columns) {
+        if (column.label) parts.push(column.label)
+        parts.push(...column.items.map((i) => i.content.value))
+      }
       break
-    case 'story':
-      parts.push(card.content.intro ?? '', card.content.explanation ?? '')
-      parts.push(card.content.code?.code ?? '')
-      for (const step of card.content.steps) {
-        parts.push(step.prompt, step.answer, step.code?.code ?? '')
+    case 'walkthrough':
+      parts.push(interaction.scenario.value, interaction.code?.value ?? '')
+      for (const step of interaction.steps) {
+        parts.push(step.prompt.value, step.tip?.value ?? '', step.explanation?.value ?? '')
+        if (step.response.type === 'recall') parts.push(step.response.answer.value)
+        if (step.response.type === 'multiple_choice') {
+          parts.push(...step.response.options.map((o) => o.content.value))
+        }
+        if (step.response.type === 'exact_input') parts.push(...step.response.acceptedAnswers)
       }
       break
     default: {
-      const _exhaustive: never = card
+      const _exhaustive: never = interaction
       return _exhaustive
     }
   }
 
-  return parts.join(' \n ').toLowerCase()
+  return parts.filter(Boolean).join(' \n ').toLowerCase()
 }

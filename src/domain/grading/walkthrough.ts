@@ -1,4 +1,4 @@
-import type { WalkthroughInteraction, WalkthroughStep } from '@/types/cardV2'
+import type { WalkthroughInteraction, WalkthroughStep } from '@/types/card'
 import type { ObjectiveResult } from '@/features/reviewV2/reviewPhase'
 import { gradeMultipleChoice } from './multipleChoice'
 import { matchesAcceptedAnswer } from './writeCode'

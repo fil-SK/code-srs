@@ -37,8 +37,13 @@ describe('backup build/serialize/parse', () => {
     expect(() => parseBackup(future)).toThrow(/newer/)
   })
 
+  it('rejects a prototype-era version 1 backup', () => {
+    const old = JSON.stringify({ app: 'code-srs', version: 1, data: {} })
+    expect(() => parseBackup(old)).toThrow(/unsupported prototype data format/)
+  })
+
   it('rejects missing data lists', () => {
-    const bad = JSON.stringify({ app: 'code-srs', version: 1, data: { cards: [] } })
+    const bad = JSON.stringify({ app: 'code-srs', version: 2, data: { cards: [] } })
     expect(() => parseBackup(bad)).toThrow(/decks/)
   })
 })

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { CardType, CodeBlock, Draft, ID } from '@/types'
+import type { CodeBlock, Draft, ID, InteractionType } from '@/types'
 import { getRepository } from '@/data'
 import { newId } from '@/lib/id'
 import { qk } from './queryKeys'
@@ -27,7 +27,7 @@ export function useDraft(id: ID | null) {
 export interface NewDraftInput {
   rawText: string
   code?: CodeBlock
-  intendedType?: CardType
+  intendedType?: InteractionType
   intendedDeckId?: ID
 }
 

@@ -2,7 +2,7 @@ import { Fragment, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
-import type { MatchingColumn, MatchingColumnItem } from '@/types/cardV2'
+import type { MatchingColumn, MatchingColumnItem } from '@/types/card'
 import type { MatchingGrade, MatchingResponse } from '@/domain/grading/matching'
 import { placeMatchingBadges, type CubicEdgeGeometry } from './matchingBadgeGeometry'
 

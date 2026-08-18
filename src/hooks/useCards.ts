@@ -2,9 +2,32 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Card, ID } from '@/types'
 import type { CardQuery, DueQuery } from '@/data/repository'
 import { getRepository } from '@/data'
-import { createCard, type NewCardInput } from '@/domain/cards/factory'
-import { cardStateFromCard } from '@/domain/scheduling/cardState'
+import type { RecallFormState } from '@/domain/cards/recallForm'
+import { saveRecallCard, type SaveRecallCardTarget } from '@/domain/cards/saveRecallCard'
+import type { MultipleChoiceFormState } from '@/domain/cards/multipleChoiceForm'
+import {
+  saveMultipleChoiceCard,
+  type SaveMultipleChoiceCardTarget,
+} from '@/domain/cards/saveMultipleChoiceCard'
+import type { WriteCodeFormState } from '@/domain/cards/writeCodeForm'
+import { saveWriteCodeCard, type SaveWriteCodeCardTarget } from '@/domain/cards/saveWriteCodeCard'
+import type { OrderingFormState } from '@/domain/cards/orderingForm'
+import { saveOrderingCard, type SaveOrderingCardTarget } from '@/domain/cards/saveOrderingCard'
+import type { MatchingFormState } from '@/domain/cards/matchingForm'
+import { saveMatchingCard, type SaveMatchingCardTarget } from '@/domain/cards/saveMatchingCard'
+import type { WalkthroughFormState } from '@/domain/cards/walkthroughForm'
+import {
+  saveWalkthroughCard,
+  type SaveWalkthroughCardTarget,
+} from '@/domain/cards/saveWalkthroughCard'
 import { qk } from './queryKeys'
+
+export type { SaveRecallCardTarget } from '@/domain/cards/saveRecallCard'
+export type { SaveMultipleChoiceCardTarget } from '@/domain/cards/saveMultipleChoiceCard'
+export type { SaveWriteCodeCardTarget } from '@/domain/cards/saveWriteCodeCard'
+export type { SaveOrderingCardTarget } from '@/domain/cards/saveOrderingCard'
+export type { SaveMatchingCardTarget } from '@/domain/cards/saveMatchingCard'
+export type { SaveWalkthroughCardTarget } from '@/domain/cards/saveWalkthroughCard'
 
 const repo = getRepository()
 
@@ -13,8 +36,7 @@ export function useCard(id: ID | undefined) {
     queryKey: qk.card(id ?? ''),
     // TanStack Query v5 treats a query function returning `undefined` as a
     // bug (logs "Query data cannot be undefined") — `null` is the correct
-    // "not found" value. Matters now that CardEditEntry routinely probes
-    // this alongside useCardV2 for ids that only exist in one store.
+    // "not found" value.
     queryFn: async () => (await repo.cards.getById(id as ID)) ?? null,
     enabled: !!id,
   })
@@ -34,29 +56,27 @@ export function useSearchCards(query: CardQuery) {
   })
 }
 
+// Takes an already-built record (see domain/cards/factory's createCard) so
+// callers like CardTable's Duplicate can derive one from an existing card.
 export function useCreateCard() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: NewCardInput) => {
-      const card = createCard(input)
+    mutationFn: async (card: Card) => {
       await repo.cards.put(card)
-      await repo.cardStates.put(cardStateFromCard(card)) // dual-write, Phase D
       return card
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
   })
 }
 
-// Also used to toggle `suspended` (see library/shared/CardTable) — dual-write
-// unconditionally rather than trying to detect which fields changed;
-// rewriting CardState with unchanged values is harmless and idempotent.
+// Also used to toggle `suspended` and to move a card between decks
+// (see library/shared/CardTable).
 export function useSaveCard() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (card: Card) => {
       const saved = { ...card, updatedAt: Date.now() }
       await repo.cards.put(saved)
-      await repo.cardStates.put(cardStateFromCard(saved)) // dual-write, Phase D
     },
     onSuccess: (_data, card) => {
       qc.invalidateQueries({ queryKey: qk.cards })
@@ -68,10 +88,7 @@ export function useSaveCard() {
 export function useDeleteCard() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: ID) => {
-      await repo.cards.delete(id)
-      await repo.cardStates.delete(id) // avoid an orphaned CardState row
-    },
+    mutationFn: (id: ID) => repo.cards.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
   })
 }
@@ -101,4 +118,57 @@ export function useReorderCards() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.cards }),
   })
+}
+
+// ---- Per-interaction save hooks --------------------------------------------
+// Thin useMutation wrappers around the pure save*Card modules in
+// src/domain/cards/, each unit-tested directly against a repository.
+
+function useSaveCardMutation<TForm, TTarget>(
+  save: (form: TForm, target: TTarget) => Promise<Card>,
+) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ form, target }: { form: TForm; target: TTarget }) => save(form, target),
+    onSuccess: (record) => {
+      qc.invalidateQueries({ queryKey: qk.cards })
+      qc.invalidateQueries({ queryKey: qk.card(record.id) })
+    },
+  })
+}
+
+export function useSaveRecallCard() {
+  return useSaveCardMutation<RecallFormState, SaveRecallCardTarget>((form, target) =>
+    saveRecallCard(repo, form, target),
+  )
+}
+
+export function useSaveMultipleChoiceCard() {
+  return useSaveCardMutation<MultipleChoiceFormState, SaveMultipleChoiceCardTarget>(
+    (form, target) => saveMultipleChoiceCard(repo, form, target),
+  )
+}
+
+export function useSaveWriteCodeCard() {
+  return useSaveCardMutation<WriteCodeFormState, SaveWriteCodeCardTarget>((form, target) =>
+    saveWriteCodeCard(repo, form, target),
+  )
+}
+
+export function useSaveOrderingCard() {
+  return useSaveCardMutation<OrderingFormState, SaveOrderingCardTarget>((form, target) =>
+    saveOrderingCard(repo, form, target),
+  )
+}
+
+export function useSaveMatchingCard() {
+  return useSaveCardMutation<MatchingFormState, SaveMatchingCardTarget>((form, target) =>
+    saveMatchingCard(repo, form, target),
+  )
+}
+
+export function useSaveWalkthroughCard() {
+  return useSaveCardMutation<WalkthroughFormState, SaveWalkthroughCardTarget>((form, target) =>
+    saveWalkthroughCard(repo, form, target),
+  )
 }

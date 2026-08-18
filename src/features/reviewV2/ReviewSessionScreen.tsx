@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from 'react'
 import type { Rating, SchedulingState } from '@/types'
-import type { CardInteraction, CardV2, InteractionType } from '@/types/cardV2'
+import type { CardInteraction, Card, InteractionType } from '@/types/card'
 import { cn } from '@/lib/cn'
 import { reviewService, type SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { formatInterval } from '@/domain/scheduling/format'
@@ -51,12 +51,12 @@ export function ReviewSessionScreen<T extends InteractionType>({
   previousDisabled,
   nextDisabled,
 }: {
-  card: CardV2 & { interaction: Extract<CardInteraction, { type: T }> }
+  card: Card & { interaction: Extract<CardInteraction, { type: T }> }
   definition: InteractionDefinition<T>
   current: number
   total: number
   onExit: () => void
-  // No CardV2 repository exists yet (see reviewService.ts) — callers supply
+  // No Card repository exists yet (see reviewService.ts) — callers supply
   // whatever SchedulingState they have; the preview routes pass a fresh
   // baseline since there is nothing real to persist against yet.
   schedulingBefore: SchedulingState

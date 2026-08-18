@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CardV2, OrderingInteraction } from '@/types/cardV2'
-import { richText } from '@/types/cardV2'
+import type { Card, OrderingInteraction } from '@/types/card'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { orderingDefinition } from './index'
 import { ReviewSessionScreen } from '../../ReviewSessionScreen'
@@ -22,7 +22,7 @@ const interaction: OrderingInteraction = {
   correctOrder: ['item-a', 'item-c', 'item-b'],
 }
 
-const fixture: CardV2 & { interaction: OrderingInteraction } = {
+const fixture: Card & { interaction: OrderingInteraction } = {
   id: 'test-ordering-1',
   schemaVersion: 2,
   deckId: 'deck-1',

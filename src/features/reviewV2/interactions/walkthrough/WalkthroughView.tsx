@@ -13,7 +13,7 @@ import { initialWalkthroughState, type WalkthroughState } from './state'
 import { focusToHighlightLines } from './focusLines'
 import { StepResponse } from './StepResponse'
 
-// One Card, multiple ordered steps, one final CardState/rating (spec): every
+// One Card, multiple ordered steps, one final rating (spec): every
 // step is answered inside this View while the shell's phase stays
 // 'presenting' - only the last step's Continue button (relabeled "Finish")
 // calls the shell's onPrimaryAction, which is what actually submits the

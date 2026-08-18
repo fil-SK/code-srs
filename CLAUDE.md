@@ -59,9 +59,9 @@ Tests are colocated as `*.test.ts`/`*.test.tsx`. The suite is **hermetic**: `vit
 Terse rules only. The mechanisms behind them — the seam, both registries, the hooks table, routing, scheduling, migration machinery — are in [`docs/architecture.md`](docs/architecture.md); do not re-derive them here.
 
 - **One storage seam.** Everything depends on `Repository` (`src/data/repository.ts`); `getRepository()` (`src/data/index.ts`) picks Dexie or Supabase. **Never import a backend from a component, hook or page**, and never bypass the TanStack Query hooks in `src/hooks/` (keys centralized in `queryKeys.ts`).
-- **Two card models coexist on purpose** — `src/types/card.ts` (v1, 8 types) and `src/types/cardV2.ts` (v2, 6 interactions). **When grepping for "Card", check which one you're in.**
-- **Do not add a v1 card type.** The v1 registry and renderers are deleted; v1 is a storage format only, rendered through `migrateCard` into the v2 registry. New types are v2 interactions — follow the checklist in `docs/architecture.md`, which the compiler enforces.
-- **Scheduling ownership:** `Card.scheduling` is the sole source of truth; `Repository.cardStates` is dual-written and read by nothing; `CardV2Record` carries its own embedded `scheduling`. Do not drop either side of the dual write or point a read at `cardStates` outside a deliberate cutover (`docs/CURRENT_STATE.md` §12–13).
+- **One card model.** `src/types/card.ts` — a single `Card` (content + its own embedded `scheduling`) with six `CardInteraction` members. The v1 8-type union, `CardV2`/`CardV2Record`, `migrateCard` and the `cardStates` store were all deleted when the two models converged. **There is no second card type and no on-read migration.**
+- **New card types are new interactions** — add a `CardInteraction` member and follow the checklist in `docs/architecture.md`, which the compiler enforces.
+- **Scheduling lives on `Card.scheduling`**, embedded in the card. If it is ever extracted into its own entity, that is a deliberate schema change with a migration, not a refactor.
 - **Review is generic.** `ReviewSessionScreen` contains no per-type logic, and the flow is strictly two-phase (Question → reveal → Answer → one FSRS grade).
 - **Auth lives in one place.** `RequireAuth` is one pathless layout route wrapping every product route; `localSession.ts` is the **only** file that may touch auth storage — do not add a `localStorage` session check anywhere else.
 - **Do not add a dependency for what this repo builds by hand:** markdown (`RichText.tsx`, an XSS-safe subset where underscores are deliberately not emphasis markers), charts (hand-rolled SVG/CSS), the roadmap canvas, popovers (`FloatingPanel.tsx`), dialogs (`useDialogs()`, never `window.confirm`/`prompt`/`alert`). CodeMirror 6 stays lazy-loaded via `LazyCodeView`/`LazyCodeEditor`.
@@ -80,8 +80,8 @@ Terse rules only. The mechanisms behind them — the seam, both registries, the 
 
 Ask before doing any of these; none of them is implied by an ordinary feature request.
 
-- **Never delete or rewrite persisted rows as a side effect of a UI change.** Migrations that touch real user data are explicit, dry-run-able and reportable via `src/domain/migration/runner.ts`; the only migration permitted to run lazily on read is `migrateCard`, and no second one may be added.
-- **Do not start a not-started migration** (CardState read cutover, the Collection/Deck split) incidentally. See [`docs/itera-migration-plan.md`](docs/itera-migration-plan.md).
+- **Never delete or rewrite persisted rows as a side effect of a UI change.** Migrations that touch real user data are explicit, dry-run-able and reportable via `src/domain/migration/runner.ts`. **No migration may run lazily on read** — the one that used to (`migrateCard`) is gone with the card-model convergence.
+- **Do not start a not-started migration** (the Collection/Deck split) incidentally. See [`docs/itera-migration-plan.md`](docs/itera-migration-plan.md).
 - **Do not delete the code still kept on purpose** — all Roadmaps routes/data, and `src/hooks/useDrafts.ts` + `repo.drafts` + the Dexie drafts store + drafts in backup (the drafts UI was deleted on 2026-08-17, the data deliberately was not). Each is listed in `docs/CURRENT_STATE.md` §15/§19 with the reason. The v1 legacy surface that used to be on this list is gone — do not resurrect it.
 - **Do not add a dependency** for anything in the hand-built list above without asking.
 - **`docs/itera-decisions.md` is append-only** and `docs/archive/*` is history — never edit either in place to make it agree with new work.

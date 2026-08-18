@@ -9,13 +9,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CardV2, RecallInteraction } from '@/types/cardV2'
-import { richText } from '@/types/cardV2'
+import type { Card, RecallInteraction } from '@/types/card'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { recallDefinition } from './interactions/recall'
 import { ReviewSessionScreen } from './ReviewSessionScreen'
 
-const fixture: CardV2 & { interaction: RecallInteraction } = {
+const fixture: Card & { interaction: RecallInteraction } = {
   id: 'test-recall-1',
   schemaVersion: 2,
   deckId: 'deck-1',

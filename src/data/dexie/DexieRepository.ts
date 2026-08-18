@@ -1,13 +1,9 @@
 import type { Table } from 'dexie'
 import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
-import type { CardState, CardV2Record } from '@/types/cardV2'
 import { searchableText } from '@/domain/search/searchableText'
 import type {
   CardQuery,
   CardRepo,
-  CardV2DueQuery,
-  CardV2Query,
-  CardV2Repo,
   CrudRepo,
   DueQuery,
   Repository,
@@ -68,61 +64,12 @@ function createCardRepo(db: AppDB): CardRepo {
 
       if (!includeSuspended) cards = cards.filter((c) => !c.suspended)
       if (deckId) cards = cards.filter((c) => c.deckId === deckId)
-      if (types?.length) cards = cards.filter((c) => types.includes(c.type))
+      if (types?.length) cards = cards.filter((c) => types.includes(c.interaction.type))
       if (tags?.length)
         cards = cards.filter((c) => tags.some((t) => c.tags.includes(t)))
       if (text) {
         const q = text.toLowerCase()
         cards = cards.filter((c) => searchableText(c).includes(q))
-      }
-
-      return cards.sort((a, b) => b.updatedAt - a.updatedAt)
-    },
-  }
-}
-
-// Plain substring search over a CardV2Record's text fields.
-function cardV2SearchableText(card: CardV2Record): string {
-  const parts = [card.prompt.value, card.tip?.value, card.explanation?.value]
-  if (card.interaction.type === 'recall') parts.push(card.interaction.answer.value)
-  if (card.interaction.type === 'multiple_choice') {
-    parts.push(...card.interaction.options.map((o) => o.content.value))
-  }
-  if (card.interaction.type === 'write_code') {
-    parts.push(...card.interaction.acceptedAnswers)
-  }
-  return parts.filter(Boolean).join(' ').toLowerCase()
-}
-
-function createCardV2Repo(db: AppDB): CardV2Repo {
-  return {
-    ...crud(db.cardsV2),
-
-    async getDue({ now, deckId, tags, limit }: CardV2DueQuery): Promise<CardV2Record[]> {
-      let cards = await db.cardsV2
-        .where('scheduling.due')
-        .belowOrEqual(now)
-        .toArray()
-
-      cards = cards.filter((c) => !c.suspended)
-      if (deckId) cards = cards.filter((c) => c.deckId === deckId)
-      if (tags?.length)
-        cards = cards.filter((c) => tags.some((t) => c.tags.includes(t)))
-
-      cards.sort((a, b) => a.scheduling.due - b.scheduling.due)
-      return limit ? cards.slice(0, limit) : cards
-    },
-
-    async search({ text, deckId, tags, includeSuspended }: CardV2Query): Promise<CardV2Record[]> {
-      let cards = await db.cardsV2.toArray()
-
-      if (!includeSuspended) cards = cards.filter((c) => !c.suspended)
-      if (deckId) cards = cards.filter((c) => c.deckId === deckId)
-      if (tags?.length)
-        cards = cards.filter((c) => tags.some((t) => c.tags.includes(t)))
-      if (text) {
-        const q = text.toLowerCase()
-        cards = cards.filter((c) => cardV2SearchableText(c).includes(q))
       }
 
       return cards.sort((a, b) => b.updatedAt - a.updatedAt)
@@ -159,8 +106,6 @@ export class DexieRepository implements Repository {
   readonly drafts: CrudRepo<Draft>
   readonly reviews: ReviewRepo
   readonly roadmaps: CrudRepo<Roadmap>
-  readonly cardStates: CrudRepo<CardState>
-  readonly cardsV2: CardV2Repo
 
   constructor(db: AppDB = defaultDb) {
     this.cards = createCardRepo(db)
@@ -168,7 +113,5 @@ export class DexieRepository implements Repository {
     this.drafts = crud(db.drafts)
     this.reviews = createReviewRepo(db)
     this.roadmaps = crud(db.roadmaps)
-    this.cardStates = crud(db.cardStates)
-    this.cardsV2 = createCardV2Repo(db)
   }
 }

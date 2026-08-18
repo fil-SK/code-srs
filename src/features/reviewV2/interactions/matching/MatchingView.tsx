@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/cn'
 import { shuffle } from '@/lib/shuffle'
-import type { MatchingColumnItem } from '@/types/cardV2'
+import type { MatchingColumnItem } from '@/types/card'
 import { gradeMatching, type MatchingResponse } from '@/domain/grading/matching'
 import { CardPrompt } from '../../components/CardPrompt'
 import { FlashcardSurface } from '../../components/FlashcardSurface'

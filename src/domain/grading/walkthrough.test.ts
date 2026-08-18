@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { WalkthroughInteraction, WalkthroughStep } from '@/types/cardV2'
+import type { WalkthroughInteraction, WalkthroughStep } from '@/types/card'
 import {
   aggregateWalkthroughResult,
   gradeWalkthroughStep,

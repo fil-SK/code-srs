@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { Card, Deck, ReviewLog } from '@/types'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { newId } from '@/lib/id'
 import { AppDB } from './db'
@@ -14,24 +15,24 @@ beforeEach(async () => {
     db.decks.clear(),
     db.drafts.clear(),
     db.reviewLogs.clear(),
-    db.cardStates.clear(),
   ])
 })
 
 const DECK_ID = 'deck-1'
 
-function basicCard(overrides: Partial<Card> = {}): Card {
+function recallCard(overrides: Partial<Card> = {}): Card {
   const now = 1_000
   return {
     id: newId(),
+    schemaVersion: 2,
     deckId: DECK_ID,
     tags: [],
     createdAt: now,
     updatedAt: now,
     suspended: false,
     scheduling: initialSchedulingState(now),
-    type: 'basic',
-    content: { front: 'Q', back: 'A' },
+    prompt: richText('Q'),
+    interaction: { type: 'recall', answer: richText('A') },
     ...overrides,
   } as Card
 }
@@ -50,7 +51,7 @@ describe('DexieRepository — CRUD', () => {
   })
 
   it('upserts on put and removes on delete', async () => {
-    const card = basicCard()
+    const card = recallCard()
     await repo.cards.put(card)
     await repo.cards.put({ ...card, updatedAt: 2_000 })
     expect(await repo.cards.getAll()).toHaveLength(1)
@@ -61,7 +62,7 @@ describe('DexieRepository — CRUD', () => {
   })
 
   it('bulkPut inserts many (import path)', async () => {
-    await repo.cards.bulkPut([basicCard(), basicCard(), basicCard()])
+    await repo.cards.bulkPut([recallCard(), recallCard(), recallCard()])
     expect(await repo.cards.getAll()).toHaveLength(3)
   })
 })
@@ -69,10 +70,10 @@ describe('DexieRepository — CRUD', () => {
 describe('DexieRepository — getDue', () => {
   it('returns due/new cards, excludes future and suspended, sorts by due', async () => {
     const now = 10_000
-    const due1 = basicCard({ scheduling: { ...initialSchedulingState(), due: 5_000 } })
-    const due2 = basicCard({ scheduling: { ...initialSchedulingState(), due: 9_000 } })
-    const future = basicCard({ scheduling: { ...initialSchedulingState(), due: 50_000 } })
-    const suspended = basicCard({
+    const due1 = recallCard({ scheduling: { ...initialSchedulingState(), due: 5_000 } })
+    const due2 = recallCard({ scheduling: { ...initialSchedulingState(), due: 9_000 } })
+    const future = recallCard({ scheduling: { ...initialSchedulingState(), due: 50_000 } })
+    const suspended = recallCard({
       suspended: true,
       scheduling: { ...initialSchedulingState(), due: 1_000 },
     })
@@ -84,8 +85,8 @@ describe('DexieRepository — getDue', () => {
 
   it('filters by deck and honors limit', async () => {
     const now = 10_000
-    const mine = basicCard({ deckId: 'a', scheduling: { ...initialSchedulingState(), due: 1 } })
-    const other = basicCard({ deckId: 'b', scheduling: { ...initialSchedulingState(), due: 1 } })
+    const mine = recallCard({ deckId: 'a', scheduling: { ...initialSchedulingState(), due: 1 } })
+    const other = recallCard({ deckId: 'b', scheduling: { ...initialSchedulingState(), due: 1 } })
     await repo.cards.bulkPut([mine, other])
 
     expect((await repo.cards.getDue({ now, deckId: 'a' })).map((c) => c.id)).toEqual([
@@ -98,11 +99,18 @@ describe('DexieRepository — getDue', () => {
 describe('DexieRepository — search', () => {
   it('matches text in content and respects suspended', async () => {
     await repo.cards.bulkPut([
-      basicCard({ content: { front: 'What is SSA form?', back: 'static single assignment' } }),
-      basicCard({ content: { front: 'unrelated', back: 'nope' } }),
-      basicCard({
+      recallCard({
+        prompt: richText('What is SSA form?'),
+        interaction: { type: 'recall', answer: richText('static single assignment') },
+      }),
+      recallCard({
+        prompt: richText('unrelated'),
+        interaction: { type: 'recall', answer: richText('nope') },
+      }),
+      recallCard({
         suspended: true,
-        content: { front: 'SSA suspended', back: 'x' },
+        prompt: richText('SSA suspended'),
+        interaction: { type: 'recall', answer: richText('x') },
       }),
     ])
 
@@ -113,10 +121,10 @@ describe('DexieRepository — search', () => {
 
   it('filters by type and tag', async () => {
     await repo.cards.bulkPut([
-      basicCard({ tags: ['mlir'] }),
-      basicCard({ tags: ['cpp'] }),
+      recallCard({ tags: ['mlir'] }),
+      recallCard({ tags: ['cpp'] }),
     ])
-    expect(await repo.cards.search({ types: ['basic'] })).toHaveLength(2)
+    expect(await repo.cards.search({ types: ['recall'] })).toHaveLength(2)
     expect(await repo.cards.search({ tags: ['mlir'] })).toHaveLength(1)
     expect(await repo.cards.search({ tags: ['rust'] })).toHaveLength(0)
   })
@@ -163,47 +171,5 @@ describe('DexieRepository — reviews', () => {
     await repo.reviews.append(entry)
     await repo.reviews.delete(entry.id)
     expect(await repo.reviews.forCard('c1')).toHaveLength(0)
-  })
-})
-
-describe('DexieRepository — cardStates (Phase D, keyed by cardId not id)', () => {
-  it('upserts and reads back by cardId', async () => {
-    const state = {
-      cardId: 'card-1',
-      due: 5_000,
-      state: 'review' as const,
-      stability: 3,
-      difficulty: 4,
-      elapsedDays: 1,
-      scheduledDays: 2,
-      learningSteps: 0,
-      reps: 2,
-      lapses: 0,
-      suspended: false,
-    }
-    await repo.cardStates.put(state)
-    expect(await repo.cardStates.getById('card-1')).toEqual(state)
-
-    await repo.cardStates.put({ ...state, reps: 3 })
-    expect((await repo.cardStates.getById('card-1'))?.reps).toBe(3)
-    expect(await repo.cardStates.getAll()).toHaveLength(1)
-  })
-
-  it('removes on delete', async () => {
-    await repo.cardStates.put({
-      cardId: 'card-2',
-      due: 0,
-      state: 'new',
-      stability: 0,
-      difficulty: 0,
-      elapsedDays: 0,
-      scheduledDays: 0,
-      learningSteps: 0,
-      reps: 0,
-      lapses: 0,
-      suspended: false,
-    })
-    await repo.cardStates.delete('card-2')
-    expect(await repo.cardStates.getById('card-2')).toBeUndefined()
   })
 })

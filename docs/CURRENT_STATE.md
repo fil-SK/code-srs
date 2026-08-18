@@ -1,8 +1,8 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-17** (branch `app_redesign`, HEAD `fdaad9f`).
+**Last verified against the working tree: 2026-08-18** (branch `app_redesign`).
 
-The most recent milestone **deleted the v1 legacy surface**: `/browse`, `/cards/new`, `/drafts` and `/stats` are gone along with the entire v1 card registry and all 8 renderer families, and the `/design-preview/library*` fork is gone with them. The app is now declared light-only, and `window.confirm`/`prompt`/`alert` appear nowhere in `src/`. **Persisted data was not touched** — drafts rows, the Dexie store and backup import/export all survive; only the drafts UI was removed. Six capabilities went with that surface and were deliberately not restored; they are listed in [`features.md`](features.md). See §15 and the 2026-08-17 entries in [`itera-decisions.md`](itera-decisions.md).
+The most recent milestone **converged the two card models into one**. `src/types/card.ts` now defines a single `Card` (content plus its own embedded `scheduling`) with six `CardInteraction` members; the v1 8-type union, `CardV2`/`CardV2Record`, `migrateCard`, the `cardsV2` store and the write-only `CardState` extraction are all gone. **Card, review and deck data was deliberately reset rather than migrated** — it was generated prototype content — and the Dexie database was renamed `code-srs` to `itera` with a single `version(1)`. See the 2026-08-18 entries in [`itera-decisions.md`](itera-decisions.md).
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -26,13 +26,13 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Milestone reached: "The v1 legacy surface is deleted" (2026-08-17).**
+**Milestone reached: "Single card model" (2026-08-18).**
 
 The redesign has converged *and* the retreat is finished. Previously the redesign was complete but the pages it replaced were still mounted-but-unlinked, so a user could reach a pre-redesign screen by URL and two redesigned pages still linked into them. Those pages, their entire transitive closure, and the `/design-preview` Library fork are now gone: 78 production files and 7 test files, leaving exactly one implementation of every surface.
 
-What is real: one shared Itera app shell, one Library/Deck implementation, one Review surface, one flip primitive, one card-rendering path (`migrateCard` → the v2 registry), all six v2 authoring editors, a real Progress page, a real Account settings page, and a real auth gate in front of everything. The remaining work is data-model completion (v2 cards in the real due queue, CardState read cutover, the Collection/Deck migration), replacing Today's placeholder content with real product logic, and the one remaining reskinned-only surface (Roadmaps).
+What is real: one shared Itera app shell, one Library/Deck implementation, one Review surface, one flip primitive, **one card model**, one card store, one hook family, all six authoring editors, a real Progress page with a real Review history, a real Account settings page, and a real auth gate in front of everything. Every card authored in any of the six editors is immediately schedulable in `/review` — the integration hole that used to sit between authoring and reviewing is closed by construction. The remaining work is the Collection/Deck migration, replacing Today's placeholder content with real product logic, and the one remaining reskinned-only surface (Roadmaps).
 
-Recent milestone sequence (newest first): v1 legacy surface deleted → Progress iconography → Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
+Recent milestone sequence (newest first): single card model -> Review history -> v1 legacy surface deleted → Progress iconography → Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
 
 ---
 
@@ -46,9 +46,9 @@ Real data, real behavior, production-routed:
 | Collection identity view | `/decks?collection=…` (same route) | `src/features/library/LibraryCollectionView.tsx` |
 | Focused Deck page | `/decks/:id` | `src/features/library/LibraryDeckPage.tsx` |
 | Review session | `/review` | `src/features/review/ReviewPage.tsx` → `ReviewSessionV2` → `reviewV2/ReviewSessionScreen` |
-| Card create (v2) | `/decks/:deckId/cards/new` | `src/features/cardsV2/CardCreatePage.tsx` |
-| Card edit (v2 + legacy cutover) | `/cards/:id/edit` | `src/features/cardsV2/CardEditEntry.tsx` |
-| Card study preview (non-committing) | `/cards/:id/study` | `src/features/cardsV2/CardStudyPreviewPage.tsx` |
+| Card create | `/decks/:deckId/cards/new` | `src/features/cards/CardCreatePage.tsx` |
+| Card edit | `/cards/:id/edit` | `src/features/cards/CardEditEntry.tsx` |
+| Card study preview (non-committing) | `/cards/:id/study` | `src/features/cards/CardStudyPreviewPage.tsx` |
 | Progress | `/progress` | `src/features/progress/ProgressPage.tsx` |
 | Review history | `/progress/history` | `src/features/progress/ReviewHistoryPage.tsx` |
 | Account settings | `/settings`, `/settings/:section` | `src/features/settings/AccountSettingsPage.tsx` |
@@ -61,7 +61,7 @@ Real data, real behavior, production-routed:
 |---|---|---|
 | **Today** (`/`, `src/features/today/`) | Layout, greeting rotation (`greetings.ts`), the shared shell. | **All numbers.** Streak, weekly goal, recall %, milestone, Continue Learning rows, pace-chart series are illustrative constants. No streak/momentum/suggested-session domain logic exists. "Adjust session" has no behavior. |
 | **Progress** (`/progress`, `/progress/history`) | KPI tiles, heat map, retention chart, deck-performance table, milestones — all computed from real `ReviewLog`/`Card`/`Deck` via `src/domain/stats/{dateRange,progressMetrics}.ts`. "Sessions" are gap-clustered from review timestamps, not a persisted entity. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | 7 of 9 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Overview and Review history are live. |
-| **Account settings** (`/settings`) | **Import / Export** (JSON backup) and **Card scheduling** (the Phase D CardState backfill dry-run/apply) are fully functional. | Profile, Email & password, Appearance, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
+| **Account settings** (`/settings`) | **Import / Export** (JSON backup) is fully functional. | Profile, Email & password, Appearance, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
 | **Login** (`/login`) | Page, session minting, redirect-back-to-requested-route, Supabase magic link. | In local mode the password is a dev/demo shell: never stored, sent, or verified. "Forgot password" is a deliberate `aria-disabled` placeholder — no reset backend. |
 | **Roadmaps** (`/roadmaps`, `/roadmaps/:id`) | Create / rename / delete / canvas editing all work, now through `useDialogs()` rather than `window.prompt`, and the list page has a real `<h1>`. | Still **reskinned only** — pre-redesign layout and density, carrying Itera colors solely through `.itera-scope`'s token re-point. Deliberately out of primary nav (D11/D17), reachable by direct URL. |
 
@@ -91,7 +91,7 @@ Real data, real behavior, production-routed:
 ## 6. Account / avatar menu state
 
 - `AccountMenu` + `AccountMenuContent` (`src/components/layout/`). Built on the existing `FloatingPanel` — **no popover dependency was added.** 300px anchored, viewport-height-capped panel with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger). Below 480px (`useIsNarrowShell`) the identical content renders as a bottom sheet.
-- Live rows: **Account settings**, **Spaced repetition (FSRS)** (links to Card scheduling), **Import / Export**, and **Sign out** (enabled whenever any session exists — local, demo, or Supabase).
+- Live rows: **Account settings**, **Import / Export**, and **Sign out** (enabled whenever any session exists — local, demo, or Supabase).
 - Placeholder rows: Preferences, Study settings, Keyboard shortcuts, Help & documentation, What's new, About Itera — focusable `aria-disabled` rows with a "Soon" pill (never `disabled`, never hidden).
 - The grouped menu follows `profile-menu.png`: account/preferences; a divided study group; keyboard/help; What's new/About; Sign out. **It remains quick navigation only.** New settings still belong in `src/features/settings/`; the menu links only the requested high-value shortcuts.
 
@@ -105,7 +105,7 @@ All three views render inside `LibraryShell` + `CollectionNav`: a centered, bord
 
 - **Default Library / All Decks (`/decks`)** — `LibraryBrowserPage`. The All Decks scope follows the locked `all-decks.png` composition: identity title/description and divider, an orange New Deck action plus an Import Deck shortcut to the real JSON Import & Export settings section, 44px search/filter/sort controls, descriptive deck rows with bold metric values, and always-on ten-deck pagination whose count reports the visible range. These proportions are deliberately scoped to **All Decks only**; Unfiled and Collection identity views retain their own compositions. Real `useDecks` + `useSearchCards` + `useSearchCardsV2` + `useDueCards` data drives per-deck cards, due, mastery and last-studied metrics from `deckMetrics.ts`; create / rename / delete remain live.
 - **Parent / container ("Collection") view** — `LibraryCollectionView`, rendered by `LibraryBrowserPage` when the selection is a Collection. Identity header, rolled-up stats (`aggregateMetrics`), its child decks, and any cards filed directly on it. A direct `/decks/:id` navigation whose id resolves to a deck-with-children **redirects here** instead of rendering an incorrectly empty leaf page.
-- **Focused leaf-Deck view (`/decks/:id`)** — `LibraryDeckPage`. Cards / Insights tab split inside the locked-reference composition: bold final breadcrumb, enlarged aligned metrics, wider 44px toolbar controls, reference-like non-card icons and white surfaces. The Cards tab's search / type / status / sort toolbar and **always-on seven-row pagination** operate over a unified `RowMeta` computed for **both** v1 `Card` and `CardV2Record` rows; multi-page footers report the visible card range. Default manual ordering remains available for v1 cards within the visible page; the grip floats in the row inset so card-type tiles stay close to the list border. Clicking a row **opens the card in preview** (`/preview?card=…` for v1, `/cards/:id/study` for v2); Edit/Duplicate/Move/Suspend/Delete live in the row kebab menu. There is no separate read-only card detail screen, by decision. Deck settings opens with a 24px separation from the identity/action area and closes on a successful save, Cancel, or a second click of its toggle. The identity header and metrics stack at phone widths; the table keeps its deliberate horizontal scroll.
+- **Focused leaf-Deck view (`/decks/:id`)** — `LibraryDeckPage`. Cards / Insights tab split inside the locked-reference composition: bold final breadcrumb, enlarged aligned metrics, wider 44px toolbar controls, reference-like non-card icons and white surfaces. The Cards tab's search / type / status / sort toolbar and **always-on seven-row pagination** operate over a `RowMeta` projection of the one card list; multi-page footers report the visible card range. Manual drag ordering applies to every card within the visible page; the grip floats in the row inset so card-type tiles stay close to the list border. Clicking a row **opens the card in study preview** (`/cards/:id/study`); Edit/Duplicate/Move/Suspend/Delete live in the row kebab menu. There is no separate read-only card detail screen, by decision. Deck settings opens with a 24px separation from the identity/action area and closes on a successful save, Cancel, or a second click of its toggle. The identity header and metrics stack at phone widths; the table keeps its deliberate horizontal scroll.
 
 **"Collection" is UI-only.** It is derived structurally from the existing `Deck.parentId` tree in `src/features/library/collectionTree.ts` (any deck with children is a Collection node; childless decks are the browsable Library decks). **There is no `Collection` type, no table, and no migration** — see §13.
 
@@ -115,7 +115,7 @@ Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*
 
 **Review history** (`/progress/history`, `ReviewHistoryPage.tsx`) is the second live Progress destination: one row per `ReviewLog`, newest first, with card, deck, rating, resulting interval and timestamp, filterable by range (30D/3M/1Y/**All**, its own local presets — *not* the shared `DATE_RANGE_PRESETS`, whose bounded windows exist for Overview's period-over-period deltas), by deck (including the deck's subtree) and by rating. Reviews whose card was since deleted are kept, shown as `(deleted card)`; rows logged before `ReviewLog.dueAfter` existed render an em dash for interval rather than a fabricated number. Rating pills are deliberately neutral rather than a danger/warning/success/accent set, with the palest accent tint on Again only (see the decisions log). The "Activity" sidebar row stays a "Soon" placeholder on purpose — it reads as a broader feed (cards created, decks edited, imports) and the name is left free for it.
 
-Deck attribution for both Progress surfaces goes through `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards, cardsV2)`, which spans **both** card stores. This matters because editing a legacy card in the Recall editor deletes its `cards` row and writes a `cardsV2` record under the same id; the previous v1-only map silently dropped those cards' entire review history from every deck-scoped statistic.
+Deck attribution for both Progress surfaces goes through `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`, built once per render and passed down. It previously had to span two card stores, which is exactly the bug class (D186) the single model removes.
 
 ## 10. Card interaction status
 
@@ -130,34 +130,31 @@ Two axes matter: **Review** (rendering + grading a card) and **Authoring** (crea
 | **Matching** | `matching/MatchingView.tsx` + `MatchingBoard.tsx` | `domain/grading/matching.ts` (partial credit) | `MatchingEditorShell` | Connected multi-column board with drawn connectors. Check/X badges sit at each connection midpoint; colliding crossing-line midpoints move together to the nearest clear point on their curves. **Capped at three columns.** The old accordion is deleted. |
 | **Walkthrough** | `walkthrough/WalkthroughView.tsx` + `StepResponse.tsx` | `domain/grading/walkthrough.ts` (partial credit) | `WalkthroughEditorShell` | Multi-step, multi-range code focus via `LazyCodeView`'s `highlightLines`. Each step can carry its own optional pre-answer tip and post-answer explanation in addition to the card-wide fields. Code-backed Walkthrough cards retain the entrance fade without the ancestor scale/rotation that blurred CodeMirror glyphs. Absorbs v1 `story`. |
 
-Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partial<Record<…>>` so a future 7th type fails loudly). Authoring shells live in `src/features/cardsV2/` with per-type pure form/save modules in `src/domain/cardsV2/`.
+Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partial<Record<…>>` so a future 7th type fails loudly). Authoring shells live in `src/features/cards/` with per-type pure form/save modules in `src/domain/cards/`.
 
 **New-card composition:** `/decks/:deckId/cards/new` now follows the locked `add-new-card.png` reference as one continuous 880px surface, expanding to 1120px only while the desktop preview drawer is open. The page header is **Cancel | New card**; Recall is selected by default; the existing six interaction icons are unchanged; numbered Choose interaction / Card content / Organize sections use inset hairlines; Deck and Tags keep their existing values, gain identifying icons and share one explicit control height; Save and bordered Cancel live in the footer. Narrow screens retain Editor/Preview tabs. No character limits or counters were added.
 
-**The v1 registry and all 8 renderer families are deleted.** `src/types/card.ts` remains the storage model for un-migrated v1 rows, but there is no longer any v1 *authoring or rendering* path: `migrateCard` is the only way a v1 card reaches a screen, and every editor is a v2 shell. `src/features/cards/` now contains exactly one file, `cardTypeMeta.ts`, kept because `library/shared/rowVisuals.ts` reads its per-type icon/label/tile for card table rows.
+**There is one card model, one rendering path and one authoring path.** `src/features/cards/` holds the six editor shells; `src/features/reviewV2/interactions/` holds the six views.
 
-`/cards/:id/edit` handles all 8 v1 types through the six v2 editor shells and migrates to a `CardV2Record` on save, same id (so `ReviewLog` history survives), deleting the superseded v1 row. Its final fallthrough is a **"Card not found"** state, reachable only for an id matching neither model.
+`/cards/:id/edit` is one switch on `interaction.type` picking the matching editor shell; saving reuses the card's id/createdAt/scheduling/suspended so `ReviewLog` history survives. Its fallthrough is a **"Card not found"** state, reachable only for an id that resolves to no card.
 
 ## 11. Review integration state
 
 - `/review` is a **top-level, chrome-free route** (no `AppShell` ancestor), inside `RequireAuth`. It renders `ReviewSessionV2` → `ReviewSessionScreen`, the exact same shell `/design-preview/review/*` uses. One shell, not two. The shared width-safe Review strip follows `recall-card.png`: a literal **< Exit session** control left, bold position centered, and a bordered keyboard key plus action hint right. Exit and the right-side status/action use the same UI typography; Exit has the expected pointing-hand cursor. The strip's white background and border are full-bleed, while its controls share `TopNav`'s centered 1280px frame so the left/right controls align with the logo/profile edges. Session-backed surfaces also reserve 56px beneath their final content, matching the strip-to-card gap above.
 - Flow is strictly two-phase: Question → reveal → Answer → one FSRS grade. Objective types compute an `ObjectiveResult` from `src/domain/grading/*`, show a pass/fail banner, and pre-select a rating the user can override.
 - The shared rating controls follow the locked `answer-icons.png` reference: Again uses refresh, Hard ascending bars, Good a circled check, and Easy double chevrons. Each card shows its numeric shortcut plus the real FSRS next interval; the suggested/selected grade receives the single orange outline/icon signal. They render four-across from `sm` upward and 2×2 on phones.
-- `/preview` renders the **real v2 card** (`migrateCard` + `ReviewSessionScreen` with `hideRating`), not the v1 registry renderers. It uses the shared Review strip instead of its former tag/jump-input header; `AppShell` gives preview routes a full-width, zero-top-padding main surface so the strip sits flush beneath and spans the same page width as the navbar. In deck flip-through, bordered Prev/Next controls sit immediately around the centered `X of Y`; Left/Right arrows perform the same navigation unless focus is inside an interactive card control or editor. At phone widths the redundant shortcut hint yields its space to this centered navigation group. `/cards/:id/study` uses the same strip treatment without deck navigation. After reveal, preview-only cards say **Answer revealed**; surfaces with rating controls say **Rate your answer** instead of the old `1–4 to rate` hint.
+- `/preview` renders the **real card** through `ReviewSessionScreen` with `hideRating`. It uses the shared Review strip instead of its former tag/jump-input header; `AppShell` gives preview routes a full-width, zero-top-padding main surface so the strip sits flush beneath and spans the same page width as the navbar. In deck flip-through, bordered Prev/Next controls sit immediately around the centered `X of Y`; Left/Right arrows perform the same navigation unless focus is inside an interactive card control or editor. At phone widths the redundant shortcut hint yields its space to this centered navigation group. `/cards/:id/study` uses the same strip treatment without deck navigation. After reveal, preview-only cards say **Answer revealed**; surfaces with rating controls say **Rate your answer** instead of the old `1–4 to rate` hint.
 - Every interaction front uses the shared `CardPrompt`: 24px normally, 20px only beyond 280 normalized characters or six non-empty lines. All six v2 editors warn authors when that fallback activates and recommend shortening or splitting the card.
-- **Known integration hole (the biggest one in the repo): `CardV2Record`s are never in the due queue.** `useDueCards` → `repo.cards.getDue()` reads v1 `Card` only. `repo.cardsV2.getDue()` is implemented in **both** backends but has **no hook and no caller**. A card authored through the new create flow can only ever be reviewed non-committingly (editor preview, `/cards/:id/study`). See §16.
-- Duplication that is known and accepted: `src/hooks/useReview.ts` (v1) still calls the scheduler functions directly instead of `src/domain/scheduling/reviewService.ts`. (The v1 `ReviewSession.tsx` / `useReviewSession.ts` that used to sit unreferenced beside it are now deleted, so `ReviewSessionScreen` is the only Review surface.)
 
 ---
 
 ## 12. Persistence / auth / repository architecture that must not be broken
 
 - **One seam: `Repository` (`src/data/repository.ts`).** `getRepository()` (`src/data/index.ts`) returns `DexieRepository` by default, or `SupabaseRepository` when `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` are set. **No component, hook, or page may import a backend directly.**
-- Members: `cards`, `cardsV2`, `cardStates`, `decks`, `drafts`, `reviews`, `roadmaps`.
+- Members: `cards`, `decks`, `drafts`, `reviews`, `roadmaps`.
 - **Every entity is stored as one opaque JSON blob** keyed by an inline `id` (`data jsonb` in Postgres, a plain object in Dexie). Supabase adds a few generated columns (`due`, `suspended`, `deck_id`) purely for indexing; **all text/tag/type filtering happens in memory identically in both backends** so results match. Adding a field to a type therefore needs no migration.
 - **All data access goes through TanStack Query hooks in `src/hooks/`** (`useCards`, `useCardsV2`, `useDecks`, `useDrafts`, `useReview`, `useRoadmaps`, `useBackup`). Query keys are centralized in `src/hooks/queryKeys.ts`.
-- **`Card.scheduling` is still the sole source of truth for scheduling.** `Repository.cardStates` is dual-written by every write path (`useGradeCard`, `useUndoGrade`, `usePersistReviewResult`, `useCreateCard`, `useSaveCard`, `useDeleteCard`) but **nothing reads it**. Do not "simplify" by dropping either side of the dual write.
-- `CardV2Record` carries **its own embedded `scheduling`**, deliberately independent of the `CardState` extraction.
+- **`Card.scheduling` is the sole source of truth for scheduling**, embedded on the card itself. The half-built `CardState` extraction (a write-only store nothing read) was removed with the card-model convergence; separating content from scheduling again is a deliberate schema change with its own migration, not a refactor.
 - **Dexie schema changes require a `version()` bump** in `src/data/dexie/db.ts` (declare only new/changed stores).
 - **Supabase tables need GRANTs, not just RLS.** Postgres denies before RLS runs: RLS-without-grant = **403 on every request**; RLS-without-policy = empty 200. Every table in `supabase/schema.sql` needs table + `enable row level security` + an `own rows` policy + `grant select, insert, update, delete … to authenticated`. `schema.sql` is **not** auto-applied — a human runs it in the SQL editor.
 - The Supabase **publishable** key (`sb_publishable_…`) is `VITE_SUPABASE_ANON_KEY`. The secret key must never reach the frontend.
@@ -167,10 +164,7 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 | Migration | Status |
 |---|---|
-| **Phase D — CardState read cutover (steps 4–6)** | Schema, backfill runner, Settings UI and dual-write are shipped. **Parity verification, read cutover, and cleanup have not run.** `Card.scheduling` still backs `getDue()` and everything else. |
 | **Phase G — Collection/Deck split** | **Not started. Even the read-only preflight report has never been run.** There is no `Collection` type, no `collections` table, no `src/domain/collections/tree.ts`. The Library ships against the UI-only `parentId` derivation instead. |
-| **v1 → v2 card cutover** | `migrateCard(v1) → CardV2` is pure, total across all 8 v1 types, and run **lazily on read** — the only migration allowed to be lazy. v1 rows are only converted to `CardV2Record`s opportunistically, when edited through a v2 editor. There is no bulk conversion and no plan to force one yet. |
-| **Phase M cleanup** | `Card.scheduling` removal and stopping the dual write are explicitly deferred. |
 
 `src/domain/migration/runner.ts` (`MigrationRunner`) is the contract every explicit migration must satisfy: dry-run-able, reportable, reversible. See [`itera-migration-plan.md`](itera-migration-plan.md) §0 for why lazy migration was rejected for these.
 
@@ -187,13 +181,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 - **`/roadmaps*` is routed and working but out of primary nav** (D11/D17), so it is direct-URL only, and it is still visually pre-redesign (§14). **Do not delete it** — the data, repository member and Supabase table are untouched.
 - **`src/hooks/useDrafts.ts` is a deliberately retained orphan.** The drafts UI was deleted, but the entity survives end to end: `repo.drafts`, the Dexie store, and the `drafts` array in backup import/export. The hook has no caller. **Do not "clean it up"** — deleting it would be the first step toward dropping user data that a backup file still round-trips.
-- **`repo.cardsV2.getDue()` is implemented in both backends and called by nothing.** This is the §17 milestone's entry point, not dead code.
 
 **Data / migration risk:**
 
-- **Supabase `card_states` and `cards_v2` are unverified against a live database** (the project owner's Supabase project was deleted mid-development). Written to the same standard as the rest of the schema; flagged rather than assumed correct.
-- **`cards_v2` exists in `supabase/schema.sql` but has no file under `supabase/migrations/`**, unlike `card_states` (`0001_card_states.sql`). A project built from `schema.sql` gets the table; one migrated file-by-file does not. See [`itera-migration-plan.md`](itera-migration-plan.md) §8.
-- **The dual write is load-bearing in one direction only.** Every write path writes both `Card.scheduling` and a `CardState` row; nothing reads the latter. Dropping either side, or pointing a read at `cardStates` outside a deliberate cutover, silently corrupts scheduling.
+- **The Supabase schema is unverified against a live database** (the project owner's Supabase project was deleted mid-development). Written to the same standard as the rest of the schema; flagged rather than assumed correct.
 
 **Technical debt:**
 
@@ -203,10 +194,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-18, after the Review history pass (the previous baseline was 62 files / 415 tests at HEAD `fdaad9f`):
+Measured 2026-08-18, after the single-card-model pass (the previous baseline was 64 files / 432 tests):
 
 ```
-npx vitest run       → 64 test files, 432 tests, all passing
+npx vitest run       → 61 test files, 390 tests, all passing
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -214,7 +205,7 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**432 is the current correct test count.** Review history added `src/domain/stats/{reviewHistory,cardDeckIndex}.test.ts`, plus cases in `progressMetrics.test.ts` (v2-only deck attribution) and `scheduler.test.ts` (`dueAfter`). On the prior baseline: **415 was the correct count then**, down from 451 and then back up. The deletion removed 7 files / 42 tests that covered the v1 renderers — not a coverage loss, since `src/domain/grading/*.test.ts` already covers the v2 equivalents that production actually runs. Six tests were then added: `CardEditEntry`'s not-found state and its v1-editor branch, `PreviewPage`'s back-link resolution (derived deck, and `from` taking precedence), and `ReviewPage`'s empty-state CTA targets for the scoped and unscoped cases.
+**390 is the current correct test count**, down from 432. The card-model convergence deleted the migration and CardState suites outright (their subjects no longer exist) and removed the six per-type "migrates a legacy v1 card" cases plus the legacy form-hydration cases — not a coverage loss, since none of that code remains. The v1 card fixtures in the Dexie, Preview, Review and CardEditEntry suites were rewritten against the single model rather than deleted.
 
 One caveat worth knowing, carried over from the 2026-08-17 pass: a single run then reported one failure that four consecutive re-runs could not reproduce, and which the summary output did not name. It is an unidentified flake, not a known-failing test. It did not resurface during the Review history pass. If it does, capture the file name.
 
@@ -224,60 +215,21 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 ## 17. Exact recommended next milestone
 
-**Bring `CardV2Record`s into the real due queue, so cards authored in the new create flow are actually schedulable.**
+**Replace Today's placeholder content with real product logic.**
 
-This is the only place where a complete, shipped feature (six-type v2 authoring) produces something the product cannot use. Today a user can create a Matching or Walkthrough card and it will never appear in `/review`.
+Today is now the only surface that shows numbers a user would reasonably believe and that are not real: streak, weekly goal, recall %, the milestone line, the Continue Learning rows and the pace-chart series are all illustrative constants, and "Adjust session" has no behavior. Every other primary surface (Library, Review, Progress, Review history, Settings) reads real data.
+
+The previous recommendation here — bringing `CardV2Record`s into the real due queue — is **superseded, not skipped**: the card-model convergence closed that hole by construction, since there is now one store and `/review` reads it directly.
 
 Concrete scope:
 
-1. Add a `useDueCardsV2` hook over the already-implemented `repo.cardsV2.getDue()` (both backends implement it; nothing calls it), with query keys in `queryKeys.ts`.
-2. Merge the v1 and v2 due sets into one ordered queue in `ReviewPage` — including the deck-scoping (`?deck=`) path, which currently filters v1 `deckId` only.
-3. Persist a grade back onto `CardV2Record.scheduling` (its own embedded scheduling, *not* `cardStates`) through `ReviewService`, and append a `ReviewLog` so Progress/Stats keep working for v2 cards.
-4. Extend undo (`useUndoGrade`) to the v2 path.
-5. Update the due counts that already read v1 only: `useNavBadges`, `deckMetrics.ts`, Library's due-only filter, Today's counts.
-6. Tests: mixed-queue ordering, deck scoping across both kinds, grade → persisted scheduling → no longer due, undo.
+1. A real streak/momentum domain module over `ReviewLog` (Progress already computes a streak in `progressMetrics.ts` — reuse it rather than inventing a second definition).
+2. A suggested-session concept behind `SuggestedSessionHero`, with a real card count.
+3. Real Continue Learning rows (recently-studied decks with real due counts).
+4. Either a real pace series or an honest empty state for `PaceChart`.
+5. `StreakBadge` in the top nav reads the same real streak.
 
-Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's read cutover, and Today's real product logic. Those are the next three candidates after it, in that order.
-
-**The 2026-08-17 deletion did not change this recommendation.** It removed surfaces, not the data model; `repo.cardsV2.getDue()` is still implemented in both backends and still called by nothing. One item did get slightly smaller: `useNavBadges` now returns a single `'/'` due count, since the `/drafts` badge it also computed had no nav link left to attach to.
-
-## 18. Important implementation files and directories
-
-**Shell / routing / auth**
-- `src/app/router.tsx` — the whole route tree; the structural separation of `/review`, `/login`, `/design-preview/*` lives here.
-- `src/components/layout/{AppShell,TopNav,primaryNavLinks,AccountMenu,AccountMenuContent,StreakBadge,useIsNarrowShell,useNavBadges}`
-- `src/auth/{RequireAuth,AuthProvider,AuthGate,localSession}.ts(x)`
-
-**Data**
-- `src/data/repository.ts` (the seam), `src/data/index.ts` (backend choice), `src/data/dexie/`, `src/data/supabase/`, `src/data/backup.ts`
-- `src/hooks/{useCards,useCardsV2,useDecks,useDrafts,useReview,useRoadmaps,useBackup,queryKeys}.ts`
-- `supabase/schema.sql`, `supabase/migrations/`
-
-**Card models and migration**
-- `src/types/card.ts` (v1, 8-type union) and `src/types/cardV2.ts` (v2: `CardV2`, 6-type `CardInteraction`, `RichContent`, `CardState`, `ReviewEvent`). **When grepping for "Card", check which model you are in.**
-- `src/domain/migration/{cardMigration,cardStateBackfill,runner}.ts`
-
-**Review**
-- `src/features/reviewV2/{ReviewSessionScreen,reviewPhase}.tsx|ts`, `interactions/{registry,types}.ts`, `interactions/<type>/`, `components/{IteraSurface,ForceLightTheme,FlashcardSurface,FlipCard,FlipCueIcon,CardPrompt,promptLength,TipPanel,ExplanationPanel,RatingControls,InteractionLabel,ReviewTopBar,CardPanel}.tsx|ts`
-- `src/domain/grading/{multipleChoice,writeCode,ordering,matching,walkthrough}.ts`
-- `src/domain/scheduling/reviewService.ts`, `src/features/review/{ReviewPage,ReviewSessionV2}.tsx`
-
-**Authoring**
-- `src/features/cardsV2/` (all six `*EditorShell`s, `*Fields`, `*LivePreview`, `CardTypeChooser`, `CardEditorShell`, shared `CardOrganizeFields`), `src/domain/cardsV2/` (pure form/save modules)
-- `src/features/cards/cardTypeMeta.ts` — all that remains of the v1 feature directory, kept for `library/shared/rowVisuals.ts`'s row icons/labels.
-
-**Library / Progress / Settings / Today / Login**
-- `src/features/library/` (`LibraryBrowserPage`, `LibraryCollectionView`, `LibraryDeckPage`, `collectionTree.ts`, `deckMetrics.ts`, `shared/*`)
-- `src/features/progress/`, `src/domain/stats/{dateRange,progressMetrics,reviewHistory,cardDeckIndex}.ts`
-- `src/features/settings/` (`AccountSettingsPage`, `settingsSections.ts`, `sections/*`, `CardStateMigrationSection`)
-- `src/features/today/`, `src/features/login/`
-
-**Design system**
-- `src/index.css` — both token systems: the general light-only tokens and the namespaced `.itera-scope` / `.itera-flip*` Itera set, plus `@theme inline` exposure of `itera-`-prefixed Tailwind utilities.
-- `src/components/ui/{Button,Field,FloatingPanel,dialogs}.tsx`, `src/components/text/RichText.tsx`, `src/components/code/`, `src/lib/{cn,id,lazyWithRetry}.ts`
-
-**Preview infrastructure**
-- `src/features/design-preview/` — chrome-free fixture routes for the six review interactions, and nothing else. Each imports the **production** `ReviewSessionScreen`, so a preview cannot drift from `/review`. The Library slice that once lived here was an adapted-not-imported fork; production overtook it and it was deleted.
+Explicitly **not** in this milestone: the Collection/Deck split (Phase G) and the Roadmaps reskin. Those are the next two candidates, in that order.
 
 ---
 
@@ -310,7 +262,7 @@ An unmatched path renders `RouteError`'s **"Page not found"** branch (`isRouteEr
 - `/roadmaps*` — routed and working, deliberately out of primary nav (spec §36 defers it). **Do not delete**; the data, repository member and Supabase table are untouched.
 - Retained with no caller, on purpose: `src/hooks/useDrafts.ts` (+ `repo.drafts`, the Dexie store, and `drafts` in backup import/export). The drafts *UI* was deleted; the *data* was not. See §15.
 - Deleted for good (do not resurrect): `Sidebar.tsx`, `BottomNav.tsx`, `navItems.ts`, `PageHeaderOverride.tsx`, `TodayShell.tsx`, `CreateMenu.tsx`, `ProfileMenu.tsx`, `SettingsPage.tsx`, `src/auth/LoginPage.tsx`, `CardDetailPage`.
-- **Deleted 2026-08-17 with the v1 legacy surface** (do not resurrect): the `/browse`, `/cards/new`, `/drafts` and `/stats` routes and their pages; `src/features/cards/{registry,renderers}/` (all 8 families), `CardRow.tsx`, `CardTypeBadge.tsx`, `CardView.tsx`; `src/features/{dashboard,decks,drafts,stats}/` entirely; `src/features/review/{ReviewSession,GradeBar,useReviewSession}`; `src/components/ui/FlipCard.tsx`; `src/components/layout/ThemeToggle.tsx`; `src/components/code/{CodeBlockField,lineRanges}`; `src/domain/grading/normalize.ts`; `src/domain/stats/computeStats.ts`; `src/features/cardsV2/{CardRowV2,shared/InteractionTypeBadge}.tsx`; and the entire `design-preview/library-{browser,deck,shared}/` fork.
+- **Deleted 2026-08-17 with the v1 legacy surface** (do not resurrect): the `/browse`, `/cards/new`, `/drafts` and `/stats` routes and their pages; `src/features/cards/{registry,renderers}/` (all 8 families), `CardRow.tsx`, `CardTypeBadge.tsx`, `CardView.tsx`; `src/features/{dashboard,decks,drafts,stats}/` entirely; `src/features/review/{ReviewSession,GradeBar,useReviewSession}`; `src/components/ui/FlipCard.tsx`; `src/components/layout/ThemeToggle.tsx`; `src/components/code/{CodeBlockField,lineRanges}`; `src/domain/grading/normalize.ts`; `src/domain/stats/computeStats.ts`; `src/features/cards/{CardRowV2,shared/InteractionTypeBadge}.tsx`; and the entire `design-preview/library-{browser,deck,shared}/` fork.
 
 ## 20. Visual system status
 

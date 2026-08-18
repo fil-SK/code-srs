@@ -1,27 +1,23 @@
 import type { Card, Millis } from '@/types'
+import { CARD_SCHEMA_VERSION } from '@/types/card'
 import { newId } from '@/lib/id'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 
-// Plain Omit collapses a discriminated union (loses the type<->content link), so
-// distribute over each variant to keep them correlated.
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-  ? Omit<T, K>
-  : never
-
-// The fields a caller supplies when creating a card; the envelope (id,
-// timestamps, suspended, scheduling) is filled in here.
-export type NewCardInput = DistributiveOmit<
+// The fields a caller supplies when creating a Card; the envelope
+// (id, schemaVersion, timestamps, suspended, scheduling) is filled in here.
+export type NewCardInput = Omit<
   Card,
-  'id' | 'createdAt' | 'updatedAt' | 'suspended' | 'scheduling'
+  'id' | 'schemaVersion' | 'createdAt' | 'updatedAt' | 'suspended' | 'scheduling'
 >
 
 export function createCard(input: NewCardInput, now: Millis = Date.now()): Card {
   return {
     id: newId(),
+    schemaVersion: CARD_SCHEMA_VERSION,
     createdAt: now,
     updatedAt: now,
     suspended: false,
     scheduling: initialSchedulingState(now),
     ...input,
-  } as Card
+  }
 }

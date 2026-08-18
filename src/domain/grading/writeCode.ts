@@ -1,4 +1,4 @@
-import type { WriteCodeInteraction } from '@/types/cardV2'
+import type { WriteCodeInteraction } from '@/types/card'
 
 type Comparison = WriteCodeInteraction['comparison']
 

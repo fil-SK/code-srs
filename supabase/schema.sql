@@ -1,4 +1,4 @@
--- code-srs schema. Run this once in the Supabase SQL editor
+-- Itera schema. Run this once in the Supabase SQL editor
 -- (Dashboard -> SQL Editor -> New query -> paste -> Run).
 --
 -- Design: one table per entity. The full entity object lives in `data` (jsonb),
@@ -7,7 +7,9 @@
 -- index them. Row Level Security locks every row to its owner.
 
 -- ---------------------------------------------------------------------------
--- Cards
+-- Cards. One row per card: content plus its own embedded FSRS scheduling.
+-- (The former `cards_v2` and `card_states` tables are gone — see
+-- supabase/migrations/0002_single_card_model.sql.)
 -- ---------------------------------------------------------------------------
 create table if not exists public.cards (
   id        text primary key,
@@ -104,58 +106,3 @@ create policy "own rows" on public.roadmaps
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 grant select, insert, update, delete on public.roadmaps to authenticated;
-
--- ---------------------------------------------------------------------------
--- CardState (Itera redesign Phase D — CardState extraction, dual-written
--- alongside Card.scheduling, not yet read from anywhere). Added after the
--- initial schema; this whole block is a self-contained migration you can
--- paste and run on an existing database — same as supabase/migrations/
--- 0001_card_states.sql. Keyed by `card_id` (CardState's own natural key),
--- not `id` — see itera-decisions.md.
--- ---------------------------------------------------------------------------
-create table if not exists public.card_states (
-  card_id text primary key references public.cards (id) on delete cascade,
-  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  data    jsonb not null
-);
-
-create index if not exists card_states_user_idx on public.card_states (user_id);
-
-alter table public.card_states enable row level security;
-
-drop policy if exists "own rows" on public.card_states;
-create policy "own rows" on public.card_states
-  for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
-
-grant select, insert, update, delete on public.card_states to authenticated;
-
--- ---------------------------------------------------------------------------
--- CardV2 (Itera redesign Phase F — Create/Edit). Real, persisted storage for
--- cards authored/edited through the new Recall editor: full CardV2 content
--- plus its own embedded `scheduling`, independent of card_states above (this
--- table is never dual-written to/from card_states). Same one-table,
--- data-jsonb-plus-generated-columns pattern as `cards`. Added after the
--- initial schema; this whole block is a self-contained migration you can
--- paste and run on an existing database.
--- ---------------------------------------------------------------------------
-create table if not exists public.cards_v2 (
-  id        text primary key,
-  user_id   uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  data      jsonb not null,
-  deck_id   text    generated always as (data ->> 'deckId') stored,
-  due       bigint  generated always as ((data -> 'scheduling' ->> 'due')::bigint) stored,
-  suspended boolean generated always as ((data ->> 'suspended')::boolean) stored
-);
-
-create index if not exists cards_v2_user_due_idx on public.cards_v2 (user_id, suspended, due);
-create index if not exists cards_v2_user_deck_idx on public.cards_v2 (user_id, deck_id);
-
-alter table public.cards_v2 enable row level security;
-
-drop policy if exists "own rows" on public.cards_v2;
-create policy "own rows" on public.cards_v2
-  for all to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
-
-grant select, insert, update, delete on public.cards_v2 to authenticated;

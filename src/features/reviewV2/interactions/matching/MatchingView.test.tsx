@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CardV2, MatchingInteraction } from '@/types/cardV2'
-import { richText } from '@/types/cardV2'
+import type { Card, MatchingInteraction } from '@/types/card'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { matchingDefinition } from './index'
 import { ReviewSessionScreen } from '../../ReviewSessionScreen'
@@ -57,7 +57,7 @@ const threeColumnInteraction: MatchingInteraction = {
   ],
 }
 
-function cardWith(i: MatchingInteraction): CardV2 & { interaction: MatchingInteraction } {
+function cardWith(i: MatchingInteraction): Card & { interaction: MatchingInteraction } {
   return {
     id: 'test-matching-1',
     schemaVersion: 2,

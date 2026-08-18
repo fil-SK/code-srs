@@ -53,7 +53,6 @@ describe('AccountSettingsPage', () => {
       'Privacy',
       'Connected devices',
       'Import / Export',
-      'Card scheduling',
     ]) {
       expect(screen.getByRole('link', { name: label })).toBeTruthy()
     }
@@ -68,12 +67,6 @@ describe('AccountSettingsPage', () => {
     expect(screen.getByRole('button', { name: /Import JSON/ }).hasAttribute('disabled')).toBe(false)
   })
 
-  it('keeps the CardState migration tool reachable', () => {
-    renderAt('/settings/card-scheduling')
-
-    expect(screen.getByRole('heading', { name: /Card scheduling migration/ })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Run dry run' })).toBeTruthy()
-  })
 
   it('falls back to Profile for an unknown section slug', () => {
     renderAt('/settings/does-not-exist')

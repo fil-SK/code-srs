@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { MultipleChoiceInteraction } from '@/types/cardV2'
+import type { MultipleChoiceInteraction } from '@/types/card'
 import { gradeMultipleChoice } from './multipleChoice'
 
 const single: MultipleChoiceInteraction = {

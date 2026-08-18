@@ -2,8 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { CardV2, WriteCodeInteraction } from '@/types/cardV2'
-import { richText } from '@/types/cardV2'
+import type { Card, WriteCodeInteraction } from '@/types/card'
+import { richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 import { writeCodeDefinition } from './index'
 import { ReviewSessionScreen } from '../../ReviewSessionScreen'
@@ -46,7 +46,7 @@ const comparison = {
   caseSensitive: true,
 }
 
-function fixture(interaction: WriteCodeInteraction): CardV2 & { interaction: WriteCodeInteraction } {
+function fixture(interaction: WriteCodeInteraction): Card & { interaction: WriteCodeInteraction } {
   return {
     id: 'test-write-code-1',
     schemaVersion: 2,

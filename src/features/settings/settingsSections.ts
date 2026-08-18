@@ -1,7 +1,6 @@
 import {
   ArrowUpDown,
   Bell,
-  Layers,
   Lock,
   Mail,
   Monitor,
@@ -34,7 +33,6 @@ export const settingsSections: SettingsSection[] = [
   { slug: 'privacy', label: 'Privacy', icon: Lock, group: 1 },
   { slug: 'devices', label: 'Connected devices', icon: Monitor, group: 1 },
   { slug: 'import-export', label: 'Import / Export', icon: ArrowUpDown, group: 2 },
-  { slug: 'card-scheduling', label: 'Card scheduling', icon: Layers, group: 2 },
 ]
 
 export const DEFAULT_SECTION = 'profile'

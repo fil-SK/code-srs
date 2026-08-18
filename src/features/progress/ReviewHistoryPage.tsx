@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { ID, Rating } from '@/types'
+import type { ID, InteractionType, Rating } from '@/types'
 import { cn } from '@/lib/cn'
 import { useReviewLogs } from '@/hooks/useReview'
 import { useSearchCards } from '@/hooks/useCards'
-import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import { useDecks } from '@/hooks/useDecks'
-import { getCardTitle } from '@/features/cards/cardTypeMeta'
 import { rowVisualFor } from '@/features/library/shared/rowVisuals'
 import { EmptyState } from '@/features/library/shared/EmptyState'
 import { CardListFooter } from '@/features/library/shared/CardListFooter'
@@ -42,18 +40,16 @@ function gridClass() {
 }
 
 // A card's display label. Resolved here rather than in domain/stats, because
-// getCardTitle and rowVisualFor live behind modules that pull in lucide and
-// src/domain does not import from src/features.
+// rowVisualFor lives behind a module that pulls in lucide, and src/domain
+// does not import from src/features.
 interface CardLabel {
   title: string
-  kind: 'v1' | 'v2'
-  type: string
+  type: InteractionType
 }
 
 export function ReviewHistoryPage() {
   const logsQuery = useReviewLogs()
   const cardsQuery = useSearchCards({ includeSuspended: true })
-  const cardsV2Query = useSearchCardsV2({ includeSuspended: true })
   const decksQuery = useDecks()
 
   const [rangeValue, setRangeValue] = useState<HistoryRangeValue>('30d')
@@ -68,25 +64,18 @@ export function ReviewHistoryPage() {
   const logs = logsQuery.data
   const decks = useMemo(() => decksQuery.data ?? [], [decksQuery.data])
 
-  const cardDecks = useMemo(
-    () => buildCardDeckMap(cardsQuery.data ?? [], cardsV2Query.data ?? []),
-    [cardsQuery.data, cardsV2Query.data],
-  )
+  const cardDecks = useMemo(() => buildCardDeckMap(cardsQuery.data ?? []), [cardsQuery.data])
 
   const cardLabels = useMemo(() => {
     const map = new Map<ID, CardLabel>()
     for (const c of cardsQuery.data ?? []) {
-      map.set(c.id, { title: getCardTitle(c), kind: 'v1', type: c.type })
-    }
-    for (const c of cardsV2Query.data ?? []) {
       map.set(c.id, {
         title: c.prompt.value.split('\n')[0]?.trim() || '(untitled)',
-        kind: 'v2',
         type: c.interaction.type,
       })
     }
     return map
-  }, [cardsQuery.data, cardsV2Query.data])
+  }, [cardsQuery.data])
 
   const deckNames = useMemo(() => new Map(decks.map((d) => [d.id, d.name])), [decks])
 
@@ -124,7 +113,6 @@ export function ReviewHistoryPage() {
   if (
     logsQuery.isLoading ||
     cardsQuery.isLoading ||
-    cardsV2Query.isLoading ||
     decksQuery.isLoading
   ) {
     return (
@@ -210,9 +198,7 @@ export function ReviewHistoryPage() {
                     <div className="divide-y divide-itera-border">
                       {pageRows.map((row) => {
                         const label = cardLabels.get(row.cardId)
-                        const visual = label
-                          ? rowVisualFor({ kind: label.kind, type: label.type })
-                          : null
+                        const visual = label ? rowVisualFor(label.type) : null
                         const Icon = visual?.icon
                         return (
                           <div

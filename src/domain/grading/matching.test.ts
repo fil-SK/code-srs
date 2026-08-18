@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { MatchingInteraction } from '@/types/cardV2'
+import type { MatchingInteraction } from '@/types/card'
 import { gradeMatching, isMatchingResponseReady, type MatchingResponse } from './matching'
 
 // Ordinary two-column matching.

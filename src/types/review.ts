@@ -1,4 +1,5 @@
 import type { ID, Millis } from './common'
+import type { InteractionType } from './card'
 
 // FSRS grades. The 4-button self-grade bar maps directly to these.
 export type Rating = 1 | 2 | 3 | 4 // Again | Hard | Good | Easy
@@ -39,4 +40,41 @@ export interface ReviewLog {
   // separately; dueAfter also covers learning steps, where scheduledDays is 0
   // but the card is due again in minutes.
   dueAfter?: Millis
+}
+
+// ---- ReviewEvent — immutable review history (spec §9.3) ----
+
+export interface ReviewEvent {
+  id: ID
+  cardId: ID
+  sessionId: ID
+  interactionType: InteractionType
+  reviewedAt: Millis
+  rating: 1 | 2 | 3 | 4 // Again | Hard | Good | Easy
+  autoGraded: boolean
+  responseDurationMs: number
+  stabilityBefore: number
+  stabilityAfter: number
+  difficultyBefore: number
+  difficultyAfter: number
+  stateAfter: SchedulingStateKind
+  metadata?: Record<string, unknown> // per-step Walkthrough outcomes, etc.
+}
+
+// ---- StudySession (spec §9.1) ----
+
+export type SessionSource =
+  | { kind: 'due' }
+  | { kind: 'deck'; deckId: ID }
+  | { kind: 'decks'; deckIds: ID[] }
+  | { kind: 'collection'; collectionId: ID }
+
+export interface StudySession {
+  id: ID
+  source: SessionSource
+  cardIds: ID[]
+  currentIndex: number
+  startedAt: Millis
+  completedAt?: Millis
+  goal?: { cardCount?: number; targetMinutes?: number }
 }

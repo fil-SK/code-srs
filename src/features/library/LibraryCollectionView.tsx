@@ -10,19 +10,17 @@ import {
   Settings,
   Trash2,
 } from 'lucide-react'
-import type { Card, Deck, ID } from '@/types'
+import type { Deck, ID } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
 import { useDialogs } from '@/components/ui/dialogs'
 import { cn } from '@/lib/cn'
 import { languageLabel } from '@/domain/decks/languages'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
-import { useDeleteCard, useMoveCard, useSaveCard, useSearchCards } from '@/hooks/useCards'
-import { useSearchCardsV2 } from '@/hooks/useCardsV2'
+import { useSearchCards } from '@/hooks/useCards'
 import { useCreateDeck, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
-import { getCardTitle } from '@/features/cards/cardTypeMeta'
-import { OverflowMenu } from '@/features/cardsV2/shared/OverflowMenu'
-import { CardTableHeader, CardTableRowV1, CardTableRowV2 } from './shared/CardTable'
+import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
+import { CardTableHeader, CardTableRow } from './shared/CardTable'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
 import { CardListFooter } from './shared/CardListFooter'
 import { DeckMark } from './shared/DeckMark'
@@ -41,7 +39,7 @@ import {
 } from './collectionTree'
 import { aggregateMetrics, metricsFor, type DeckMetrics } from './deckMetrics'
 import { sortDecks, type DeckSortKey } from './shared/sortDecks'
-import { formatLastStudied } from '@/features/cardsV2/shared/format'
+import { formatLastStudied } from '@/features/cards/shared/format'
 
 const PAGE_SIZE = 10
 
@@ -71,9 +69,6 @@ export function LibraryCollectionView({
   const createDeck = useCreateDeck()
   const saveDeck = useSaveDeck()
   const deleteDeck = useDeleteDeck()
-  const saveCard = useSaveCard()
-  const deleteCard = useDeleteCard()
-  const moveCard = useMoveCard()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<DeckSortKey>('name')
@@ -115,8 +110,7 @@ export function LibraryCollectionView({
   // the pre-Collection data model never forbade it. Surfaced as its own
   // section below rather than silently hidden.
   const directCards = useSearchCards({ deckId: collectionId, includeSuspended: true })
-  const directCardsV2 = useSearchCardsV2({ deckId: collectionId, includeSuspended: true })
-  const directCount = (directCards.data?.length ?? 0) + (directCardsV2.data?.length ?? 0)
+  const directCount = directCards.data?.length ?? 0
 
   async function newDeck() {
     const name = await dialogs.prompt({
@@ -155,18 +149,6 @@ export function LibraryCollectionView({
     if (ok) deleteDeck.mutate(child.id)
   }
 
-  function toggleSuspendDirect(card: Card) {
-    saveCard.mutate({ ...card, suspended: !card.suspended })
-  }
-
-  async function removeDirectCard(card: Card) {
-    const ok = await dialogs.confirm({
-      title: 'Delete this card?',
-      description: `“${getCardTitle(card)}” will be removed permanently. This cannot be undone.`,
-      danger: true,
-    })
-    if (ok) deleteCard.mutate(card.id)
-  }
 
   async function deleteCollection() {
     if (!deck) return
@@ -393,19 +375,8 @@ export function LibraryCollectionView({
             </div>
             <div className="rounded-itera-card border border-itera-border bg-itera-surface px-4">
               <div className="divide-y divide-itera-border">
-                {(directCardsV2.data ?? []).map((card) => (
-                  <CardTableRowV2 key={card.id} card={card} decks={flatDecks} now={now} />
-                ))}
                 {(directCards.data ?? []).map((card) => (
-                  <CardTableRowV1
-                    key={card.id}
-                    card={card}
-                    decks={flatDecks}
-                    onToggleSuspend={toggleSuspendDirect}
-                    onDelete={removeDirectCard}
-                    onMove={(c, deckId) => moveCard.mutate({ card: c, deckId })}
-                    now={now}
-                  />
+                  <CardTableRow key={card.id} card={card} decks={flatDecks} now={now} />
                 ))}
               </div>
             </div>

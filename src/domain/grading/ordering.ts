@@ -1,5 +1,5 @@
 import type { ID } from '@/types/common'
-import type { OrderingInteraction } from '@/types/cardV2'
+import type { OrderingInteraction } from '@/types/card'
 
 export interface OrderingPositionResult {
   itemId: ID

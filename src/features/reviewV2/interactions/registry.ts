@@ -1,4 +1,4 @@
-import type { InteractionType } from '@/types/cardV2'
+import type { InteractionType } from '@/types/card'
 import type { InteractionDefinition } from './types'
 import { recallDefinition } from './recall'
 import { multipleChoiceDefinition } from './multipleChoice'

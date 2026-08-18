@@ -1,8 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Undo2 } from 'lucide-react'
 import type { Card, ID } from '@/types'
-import { migrateCard } from '@/domain/migration/cardMigration'
 import type { SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
 import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
@@ -10,23 +9,17 @@ import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import { usePersistReviewResult, useUndoGrade } from '@/hooks/useReview'
 
 interface UndoEntry {
-  card: Card // original v1 card (pre-grade), restored verbatim on undo
+  card: Card // the pre-grade card, restored verbatim on undo
   logId: ID
 }
 
-// Production's Review surface, replacing `ReviewSession` for actual
-// reviewing: every v1 Card is migrated to CardV2 on read (migrateCard, the
-// one lazy/on-read migration this codebase allows) and rendered through the
-// same shared v2 shell used by /design-preview/* - no separate "production"
-// copy of ReviewSessionScreen, the phase reducer, or the interaction
-// registry. The v1 `ReviewSession`/`useReviewSession` pair this replaced has
-// been deleted, so this is the only Review surface.
+// Production's Review surface. Cards render through the same shared shell
+// used by /design-preview/* - there is no separate "production" copy of
+// ReviewSessionScreen, the phase reducer, or the interaction registry.
 //
-// Scheduling still lives on `Card.scheduling` (Phase D, CardState
-// extraction, hasn't happened): `schedulingBefore` is the real, current
-// value from the snapshot queue, and grading persists back onto the
-// original v1 Card via `usePersistReviewResult`, not a CardV2 store that
-// doesn't exist yet.
+// `schedulingBefore` is the real, current value from the snapshot queue, and
+// grading persists back onto the card's own embedded scheduling via
+// `usePersistReviewResult`.
 export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   const navigate = useNavigate()
   const [queue] = useState(() => cards)
@@ -38,8 +31,6 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   const current = queue[index]
   const isComplete = index >= queue.length
   const busy = persist.isPending || undo.isPending
-
-  const cardV2 = useMemo(() => (current ? migrateCard(current) : undefined), [current])
 
   async function handleGraded(original: Card, result: SubmitReviewResult) {
     await persist.mutateAsync({ card: original, after: result.after, log: result.log })
@@ -86,14 +77,14 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
     )
   }
 
-  if (!current || !cardV2) return null
+  if (!current) return null
 
   return (
     <IteraSurface>
       <ReviewSessionScreen
         key={current.id}
-        card={cardV2}
-        definition={getInteractionDefinition(cardV2.interaction.type)}
+        card={current}
+        definition={getInteractionDefinition(current.interaction.type)}
         current={index + 1}
         total={queue.length}
         onExit={() => navigate('/')}

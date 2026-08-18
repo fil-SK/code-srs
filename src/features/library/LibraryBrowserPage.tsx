@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { useDialogs } from '@/components/ui/dialogs'
 import { useCreateDeck, useDecks, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
-import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import {
   collectionIdFor,
   deriveCollections,
@@ -50,7 +49,6 @@ export function LibraryBrowserPage() {
   const decksQuery = useDecks()
   const allCards = useSearchCards({ includeSuspended: true })
   const dueCards = useDueCards({ now })
-  const allCardsV2 = useSearchCardsV2({ includeSuspended: true })
 
   const createDeck = useCreateDeck()
   const saveDeck = useSaveDeck()
@@ -59,15 +57,9 @@ export function LibraryBrowserPage() {
   const collections = useMemo(() => deriveCollections(decksQuery.data ?? []), [decksQuery.data])
   const leaves = useMemo(() => leafDecks(decksQuery.data ?? []), [decksQuery.data])
 
-  const v2CountByDeck = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const c of allCardsV2.data ?? []) map.set(c.deckId, (map.get(c.deckId) ?? 0) + 1)
-    return map
-  }, [allCardsV2.data])
-
   const metrics = useMemo(
-    () => computeDeckMetrics(allCards.data ?? [], dueCards.data ?? [], v2CountByDeck),
-    [allCards.data, dueCards.data, v2CountByDeck],
+    () => computeDeckMetrics(allCards.data ?? [], dueCards.data ?? []),
+    [allCards.data, dueCards.data],
   )
 
   const navDecks = useMemo(

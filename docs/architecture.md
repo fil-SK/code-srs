@@ -21,7 +21,7 @@ Five constraints shape everything below. Breaking one of them is a decision, not
 1. **Local-first.** Card authoring, review, scheduling, search, history, import/export and previews all work with **no network and no account**. Dexie/IndexedDB is the default backend; Supabase is opt-in cloud sync, never a prerequisite. AI is optional external tooling (see [`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)) and never a runtime dependency.
 2. **One storage seam.** The entire app depends on the `Repository` interface and never learns which backend is live.
 3. **Layer separation.** `UI components → hooks (application/use-case) → domain models + scheduler boundary → repositories`. FSRS math, persistence and UI state must not share a component. Everything under `src/domain/` is pure and React-free.
-4. **Content is separate from learning state.** `Card` (content), `CardState` (scheduling), `ReviewEvent`/`ReviewLog` (immutable history) are distinct concerns. This is a hard requirement for any future shared or purchased deck, and it is why the CardState extraction exists at all.
+4. **History is immutable and separate.** `ReviewLog` is an append-mostly record that no feature rewrites. Scheduling currently lives *on* the `Card` rather than in its own entity: the half-built `CardState` extraction was removed with the card-model convergence because nothing read it. Separating content from learning state again is a real requirement for any future shared or purchased deck, but it is then a deliberate schema change with a migration, not an assumption the code already satisfies.
 5. **No destructive data change without an explicit, dry-runnable cutover.** Additive first; removal is always a separate, later, separately-decided step.
 
 ---
@@ -48,8 +48,7 @@ src/
 │   ├── search/       searchableText.ts
 │   └── stats/        dateRange.ts, progressMetrics.ts
 ├── features/
-│   ├── cards/          cardTypeMeta.ts ONLY — the v1 registry, renderers and pages were deleted
-│   ├── cardsV2/        the v2 authoring UI — see "Card creation" below
+│   ├── cards/          the authoring UI — see "Card creation" below
 │   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
 │   │                   production ReviewSessionScreen, so they cannot drift from /review
 │   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, sortDecks, useIsWideLibrary)
@@ -57,12 +56,12 @@ src/
 │   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2)
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
 │   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG) — hidden from primary nav, route/data preserved
-│   ├── settings/       AccountSettingsPage, SettingsNav, settingsSections.ts, sections/*, CardStateMigrationSection
+│   ├── settings/       AccountSettingsPage, SettingsNav, settingsSections.ts, sections/*
 │   └── today/          TodayPage, SuggestedSessionHero, MomentumPanel, ContinueLearningList, PaceChart — renders through the shared AppShell now, no separate TodayShell
 ├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
 ├── lib/          cn.ts (clsx+twMerge), id.ts (newId), lazyWithRetry.ts
 ├── test/         setup.ts (global Vitest setup)
-└── types/        card.ts (v1 union), cardV2.ts (v2 union), deck.ts, review.ts, roadmap.ts
+└── types/        card.ts (the one Card model), deck.ts, review.ts, roadmap.ts
 ```
 
 ---
@@ -94,8 +93,6 @@ export interface Repository {
   drafts: CrudRepo<Draft>
   reviews: ReviewRepo
   roadmaps: CrudRepo<Roadmap>
-  cardStates: CrudRepo<CardState> // CrudRepo's `id` param is CardState.cardId, its natural key
-  cardsV2: CardV2Repo // real, persisted CardV2 storage (Phase F) — see "Card creation" below
 }
 ```
 
@@ -118,22 +115,23 @@ A lazily-constructed singleton, chosen purely by whether `VITE_SUPABASE_URL`/`VI
 **Dexie backend** (`src/data/dexie/db.ts` + `DexieRepository.ts`) — database name is still literally `'code-srs'` (not renamed for the rebrand). Schema is additive/incremental:
 
 ```ts
+// Database 'itera'. One version on purpose: it was renamed from 'code-srs'
+// when the card models converged, which discarded the prototype data and let
+// the old version(1)..version(4) ladder collapse into this single declaration.
 this.version(1).stores({
-  cards: 'id, deckId, type, *tags, scheduling.due',
+  cards: 'id, deckId, *tags, scheduling.due',
   decks: 'id, parentId, name',
   drafts: 'id, createdAt',
   reviewLogs: 'id, cardId, reviewedAt',
+  roadmaps: 'id, title',
 })
-this.version(2).stores({ roadmaps: 'id, title' })
-this.version(3).stores({ cardStates: 'cardId' })
-this.version(4).stores({ cardsV2: 'id, deckId, *tags, scheduling.due' })
 ```
 
 Each `version()` call declares only new/changed stores — Dexie carries the rest forward. `*tags` is a multi-entry index; `scheduling.due` is a nested-keypath index letting `getDue()` query `db.cards.where('scheduling.due').belowOrEqual(now)` directly. Booleans (`suspended`) aren't indexed — IndexedDB can't index them — so suspension is filtered in memory.
 
 > **Gotcha:** any Dexie schema change needs a new `version()` bump, declaring only the new/changed stores.
 
-**Supabase backend** (`src/data/supabase/SupabaseRepository.ts`) — every table stores the whole entity as an opaque `data jsonb` column (mirroring Dexie's "plain object" model exactly), plus a few **generated columns** so hot queries can be indexed (`due`, `suspended`, `deck_id` on `cards`; `card_id`, `reviewed_at` on `review_logs`). `getDue`/`search` push what they can to SQL (`.eq('suspended', false).lte('due', now)`) and do the rest — deck/tag/type/text filtering — **in memory, identically to Dexie**, so results match regardless of backend. Row Level Security scopes every query to `auth.uid()`.
+**Supabase backend** (`src/data/supabase/SupabaseRepository.ts`) — every table stores the whole entity as an opaque `data jsonb` column (mirroring Dexie's "plain object" model exactly), plus a few **generated columns** so hot queries can be indexed (`due`, `suspended`, `deck_id` on `cards`; `card_id`, `reviewed_at` on `review_logs`). `getDue`/`search` push what they can to SQL (`.eq('suspended', false).lte('due', now)`) and do the rest — deck/tag/interaction/text filtering — **in memory, identically to Dexie**, so results match regardless of backend. Row Level Security scopes every query to `auth.uid()`.
 
 > **Gotcha:** Postgres denies a table before RLS even runs if the table lacks a `grant` — a missing grant is a 403 on every request, not an RLS problem. Every table in `supabase/schema.sql` needs `grant select, insert, update, delete ... to authenticated` alongside its RLS policy.
 
@@ -156,10 +154,6 @@ export const qk = {
   draft: (id) => ['drafts', 'byId', id],
   roadmaps: ['roadmaps'],
   roadmap: (id) => ['roadmaps', 'byId', id],
-  cardStates: ['cardStates'], // reserved, nothing reads CardState yet
-  cardsV2: ['cardsV2'],
-  cardV2: (id) => ['cardsV2', 'byId', id],
-  cardsV2Search: (query) => ['cardsV2', 'search', query],
 }
 ```
 
@@ -167,13 +161,12 @@ Parameterized keys (`cardsDue`, `cardsSearch`) embed the query object itself, so
 
 | Hook file | Exports | Notes |
 |---|---|---|
-| `useCards.ts` | `useCard`, `useDueCards`, `useSearchCards`, `useCreateCard`, `useSaveCard`, `useDeleteCard`, `useMoveCard`, `useReorderCards` | `useSaveCard` also toggles `suspended`. `useMoveCard` drops manual `order` on move. `useReorderCards` bulk-assigns sequential `order`, preserving `updatedAt` (reordering isn't an edit). |
+| `useCards.ts` | `useCard`, `useDueCards`, `useSearchCards`, `useCreateCard`, `useSaveCard`, `useDeleteCard`, `useMoveCard`, `useReorderCards`, plus one `useSave*Card` per interaction type | `useSaveCard` also toggles `suspended`. `useMoveCard` drops manual `order` on move. `useReorderCards` bulk-assigns sequential `order`, preserving `updatedAt` (reordering isn't an edit). |
 | `useDecks.ts` | `useDecks`, `useCreateDeck`, `useSaveDeck`, `useDeleteDeck` | Plain CRUD over `CrudRepo<Deck>`. |
 | `useDrafts.ts` | `useDrafts`, `useDraft`, `useCreateDraft`, `useDeleteDraft` | `useDrafts` sorts newest-first client-side. |
 | `useReview.ts` | `useReviewLogs`, `useGradeCard`, `usePersistReviewResult`, `useUndoGrade` | The grading write path — see "Scheduling" below. |
 | `useRoadmaps.ts` | `useRoadmaps`, `useRoadmap`, `useCreateRoadmap`, `useSaveRoadmap`, `useDeleteRoadmap` | `useSaveRoadmap` is the **only** hook using `qc.setQueryData` for an optimistic write, alongside invalidation. |
 | `useBackup.ts` | `useImportBackup` | `onSuccess: () => qc.invalidateQueries()` with no key filter — appropriate after a bulk multi-entity replace/merge. |
-| `useCardsV2.ts` | `useCardV2`, `useSearchCardsV2`, `useCreateCardV2`, `useSaveCardV2`, `useDeleteCardV2`, plus one `useSave*Card` per interaction type (`useSaveRecallCard`, `useSaveMultipleChoiceCard`, `useSaveWriteCodeCard`, `useSaveOrderingCard`, `useSaveMatchingCard`, `useSaveWalkthroughCard`) | Plain CRUD over `CardV2Repo`, plus one save hook per authorable interaction type — thin wrappers around the pure `src/domain/cardsV2/save*Card.ts` modules (each unit-tested directly against a repository), which are the only places a legacy v1 card gets migrated to a `CardV2Record` on save. |
 
 Conventions observed across all of them: query keys always go through `qk`, never inlined; every mutation is a thin async function calling 1+ repo methods directly (no separate service layer for plain CRUD); `onSuccess` invalidates the coarse list key and, where relevant, the specific item key.
 
@@ -183,34 +176,46 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 
 | Entity | Type file | Repo | Dexie table | Supabase table | Tree/graph helpers |
 |---|---|---|---|---|---|
-| **Card** (v1) | `src/types/card.ts` | `CardRepo` | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/type) |
+| **Card** | `src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |
 | **Deck** | `src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
 | **Draft** | `src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
 | **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Carries an optional `dueAfter` (the resulting next-due instant); the scheduled interval is `dueAfter - reviewedAt`, so FSRS's `scheduledDays` is deliberately not logged separately. Rows written before the field existed lack it and render an em dash. |
 | **Roadmap** | `src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
-| **CardState** (v2, Phase D) | `src/types/cardV2.ts` | `CrudRepo<CardState>` (keyed by `cardId`) | `cardStates` (v3) | `card_states` (unverified against a live DB — see D42) | `src/domain/scheduling/cardState.ts`: `cardStateFromCard`, `cardStatesEqual` |
-| **CardV2Record** (v2, Phase F) | `src/types/cardV2.ts` | `CardV2Repo` (`getDue`/`search` + CRUD) | `cardsV2` (v4) | `cards_v2` (+ generated `deck_id`, `due`, `suspended` — same shape as `cards`; unverified against a live DB) | — (flat, filtered by deck/tag; no tree needed) |
 
-A `ReviewLog` stores only a `cardId`, so every deck-scoped read joins through the card at query time via `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards, cardsV2)`. That join **must span both card stores**: saving a legacy card through a `src/domain/cardsV2/save*Card.ts` module deletes its `cards` row and writes a `cardsV2` record under the same id, so a v1-only map silently drops those cards' entire review history. `computeRetentionSeries`/`computeDeckPerformance` and `buildReviewHistory` all take the prebuilt map rather than a card array.
+A `ReviewLog` stores only a `cardId`, so every deck-scoped read joins through the card at query time via `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`. Callers build it once per render and pass it down; `computeRetentionSeries`/`computeDeckPerformance` and `buildReviewHistory` all take the prebuilt map rather than a card array. (This helper previously had to span two card stores, which is exactly the bug class the single model removes — see D186.)
 
 Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
 
-**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 1`, still 1 despite `CardV2` existing): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?, cardStates?, cardsV2?}}`. `roadmaps`/`cardStates`/`cardsV2` are optional so older backups still import. `parseBackup()` rejects a version newer than the app supports and validates the four required arrays are actually arrays.
+**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `parseBackup()` rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2) — without that lower bound a prototype-era version-1 file would be read as though its v1 cards were the current shape.
 
 ---
 
-## The v1 card model (storage only)
+## The card model
 
-`src/types/card.ts` is a discriminated union on `type`, 8 members: `basic`, `mcq`, `codeReading`, `codeCompletion`, `bugFinding`, `ordering`, `matching`, `story`. Each is `CardBase & { type: T; content: TContent }`, where `CardBase` is `{id, deckId, tags, createdAt, updatedAt, order?, suspended, scheduling}`.
+`src/types/card.ts` defines exactly one `Card`:
 
-**This is now a storage format, not a UI subsystem.** The v1 `CardTypeDefinition` registry and all 8 `renderers/<type>/` families (`Question`/`Answer`/`Editor`) were **deleted** on 2026-08-17 along with the routes that used them. There is exactly one rendering path and one authoring path for every card:
+```ts
+{ id, schemaVersion, deckId, prompt, tip?, explanation?, interaction, tags,
+  createdAt, updatedAt, suspended, scheduling, order? }
+```
 
-- **Render:** `migrateCard` (`src/domain/migration/cardMigration.ts`) adapts a v1 `Card` into a `CardV2` on read, and `reviewV2/interactions/` renders it. This is the one lazy/on-read migration this codebase allows.
-- **Author:** `CardEditEntry` opens a v2 editor shell for all 8 v1 types, migrating to a `CardV2Record` on save.
+Content and scheduling live together on the one record. `interaction` is a discriminated union on `type` with six members: `recall`, `multiple_choice`, `write_code`, `ordering`, `matching`, `walkthrough`.
 
-`src/features/cards/` therefore contains exactly one file: **`cardTypeMeta.ts`**, which survives because `features/library/shared/rowVisuals.ts` reads its per-type icon, label and tile color to render card-table rows for both models.
+**There is no second card model and no on-read migration.** The v1 8-type union, the `CardV2`/`CardV2Record` content-vs-record split, `migrateCard`, and the separate `cardsV2` store were all deleted when the two models converged (see `itera-decisions.md`). Prototype card data was discarded rather than migrated, and the Dexie database was renamed `code-srs` -> `itera` with a single `version(1)`.
 
-**There is no longer a "how to add a v1 card type" checklist, because you should not add one.** New card types are v2 interactions — see "Adding a v2 interaction" below. If a v1 type ever did need adding, the compiler-enforced touchpoints are now only: the union in `src/types/card.ts`, `getCardTitle` + the `cardTypeMeta` record (both `src/features/cards/cardTypeMeta.ts`), `searchableText` (`src/domain/search/searchableText.ts`), and `migrateCard`. The former soft spot — `seedContent.ts`'s silent `default:` fallback — no longer exists, because that file was deleted with the drafts UI.
+### Adding an interaction
+
+Compiler-enforced touchpoints first; the build fails until each is handled.
+
+1. `src/types/card.ts` — add the interface and a member to the `CardInteraction` union.
+2. `src/domain/search/searchableText.ts` — add a `case`; its `never` guard fails the build until you do.
+3. `src/features/reviewV2/interactions/<type>/` — a `View` component plus an `index.ts` exporting an `InteractionDefinition`.
+4. `src/features/reviewV2/interactions/registry.ts` — register it. **The registry is `Partial<...>`, so a missing entry throws at runtime rather than failing the build** — this is the one step the compiler does not enforce.
+5. `src/domain/grading/<type>.ts` — a grader, if the type auto-grades (Recall does not; it is self-graded).
+6. `src/domain/cards/<type>Form.ts` — form state, `<type>FormToRecord`, `cardRecordTo<Type>Form`, `validate<Type>Form`, `empty<Type>Form`.
+7. `src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `src/hooks/useCards.ts`.
+8. `src/features/cards/` — `<Type>EditorShell`, `<Type>Fields`, `<Type>LivePreview`, a `CardTypeChooser` tile, and arms in `CardCreatePage` + `CardEditEntry`.
+9. `src/features/cards/shared/interactionTypeMeta.ts` — label, icon and tile colour (`features/library/shared/rowVisuals.ts` reads this for table rows).
 
 ---
 
@@ -259,48 +264,25 @@ interface ReviewService {
 }
 ```
 
-`submit()` computes `{after, log}` and returns them **without persisting anything** — there's no `CardV2`/`CardState`-backed read/write cutover yet, so callers persist the result themselves. This shape is designed not to change when that cutover eventually lands (only the internals gain a repository read/write).
+`submit()` computes `{after, log}` and returns them **without persisting anything** — callers persist the result themselves.
 
-`src/hooks/useReview.ts`'s `useGradeCard` (the **v1** path) calls `reviewState`/`buildReviewLog` **directly**, bypassing `reviewService` — known, intentional duplication (see `itera-decisions.md` D26), not yet consolidated. `usePersistReviewResult` (the **v2** path, used by `ReviewSessionV2` via `reviewService.submit`) takes an already-computed `{after, log}` rather than recomputing, so the two paths can't silently diverge on the FSRS math.
-
-### CardState dual-write (Phase D)
-
-`src/domain/scheduling/cardState.ts`'s `cardStateFromCard(card)` is the **only** place `Card.scheduling` + `Card.suspended` get reshaped into a `CardState` row — used identically by every write path and by the backfill migration. Six call sites dual-write (or delete) a matching `CardState` row alongside every `Card.scheduling` write:
-
-`useCreateCard`, `useSaveCard`, `useDeleteCard` (`src/hooks/useCards.ts`) and `useGradeCard`, `usePersistReviewResult`, `useUndoGrade` (`src/hooks/useReview.ts`).
-
-**Nothing reads from `CardState` yet** — `Card.scheduling` remains the sole source of truth for `getDue()` and everywhere else. The dual-write exists purely to keep the new store populated ahead of a later, separate read-cutover step. `src/domain/migration/cardStateBackfill.ts`'s `createCardStateBackfill(repo)` (a `MigrationRunner`) backfills `CardState` rows for cards that predate the dual-write rollout, using `cardStatesEqual()` to report `changed`/`skipped` idempotently.
+`usePersistReviewResult` (used by `ReviewSessionV2` via `reviewService.submit`) takes an already-computed `{after, log}` rather than recomputing it, so the session and the persistence hook can't silently diverge on the FSRS math.
 
 ---
 
-## Card v2 / migration
+## Migration machinery
 
-`src/types/cardV2.ts` defines a **second**, parallel card model living alongside `src/types/card.ts`'s v1 union — not replacing it. Key pieces:
+`src/domain/migration/runner.ts`'s `MigrationRunner` is the contract every data migration must satisfy — `dryRun()`, an idempotent `apply()`, and `rollbackInstructions()`, with `MigrationReport` carrying `beforeCounts`/`afterCounts`/`changed`/`skipped`/`orphans`/`duplicates`/`warnings`.
 
-- **`RichContent`** — `{format: 'markdown', value: string}`, built via `richText(value)`.
-- **`CardInteraction`** — a 6-member discriminated union on `type`: `RecallInteraction`, `MultipleChoiceInteraction`, `WriteCodeInteraction`, `OrderingInteraction`, `MatchingInteraction`, `WalkthroughInteraction`. V1's separate `basic`/`codeReading`/`bugFinding` *types* collapse into one `recall` interaction, differentiated by an `authoringPreset` tag (`'standard' | 'code_reading' | 'find_the_bug' | 'predict_output' | 'explain_code'`). V1's `story` becomes `walkthrough`, generalized to also support inline multiple-choice/short-answer steps. `WalkthroughStep` additionally owns optional `tip` and `explanation` rich content; these are additive to, not replacements for, the card-wide fields.
-- **`CardV2`** — `{id, schemaVersion, deckId, prompt, tip?, explanation?, interaction, tags, createdAt, updatedAt}`.
-- **`CardState`** — covered above.
-- **`ReviewEvent`** — the v2 successor to `ReviewLog` (adds `sessionId`, `interactionType`, free-form `metadata`). Not yet backed by a repository.
-- **`StudySession`** — a v2-only concept (session source + goal). Not implemented anywhere beyond this type.
+**Nothing implements it today.** The two migrations that did — `migrateCard` (the on-read v1 adapter) and the `CardState` backfill — were both retired when the card model converged and `CardState` was removed. The contract is kept because the next real migration (the Collection/Deck split) must meet it, and because `CLAUDE.md` names it as the required mechanism. **No migration may run lazily on read**; that exemption existed only for `migrateCard`.
 
-`src/domain/migration/cardMigration.ts`'s `migrateCard(v1) -> CardV2` is pure, total, and deterministic across all 8 v1 types — **the one migration in the plan explicitly allowed to run lazily on read**, because it's a pure content reshape that never changes where an entity lives or what references it. Everything else that changes storage location or entity identity (CardState extraction, a future Collection/Deck split) must instead implement `src/domain/migration/runner.ts`'s `MigrationRunner` contract:
-
-```ts
-interface MigrationRunner {
-  dryRun(): Promise<MigrationReport>   // no writes, deterministic
-  apply(): Promise<MigrationReport>    // idempotent — re-running shows everything `skipped`
-  rollbackInstructions(): string
-}
-```
-
-Production wiring: `src/features/review/ReviewSessionV2.tsx` migrates each v1 `Card` via `migrateCard()` (memoized per card), renders it through `reviewV2`'s shell, then persists the FSRS result back onto the **original v1 `Card.scheduling`** via `usePersistReviewResult`. A `CardV2Record` store does exist (`cardsV2`, see "Card creation" below) and carries its own embedded scheduling — but the due queue this path reads is still the v1 one, so a v2-authored card never reaches `/review` (the known gap at the end of this section).
+Because Dexie data is client-side, a migration cannot be run from CI or a script — it needs a Settings UI trigger, with Apply gated behind a dry run whose report a human has actually seen in that session (see D44).
 
 ### `src/features/reviewV2/` — the v2 Review shell
 
 - `ReviewSessionScreen.tsx` — owns the phase state machine (`reviewPhase.ts`): `presenting -> submitting -> feedback -> rating -> transitioning`, with a `RESET` back to `presenting`. Self-graded types (Recall) skip `submitting`. `ObjectiveResult = {correct: boolean, score?: number}` — `score` supports partial credit (Matching/Ordering/Walkthrough), which v1's `autoGrade` has no equivalent for.
 - `components/` — `IteraSurface`/`ForceLightTheme`, an accessible `FlipCard` (the only one; it replaced an earlier shared FlipCard that lacked keyboard/ARIA support, since deleted), `FlashcardSurface`, `TipPanel`/`ExplanationPanel`, `RatingControls`, `ReviewTopBar` (exit, position counter, shortcut hint — no logo/nav/deck metadata, "tested and rejected because they distract from recall"), `InteractionLabel`.
-- `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting an `InteractionDefinition`. `matching/` renders through `MatchingBoard.tsx`: columns side by side, with each relationship drawn as measured SVG connectors (a chain of hops when the card has two value columns). A Matching card is capped at three columns — `MAX_MATCHING_VALUE_COLUMNS` in `domain/cardsV2/matchingForm.ts`, enforced in `addMatchingColumn`, `validateMatchingForm`, and the editor's Add-column control. A **shared** (`fixed`) column is how one value serves several terms at once; an unshared column stays one-to-one, and assigning its value to another term moves it. See `itera-decisions.md` D118-D127. `ordering/` renders through `OrderingRow.tsx`: each unlocked row is the complete pointer and keyboard drag target, with a decorative 3×4 dot grip at right; see D164-D165. `walkthrough/` shows only the active step's optional tip before its first submission, then that step's optional explanation after submission; card-wide guidance remains owned by `ReviewSessionScreen`. Code-backed Walkthrough cards opt out of the shell's scale/rotation entrance transform so their always-visible CodeMirror content stays crisp. See D166.
+- `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting an `InteractionDefinition`. `matching/` renders through `MatchingBoard.tsx`: columns side by side, with each relationship drawn as measured SVG connectors (a chain of hops when the card has two value columns). A Matching card is capped at three columns — `MAX_MATCHING_VALUE_COLUMNS` in `domain/cards/matchingForm.ts`, enforced in `addMatchingColumn`, `validateMatchingForm`, and the editor's Add-column control. A **shared** (`fixed`) column is how one value serves several terms at once; an unshared column stays one-to-one, and assigning its value to another term moves it. See `itera-decisions.md` D118-D127. `ordering/` renders through `OrderingRow.tsx`: each unlocked row is the complete pointer and keyboard drag target, with a decorative 3×4 dot grip at right; see D164-D165. `walkthrough/` shows only the active step's optional tip before its first submission, then that step's optional explanation after submission; card-wide guidance remains owned by `ReviewSessionScreen`. Code-backed Walkthrough cards opt out of the shell's scale/rotation entrance transform so their always-visible CodeMirror content stays crisp. See D166.
 
 `interactions/types.ts`:
 
@@ -316,30 +298,26 @@ interface InteractionDefinition<T extends InteractionType> {
 
 `interactions/registry.ts` registers all six as `Partial<{ [T in InteractionType]: InteractionDefinition<T> }>` (not a full `Record`), and `getInteractionDefinition()` **throws at runtime** if a type is missing.
 
-### v2 registry vs. v1 registry — the concrete differences
+### Registry shape
 
-| | v1 (`cards/registry`) | v2 (`reviewV2/interactions`) |
-|---|---|---|
-| Components per type | 3 (`Question`, `Answer`, `Editor`) | 1 (`View`, receives the current `ReviewPhase`) — a self-graded flip needs one continuous element across reveal; swapping components at that boundary would break the flip animation |
-| Registry shape | full `Record` — missing type is a compile error | `Partial<Record>` — missing type throws at runtime ("so a future 7th type fails loudly instead of silently rendering nothing") |
-| Editor / authoring | yes (`Editor` component, `emptyContent`) | All six types, as of Phase F (`src/features/cardsV2/`) — see "Card creation" below. |
-| Auto-grade result | `{correct: boolean} \| null` | `ObjectiveResult = {correct: boolean, score?: number}` — partial credit |
-| Keyed on | `CardType` (8 values, 1:1 with content shape) | `InteractionType` (6 values) — decoupled from the card envelope; card-wide `prompt`/`tip`/`explanation` live on `CardV2`, while Walkthrough steps may additionally carry their own optional tip/explanation |
+`interactions/registry.ts` is a `Partial<{ [T in InteractionType]: InteractionDefinition<T> }>`, not a full `Record`, and `getInteractionDefinition()` **throws at runtime** for a missing type — deliberately, so a future seventh interaction fails loudly instead of silently rendering nothing. It is the one step in "Adding an interaction" the compiler does not catch.
 
-### Card creation (Phase F, all six interaction types)
+Each type contributes **one** `View` component (not separate Question/Answer components) because a self-graded flip needs one continuous element across the reveal; swapping components at that boundary would break the flip animation. Auto-grading returns `ObjectiveResult = {correct, score?}`, where `score` carries partial credit for Matching/Ordering/Walkthrough.
 
-`src/features/cardsV2/` is where the v2 authoring UI lives, built against `CardV2Record` (`src/types/cardV2.ts`) — `CardV2` plus its own embedded `suspended`/`scheduling`/`order`, the same envelope shape v1 `CardBase` uses, backed by the real `cardsV2` repository member above. This is a deliberate, separate store from `CardState` (the Phase D dual-write target) — `CardV2Record`'s scheduling is never read from or written to `cardStates`, so authoring a card of any type doesn't touch or advance that migration.
+### Card creation (all six interaction types)
+
+`src/features/cards/` is where the authoring UI lives, built against the one `Card` type and backed by the `cards` repository member above.
 
 - `CardTypeChooser.tsx` — all six interaction tiles, all enabled (`ENABLED` array); Walkthrough was the last to lose its "Coming soon" caption.
 - Six thin type shells — `RecallEditorShell.tsx` / `MultipleChoiceEditorShell.tsx` / `WriteCodeEditorShell.tsx` / `OrderingEditorShell.tsx` / `MatchingEditorShell.tsx` / `WalkthroughEditorShell.tsx` — each own only form state, validation/save wiring, their `*Fields.tsx`, and their `*LivePreview.tsx`. Shared composition lives in `CardEditorShell.tsx`; shared Deck/Tags controls live in `CardOrganizeFields.tsx`. The create route wraps them in the locked `add-new-card.png` composition: a top Cancel/divider/**New card** row, one 880px bordered surface, the persistent six-tile chooser, numbered Card content and Organize sections with inset rules, then Save/Cancel in the footer. Recall is selected on first paint. Desktop preview is an opt-in 420px drawer that temporarily expands the surface to 1120px; below `useIsWideEditor`'s ~980px breakpoint, Editor/Preview tabs replace it. The preview still renders the production interaction view through the existing `*LivePreview` components, never a hand-authored lookalike. Walkthrough retains its step-aware preview path.
-- `src/domain/cardsV2/{recallForm,multipleChoiceForm,writeCodeForm,orderingForm,matchingForm,walkthroughForm}.ts` — pure conversions between each editor's form state and: a throwaway preview `CardV2`, a persisted `CardV2Record`, and (via a `legacy*CardToForm` helper wrapping `migrateCard`) a legacy v1 card being hydrated for edit. Each also exports its own `validate*Form` pure validator (e.g. `validateWalkthroughForm` checks shared prompt/scenario, per-step response requirements, and highlighted-range well-formedness against the shared code's actual line count). Walkthrough conversion also round-trips optional per-step tip/explanation fields; missing fields from older blobs hydrate as empty editor values.
-- `src/domain/cardsV2/{saveRecallCard,saveMultipleChoiceCard,saveWriteCodeCard,saveOrderingCard,saveMatchingCard,saveWalkthroughCard}.ts` — the single save path per type (unit-tested directly against a repository, independent of the `useSave*Card` hooks that wrap them), each covering three targets: `new` (fresh `CardV2Record`), `v2` (update in place, same id/scheduling), and `v1` (the **legacy cutover** — builds a `CardV2Record` reusing the original v1 card's `id`/`createdAt`/`scheduling`/`suspended` so `ReviewLog` history keeps resolving, writes it to `cardsV2`, then deletes the superseded `cards` row and its `cardStates` mirror).
-- `CardEditEntry.tsx` (the element at `cards/:id/edit`) — branches: a `CardV2Record` opens its matching editor by `interaction.type`; a legacy v1 `basic`/`codeReading`/`bugFinding` card opens `RecallEditorShell`, a legacy v1 `mcq` card opens `MultipleChoiceEditorShell`, a legacy v1 `codeCompletion` card opens `WriteCodeEditorShell`, a legacy v1 `ordering`/`matching` card opens the matching v2 editor, and a legacy v1 `story` card opens `WalkthroughEditorShell`. All 8 v1 types are covered, so the final return is a "Card not found" state for an id matching neither model. Legacy cards only migrate to `CardV2Record` when actually edited-and-saved this way — not in bulk.
+- `src/domain/cards/{recallForm,multipleChoiceForm,writeCodeForm,orderingForm,matchingForm,walkthroughForm}.ts` — pure conversions between each editor's form state and a `Card`, in both directions (a throwaway preview card, and a persisted record). Each also exports its own `validate*Form` pure validator (e.g. `validateWalkthroughForm` checks shared prompt/scenario, per-step response requirements, and highlighted-range well-formedness against the shared code's actual line count). Walkthrough conversion also round-trips optional per-step tip/explanation fields; missing fields from older blobs hydrate as empty editor values.
+- `src/domain/cards/{saveRecallCard,…}.ts` — the single save path per type (unit-tested directly against a repository, independent of the `useSave*Card` hooks that wrap them), each covering two targets: `new` (fresh card) and `existing` (update in place, reusing id/createdAt/scheduling/suspended so `ReviewLog` history keeps resolving).
+- `CardEditEntry.tsx` (the element at `cards/:id/edit`) — one switch on `interaction.type` picking the matching editor shell. The switch covers every union member, so the fallthrough is a "Card not found" state reachable only for an id that resolves to no card.
 - `CardStudyPreviewPage.tsx` (`cards/:id/study`) — the Deck row's primary click target: the same non-committing `ReviewSessionScreen` embedding as the editor's live preview, dispatched by `card.interaction.type` (`getInteractionDefinition(card.interaction.type)`), seeded from the real record but a fresh scheduling baseline.
   (`CardRowV2.tsx` and `shared/InteractionTypeBadge.tsx` were deleted with the unrouted `DeckDetailPage` that was their only consumer; `features/library/shared/CardTable.tsx` renders both card kinds over a unified `RowMeta`. There is still no separate read-only card detail screen — `CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow; see `itera-decisions.md`.)
 - `shared/{StatusBadge,format,interactionTypeMeta,OverflowMenu}.tsx` — the first three promoted into production once a real consumer needed them (they were already built against real `SchedulingStateKind`/`InteractionType`, not fixture types); `OverflowMenu` is a new shared primitive, since two independent ad hoc kebab-menu implementations already existed in the codebase before this one. Its panel is rendered through `src/components/ui/FloatingPanel.tsx` (portal + fixed positioning + flip-above), not as an `absolute` child — see `itera-decisions.md` D112.
 
-**Known gap:** `CardV2Record`s aren't in the global due queue yet (`useDueCards`/`ReviewPage` only read v1 `cards`) — real, scheduling-affecting review of a `CardV2Record` isn't wired up; only the non-committing editor preview and "Study this Card" exist so far.
+Every card authored here is in the real due queue: `ReviewPage`/`useDueCards` read the same single store, so a card of any interaction type is schedulable the moment it is saved.
 
 ---
 
@@ -367,10 +345,9 @@ Component tests are the exception: opt into a DOM per-file with `// @vitest-envi
 
 ## Things that coexist on purpose (not stale code)
 
-- **Two card models**: v1 `src/types/card.ts` (8 types, storage only) and v2 `src/types/cardV2.ts` (6 interactions). Both are live storage formats; `migrateCard` bridges them on read. **When grepping for "Card", check which one you are in.**
 - **Two grade-persistence paths**: `src/hooks/useReview.ts`'s `usePersistReviewResult` (what production calls) alongside `src/domain/scheduling/reviewService.ts` (which computes the result). The hook deliberately does not recompute what `reviewService.submit` already did.
 - **`src/hooks/useDrafts.ts` with no caller**: the drafts UI was deleted but the `Draft` entity, its Dexie store and its backup array were kept, so the hook is retained rather than removed. Deleting it is the first step toward dropping data that backup files still round-trip.
 
-The earlier entries here — "two Review UIs" and "two `FlipCard` components" — are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `src/components/ui/FlipCard.tsx` were deleted on 2026-08-17. There is one Review surface and one flip primitive.
+The earlier entries here are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `src/components/ui/FlipCard.tsx` were deleted on 2026-08-17, and the **two card models** converged into one on 2026-08-18. There is one Review surface, one flip primitive, and one card model.
 
 See `itera-decisions.md` before "cleaning up" anything above.
