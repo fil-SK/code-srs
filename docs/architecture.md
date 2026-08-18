@@ -186,10 +186,12 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 | **Card** (v1) | `src/types/card.ts` | `CardRepo` | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/type) |
 | **Deck** | `src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
 | **Draft** | `src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
-| **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized) |
+| **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Carries an optional `dueAfter` (the resulting next-due instant); the scheduled interval is `dueAfter - reviewedAt`, so FSRS's `scheduledDays` is deliberately not logged separately. Rows written before the field existed lack it and render an em dash. |
 | **Roadmap** | `src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
 | **CardState** (v2, Phase D) | `src/types/cardV2.ts` | `CrudRepo<CardState>` (keyed by `cardId`) | `cardStates` (v3) | `card_states` (unverified against a live DB — see D42) | `src/domain/scheduling/cardState.ts`: `cardStateFromCard`, `cardStatesEqual` |
 | **CardV2Record** (v2, Phase F) | `src/types/cardV2.ts` | `CardV2Repo` (`getDue`/`search` + CRUD) | `cardsV2` (v4) | `cards_v2` (+ generated `deck_id`, `due`, `suspended` — same shape as `cards`; unverified against a live DB) | — (flat, filtered by deck/tag; no tree needed) |
+
+A `ReviewLog` stores only a `cardId`, so every deck-scoped read joins through the card at query time via `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards, cardsV2)`. That join **must span both card stores**: saving a legacy card through a `src/domain/cardsV2/save*Card.ts` module deletes its `cards` row and writes a `cardsV2` record under the same id, so a v1-only map silently drops those cards' entire review history. `computeRetentionSeries`/`computeDeckPerformance` and `buildReviewHistory` all take the prebuilt map rather than a card array.
 
 Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
 

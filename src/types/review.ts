@@ -33,4 +33,10 @@ export interface ReviewLog {
   difficultyBefore: number
   difficultyAfter: number
   state: SchedulingStateKind
+  // Resulting next-due instant. Optional because rows logged before this field
+  // existed genuinely cannot recover it. The scheduled interval is derivable
+  // from `dueAfter - reviewedAt`, so FSRS's scheduledDays is not logged
+  // separately; dueAfter also covers learning steps, where scheduledDays is 0
+  // but the card is due again in minutes.
+  dueAfter?: Millis
 }

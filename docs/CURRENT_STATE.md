@@ -50,6 +50,7 @@ Real data, real behavior, production-routed:
 | Card edit (v2 + legacy cutover) | `/cards/:id/edit` | `src/features/cardsV2/CardEditEntry.tsx` |
 | Card study preview (non-committing) | `/cards/:id/study` | `src/features/cardsV2/CardStudyPreviewPage.tsx` |
 | Progress | `/progress` | `src/features/progress/ProgressPage.tsx` |
+| Review history | `/progress/history` | `src/features/progress/ReviewHistoryPage.tsx` |
 | Account settings | `/settings`, `/settings/:section` | `src/features/settings/AccountSettingsPage.tsx` |
 | Login | `/login` | `src/features/login/LoginPage.tsx` |
 | Deck/card preview flip-through | `/preview` | `src/features/preview/PreviewPage.tsx` |
@@ -59,7 +60,7 @@ Real data, real behavior, production-routed:
 | Page | What is real | What is placeholder |
 |---|---|---|
 | **Today** (`/`, `src/features/today/`) | Layout, greeting rotation (`greetings.ts`), the shared shell. | **All numbers.** Streak, weekly goal, recall %, milestone, Continue Learning rows, pace-chart series are illustrative constants. No streak/momentum/suggested-session domain logic exists. "Adjust session" has no behavior. |
-| **Progress** (`/progress`) | KPI tiles, heat map, retention chart, deck-performance table, milestones — all computed from real `ReviewLog`/`Card`/`Deck` via `src/domain/stats/{dateRange,progressMetrics}.ts`. "Sessions" are gap-clustered from review timestamps, not a persisted entity. | 7 of 8 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Only Overview is live. |
+| **Progress** (`/progress`, `/progress/history`) | KPI tiles, heat map, retention chart, deck-performance table, milestones — all computed from real `ReviewLog`/`Card`/`Deck` via `src/domain/stats/{dateRange,progressMetrics}.ts`. "Sessions" are gap-clustered from review timestamps, not a persisted entity. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | 7 of 9 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Overview and Review history are live. |
 | **Account settings** (`/settings`) | **Import / Export** (JSON backup) and **Card scheduling** (the Phase D CardState backfill dry-run/apply) are fully functional. | Profile, Email & password, Appearance, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
 | **Login** (`/login`) | Page, session minting, redirect-back-to-requested-route, Supabase magic link. | In local mode the password is a dev/demo shell: never stored, sent, or verified. "Forgot password" is a deliberate `aria-disabled` placeholder — no reset backend. |
 | **Roadmaps** (`/roadmaps`, `/roadmaps/:id`) | Create / rename / delete / canvas editing all work, now through `useDialogs()` rather than `window.prompt`, and the list page has a real `<h1>`. | Still **reskinned only** — pre-redesign layout and density, carrying Itera colors solely through `.itera-scope`'s token re-point. Deliberately out of primary nav (D11/D17), reachable by direct URL. |
@@ -111,6 +112,10 @@ All three views render inside `LibraryShell` + `CollectionNav`: a centered, bord
 ## 9. Progress state
 
 Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. Five KPI tiles with period-over-period deltas, an activity heat map with its own 7D/30D/3M/1Y toggle, a deck-scopable retention chart, a deck-performance table, and derived recent milestones — all from real `ReviewLog`/`Card`/`Deck` data. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.** Chart colors deliberately use the locked Itera navy/orange/success/warning tokens, not the mockup's blue/purple. The reference-alignment pass now uses the mockup's icon concepts, larger token-colored KPI badges, quieter 30px/500 KPI values, reference-like section title/info rows and a centered Deck-performance footer. Streak surfaces share the bespoke `StreakFlameIcon` instead of Lucide's thin generic flame.
+
+**Review history** (`/progress/history`, `ReviewHistoryPage.tsx`) is the second live Progress destination: one row per `ReviewLog`, newest first, with card, deck, rating, resulting interval and timestamp, filterable by range (30D/3M/1Y/**All**, its own local presets — *not* the shared `DATE_RANGE_PRESETS`, whose bounded windows exist for Overview's period-over-period deltas), by deck (including the deck's subtree) and by rating. Reviews whose card was since deleted are kept, shown as `(deleted card)`; rows logged before `ReviewLog.dueAfter` existed render an em dash for interval rather than a fabricated number. Rating pills are deliberately neutral rather than a danger/warning/success/accent set, with the palest accent tint on Again only (see the decisions log). The "Activity" sidebar row stays a "Soon" placeholder on purpose — it reads as a broader feed (cards created, decks edited, imports) and the name is left free for it.
+
+Deck attribution for both Progress surfaces goes through `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards, cardsV2)`, which spans **both** card stores. This matters because editing a legacy card in the Recall editor deletes its `cards` row and writes a `cardsV2` record under the same id; the previous v1-only map silently dropped those cards' entire review history from every deck-scoped statistic.
 
 ## 10. Card interaction status
 
@@ -198,10 +203,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-17 at HEAD `fdaad9f`, after the v1-legacy-surface deletion:
+Measured 2026-08-18, after the Review history pass (the previous baseline was 62 files / 415 tests at HEAD `fdaad9f`):
 
 ```
-npx vitest run       → 62 test files, 415 tests, all passing
+npx vitest run       → 64 test files, 432 tests, all passing
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -209,9 +214,9 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**415 is the current correct test count**, down from 451 and then back up. The deletion removed 7 files / 42 tests that covered the v1 renderers — not a coverage loss, since `src/domain/grading/*.test.ts` already covers the v2 equivalents that production actually runs. Six tests were then added: `CardEditEntry`'s not-found state and its v1-editor branch, `PreviewPage`'s back-link resolution (derived deck, and `from` taking precedence), and `ReviewPage`'s empty-state CTA targets for the scoped and unscoped cases.
+**432 is the current correct test count.** Review history added `src/domain/stats/{reviewHistory,cardDeckIndex}.test.ts`, plus cases in `progressMetrics.test.ts` (v2-only deck attribution) and `scheduler.test.ts` (`dueAfter`). On the prior baseline: **415 was the correct count then**, down from 451 and then back up. The deletion removed 7 files / 42 tests that covered the v1 renderers — not a coverage loss, since `src/domain/grading/*.test.ts` already covers the v2 equivalents that production actually runs. Six tests were then added: `CardEditEntry`'s not-found state and its v1-editor branch, `PreviewPage`'s back-link resolution (derived deck, and `from` taking precedence), and `ReviewPage`'s empty-state CTA targets for the scoped and unscoped cases.
 
-One caveat worth knowing: a single run during this pass reported one failure that four consecutive re-runs could not reproduce, and which the summary output did not name. It is an unidentified flake, not a known-failing test. If it resurfaces, capture the file name.
+One caveat worth knowing, carried over from the 2026-08-17 pass: a single run then reported one failure that four consecutive re-runs could not reproduce, and which the summary output did not name. It is an unidentified flake, not a known-failing test. It did not resurface during the Review history pass. If it does, capture the file name.
 
 **451 is the current correct test count.** The additions since the former 429-test baseline cover Ordering surface activation, shared prompt sizing/long-form detection, the mockup-style Review strip, state-aware revealed guidance, preview-route width handling and navigation, Deck-settings dismissal, account-menu shortcuts, rating-control icons/intervals, Matching badge placement, the Multiple Choice selection/footer treatment, the authoring warning and reference-aligned create-flow structure, and Walkthrough step-scoped guidance. The 2026-08-12 login entry in [`itera-decisions.md`](itera-decisions.md) states "447 tests pass"; that older count remains historical because the log is append-only.
 
@@ -263,7 +268,7 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 
 **Library / Progress / Settings / Today / Login**
 - `src/features/library/` (`LibraryBrowserPage`, `LibraryCollectionView`, `LibraryDeckPage`, `collectionTree.ts`, `deckMetrics.ts`, `shared/*`)
-- `src/features/progress/`, `src/domain/stats/{dateRange,progressMetrics}.ts`
+- `src/features/progress/`, `src/domain/stats/{dateRange,progressMetrics,reviewHistory,cardDeckIndex}.ts`
 - `src/features/settings/` (`AccountSettingsPage`, `settingsSections.ts`, `sections/*`, `CardStateMigrationSection`)
 - `src/features/today/`, `src/features/login/`
 
@@ -291,6 +296,7 @@ Explicitly **not** in this milestone: Phase G's Collection migration, Phase D's 
 | `/cards/:id/edit` | v2 editor entry (all 8 v1 types + all 6 v2 interactions; not-found state otherwise) |
 | `/cards/:id/study` | Non-committing study preview |
 | `/progress` | Progress |
+| `/progress/history` | Review history |
 | `/settings`, `/settings/:section` | Account settings |
 
 **Behind `RequireAuth`, outside `AppShell`:** `/review` (immersive, chrome-free by construction).

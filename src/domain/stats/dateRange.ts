@@ -53,6 +53,13 @@ export function formatRangeLabel(range: DateRange): string {
   return `${startLabel} – ${MONTH_DAY_YEAR.format(end)}`
 }
 
+const TIME_OF_DAY = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' })
+
+// "2:14 PM" - pairs with formatEventDate to timestamp a single review.
+export function formatTimeOfDay(date: Millis): string {
+  return TIME_OF_DAY.format(new Date(date))
+}
+
 // "Today" / "Yesterday" / "Mon D[, YYYY]" for milestone/event timestamps.
 export function formatEventDate(date: Millis, now: Millis = Date.now()): string {
   const day = startOfDay(date)

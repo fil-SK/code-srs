@@ -4,9 +4,11 @@ import { CopyCheck, RefreshCw, Scan, Star } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { useReviewLogs } from '@/hooks/useReview'
 import { useSearchCards } from '@/hooks/useCards'
+import { useSearchCardsV2 } from '@/hooks/useCardsV2'
 import { useDecks } from '@/hooks/useDecks'
 import { EmptyState } from '@/features/library/shared/EmptyState'
 import { buildRange, formatRangeLabel, previousPeriod, type DateRangePreset } from '@/domain/stats/dateRange'
+import { buildCardDeckMap } from '@/domain/stats/cardDeckIndex'
 import {
   computeKpis,
   computeHeatmap,
@@ -27,6 +29,7 @@ import { RecentMilestones } from './components/RecentMilestones'
 export function ProgressPage() {
   const logsQuery = useReviewLogs()
   const cardsQuery = useSearchCards({ includeSuspended: true })
+  const cardsV2Query = useSearchCardsV2({ includeSuspended: true })
   const decksQuery = useDecks()
 
   const [preset, setPreset] = useState<DateRangePreset>('30d')
@@ -47,19 +50,26 @@ export function ProgressPage() {
     () => computeHeatmap(logsQuery.data ?? [], heatmapDaysFor(heatmapRange)),
     [logsQuery.data, heatmapRange],
   )
+  // Spans both card stores: a legacy card edited in the Recall editor moves
+  // from `cards` to `cardsV2` under the same id, and a v1-only map would drop
+  // its whole review history from every deck-scoped stat below.
+  const cardDecks = useMemo(
+    () => buildCardDeckMap(cardsQuery.data ?? [], cardsV2Query.data ?? []),
+    [cardsQuery.data, cardsV2Query.data],
+  )
   const retentionPoints = useMemo(
     () =>
       computeRetentionSeries(
         logsQuery.data ?? [],
         range,
-        cardsQuery.data ?? [],
+        cardDecks,
         deckScope === 'all' ? undefined : deckScope,
       ),
-    [logsQuery.data, range, cardsQuery.data, deckScope],
+    [logsQuery.data, range, cardDecks, deckScope],
   )
   const deckPerformance = useMemo(
-    () => computeDeckPerformance(logsQuery.data ?? [], cardsQuery.data ?? [], range),
-    [logsQuery.data, cardsQuery.data, range],
+    () => computeDeckPerformance(logsQuery.data ?? [], cardDecks, range),
+    [logsQuery.data, cardDecks, range],
   )
   const milestones = useMemo(() => deriveMilestones(logsQuery.data ?? []), [logsQuery.data])
 
@@ -75,7 +85,7 @@ export function ProgressPage() {
     [decksQuery.data],
   )
 
-  if (logsQuery.isLoading || cardsQuery.isLoading || decksQuery.isLoading) {
+  if (logsQuery.isLoading || cardsQuery.isLoading || cardsV2Query.isLoading || decksQuery.isLoading) {
     return <p className="text-sm text-itera-muted">Loading…</p>
   }
 

@@ -4,6 +4,7 @@ import {
   ChartNoAxesCombined,
   ClipboardList,
   Flag,
+  History,
   ScanSearch,
   Server,
   Settings,
@@ -35,6 +36,10 @@ const NAV_GROUPS: NavGroup[] = [
     heading: 'Learning',
     items: [
       { label: 'Decks', icon: Server },
+      // "Review history" is the chronological per-review record. "Activity"
+      // stays a placeholder on purpose: it reads as a broader feed (cards
+      // created, decks edited, imports), so the name is left free for it.
+      { label: 'Review history', icon: History, to: '/progress/history' },
       { label: 'Activity', icon: ChartNoAxesCombined },
       { label: 'Review lag', icon: ScanSearch },
     ],

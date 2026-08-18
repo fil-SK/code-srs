@@ -117,5 +117,6 @@ export function buildReviewLog(params: {
     difficultyBefore: before.difficulty,
     difficultyAfter: after.difficulty,
     state: after.state,
+    dueAfter: after.due,
   }
 }

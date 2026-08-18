@@ -1,4 +1,4 @@
-import type { Card, ID, Millis, ReviewLog } from '@/types'
+import type { ID, Millis, ReviewLog } from '@/types'
 import { previousPeriod, type DateRange } from './dateRange'
 
 const DAY = 86_400_000
@@ -195,12 +195,6 @@ export function computeHeatmap(logs: ReviewLog[], days: number, now: Millis = Da
   return result
 }
 
-// ---- Deck join helpers -------------------------------------------------------
-
-function cardDeckMap(cards: Card[]): Map<ID, ID> {
-  return new Map(cards.map((c) => [c.id, c.deckId]))
-}
-
 // ---- Retention over time ------------------------------------------------------
 
 export interface RetentionPoint {
@@ -212,18 +206,19 @@ export interface RetentionPoint {
 // Buckets the range into ~`targetBuckets` equal-width windows and computes
 // retention within each. `deckId` optionally scopes to one deck via the
 // cardId -> deckId join (reviews on deleted cards, which resolve to no deck,
-// are excluded when scoped, same as computeDeckPerformance below).
+// are excluded when scoped, same as computeDeckPerformance below). The caller
+// supplies the map so it is built once per render and spans both card stores
+// (see domain/stats/cardDeckIndex).
 export function computeRetentionSeries(
   logs: ReviewLog[],
   range: DateRange,
-  cards: Card[],
+  cardDecks: Map<ID, ID>,
   deckId?: ID,
   targetBuckets = 10,
 ): RetentionPoint[] {
   let scoped = logs
   if (deckId) {
-    const map = cardDeckMap(cards)
-    scoped = logs.filter((l) => map.get(l.cardId) === deckId)
+    scoped = logs.filter((l) => cardDecks.get(l.cardId) === deckId)
   }
   const bucketDays = Math.max(1, Math.round(range.days / targetBuckets))
   const bucketMs = bucketDays * DAY
@@ -263,14 +258,13 @@ function bucketedAccuracySeries(deckLogs: ReviewLog[], buckets = 6): number[] {
 
 export function computeDeckPerformance(
   logs: ReviewLog[],
-  cards: Card[],
+  cardDecks: Map<ID, ID>,
   range: DateRange,
 ): DeckPerformanceRow[] {
-  const map = cardDeckMap(cards)
   const current = inRange(logs, range)
   const byDeck = new Map<ID, ReviewLog[]>()
   for (const log of current) {
-    const deckId = map.get(log.cardId)
+    const deckId = cardDecks.get(log.cardId)
     if (!deckId) continue // card deleted since review — can't attribute to a deck
     const arr = byDeck.get(deckId)
     if (arr) arr.push(log)

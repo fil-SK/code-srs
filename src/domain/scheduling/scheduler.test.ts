@@ -50,6 +50,7 @@ describe('buildReviewLog', () => {
     expect(log.stabilityBefore).toBe(before.stability)
     expect(log.stabilityAfter).toBe(after.stability)
     expect(log.state).toBe(after.state)
+    expect(log.dueAfter).toBe(after.due)
     expect(log.id).toBeTruthy()
   })
 })
