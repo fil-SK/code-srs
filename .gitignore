@@ -36,3 +36,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Sample files to test on
+itera-learning-library.json

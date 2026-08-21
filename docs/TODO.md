@@ -38,3 +38,23 @@ the app is used.
 Icons for decks, specific backgrounds with SVG to place above, or to use text.
 Today and the Library currently derive a 1-3 character monogram from the deck
 name (`markLabelFor`), which is deterministic but not chosen.
+
+## Roadmaps
+
+## Deck marketplace
+
+## Advanced session controls
+
+## Dark mode
+
+## Onboarding demo in the app
+
+## Notifications
+
+Notifications that some cards are pending to be done etc.
+
+## How WriteCode currently works
+
+Write Code currently compares against accepted complete answers, so semantically equivalent code written differently can be marked objectively wrong. That's already a known product constraint, not a reason to change this dataset.
+
+This is now okay. I write the cards and I know which answer I expect, so I test myself on it. For production, this might not be the best approach to do it.
