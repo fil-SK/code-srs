@@ -143,6 +143,7 @@ describe('DexieRepository — reviews', () => {
       stabilityAfter: 1,
       difficultyBefore: 5,
       difficultyAfter: 5,
+      stateBefore: 'review',
       state: 'review',
       ...overrides,
     }

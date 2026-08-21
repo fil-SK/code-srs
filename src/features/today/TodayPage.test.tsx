@@ -64,6 +64,7 @@ function log(cardId: string, reviewedAt: number): ReviewLog {
     stabilityAfter: 4,
     difficultyBefore: 5,
     difficultyAfter: 5,
+    stateBefore: 'review',
     state: 'review',
   }
 }

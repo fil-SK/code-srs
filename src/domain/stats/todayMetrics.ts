@@ -2,6 +2,7 @@ import type { Card, Deck, ID, Millis, ReviewLog } from '@/types'
 import { leafDecks } from '@/domain/decks/tree'
 import { DAY_MS, startOfDay } from './dateRange'
 import { metricsFor, type DeckMetrics } from './deckMetrics'
+import { computeLearned } from './learned'
 
 // Everything Today displays, as pure functions over already-fetched entities.
 //
@@ -236,18 +237,7 @@ interface DeckLearning {
 // buildCardDeckMap sets for every other deck-scoped statistic - a card moved
 // between decks takes its history with it.
 function summarizeDeckLearning(decks: Deck[], cards: Card[], logs: ReviewLog[]): DeckLearning[] {
-  const reviewedCardIds = new Set(logs.map((l) => l.cardId))
   const deckOfCard = new Map(cards.map((c) => [c.id, c.deckId]))
-
-  const learned = new Map<ID, number>()
-  const total = new Map<ID, number>()
-  for (const card of cards) {
-    if (card.suspended) continue
-    total.set(card.deckId, (total.get(card.deckId) ?? 0) + 1)
-    if (reviewedCardIds.has(card.id)) {
-      learned.set(card.deckId, (learned.get(card.deckId) ?? 0) + 1)
-    }
-  }
 
   const lastReviewed = new Map<ID, Millis>()
   for (const log of logs) {
@@ -257,12 +247,18 @@ function summarizeDeckLearning(decks: Deck[], cards: Card[], logs: ReviewLog[]):
     if (current === undefined || log.reviewedAt > current) lastReviewed.set(deckId, log.reviewedAt)
   }
 
-  return decks.map((deck) => ({
-    deck,
-    learned: learned.get(deck.id) ?? 0,
-    total: total.get(deck.id) ?? 0,
-    lastReviewedAt: lastReviewed.get(deck.id),
-  }))
+  return decks.map((deck) => {
+    const learned = computeLearned(
+      cards,
+      logs,
+      new Set([deck.id]),
+    )
+    return {
+      deck,
+      ...learned,
+      lastReviewedAt: lastReviewed.get(deck.id),
+    }
+  })
 }
 
 /** A deck is in progress when some, but not all, of its active cards are learned. */

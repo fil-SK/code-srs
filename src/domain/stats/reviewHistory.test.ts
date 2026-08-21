@@ -16,6 +16,7 @@ function log(overrides: Partial<ReviewLog>): ReviewLog {
     stabilityAfter: 2,
     difficultyBefore: 5,
     difficultyAfter: 5,
+    stateBefore: 'review',
     state: 'review',
     ...overrides,
   }

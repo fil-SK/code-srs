@@ -75,9 +75,8 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
         </div>
 
         {/* "Retention", not "Recall rate": this is the shared Progress
-            calculation, which currently reads each review's post-grade FSRS
-            state. The correction belongs to the Progress-correctness
-            milestone, and the cautious label is deliberate until then. */}
+            calculation over mature attempts whose required stateBefore is
+            review or relearning. */}
         <div className="flex items-center gap-3">
           <MetricIcon icon={Target} />
           <div className="min-w-0 flex-1">

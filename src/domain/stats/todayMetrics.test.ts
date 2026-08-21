@@ -67,6 +67,7 @@ function log(cardId: string, daysAgo: number, overrides: Partial<ReviewLog> = {}
     stabilityAfter: 2,
     difficultyBefore: 5,
     difficultyAfter: 5,
+    stateBefore: 'review',
     state: 'review',
     ...overrides,
   }

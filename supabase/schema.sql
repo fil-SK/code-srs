@@ -49,7 +49,11 @@ create table if not exists public.review_logs (
   user_id     uuid not null default auth.uid() references auth.users (id) on delete cascade,
   data        jsonb not null,
   card_id     text   generated always as (data ->> 'cardId') stored,
-  reviewed_at bigint generated always as ((data ->> 'reviewedAt')::bigint) stored
+  reviewed_at bigint generated always as ((data ->> 'reviewedAt')::bigint) stored,
+  constraint review_logs_state_before_check check (
+    data ? 'stateBefore'
+    and data ->> 'stateBefore' in ('new', 'learning', 'review', 'relearning')
+  )
 );
 
 create index if not exists reviews_user_card_idx on public.review_logs (user_id, card_id);

@@ -33,6 +33,7 @@ export interface ReviewLog {
   stabilityAfter: number
   difficultyBefore: number
   difficultyAfter: number
+  stateBefore: SchedulingStateKind
   state: SchedulingStateKind
   // Resulting next-due instant. Optional because rows logged before this field
   // existed genuinely cannot recover it. The scheduled interval is derivable

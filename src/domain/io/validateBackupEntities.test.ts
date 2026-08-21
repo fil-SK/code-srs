@@ -5,6 +5,7 @@ import { ALL_INTERACTION_TYPES, fixtureCard, fixtureCards, fixtureDeck } from '.
 import {
   assertValidCards,
   assertValidDecks,
+  assertValidReviewLogs,
   findUnresolvedDeckReference,
 } from './validateBackupEntities'
 
@@ -64,6 +65,38 @@ describe('assertValidDecks', () => {
   it('accepts a deck whose parent is absent', () => {
     const decks: Deck[] = [fixtureDeck({ parentId: 'gone' })]
     expect(() => assertValidDecks(decks)).not.toThrow()
+  })
+})
+
+describe('assertValidReviewLogs', () => {
+  const valid = {
+    id: 'log-1',
+    cardId: 'card-1',
+    reviewedAt: 1,
+    rating: 3,
+    autoGraded: false,
+    durationMs: 1_000,
+    stabilityBefore: 1,
+    stabilityAfter: 2,
+    difficultyBefore: 5,
+    difficultyAfter: 5,
+    stateBefore: 'review',
+    state: 'review',
+  }
+
+  it('accepts the current required contract', () => {
+    expect(() => assertValidReviewLogs([valid])).not.toThrow()
+  })
+
+  it('rejects a prototype row without stateBefore', () => {
+    const { stateBefore: _stateBefore, ...prototype } = valid
+    expect(() => assertValidReviewLogs([prototype])).toThrow(/stateBefore/)
+  })
+
+  it('rejects an invalid pre-grade state', () => {
+    expect(() => assertValidReviewLogs([{ ...valid, stateBefore: 'graduated' }])).toThrow(
+      /stateBefore/,
+    )
   })
 })
 

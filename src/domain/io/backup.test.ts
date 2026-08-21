@@ -7,8 +7,27 @@ import {
   type BackupData,
 } from './backup'
 import { fixtureCard, fixtureCards, fixtureDeck } from './backupFixtures'
+import type { ReviewLog } from '@/types'
 
 const empty: BackupData = { cards: [], decks: [], drafts: [], reviewLogs: [] }
+
+function reviewLog(): ReviewLog {
+  return {
+    id: 'review-1',
+    cardId: 'card-recall',
+    reviewedAt: 1,
+    rating: 3,
+    autoGraded: false,
+    durationMs: 1_000,
+    stabilityBefore: 1,
+    stabilityAfter: 2,
+    difficultyBefore: 5,
+    difficultyAfter: 5,
+    stateBefore: 'review',
+    state: 'review',
+    dueAfter: 2,
+  }
+}
 
 describe('backup build/serialize/parse', () => {
   it('round-trips through serialize/parse', () => {
@@ -63,6 +82,19 @@ describe('backup build/serialize/parse', () => {
   it('rejects missing data lists', () => {
     const bad = JSON.stringify({ app: 'code-srs', version: 2, data: { cards: [] } })
     expect(() => parseBackup(bad)).toThrow(/decks/)
+  })
+
+  it('round-trips the required current ReviewLog contract', () => {
+    const parsed = parseBackup(serializeBackup(buildBackup({ ...empty, reviewLogs: [reviewLog()] })))
+    expect(parsed.data.reviewLogs[0].stateBefore).toBe('review')
+  })
+
+  it('rejects prototype ReviewLogs without stateBefore without a legacy fallback', () => {
+    const { stateBefore: _stateBefore, ...prototypeLog } = reviewLog()
+    const bad = serializeBackup(
+      buildBackup({ ...empty, reviewLogs: [prototypeLog as never] }),
+    )
+    expect(() => parseBackup(bad)).toThrow(/ReviewLog 1.*stateBefore/)
   })
 
   it('rejects a card with an unsupported interaction type', () => {

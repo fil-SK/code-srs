@@ -43,12 +43,12 @@ src/
 │   ├── decks/        tree.ts (nesting/flattening helpers)
 │   ├── grading/      one grade*/matches* fn per v2 interaction type
 │   ├── io/           backup.ts (versioned envelope), validateBackupEntities.ts
-│   │                 (structural card/deck validation), backupFixtures.ts
+│   │                 (structural card/deck/review-log validation), backupFixtures.ts
 │   ├── migration/    runner.ts (the contract; nothing implements it today)
 │   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, state.ts, format.ts
 │   ├── search/       searchableText.ts
-│   └── stats/        dateRange.ts, progressMetrics.ts, streak.ts, todayMetrics.ts,
-│                      deckMetrics.ts, cardDeckIndex.ts, reviewHistory.ts
+│   └── stats/        dateRange.ts, progressMetrics.ts, streak.ts, learned.ts,
+│                      todayMetrics.ts, deckMetrics.ts, cardDeckIndex.ts, reviewHistory.ts
 ├── features/
 │   ├── cards/          the authoring UI — see "Card creation" below
 │   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
@@ -119,9 +119,7 @@ A lazily-constructed singleton, chosen purely by whether `VITE_SUPABASE_URL`/`VI
 **Dexie backend** (`src/data/dexie/db.ts` + `DexieRepository.ts`) — the database is named `'itera'`; it was renamed from `'code-srs'` when the card models converged, and `db.ts` fire-and-forget `Dexie.delete('code-srs')`s the superseded prototype database to reclaim its storage. (The *backup file's* `app` marker is a separate thing and deliberately still reads `code-srs` — see "Backup" below.) Schema is additive/incremental:
 
 ```ts
-// Database 'itera'. One version on purpose: it was renamed from 'code-srs'
-// when the card models converged, which discarded the prototype data and let
-// the old version(1)..version(4) ladder collapse into this single declaration.
+// Database 'itera'. Version 1 is the unified-card baseline.
 this.version(1).stores({
   cards: 'id, deckId, *tags, scheduling.due',
   decks: 'id, parentId, name',
@@ -129,13 +127,17 @@ this.version(1).stores({
   reviewLogs: 'id, cardId, reviewedAt',
   roadmaps: 'id, title',
 })
+
+// Prototype ReviewLogs cannot recover the required pre-grade state. This
+// data-only upgrade clears that table while preserving cards and decks.
+this.version(2).upgrade((tx) => tx.table('reviewLogs').clear())
 ```
 
 Each `version()` call declares only new/changed stores — Dexie carries the rest forward. `*tags` is a multi-entry index; `scheduling.due` is a nested-keypath index letting `getDue()` query `db.cards.where('scheduling.due').belowOrEqual(now)` directly. Booleans (`suspended`) aren't indexed — IndexedDB can't index them — so suspension is filtered in memory.
 
 > **Gotcha:** any Dexie schema change needs a new `version()` bump, declaring only the new/changed stores.
 
-**Supabase backend** (`src/data/supabase/SupabaseRepository.ts`) — every table stores the whole entity as an opaque `data jsonb` column (mirroring Dexie's "plain object" model exactly), plus a few **generated columns** so hot queries can be indexed (`due`, `suspended`, `deck_id` on `cards`; `card_id`, `reviewed_at` on `review_logs`). `getDue`/`search` push what they can to SQL (`.eq('suspended', false).lte('due', now)`) and do the rest — deck/tag/interaction/text filtering — **in memory, identically to Dexie**, so results match regardless of backend. Row Level Security scopes every query to `auth.uid()`.
+**Supabase backend** (`src/data/supabase/SupabaseRepository.ts`) — every table stores the whole entity as an opaque `data jsonb` column (mirroring Dexie's "plain object" model exactly), plus a few **generated columns** so hot queries can be indexed (`due`, `suspended`, `deck_id` on `cards`; `card_id`, `reviewed_at` on `review_logs`). `getDue`/`search` push what they can to SQL (`.eq('suspended', false).lte('due', now)`) and do the rest — deck/tag/interaction/text filtering — **in memory, identically to Dexie**, so results match regardless of backend. Row Level Security scopes every query to `auth.uid()`. `supabase/migrations/0003_review_log_state_before.sql` is the clean break for analytics: it deletes prototype `review_logs` and adds a check requiring `data.stateBefore` to be one of the four scheduling states. It has not been verified against a live Supabase project.
 
 > **Gotcha:** Postgres denies a table before RLS even runs if the table lacks a `grant` — a missing grant is a 403 on every request, not an RLS problem. Every table in `supabase/schema.sql` needs `grant select, insert, update, delete ... to authenticated` alongside its RLS policy.
 
@@ -183,10 +185,10 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 | **Card** | `src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |
 | **Deck** | `src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
 | **Draft** | `src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
-| **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Carries an optional `dueAfter` (the resulting next-due instant); the scheduled interval is `dueAfter - reviewedAt`, so FSRS's `scheduledDays` is deliberately not logged separately. Rows written before the field existed lack it and render an em dash. |
+| **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Required `stateBefore` records the pre-grade scheduling state; existing `state` is the resulting post-grade state. Carries optional `dueAfter`; rows written before that older field existed can still render an em dash. |
 | **Roadmap** | `src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
 
-A `ReviewLog` stores only a `cardId`, so every deck-scoped read joins through the card at query time via `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`. Callers build it once per render and pass it down; `computeRetentionSeries`/`computeDeckPerformance` and `buildReviewHistory` all take the prebuilt map rather than a card array. (This helper previously had to span two card stores, which is exactly the bug class the single model removes — see D186.)
+A `ReviewLog` stores only a `cardId`, so deck attribution always joins through the current card. Retention series and Review history use `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`; Deck Performance takes current cards directly because it also needs active-card, Learned and Due membership. A moved card follows its current deck, while a deleted card's log remains in Review history but contributes to no current deck row.
 
 Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
 
@@ -194,7 +196,7 @@ Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `vers
 
 **Import validation runs in two layers, and neither may be skipped:**
 
-1. `parseBackup()` (pure) rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2) — without that lower bound a prototype-era version-1 file would be read as though its v1 cards were the current shape — then calls `src/domain/io/validateBackupEntities.ts` (`assertValidDecks`, `assertValidCards`). That module is hand-written and dependency-free: it checks each card's envelope, its `schemaVersion` against `CARD_SCHEMA_VERSION`, its complete `SchedulingState` (a `Record<keyof Required<SchedulingState>, …>` table, so adding a scheduling field fails the build until it is classified), its `interaction.type` against the six members, and the container shape of that type's payload. Errors name the entity by position and id. `drafts`/`reviewLogs`/`roadmaps` keep list-presence validation only.
+1. `parseBackup()` (pure) rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2), then calls `src/domain/io/validateBackupEntities.ts` (`assertValidDecks`, `assertValidCards`, `assertValidReviewLogs`). The hand-written validator checks each card's current shape and every ReviewLog field needed by analytics, including required `stateBefore`, post-grade `state`, rating, timestamps and before/after scheduling numbers. A version-2 backup with empty `reviewLogs` remains valid; a nonempty prototype backup lacking `stateBefore` is rejected. The envelope version stays 2 because the array already existed and the AI-card workflow exports it empty.
 2. `importBackup()` (`src/data/backup.ts`) applies the one rule that needs repository state: every `card.deckId` must resolve. Under **Merge** that means the file's decks *plus* the decks already in the library; under **Replace**, the file's decks only, since replace discards the library first. It runs **before** the replace-mode `clear()`, so a rejected import never leaves the store half-written. `deck.parentId` is deliberately *not* checked referentially — `useDeleteDeck` does not reparent children and `collectionTree.ts` already tolerates a dangling parent, so rejecting one would refuse a legitimate export.
 
 `src/domain/io/backupFixtures.ts` holds a valid deck plus one valid card of every interaction type. It lives in a non-test module on purpose: `tsconfig.app.json` excludes `*.test.ts`, so a fixture written inline in a test can rot silently (`src/data/backup.test.ts` carried a deleted v1 card shape for exactly that reason).
@@ -212,7 +214,7 @@ Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `vers
 
 Content and scheduling live together on the one record. `interaction` is a discriminated union on `type` with six members: `recall`, `multiple_choice`, `write_code`, `ordering`, `matching`, `walkthrough`.
 
-**There is no second card model and no on-read migration.** The v1 8-type union, the `CardV2`/`CardV2Record` content-vs-record split, `migrateCard`, and the separate `cardsV2` store were all deleted when the two models converged (see `itera-decisions.md`). Prototype card data was discarded rather than migrated, and the Dexie database was renamed `code-srs` -> `itera` with a single `version(1)`.
+**There is no second card model and no on-read migration.** The v1 8-type union, the `CardV2`/`CardV2Record` content-vs-record split, `migrateCard`, and the separate `cardsV2` store were all deleted when the two models converged (see `itera-decisions.md`). Prototype card data was discarded rather than migrated, and the Dexie database was renamed `code-srs` -> `itera`; version 2 later added the ReviewLog-only clean break described above.
 
 ### Adding an interaction
 
@@ -264,7 +266,7 @@ Local mode is gated: a fresh browser lands on `/login` and must sign in or conti
 - `toCardInput`/`fromCard` — bidirectional adapters between the app's own `SchedulingState` (persisted on `Card.scheduling`; `Millis` numbers, app field names) and `ts-fsrs`'s native `Card`/`CardInput` (`Date` objects, snake_case).
 - `reviewState(state, rating, now?)` — applies one grade via `scheduler.next(...)`. The single function that actually advances FSRS state.
 - `previewStates(state, now?)` — `scheduler.repeat(...)`, returning what each of the 4 ratings would produce, for labeling the rating buttons with resulting intervals.
-- `buildReviewLog(params)` — assembles a `ReviewLog` from explicit before/after state (not FSRS's own internal log), so recorded deltas are exact.
+- `buildReviewLog(params)` — the single log-construction choke point. It records required `stateBefore: before.state`, preserves `state: after.state`, and assembles the remaining before/after fields from the same explicit pair (not FSRS's internal log).
 
 `src/domain/scheduling/reviewService.ts` is the `ReviewService` boundary spec §9.5 requires ("UI never calls scheduler.ts directly, it goes through this service"):
 
@@ -316,15 +318,18 @@ Session identity is deliberately transient and per-mount. The `StudySession` typ
 Today computes nothing in a component. `TodayPage` is the only fetcher on the route (`useSearchCards`, `useDueCards`, `useDecks`, `useReviewLogs`, with `now` snapshotted once per mount so it agrees with `/review`); it memoizes calls into `src/domain/stats/` and passes plain props to four presentational panels. `UI → hooks → pure domain → Repository`, with no shortcuts.
 
 - **`streak.ts`** — `computeStreak(logs, now)` → `{ current, best, activeToday }`. **The one streak definition in the product**, consumed by Today's Momentum panel, the top-nav `StreakBadge` and Progress's KPI tile (through `computeKpis`), so the three can present it differently but cannot disagree. Grace behavior: studying through yesterday keeps the streak alive until a full local calendar day is actually missed.
-- **`todayMetrics.ts`** — `summarizeDueQueue`, `estimateSessionMinutes`, `nextDueAt`, `computePaceSeries`, `buildContinueLearning`, `selectNextMilestone`, `resolveSessionLimit`. Pure, `now` always explicit.
+- **`todayMetrics.ts`** — `summarizeDueQueue`, `estimateSessionMinutes`, `nextDueAt`, `computePaceSeries`, `buildContinueLearning`, `selectNextMilestone`, `resolveSessionLimit`. Pure, `now` always explicit; learned deck summaries call the canonical helper rather than counting separately.
 - **`deckMetrics.ts`** — moved here from `src/features/library/`. Today's Continue Learning and Next Milestone need the same per-deck due/last-studied/mastery numbers the Library shows, and `src/domain` may not import from `src/features`.
-- **`progressMetrics.ts`** — `computeRetention(logs)` is exported so Today shares Progress's definition rather than carrying its own. That calculation reads each review's post-grade FSRS state and is known to be semantically imperfect; the `stateBefore` correction belongs to the Progress-correctness milestone, and one shared function means the fix reaches both surfaces at once.
+- **`learned.ts`** — `computeLearned(cards, logs, deckIds?)` is the one unique-current-active-card definition used by Progress, Today milestones and Deck Performance.
+- **`progressMetrics.ts`** — `computeRetention(logs)` is the one shared definition for Today and Progress: eligible iff `stateBefore` is `review` or `relearning`; successful iff `rating >= 2` (Hard); `null` when there are no eligible attempts. It also owns the exact Progress KPI, time-bucket, heat-map, retention-series, leaf-deck performance and milestone derivations.
 - **`dateRange.ts`** — `startOfDay` and `DAY_MS` are exported, so streaks, the heatmap and the pace series share one local-day boundary instead of three private copies.
 
 Two definitions worth stating exactly, because the UI copy depends on them:
 
-- **Learned** (Next milestone) = a **current, non-suspended card with at least one `ReviewLog`**. Unique cards, not a log count; cards are attributed to the deck they are in *now*, matching `buildCardDeckMap`. It is never called mastery.
+- **Learned** = a **current, non-suspended card with at least one `ReviewLog`**. Unique cards, not a log count; cards are attributed to the deck they are in *now*. It is never called mastery.
 - **Pace** = **reviews completed per local calendar day**, seven buckets ending today, zero-days included. `durationMs` is deliberately not consulted; it backs the session-duration estimate and nothing else.
+
+Progress Deck Performance lists leaf decks only. Every row's Learned, Due and Retention values use the same direct-card leaf scope, avoiding double-counted parent and child rows. Rows exist for every leaf with active cards even if the selected period has no logs, and sort by actionable due work first, then due count, weaker valid retention, recency and name. A due row opens the same `/review?deck=<leaf-id>` scope; Trend was removed because the former review-count chunks looked temporal without being time buckets.
 
 ---
 

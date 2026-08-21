@@ -1,7 +1,7 @@
 // Minimal hand-rolled SVG trend line, matching this codebase's existing
 // "no charting library" convention (PaceChart.tsx, MasteryRing.tsx). Used
-// both by the Total Sessions KPI tile and the deck-performance trend cell —
-// deliberately just a stroked polyline (no area fill, no axes) since it's
+// by the Reviews KPI tile. Deliberately just a stroked polyline (no area fill,
+// no axes) since it's
 // read at a glance, not analyzed.
 export function Sparkline({
   values,

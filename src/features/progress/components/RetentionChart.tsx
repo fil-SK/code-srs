@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Info } from 'lucide-react'
 import type { RetentionPoint } from '@/domain/stats/progressMetrics'
 import { DeckScopeDropdown, type DropdownOption } from './DeckScopeDropdown'
+import { buildRetentionLinePaths } from './retentionChartPath'
 
 const WIDTH = 640
 const HEIGHT = 200
@@ -34,19 +35,7 @@ export function RetentionChart({
 }) {
   const known = points.filter((p) => p.retention !== null) as (RetentionPoint & { retention: number })[]
 
-  const linePath = useMemo(() => {
-    if (known.length < 2) return null
-    return known
-      .map((p, i) => {
-        const x = xFor(
-          points.indexOf(p),
-          points.length,
-        )
-        const y = yFor(p.retention)
-        return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`
-      })
-      .join(' ')
-  }, [known, points])
+  const linePaths = useMemo(() => buildRetentionLinePaths(points), [points])
 
   const average = known.length
     ? known.reduce((sum, p) => sum + p.retention, 0) / known.length
@@ -109,9 +98,18 @@ export function RetentionChart({
               />
             )}
 
-            {linePath && (
-              <path d={linePath} fill="none" stroke="var(--itera-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            )}
+            {linePaths.map((linePath) => (
+              <path
+                key={linePath}
+                data-retention-segment="true"
+                d={linePath}
+                fill="none"
+                stroke="var(--itera-accent)"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
 
             {last && (
               <>

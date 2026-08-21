@@ -7,11 +7,11 @@ import type { Card, Deck, Draft, ID, ReviewLog, Roadmap } from '@/types'
 // Booleans (e.g. card.suspended) are intentionally NOT indexed — IndexedDB keys
 // can't be boolean, so suspension is filtered in memory.
 //
-// A single version(1) on purpose: the database was renamed from 'code-srs' to
-// 'itera' when the v1/v2 card models converged, which discarded the prototype
-// data rather than migrating it (see docs/itera-decisions.md). That reset let
-// the old version(1)..version(4) ladder collapse into this one declaration.
-// The next schema change adds version(2) as usual.
+// The database was renamed from 'code-srs' to 'itera' when the card models
+// converged. Version 2 deliberately clears prototype ReviewLogs because rows
+// written before the required stateBefore field cannot support correct mature
+// retention and that history was explicitly declared disposable. Cards,
+// decks, drafts, and roadmaps are left intact.
 export class AppDB extends Dexie {
   cards!: Table<Card, ID>
   decks!: Table<Deck, ID>
@@ -19,8 +19,8 @@ export class AppDB extends Dexie {
   reviewLogs!: Table<ReviewLog, ID>
   roadmaps!: Table<Roadmap, ID>
 
-  constructor() {
-    super('itera')
+  constructor(name = 'itera') {
+    super(name)
     this.version(1).stores({
       cards: 'id, deckId, *tags, scheduling.due',
       decks: 'id, parentId, name',
@@ -28,6 +28,7 @@ export class AppDB extends Dexie {
       reviewLogs: 'id, cardId, reviewedAt',
       roadmaps: 'id, title',
     })
+    this.version(2).upgrade((tx) => tx.table('reviewLogs').clear())
   }
 }
 

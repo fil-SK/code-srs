@@ -1,12 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import type { Card, ReviewLog } from '@/types'
+import type { Card, Deck, ReviewLog } from '@/types'
 import { buildRange } from './dateRange'
 import { buildCardDeckMap } from './cardDeckIndex'
 import {
   clusterSessions,
   computeKpis,
   computeHeatmap,
+  computeRetention,
   computeRetentionSeries,
+  computeReviewSeries,
   computeDeckPerformance,
   deriveMilestones,
 } from './progressMetrics'
@@ -26,6 +28,7 @@ function log(overrides: Partial<ReviewLog>): ReviewLog {
     stabilityAfter: 2,
     difficultyBefore: 5,
     difficultyAfter: 5,
+    stateBefore: 'review',
     state: 'review',
     ...overrides,
   }
@@ -54,6 +57,10 @@ function card(overrides: Partial<Card>): Card {
   } as unknown as Card
 }
 
+function deck(id: string, name = id, parentId?: string): Deck {
+  return { id, name, parentId, createdAt: 0, updatedAt: 0 }
+}
+
 describe('clusterSessions', () => {
   it('groups reviews within the gap threshold into one session', () => {
     const t0 = Date.now()
@@ -80,7 +87,7 @@ describe('clusterSessions', () => {
 })
 
 describe('computeKpis', () => {
-  it('computes cardsReviewed and a positive delta vs a smaller previous period', () => {
+  it('counts ReviewLog entries and compares the selected period with the previous one', () => {
     const now = Date.now()
     const range = buildRange('7d', now)
     const logs = [
@@ -90,16 +97,28 @@ describe('computeKpis', () => {
       // 1 review in the previous window
       log({ reviewedAt: now - 10 * DAY, rating: 3 }),
     ]
-    const kpis = computeKpis(logs, range, now)
-    expect(kpis.cardsReviewed.value).toBe(2)
-    expect(kpis.cardsReviewed.deltaPct).toBe(100)
+    const kpis = computeKpis([], [], logs, range, now)
+    expect(kpis.reviews.value).toBe(2)
+    expect(kpis.reviews.deltaPct).toBe(100)
   })
 
-  it('returns null retention/accuracy when there are no reviews in range', () => {
+  it('counts repeated reviews as Reviews but one current card as Learned', () => {
+    const now = Date.now()
+    const cards = [card({ id: 'a' }), card({ id: 'b' })]
+    const logs = [
+      log({ cardId: 'a', reviewedAt: now - DAY }),
+      log({ cardId: 'a', reviewedAt: now - 2 * DAY }),
+    ]
+    const kpis = computeKpis(cards, [cards[1]], logs, buildRange('7d', now), now)
+    expect(kpis.learned).toEqual({ value: 1, total: 2 })
+    expect(kpis.due).toBe(1)
+    expect(kpis.reviews.value).toBe(2)
+  })
+
+  it('returns null retention when there are no eligible reviews in range', () => {
     const range = buildRange('7d')
-    const kpis = computeKpis([], range)
+    const kpis = computeKpis([], [], [], range)
     expect(kpis.retention.value).toBeNull()
-    expect(kpis.accuracy.value).toBeNull()
     expect(kpis.streak).toBe(0)
   })
 
@@ -111,9 +130,67 @@ describe('computeKpis', () => {
       log({ reviewedAt: now - 2 * DAY }),
       log({ reviewedAt: now - 3 * DAY }),
     ]
-    const kpis = computeKpis(logs, range, now)
+    const kpis = computeKpis([], [], logs, range, now)
     expect(kpis.streak).toBe(3)
     expect(kpis.bestStreak).toBe(3)
+  })
+})
+
+describe('computeRetention', () => {
+  it('returns null for no logs or only new/learning reviews', () => {
+    expect(computeRetention([])).toBeNull()
+    expect(
+      computeRetention([
+        log({ stateBefore: 'new', state: 'review', rating: 4 }),
+        log({ stateBefore: 'learning', state: 'review', rating: 3 }),
+      ]),
+    ).toBeNull()
+  })
+
+  it.each([
+    ['Again', 1, 0],
+    ['Hard', 2, 1],
+    ['Good', 3, 1],
+    ['Easy', 4, 1],
+  ] as const)('counts a Review-state %s as expected', (_label, rating, expected) => {
+    expect(computeRetention([log({ stateBefore: 'review', rating })])).toBe(expected)
+  })
+
+  it('includes relearning and computes the exact mature success fraction', () => {
+    const logs = [
+      log({ stateBefore: 'new', rating: 4 }),
+      log({ stateBefore: 'learning', rating: 3 }),
+      log({ stateBefore: 'review', rating: 1 }),
+      log({ stateBefore: 'review', rating: 2 }),
+      log({ stateBefore: 'relearning', rating: 3 }),
+    ]
+    expect(computeRetention(logs)).toBe(2 / 3)
+  })
+
+  it('does not fall back to the post-review state', () => {
+    expect(
+      computeRetention([log({ stateBefore: 'new', state: 'review', rating: 4 })]),
+    ).toBeNull()
+    expect(
+      computeRetention([log({ stateBefore: 'review', state: 'relearning', rating: 1 })]),
+    ).toBe(0)
+  })
+})
+
+describe('computeReviewSeries', () => {
+  it('counts every review in selected-range time buckets', () => {
+    const now = Date.now()
+    const range = buildRange('7d', now)
+    const series = computeReviewSeries(
+      [
+        log({ cardId: 'same', reviewedAt: now - DAY }),
+        log({ cardId: 'same', reviewedAt: now - DAY + MIN }),
+        log({ reviewedAt: now - 10 * DAY }),
+      ],
+      range,
+      7,
+    )
+    expect(series.reduce((sum, point) => sum + point.count, 0)).toBe(2)
   })
 })
 
@@ -155,41 +232,85 @@ describe('computeRetentionSeries', () => {
       log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
       log({ cardId: 'b', reviewedAt: now - DAY, rating: 1, state: 'review' }),
     ]
-    const series = computeRetentionSeries(logs, range, buildCardDeckMap(cards), 'deck-a')
+    const series = computeRetentionSeries(logs, range, buildCardDeckMap(cards), new Set(['deck-a']))
     const bucketWithData = series.find((p) => p.retention !== null)
     expect(bucketWithData?.retention).toBe(1)
   })
 })
 
 describe('computeDeckPerformance', () => {
-  it('joins reviews to decks and excludes logs for deleted cards', () => {
+  it('computes Learned, Due, and mature Retention for a leaf study scope', () => {
     const now = Date.now()
     const range = buildRange('7d', now)
-    const cards = [card({ id: 'a', deckId: 'deck-a' })]
-    const logs = [
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
-      log({ cardId: 'deleted-card', reviewedAt: now - DAY, rating: 3, state: 'review' }),
+    const cards = [
+      card({ id: 'a', deckId: 'deck-a' }),
+      card({ id: 'b', deckId: 'deck-a' }),
+      card({ id: 'suspended', deckId: 'deck-a', suspended: true }),
     ]
-    const rows = computeDeckPerformance(logs, buildCardDeckMap(cards), range)
+    const logs = [
+      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, stateBefore: 'review' }),
+      log({ cardId: 'a', reviewedAt: now - DAY, rating: 1, stateBefore: 'review' }),
+      log({ cardId: 'deleted-card', reviewedAt: now - DAY, rating: 3 }),
+    ]
+    const rows = computeDeckPerformance(logs, cards, [cards[1]], [deck('deck-a')], range)
     expect(rows).toHaveLength(1)
-    expect(rows[0].deckId).toBe('deck-a')
-    expect(rows[0].reviewed).toBe(2)
-    expect(rows[0].retention).toBe(1)
+    expect(rows[0]).toMatchObject({
+      deckId: 'deck-a',
+      learned: 1,
+      active: 2,
+      due: 1,
+      retention: 0.5,
+    })
   })
 
-  it('sorts rows by reviewed count descending', () => {
+  it('keeps a due deck with zero selected-period reviews and orders it first', () => {
     const now = Date.now()
     const range = buildRange('7d', now)
-    const cards = [card({ id: 'a', deckId: 'deck-a' }), card({ id: 'b', deckId: 'deck-b' })]
-    const logs = [
-      log({ cardId: 'a', reviewedAt: now - DAY }),
-      log({ cardId: 'b', reviewedAt: now - DAY }),
-      log({ cardId: 'b', reviewedAt: now - DAY }),
+    const cards = [card({ id: 'a', deckId: 'due' }), card({ id: 'b', deckId: 'studied' })]
+    const logs = [log({ cardId: 'b', reviewedAt: now - DAY })]
+    const rows = computeDeckPerformance(
+      logs,
+      cards,
+      [cards[0]],
+      [deck('due', 'Due'), deck('studied', 'Studied')],
+      range,
+    )
+    expect(rows[0]).toMatchObject({ deckId: 'due', due: 1, retention: null })
+  })
+
+  it('uses non-overlapping leaf scopes and excludes parent rows', () => {
+    const now = Date.now()
+    const cards = [
+      card({ id: 'parent-card', deckId: 'parent' }),
+      card({ id: 'child-card', deckId: 'child' }),
     ]
-    const rows = computeDeckPerformance(logs, buildCardDeckMap(cards), range)
-    expect(rows[0].deckId).toBe('deck-b')
-    expect(rows[0].reviewed).toBe(2)
+    const rows = computeDeckPerformance(
+      [log({ cardId: 'child-card', reviewedAt: now - DAY })],
+      cards,
+      [cards[0], cards[1]],
+      [deck('parent', 'Parent'), deck('child', 'Child', 'parent')],
+      buildRange('7d', now),
+    )
+    expect(rows.map((row) => row.deckId)).toEqual(['child'])
+    expect(rows[0]).toMatchObject({ learned: 1, active: 1, due: 1 })
+  })
+
+  it('attributes a moved card to its current leaf deck and ignores deleted cards', () => {
+    const now = Date.now()
+    const cards = [card({ id: 'moved', deckId: 'to' })]
+    const logs = [
+      log({ cardId: 'moved', reviewedAt: now - DAY }),
+      log({ cardId: 'deleted', reviewedAt: now - DAY }),
+    ]
+    const rows = computeDeckPerformance(
+      logs,
+      cards,
+      [],
+      [deck('from', 'From'), deck('to', 'To')],
+      buildRange('7d', now),
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ deckId: 'to', learned: 1 })
   })
 })
 

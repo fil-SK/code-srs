@@ -1,4 +1,11 @@
-import type { Card, Deck, ID, InteractionType, SchedulingState } from '@/types'
+import type {
+  Card,
+  Deck,
+  ID,
+  InteractionType,
+  ReviewLog,
+  SchedulingState,
+} from '@/types'
 import { CARD_SCHEMA_VERSION } from '@/types/card'
 
 // Structural validation for the entities inside a backup file, run by
@@ -229,6 +236,50 @@ export function assertValidCards(cards: unknown[]): asserts cards is Card[] {
 
     assertValidInteraction(i, id, raw.interaction)
     assertValidScheduling(i, id, raw.scheduling)
+  })
+}
+
+// ---- ReviewLog ----
+
+export function assertValidReviewLogs(logs: unknown[]): asserts logs is ReviewLog[] {
+  logs.forEach((raw, i) => {
+    if (!isObject(raw)) fail('ReviewLog', i, undefined, 'is not an object.')
+    const id = raw.id
+    if (!isNonEmptyString(id)) fail('ReviewLog', i, id, 'is missing a valid "id".')
+    if (!isNonEmptyString(raw.cardId)) {
+      fail('ReviewLog', i, id, 'is missing a valid "cardId".')
+    }
+    for (const field of [
+      'reviewedAt',
+      'durationMs',
+      'stabilityBefore',
+      'stabilityAfter',
+      'difficultyBefore',
+      'difficultyAfter',
+    ] as const) {
+      if (!isFiniteNumber(raw[field])) {
+        fail('ReviewLog', i, id, `is missing a numeric "${field}".`)
+      }
+    }
+    if (![1, 2, 3, 4].includes(raw.rating as number)) {
+      fail('ReviewLog', i, id, 'has an invalid "rating". Expected 1, 2, 3, or 4.')
+    }
+    if (typeof raw.autoGraded !== 'boolean') {
+      fail('ReviewLog', i, id, 'needs a boolean "autoGraded".')
+    }
+    for (const field of ['stateBefore', 'state'] as const) {
+      if (!SCHEDULING_STATE_KINDS.includes(raw[field] as SchedulingState['state'])) {
+        fail(
+          'ReviewLog',
+          i,
+          id,
+          `has an invalid "${field}". Expected one of: ${SCHEDULING_STATE_KINDS.join(', ')}.`,
+        )
+      }
+    }
+    if (raw.dueAfter !== undefined && !isFiniteNumber(raw.dueAfter)) {
+      fail('ReviewLog', i, id, 'has a "dueAfter" that is not a number.')
+    }
   })
 }
 

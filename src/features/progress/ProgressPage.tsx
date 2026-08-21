@@ -1,16 +1,16 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { CopyCheck, RefreshCw, Scan, Star } from 'lucide-react'
+import { Clock3, CopyCheck, GraduationCap, RefreshCw } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { useReviewLogs } from '@/hooks/useReview'
-import { useSearchCards } from '@/hooks/useCards'
+import { useDueCards, useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
-import { EmptyState } from '@/features/library/shared/EmptyState'
+import { subtreeIds } from '@/domain/decks/tree'
 import { buildRange, formatRangeLabel, previousPeriod, type DateRangePreset } from '@/domain/stats/dateRange'
 import { buildCardDeckMap } from '@/domain/stats/cardDeckIndex'
 import {
   computeKpis,
   computeHeatmap,
+  computeReviewSeries,
   computeRetentionSeries,
   computeDeckPerformance,
   deriveMilestones,
@@ -26,42 +26,66 @@ import { DeckPerformanceTable } from './components/DeckPerformanceTable'
 import { RecentMilestones } from './components/RecentMilestones'
 
 export function ProgressPage() {
+  const now = useMemo(() => Date.now(), [])
   const logsQuery = useReviewLogs()
   const cardsQuery = useSearchCards({ includeSuspended: true })
+  const dueCardsQuery = useDueCards({ now })
   const decksQuery = useDecks()
 
   const [preset, setPreset] = useState<DateRangePreset>('30d')
   const [heatmapRange, setHeatmapRange] = useState<HeatmapRangeValue>('30d')
   const [deckScope, setDeckScope] = useState('all')
 
-  const logs = logsQuery.data ?? []
-
   const range = useMemo(() => buildRange(preset), [preset])
   const comparisonLabel = useMemo(() => formatRangeLabel(previousPeriod(range)), [range])
 
-  const kpis = useMemo(() => computeKpis(logsQuery.data ?? [], range), [logsQuery.data, range])
-  const sessionsSparkline = useMemo(
-    () => computeHeatmap(logsQuery.data ?? [], Math.min(range.days, 30)).map((d) => d.count),
-    [logsQuery.data, range.days],
+  const kpis = useMemo(
+    () =>
+      computeKpis(
+        cardsQuery.data ?? [],
+        dueCardsQuery.data ?? [],
+        logsQuery.data ?? [],
+        range,
+        now,
+      ),
+    [cardsQuery.data, dueCardsQuery.data, logsQuery.data, range, now],
+  )
+  const reviewsSparkline = useMemo(
+    () => computeReviewSeries(logsQuery.data ?? [], range).map((point) => point.count),
+    [logsQuery.data, range],
   )
   const heatmapDays = useMemo(
     () => computeHeatmap(logsQuery.data ?? [], heatmapDaysFor(heatmapRange)),
     [logsQuery.data, heatmapRange],
   )
   const cardDecks = useMemo(() => buildCardDeckMap(cardsQuery.data ?? []), [cardsQuery.data])
+  const retentionDeckIds = useMemo(
+    () =>
+      deckScope === 'all'
+        ? undefined
+        : new Set(subtreeIds(decksQuery.data ?? [], deckScope)),
+    [deckScope, decksQuery.data],
+  )
   const retentionPoints = useMemo(
     () =>
       computeRetentionSeries(
         logsQuery.data ?? [],
         range,
         cardDecks,
-        deckScope === 'all' ? undefined : deckScope,
+        retentionDeckIds,
       ),
-    [logsQuery.data, range, cardDecks, deckScope],
+    [logsQuery.data, range, cardDecks, retentionDeckIds],
   )
   const deckPerformance = useMemo(
-    () => computeDeckPerformance(logsQuery.data ?? [], cardDecks, range),
-    [logsQuery.data, cardDecks, range],
+    () =>
+      computeDeckPerformance(
+        logsQuery.data ?? [],
+        cardsQuery.data ?? [],
+        dueCardsQuery.data ?? [],
+        decksQuery.data ?? [],
+        range,
+      ),
+    [logsQuery.data, cardsQuery.data, dueCardsQuery.data, decksQuery.data, range],
   )
   const milestones = useMemo(() => deriveMilestones(logsQuery.data ?? []), [logsQuery.data])
 
@@ -77,7 +101,12 @@ export function ProgressPage() {
     [decksQuery.data],
   )
 
-  if (logsQuery.isLoading || cardsQuery.isLoading || decksQuery.isLoading) {
+  if (
+    logsQuery.isLoading ||
+    cardsQuery.isLoading ||
+    dueCardsQuery.isLoading ||
+    decksQuery.isLoading
+  ) {
     return <p className="text-sm text-itera-muted">Loading…</p>
   }
 
@@ -92,51 +121,46 @@ export function ProgressPage() {
           <DateRangePicker preset={preset} range={range} onChange={setPreset} />
         </div>
 
-        {logs.length === 0 ? (
-          <EmptyState
-            title="No review history yet"
-            description="Study a few cards and your progress will show up here — sessions, retention, and streaks all come from real review activity."
-            action={
-              <Link
-                to="/review"
-                className="inline-flex items-center justify-center rounded-[9px] bg-itera-accent px-4 py-2 text-sm font-semibold text-white hover:bg-itera-accent-hover"
-              >
-                Start reviewing
-              </Link>
-            }
-          />
-        ) : (
-          <>
+        <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <KpiTile
-                icon={Scan}
-                label="Total sessions"
-                value={`${kpis.totalSessions.value}`}
+                icon={GraduationCap}
+                label="Learned"
+                value={kpis.learned.value.toLocaleString()}
                 variant="dark"
-                sparkline={sessionsSparkline}
-                footer={<KpiDelta delta={kpis.totalSessions.deltaPct} comparisonLabel={comparisonLabel} dark />}
+                footer={
+                  <span className="text-white/60">
+                    {kpis.learned.value.toLocaleString()} of {kpis.learned.total.toLocaleString()} active cards
+                  </span>
+                }
+              />
+              <KpiTile
+                icon={Clock3}
+                label="Due"
+                value={kpis.due.toLocaleString()}
+                iconTone="navy"
+                footer={<span className="text-itera-muted">Due now</span>}
               />
               <KpiTile
                 icon={CopyCheck}
-                label="Cards reviewed"
-                value={kpis.cardsReviewed.value.toLocaleString()}
+                label="Reviews"
+                value={kpis.reviews.value.toLocaleString()}
                 iconTone="navy"
-                footer={<KpiDelta delta={kpis.cardsReviewed.deltaPct} comparisonLabel={comparisonLabel} />}
+                sparkline={reviewsSparkline}
+                footer={<KpiDelta delta={kpis.reviews.deltaPct} comparisonLabel={comparisonLabel} />}
               />
               <KpiTile
                 icon={RefreshCw}
-                label="Retention rate"
+                label="Retention"
                 value={kpis.retention.value === null ? '—' : `${Math.round(kpis.retention.value * 100)}%`}
                 iconTone="success"
-                footer={<KpiDelta delta={kpis.retention.deltaPp} comparisonLabel={comparisonLabel} />}
-              />
-              <KpiTile
-                icon={Star}
-                label="Avg. accuracy"
-                value={kpis.accuracy.value === null ? '—' : `${Math.round(kpis.accuracy.value * 100)}%`}
-                iconTone="warning"
-                iconFilled
-                footer={<KpiDelta delta={kpis.accuracy.deltaPp} comparisonLabel={comparisonLabel} />}
+                footer={
+                  <KpiDelta
+                    delta={kpis.retention.deltaPp}
+                    comparisonLabel={comparisonLabel}
+                    unit="percentagePoints"
+                  />
+                }
               />
               <KpiTile
                 icon={StreakFlameIcon}
@@ -162,7 +186,6 @@ export function ProgressPage() {
               <RecentMilestones events={milestones} />
             </div>
           </>
-        )}
       </div>
     </ProgressShell>
   )

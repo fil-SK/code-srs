@@ -31,6 +31,7 @@ export function DateRangePicker({
     <div ref={ref} className="relative flex-none">
       <button
         type="button"
+        aria-label="Select progress date range"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}

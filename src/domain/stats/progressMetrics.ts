@@ -1,5 +1,7 @@
-import type { ID, Millis, ReviewLog } from '@/types'
+import type { Card, Deck, ID, Millis, ReviewLog } from '@/types'
+import { leafDecks } from '@/domain/decks/tree'
 import { DAY_MS, previousPeriod, startOfDay, type DateRange } from './dateRange'
+import { computeLearned } from './learned'
 import { computeStreak } from './streak'
 
 const DAY = DAY_MS
@@ -8,34 +10,18 @@ function inRange(logs: ReviewLog[], range: DateRange): ReviewLog[] {
   return logs.filter((l) => l.reviewedAt >= range.from && l.reviewedAt < range.to)
 }
 
-// Mature-card recall: of reviews on cards already in FSRS's review/relearning
-// state, the share rated Hard/Good/Easy (not Again). Inherited from the
-// deleted v1 stats module's definition, but parametrized by an arbitrary
-// window instead of a fixed trailing 30 days.
-//
-// Exported because Today's Momentum panel shows the same metric and must not
-// carry its own definition: this calculation is known to be semantically
-// imperfect (it reads the review's post-grade FSRS state rather than the state
-// the card was in when it was asked), and the correction belongs to the
-// Progress-correctness milestone. One function means that fix reaches both
-// surfaces at once.
+// Mature retention: only reviews where the card was already in Review or
+// Relearning before the grade are eligible. Hard, Good, and Easy are
+// successes; Again is a failure. Today imports this same function.
 export function computeRetention(logs: ReviewLog[]): number | null {
-  const mature = logs.filter((l) => l.state === 'review' || l.state === 'relearning')
+  const mature = logs.filter(
+    (l) => l.stateBefore === 'review' || l.stateBefore === 'relearning',
+  )
   if (!mature.length) return null
   return mature.filter((l) => l.rating >= 2).length / mature.length
 }
 
 const retentionOf = computeRetention
-
-// Accuracy: the same "not Again" success rate, but over *all* reviews in the
-// window regardless of card state (new/learning cards count too). Deliberately
-// broader than retention — it reads as the higher of the two numbers, since
-// early-stage reviews are easier to answer correctly than mature recall
-// checks.
-function accuracyOf(logs: ReviewLog[]): number | null {
-  if (!logs.length) return null
-  return logs.filter((l) => l.rating >= 2).length / logs.length
-}
 
 function pctDelta(current: number, previous: number): number | null {
   if (previous === 0) return current === 0 ? 0 : null
@@ -88,38 +74,70 @@ export function clusterSessions(
 // ---- KPI row ----------------------------------------------------------------
 
 export interface KpiSet {
-  totalSessions: { value: number; deltaPct: number | null }
-  cardsReviewed: { value: number; deltaPct: number | null }
+  learned: { value: number; total: number }
+  due: number
+  reviews: { value: number; deltaPct: number | null }
   retention: { value: number | null; deltaPp: number | null }
-  accuracy: { value: number | null; deltaPp: number | null }
   streak: number
   bestStreak: number
 }
 
-export function computeKpis(logs: ReviewLog[], range: DateRange, now: Millis = Date.now()): KpiSet {
+export function computeKpis(
+  cards: Card[],
+  dueCards: Card[],
+  logs: ReviewLog[],
+  range: DateRange,
+  now: Millis = Date.now(),
+): KpiSet {
   const current = inRange(logs, range)
   const previous = inRange(logs, previousPeriod(range))
 
-  const currentSessions = clusterSessions(current).length
-  const previousSessions = clusterSessions(previous).length
-
   const currentRetention = retentionOf(current)
   const previousRetention = retentionOf(previous)
-  const currentAccuracy = accuracyOf(current)
-  const previousAccuracy = accuracyOf(previous)
 
   // Streak is deliberately independent of the selected range - it is always
   // "current" - and comes from the one shared definition in ./streak.
   const { current: streak, best: bestStreak } = computeStreak(logs, now)
+  const learned = computeLearned(cards, logs)
 
   return {
-    totalSessions: { value: currentSessions, deltaPct: pctDelta(currentSessions, previousSessions) },
-    cardsReviewed: { value: current.length, deltaPct: pctDelta(current.length, previous.length) },
+    learned: {
+      value: learned.learned,
+      total: learned.total,
+    },
+    due: dueCards.length,
+    reviews: { value: current.length, deltaPct: pctDelta(current.length, previous.length) },
     retention: { value: currentRetention, deltaPp: ppDelta(currentRetention, previousRetention) },
-    accuracy: { value: currentAccuracy, deltaPp: ppDelta(currentAccuracy, previousAccuracy) },
     streak,
     bestStreak,
   }
+}
+
+export interface ReviewCountPoint {
+  bucketStart: Millis
+  bucketEnd: Millis
+  count: number
+}
+
+// Reviews per equal-width time bucket for the selected range. The KPI's
+// sparkline therefore visualizes the same ReviewLog count the tile names.
+export function computeReviewSeries(
+  logs: ReviewLog[],
+  range: DateRange,
+  targetBuckets = 30,
+): ReviewCountPoint[] {
+  const bucketDays = Math.max(1, Math.ceil(range.days / targetBuckets))
+  const bucketMs = bucketDays * DAY
+  const points: ReviewCountPoint[] = []
+  for (let start = range.from; start < range.to; start += bucketMs) {
+    const end = Math.min(start + bucketMs, range.to)
+    points.push({
+      bucketStart: start,
+      bucketEnd: end,
+      count: logs.filter((log) => log.reviewedAt >= start && log.reviewedAt < end).length,
+    })
+  }
+  return points
 }
 
 // ---- Activity heatmap -------------------------------------------------------
@@ -188,12 +206,15 @@ export function computeRetentionSeries(
   logs: ReviewLog[],
   range: DateRange,
   cardDecks: Map<ID, ID>,
-  deckId?: ID,
+  deckIds?: ReadonlySet<ID>,
   targetBuckets = 10,
 ): RetentionPoint[] {
   let scoped = logs
-  if (deckId) {
-    scoped = logs.filter((l) => cardDecks.get(l.cardId) === deckId)
+  if (deckIds) {
+    scoped = logs.filter((l) => {
+      const deckId = cardDecks.get(l.cardId)
+      return deckId !== undefined && deckIds.has(deckId)
+    })
   }
   const bucketDays = Math.max(1, Math.round(range.days / targetBuckets))
   const bucketMs = bucketDays * DAY
@@ -210,52 +231,60 @@ export function computeRetentionSeries(
 
 export interface DeckPerformanceRow {
   deckId: ID
-  reviewed: number
+  learned: number
+  active: number
+  due: number
   retention: number | null
-  accuracy: number | null
-  // Accuracy across a handful of equal-size chronological chunks of this
-  // deck's reviews in range — enough to draw a small trend sparkline. Not a
-  // time-bucketed series (chunks are by review count, not by day), since
-  // low-volume decks would otherwise produce mostly-empty buckets.
-  trendSeries: number[]
-}
-
-function bucketedAccuracySeries(deckLogs: ReviewLog[], buckets = 6): number[] {
-  if (!deckLogs.length) return []
-  const sorted = [...deckLogs].sort((a, b) => a.reviewedAt - b.reviewedAt)
-  const chunkSize = Math.max(1, Math.ceil(sorted.length / buckets))
-  const series: number[] = []
-  for (let i = 0; i < sorted.length; i += chunkSize) {
-    series.push(accuracyOf(sorted.slice(i, i + chunkSize)) ?? 0)
-  }
-  return series
+  lastReviewedAt?: Millis
 }
 
 export function computeDeckPerformance(
   logs: ReviewLog[],
-  cardDecks: Map<ID, ID>,
+  cards: Card[],
+  dueCards: Card[],
+  decks: Deck[],
   range: DateRange,
 ): DeckPerformanceRow[] {
   const current = inRange(logs, range)
-  const byDeck = new Map<ID, ReviewLog[]>()
-  for (const log of current) {
-    const deckId = cardDecks.get(log.cardId)
-    if (!deckId) continue // card deleted since review — can't attribute to a deck
-    const arr = byDeck.get(deckId)
-    if (arr) arr.push(log)
-    else byDeck.set(deckId, [log])
-  }
-  const rows: DeckPerformanceRow[] = []
-  for (const [deckId, deckLogs] of byDeck) {
-    rows.push({
-      deckId,
-      reviewed: deckLogs.length,
-      retention: retentionOf(deckLogs),
-      accuracy: accuracyOf(deckLogs),
-      trendSeries: bucketedAccuracySeries(deckLogs),
+  const dueIds = new Set(dueCards.map((card) => card.id))
+
+  return leafDecks(decks)
+    .map((deck): DeckPerformanceRow | null => {
+      const activeCards = cards.filter((card) => card.deckId === deck.id && !card.suspended)
+      if (activeCards.length === 0) return null
+      const cardIds = new Set(activeCards.map((card) => card.id))
+      const deckLogs = current.filter((log) => cardIds.has(log.cardId))
+      const allDeckLogs = logs.filter((log) => cardIds.has(log.cardId))
+      return {
+        deckId: deck.id,
+        learned: computeLearned(activeCards, logs).learned,
+        active: activeCards.length,
+        due: activeCards.filter((card) => dueIds.has(card.id)).length,
+        retention: retentionOf(deckLogs),
+        lastReviewedAt: allDeckLogs.length
+          ? Math.max(...allDeckLogs.map((log) => log.reviewedAt))
+          : undefined,
+      }
     })
-  }
-  return rows.sort((a, b) => b.reviewed - a.reviewed)
+    .filter((row): row is DeckPerformanceRow => row !== null)
+    .sort((a, b) => {
+      const aActionable = a.due > 0 ? 1 : 0
+      const bActionable = b.due > 0 ? 1 : 0
+      if (aActionable !== bActionable) return bActionable - aActionable
+      if (a.due !== b.due) return b.due - a.due
+      if (a.retention !== null && b.retention !== null && a.retention !== b.retention) {
+        return a.retention - b.retention
+      }
+      if ((a.retention === null) !== (b.retention === null)) {
+        return a.retention === null ? 1 : -1
+      }
+      if ((a.lastReviewedAt ?? 0) !== (b.lastReviewedAt ?? 0)) {
+        return (b.lastReviewedAt ?? 0) - (a.lastReviewedAt ?? 0)
+      }
+      const aName = decks.find((deck) => deck.id === a.deckId)?.name ?? ''
+      const bName = decks.find((deck) => deck.id === b.deckId)?.name ?? ''
+      return aName.localeCompare(bName)
+    })
 }
 
 // ---- Milestones ---------------------------------------------------------------

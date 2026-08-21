@@ -21,7 +21,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Decks tab, per-deck view, Browse, and an interactive Preview** — try cards (answer + check yourself) with no scheduling impact.
 - **Optional Explanation** on every card type, shown on reveal.
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
-- **Stats**: streak, retention, reviews per day, and a due-forecast.
+- **Progress**: learned and due cards, review volume, mature-material retention, current streak, activity, and actionable per-deck metrics.
 - **Import / Export** your whole collection as JSON.
 - **Dark/light theme**, responsive, mobile-friendly, installable (PWA).
 - **Two storage modes**: local-only (IndexedDB, zero setup) or cloud sync (Supabase Postgres + magic-link auth).
@@ -63,7 +63,7 @@ Grading model: interactive interactions (Multiple Choice, Write Code, Ordering, 
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.
 - **Preview** — try cards with **no scheduling impact** through the same card surface as Review. In deck flip-through, Prev and Next flank the position in the white strip; the Left/Right arrow keys perform the same navigation. Ratings are hidden and nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
-- **Stats** — streak, retention, reviews/day, and upcoming load.
+- **Progress** (`/progress`) — Learned, Due, Reviews, mature Retention, and Current streak; activity and retention charts; actionable leaf-deck rows ordered around work due now. Today, navigation, Progress, and Review share the same due/streak/retention definitions.
 - **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The avatar menu also links those two working sections directly and shows Study settings, What's new, keyboard/help and profile destinations as clearly marked upcoming items. Sign-out is available there for local, demo and cloud sessions.
 
 **Markdown** works in every card's prose: `` `inline code` ``, `**bold**`, `*italic*`, and:

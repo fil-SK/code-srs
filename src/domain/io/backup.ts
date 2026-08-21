@@ -1,5 +1,9 @@
 import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
-import { assertValidCards, assertValidDecks } from './validateBackupEntities'
+import {
+  assertValidCards,
+  assertValidDecks,
+  assertValidReviewLogs,
+} from './validateBackupEntities'
 
 // 2 = the single card model. Version 1 files hold the old 8-type v1 cards and
 // a separate second card array; that format is prototype-era and unsupported, so
@@ -82,13 +86,15 @@ export function parseBackup(json: string): BackupFile {
     }
   }
 
-  // Entity-level structure. Cards and decks are the only two the app reads on
-  // every screen, and a malformed one reaches Review as a crash rather than a
-  // refusal; drafts/reviewLogs/roadmaps keep list-presence validation only.
+  // Entity-level structure. Cards, decks, and ReviewLogs are validated before
+  // import. ReviewLog validation is what prevents a version-2 backup from
+  // silently reintroducing prototype history without required stateBefore.
+  // Drafts and roadmaps keep list-presence validation only.
   // Referential integrity (card.deckId) needs repository state and therefore
   // lives in the import layer, src/data/backup.ts.
   assertValidDecks(data.decks as unknown[])
   assertValidCards(data.cards as unknown[])
+  assertValidReviewLogs(data.reviewLogs as unknown[])
 
   return parsed as BackupFile
 }

@@ -10,10 +10,12 @@ export function KpiDelta({
   delta,
   comparisonLabel,
   dark,
+  unit = 'percent',
 }: {
   delta: number | null
   comparisonLabel: string
   dark?: boolean
+  unit?: 'percent' | 'percentagePoints'
 }) {
   if (delta === null) {
     return (
@@ -36,7 +38,7 @@ export function KpiDelta({
     <span className={cn('inline-flex items-center gap-1 font-semibold', tone)}>
       <Icon size={11} />
       {rounded}
-      {flat ? '' : '%'} vs {comparisonLabel}
+      {unit === 'percentagePoints' ? ' pp' : '%'} vs {comparisonLabel}
     </span>
   )
 }
@@ -70,6 +72,8 @@ export function KpiTile({
 
   return (
     <div
+      role="group"
+      aria-label={label}
       className={cn(
         'rounded-itera-card border p-5',
         dark
