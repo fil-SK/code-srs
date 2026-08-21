@@ -14,6 +14,7 @@ Codex reads [`AGENTS.md`](AGENTS.md), which points at the **same** shared docume
 | What does the product do; what is planned vs. out of scope? | [`docs/features.md`](docs/features.md) |
 | Why is it this way? | [`docs/itera-decisions.md`](docs/itera-decisions.md) (append-only; read the newest entries first) |
 | Data-migration contract and phase status | [`docs/itera-migration-plan.md`](docs/itera-migration-plan.md) |
+| What was deliberately deferred, and why | [`docs/TODO.md`](docs/TODO.md) — the holding pen. Check it before "adding" something obvious; several are deferred on purpose and the reason is recorded in `itera-decisions.md`. |
 | Index + source-of-truth hierarchy | [`docs/README.md`](docs/README.md) |
 | Project history (audit, A–M plan, original master spec) | [`docs/archive/`](docs/archive/) — **historical only, never a current source of truth** |
 
@@ -113,7 +114,7 @@ The project is mockup-driven and several mockups are **locked references**; they
 
 - **No em dashes in code comments.** Explain non-obvious *why*, not *what*.
 - Match the surrounding code: shared input styling via `Field` / `fieldClass` / `selectClass`, buttons via `components/ui/Button`, class merging via `cn` (`src/lib/cn.ts`), ids via `newId()` (`src/lib/id.ts`).
-- oxlint enforces `react-hooks/exhaustive-deps`; when intentionally omitting a dep, use a stable serialized key and an `// eslint-disable-next-line react-hooks/exhaustive-deps` (see `CodeView`, `ReviewSession`).
+- oxlint enforces `react-hooks/exhaustive-deps`; when intentionally omitting a dep, use a stable serialized key and an `// eslint-disable-next-line react-hooks/exhaustive-deps` (see `CodeView`, `ReviewSessionScreen`).
 - Backup files (`src/domain/io/backup.ts`) are versioned; new entity arrays are added **optional** so older backups still import. Imports are validated before any write: entity structure in `src/domain/io/validateBackupEntities.ts` (pure, no dependency), and the `card.deckId` referential rule in `src/data/backup.ts` (mode-dependent, and it must stay ahead of the replace-mode `clear()`). The envelope's `app: 'code-srs'` is a **legacy format identifier, not the product name** - do not rename it. **Changing `src/types/card.ts` or the backup format means updating `docs/prompts/ai-card-prompt.md` in the same pass** - it is a real import contract, and it once drifted into producing files the app refuses.
 - `docs/itera-decisions.md` is **append-only**: never edit a past entry's substance in place. If a decision is superseded, add a new dated entry that says so and cross-references the old one — don't rewrite history.
 - **When a change reaches finalized state** (a feature is implemented, a design/behavior change is settled — not a WIP/exploratory edit), update documentation in the same pass: `docs/CURRENT_STATE.md` whenever status changes, plus `docs/architecture.md` / `docs/design-system.md` / `docs/features.md` for what they cover, `README.md` for user-facing changes, and `docs/itera-decisions.md` for material decisions (append a new dated entry, never edit one). Don't leave docs describing the pre-change state.

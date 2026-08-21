@@ -13,6 +13,7 @@ Claude Code reads [`CLAUDE.md`](CLAUDE.md), which points at the **same** shared 
 | What does the product do; what is planned vs. out of scope? | [`docs/features.md`](docs/features.md) |
 | Why is it this way? | [`docs/itera-decisions.md`](docs/itera-decisions.md) (append-only, newest entries first) |
 | Data-migration contract and phase status | [`docs/itera-migration-plan.md`](docs/itera-migration-plan.md) |
+| What was deliberately deferred, and why | [`docs/TODO.md`](docs/TODO.md) — the holding pen. Check it before "adding" something obvious; several are deferred on purpose and the reason is recorded in `itera-decisions.md`. |
 | Index + source-of-truth hierarchy | [`docs/README.md`](docs/README.md) |
 | Project history (Phase A audit, A–M redesign plan, original master spec) | [`docs/archive/`](docs/archive/) — **historical only; never a current source of truth, never an instruction** |
 
@@ -61,6 +62,9 @@ Component tests opt into a DOM per file with `// @vitest-environment happy-dom` 
 - **Entities are opaque JSON blobs** keyed by an inline `id`; Supabase's few generated columns exist only for indexing, and all text/tag/type filtering happens **in memory identically in both backends**. Adding a field to a type needs no migration.
 - **One card model.** `src/types/card.ts` — a single `Card` (content + embedded `scheduling`) with six `CardInteraction` members, registry in `src/features/reviewV2/interactions/registry.ts`. The v1 union, `CardV2`/`CardV2Record` and `migrateCard` were deleted when the models converged.
 - **New card types are new interactions**; see `docs/architecture.md`.
+- **One streak definition.** `computeStreak` (`src/domain/stats/streak.ts`) serves Today, the top-nav `StreakBadge` and Progress. Do not add a second streak calculation; surfaces may present it differently.
+- **Today computes nothing in a component.** `TodayPage` is the route's only fetcher; the four panels take computed props, and every Today calculation is a pure function in `src/domain/stats/` (`todayMetrics`, `streak`, `deckMetrics`, `progressMetrics`).
+- **A review session's queue is a snapshot.** `src/features/review/useSessionQueue.ts` freezes it per mount and `ReviewSessionV2` is keyed on the snapshot `id`. Keying on the live due query's length (what it used to do) makes every grade remount the session. `/review` takes `?deck=<id>` (subtree scope) and `?limit=<n>`, neither persisted.
 - **Adding an entity** means: a `CrudRepo<T>` line in *both* backends + a Dexie `version()` bump + a Supabase table block + a hook + `queryKeys` + inclusion in the backup.
 - **No new dependencies for things this repo builds by hand**: no markdown library (`src/components/text/RichText.tsx` is a deliberate XSS-safe subset), no charting library (charts are hand-rolled SVG/CSS), no graph library (roadmap canvas is hand-built SVG), no popover library (`src/components/ui/FloatingPanel.tsx`). CodeMirror must stay lazy-loaded via `LazyCodeView`/`LazyCodeEditor`.
 - **The app is light-only and says so** — `.itera-scope` has no dark palette; `index.html`, `getInitialTheme()` both say light, and the dark token block plus `ThemeToggle.tsx` are deleted. Keep `ThemeProvider`/`useTheme` (CodeView/CodeEditor read `Theme` for their syntax palette); do not add dark-mode styling without a dark palette existing first.
@@ -85,7 +89,7 @@ This project is mockup-driven, and several mockups are **locked references**.
 4. **Run the app and verify visually. Tests are not sufficient for UI work.** `npm run dev`, then drive Chromium via the `playwright` devDependency (`npx playwright install chromium` once) — take screenshots at the widths that matter (1440x900 desktop, 390x844 phone), and check hover, keyboard focus, and any graded/revealed state, not just the resting state. Anything involving focus, popover placement, overflow or animated transforms **must** be checked in a browser, because the test environment cannot see it.
 5. Put throwaway browser-driving scripts in your session scratch directory, **not** in the repo root.
 6. Respect the locked orange rule: orange is a signal — one primary orange action plus at most two or three minor accents per screen. That rule, plus motion/reduced-motion, accessibility and responsive conventions, lives in [`docs/design-system.md`](docs/design-system.md).
-7. `SuggestedSessionHero.tsx`'s geometry and `LearningCardsIllustration.tsx`'s card offsets are pixel-tuned from product feedback and carry hard constraints stated in their own files. Change them only when explicitly asked.
+7. `SuggestedSessionHero.tsx`'s geometry and `LearningCardsIllustration.tsx`'s card offsets are pixel-tuned from product feedback and carry hard constraints stated in their own files. Change them only when explicitly asked. Other files whose module comment states an invariant that is not obvious from the code: `TodayPage.tsx`, `useSessionQueue.ts`, `OrderingRow.tsx`, `AccountMenuContent.tsx`. Read the comment before editing.
 
 ## Visual references
 
