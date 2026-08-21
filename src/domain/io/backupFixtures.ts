@@ -1,4 +1,4 @@
-import type { Card, Deck, InteractionType } from '@/types'
+import type { Card, Deck, Draft, InteractionType, ReviewLog, Roadmap } from '@/types'
 import { CARD_SCHEMA_VERSION, richText } from '@/types/card'
 import { initialSchedulingState } from '@/domain/scheduling/state'
 
@@ -10,6 +10,55 @@ import { initialSchedulingState } from '@/domain/scheduling/state'
 
 export function fixtureDeck(overrides: Partial<Deck> = {}): Deck {
   return { id: 'deck-1', name: 'Operating Systems', createdAt: 1, updatedAt: 1, ...overrides }
+}
+
+// Both carry every optional field, so a test that wants "valid without the
+// optionals" removes them explicitly rather than relying on a thin fixture.
+export function fixtureDraft(overrides: Partial<Draft> = {}): Draft {
+  return {
+    id: 'draft-1',
+    rawText: 'Difference between a mutex and a spinlock?',
+    code: { language: 'cpp', code: 'std::mutex m;' },
+    intendedType: 'recall',
+    intendedDeckId: 'deck-1',
+    createdAt: 1,
+    ...overrides,
+  }
+}
+
+export function fixtureRoadmap(overrides: Partial<Roadmap> = {}): Roadmap {
+  return {
+    id: 'roadmap-1',
+    title: 'Compilers',
+    description: 'Front end to back end.',
+    nodes: [
+      { id: 'n1', deckId: 'deck-1', x: 0, y: 0 },
+      { id: 'n2', deckId: 'deck-1', x: 220, y: 0 },
+    ],
+    edges: [{ id: 'e1', from: 'n1', to: 'n2' }],
+    createdAt: 1,
+    updatedAt: 1,
+    ...overrides,
+  }
+}
+
+export function fixtureReviewLog(overrides: Partial<ReviewLog> = {}): ReviewLog {
+  return {
+    id: 'review-1',
+    cardId: 'card-recall',
+    reviewedAt: 1,
+    rating: 3,
+    autoGraded: false,
+    durationMs: 1_000,
+    stabilityBefore: 1,
+    stabilityAfter: 2,
+    difficultyBefore: 5,
+    difficultyAfter: 5,
+    stateBefore: 'review',
+    state: 'review',
+    dueAfter: 2,
+    ...overrides,
+  }
 }
 
 const INTERACTIONS: { [T in InteractionType]: Extract<Card['interaction'], { type: T }> } = {

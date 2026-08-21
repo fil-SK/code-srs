@@ -6,9 +6,12 @@ import type {
   CardRepo,
   CrudRepo,
   DueQuery,
+  ImportGuarantee,
   Repository,
   ReviewRepo,
+  WorkspaceSnapshot,
 } from '../repository'
+import { ImportFailure } from '@/domain/io/importFailure'
 import { getSupabase } from './client'
 
 // Every row stores the whole entity in a `data` jsonb column, so reads unwrap
@@ -172,11 +175,43 @@ export class SupabaseRepository implements Repository {
   readonly reviews: ReviewRepo
   readonly roadmaps: CrudRepo<Roadmap>
 
+  // PostgREST has no transaction that spans requests: every delete and every
+  // upsert here is its own committed statement. A five-table clear followed by
+  // five uploads is therefore a sequence that can stop halfway, and no amount
+  // of client-side restore logic turns it into one unit - the restore can fail
+  // too. This backend says so rather than pretending otherwise.
+  readonly importGuarantee: ImportGuarantee = 'best-effort'
+
   constructor(sb: SupabaseClient = getSupabase()) {
     this.cards = createCardRepo(sb)
     this.decks = crud<Deck>(sb, 'decks')
     this.drafts = crud<Draft>(sb, 'drafts')
     this.reviews = createReviewRepo(sb)
     this.roadmaps = crud<Roadmap>(sb, 'roadmaps')
+  }
+
+  // Refused, not attempted. Clearing the cloud workspace before uploads that
+  // can fail is exactly the data loss audit P1-1 records; an all-or-nothing
+  // cloud replace needs a database-side function (one transaction doing the
+  // delete + insert for all five tables), which does not exist yet. Until it
+  // does, Replace is unavailable in cloud mode and the UI hides it.
+  async replaceAll(_snapshot: WorkspaceSnapshot): Promise<void> {
+    throw new ImportFailure(
+      'Replace is not available while your data is synced to the cloud, because the ' +
+        'existing data cannot be restored if the upload fails partway. Use Merge instead. ' +
+        'Nothing was changed.',
+      'validation',
+      true,
+    )
+  }
+
+  // Additive and idempotent, so a failed merge leaves earlier upserts in place
+  // but destroys nothing.
+  async mergeAll(snapshot: WorkspaceSnapshot): Promise<void> {
+    await this.cards.bulkPut(snapshot.cards)
+    await this.decks.bulkPut(snapshot.decks)
+    await this.drafts.bulkPut(snapshot.drafts)
+    await this.reviews.bulkPut(snapshot.reviewLogs)
+    await this.roadmaps.bulkPut(snapshot.roadmaps)
   }
 }

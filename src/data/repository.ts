@@ -42,6 +42,24 @@ export interface ReviewRepo {
   range(from: Millis, to: Millis): Promise<ReviewLog[]>
 }
 
+// The whole persisted workspace as one payload. Import is the only operation
+// that writes every store at once, and it must do so as one unit.
+export interface WorkspaceSnapshot {
+  cards: Card[]
+  decks: Deck[]
+  drafts: Draft[]
+  reviewLogs: ReviewLog[]
+  roadmaps: Roadmap[]
+}
+
+// What a backend can promise for a whole-workspace write.
+//   'transactional' — replaceAll/mergeAll either fully apply or leave storage
+//                     exactly as it was. Nothing partial is ever observable.
+//   'best-effort'   — the write is a sequence that can stop halfway. A backend
+//                     that says this must refuse replaceAll rather than clear
+//                     storage it cannot restore.
+export type ImportGuarantee = 'transactional' | 'best-effort'
+
 // The single seam the entire app depends on. Today it resolves to Dexie;
 // later a SupabaseRepository implements the same surface with no UI changes.
 export interface Repository {
@@ -50,4 +68,14 @@ export interface Repository {
   drafts: CrudRepo<Draft>
   reviews: ReviewRepo
   roadmaps: CrudRepo<Roadmap>
+
+  // Whole-workspace import lives on the seam rather than being orchestrated
+  // store-by-store by the caller: only the backend knows how (or whether) five
+  // stores can be written as one unit. The import layer reports this guarantee
+  // to the user instead of assuming one (audit P1-1).
+  readonly importGuarantee: ImportGuarantee
+  // Discard everything stored and write `snapshot` instead.
+  replaceAll(snapshot: WorkspaceSnapshot): Promise<void>
+  // Upsert `snapshot` over whatever is already stored.
+  mergeAll(snapshot: WorkspaceSnapshot): Promise<void>
 }

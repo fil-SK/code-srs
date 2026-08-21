@@ -30,6 +30,8 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 A temporal end-to-end QA pass on 2026-08-21 (import → review → real FSRS persistence → controlled calendar-time advance → due queries → Today → Progress → Review history) returned **PASS WITH ISSUES** with no correctness blocker; its evidence is kept in [`qa_report_21_aug_2026/`](qa_report_21_aug_2026/qa_report_21_8_2026.md). All three findings were closed on 2026-08-22 without new product scope: isolated retention buckets now render as points, streak copy is grammatically correct, and `newId()` no longer assumes a secure context. The phone-width observation in that report did not reproduce as a persistent overflow.
 
+A release-readiness audit on 2026-08-22 ([`audits/audit_22_8_2026.md`](audits/audit_22_8_2026.md)) reproduced a P1 data-loss path in replace-mode import: a file that passed preflight cleared all five stores and then failed mid-write, destroying the prior workspace. **P1-1 is fixed** — every backup array is now validated element-by-element before any write, and the local backend performs replace and merge inside a single Dexie transaction, so a failed import leaves the previous workspace exactly as it was (§12, §15, and the 2026-08-22 decision entry). The audit's other findings are open and are **not** addressed by that pass.
+
 Progress now answers five explicit questions with five honest tiles: unique current active cards learned, cards due now, ReviewLog entries in the selected period, mature retention in that period, and the canonical current streak. `stateBefore` is required on every new ReviewLog, so new/learning graduations never contaminate mature retention and a Review → Again remains an eligible failure. The page retains its heat map, deck-scopable retention chart and milestones; gaps in the retention chart are no longer interpolated. Deck Performance shows leaf/actionable decks with Learned, Due and Retention, including due decks with no period history, ordered around due work. No page was redesigned.
 
 Today's placeholder content is gone. The hero reads the real due queue (count, contributing deck names, and a duration estimated from the learner's own review history); Momentum is four real rows (Current streak, Retention, Due today, Next milestone); Continue Learning lists real decks with real due counts and deck-scoped links; the pace chart plots real reviews-per-day; and the page has honest new-user and caught-up states. Weekly Goal was **removed rather than computed** — no goal concept exists. `Adjust session` is a working dialog (deck scope + card count, nothing persisted), and the Review queue is a per-mount snapshot.
@@ -179,7 +181,7 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 - **Dexie schema changes require a `version()` bump** in `src/data/dexie/db.ts` (declare only new/changed stores). Version 2 is a deliberate data-only upgrade: it clears `reviewLogs` and nothing else so an old row without required `stateBefore` can never enter current analytics.
 - **Supabase tables need GRANTs, not just RLS.** Postgres denies before RLS runs: RLS-without-grant = **403 on every request**; RLS-without-policy = empty 200. Every table in `supabase/schema.sql` needs table + `enable row level security` + an `own rows` policy + `grant select, insert, update, delete … to authenticated`. `schema.sql` is **not** auto-applied — a human runs it in the SQL editor.
 - The Supabase **publishable** key (`sb_publishable_…`) is `VITE_SUPABASE_ANON_KEY`. The secret key must never reach the frontend.
-- Backup files (`src/domain/io/backup.ts`, `src/data/backup.ts`) remain at version 2; no envelope bump was needed because the format already includes `reviewLogs`, and AI-generated imports intentionally carry an empty array. **Imports are validated before any write**: `parseBackup` validates every card, deck and ReviewLog, including required `stateBefore`, numeric rating/timestamps and both scheduling states; an incompatible nonempty prototype-history backup is rejected rather than imported or interpreted with a fallback. `importBackup` then applies the repository-aware `card.deckId` rule before replace-mode `clear()`. The `app: 'code-srs'` marker remains a legacy format identifier, not the product name.
+- Backup files (`src/domain/io/backup.ts`, `src/data/backup.ts`) remain at version 2; no envelope bump was needed because the format already includes `reviewLogs`, AI-generated imports intentionally carry an empty array, and stricter validation of an already-required shape is not a format change. **Imports are validated before any write**: `parseBackup` validates every entity in every array it will write — cards, decks, ReviewLogs (including required `stateBefore`, numeric rating/timestamps and both scheduling states), **drafts and roadmaps** — so an incompatible nonempty prototype-history backup, or an entity IndexedDB cannot key, is rejected rather than imported. `importBackup` then applies the repository-aware `card.deckId` rule before any write. **Replace is all-or-nothing on the local backend**: `repo.replaceAll()` runs the clear and the write inside one Dexie `rw` transaction, so a failed replace-import leaves the previous workspace exactly as it was; on Supabase there is no cross-request transaction, so Replace is refused rather than emulated (see §15 and the 2026-08-22 decision entry). The `app: 'code-srs'` marker remains a legacy format identifier, not the product name.
 
 ## 13. Migrations that have NOT happened
 
@@ -204,6 +206,7 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 **Data / migration risk:**
 
+- **Replace-import is unavailable on the Supabase backend.** PostgREST has no transaction spanning requests, so a five-table clear followed by five uploads can stop halfway and cannot be rolled back. `SupabaseRepository.replaceAll` therefore throws before issuing any request, `canReplaceImport()` returns false, and the Import / Export section renders Replace as an `aria-disabled` option with the reason. Merge is unaffected. Closing this needs a database-side function doing the delete + insert for all five tables in one transaction; it is recorded in [`TODO.md`](TODO.md) and deliberately not written blind against a project that cannot be tested.
 - **The Supabase schema and `0003_review_log_state_before.sql` are unverified against a live database** (the project owner's Supabase project was deleted mid-development). Migration 0003 deliberately deletes prototype `review_logs`, adds the required-`stateBefore` JSON check, and re-grants authenticated CRUD. Written to the same standard as the rest of the schema; flagged rather than assumed correct.
 
 **Technical debt:**
@@ -214,10 +217,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-22, after the QA cleanup pass:
+Measured 2026-08-22, after the replace-import data-safety fix (audit P1-1):
 
 ```
-npx vitest run       → 75 test files, 588 tests, all passing (44.08s)
+npx vitest run       → 78 test files, 637 tests, all passing (45.73s)
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -225,7 +228,9 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**588 is the current correct test count.** The QA cleanup pass added 19 across two new files (`retentionChartPath.test.ts`, `id.test.ts`) plus additions to the retention-chart, streak and Progress suites: isolated retention buckets in every gap position, day-count pluralization, and both `newId()` branches.
+**637 is the current correct test count.** The replace-import fix added 49 across three new files (`src/data/dexie/replaceAll.test.ts` — the transaction-rollback regression suite, `src/domain/io/importFailure.test.ts`, and `src/data/supabase/SupabaseRepository.test.ts`, the first test in that directory) plus Draft/Roadmap validation cases and full-workspace round-trip/merge cases in the existing backup suites.
+
+**588 was the count before it.** The QA cleanup pass added 19 across two new files (`retentionChartPath.test.ts`, `id.test.ts`) plus additions to the retention-chart, streak and Progress suites: isolated retention buckets in every gap position, day-count pluralization, and both `newId()` branches.
 
 **569 was the count before it**, across 73 files, up from 535 across 68 files. Milestone 3 added 34 tests across five new files: pre/post scheduling-state logging, mature-retention examples, the canonical Learned helper, current/period KPI definitions, actionable leaf-deck rows, ReviewLog backup validation, the Dexie history reset, KPI presentation, and retention-chart gaps.
 

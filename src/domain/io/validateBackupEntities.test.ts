@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import type { Card, Deck, ID } from '@/types'
+import type { Card, Deck, Draft, ID, Roadmap } from '@/types'
 import { CARD_SCHEMA_VERSION } from '@/types/card'
-import { ALL_INTERACTION_TYPES, fixtureCard, fixtureCards, fixtureDeck } from './backupFixtures'
+import {
+  ALL_INTERACTION_TYPES,
+  fixtureCard,
+  fixtureCards,
+  fixtureDeck,
+  fixtureDraft,
+  fixtureRoadmap,
+} from './backupFixtures'
 import {
   assertValidCards,
   assertValidDecks,
+  assertValidDrafts,
   assertValidReviewLogs,
+  assertValidRoadmaps,
   findUnresolvedDeckReference,
 } from './validateBackupEntities'
 
@@ -232,6 +241,126 @@ describe('assertValidCards', () => {
     const cards: unknown[] = [fixtureCard('recall'), fixtureCard('ordering', { id: 'card-bad' })]
     ;(cards[1] as Card).tags = undefined as never
     expect(() => assertValidCards(cards)).toThrow(/Card 2 \("card-bad"\)/)
+  })
+})
+
+describe('assertValidDrafts', () => {
+  it('accepts a real draft, with and without its optional fields', () => {
+    const bare: Draft = {
+      id: 'draft-bare',
+      rawText: 'just a thought',
+      createdAt: 2,
+    }
+    expect(() => assertValidDrafts([fixtureDraft(), bare])).not.toThrow()
+  })
+
+  it('rejects a draft that is not an object', () => {
+    expect(() => assertValidDrafts(['draft-1'])).toThrow(/Draft 1 is not an object/)
+  })
+
+  it('rejects a missing id', () => {
+    const { id: _id, ...rest } = fixtureDraft()
+    expect(() => assertValidDrafts([rest])).toThrow(/Draft 1 is missing a valid "id"/)
+  })
+
+  it('rejects a missing rawText', () => {
+    const { rawText: _rawText, ...rest } = fixtureDraft()
+    expect(() => assertValidDrafts([rest])).toThrow(/Draft 1 \("draft-1"\).*valid "rawText"/)
+  })
+
+  it('rejects a non-numeric createdAt', () => {
+    expect(() => assertValidDrafts([{ ...fixtureDraft(), createdAt: '2026-08-22' }])).toThrow(
+      /numeric "createdAt"/,
+    )
+  })
+
+  it('rejects a malformed code block', () => {
+    expect(() => assertValidDrafts([{ ...fixtureDraft(), code: { language: 'cpp' } }])).toThrow(
+      /"code"/,
+    )
+  })
+
+  it('rejects an unsupported intendedType', () => {
+    expect(() => assertValidDrafts([{ ...fixtureDraft(), intendedType: 'cloze' }])).toThrow(
+      /unsupported "intendedType" "cloze"/,
+    )
+  })
+
+  it('rejects a non-string intendedDeckId', () => {
+    expect(() => assertValidDrafts([{ ...fixtureDraft(), intendedDeckId: 7 }])).toThrow(
+      /"intendedDeckId"/,
+    )
+  })
+})
+
+describe('assertValidRoadmaps', () => {
+  it('accepts a real roadmap, with and without its optional fields', () => {
+    const bare: Roadmap = {
+      id: 'roadmap-bare',
+      title: '',
+      nodes: [],
+      edges: [],
+      createdAt: 1,
+      updatedAt: 1,
+    }
+    expect(() => assertValidRoadmaps([fixtureRoadmap(), bare])).not.toThrow()
+  })
+
+  // The exact shape that emptied a workspace in the audit's reproduction:
+  // IndexedDB cannot derive an inline key from it, so bulkPut threw a DataError
+  // after replace had already cleared every store.
+  it('rejects a roadmap without an id', () => {
+    expect(() => assertValidRoadmaps([{ title: 'no id here' }])).toThrow(
+      /Roadmap 1 is missing a valid "id"/,
+    )
+  })
+
+  it('rejects a roadmap that is not an object', () => {
+    expect(() => assertValidRoadmaps([null])).toThrow(/Roadmap 1 is not an object/)
+  })
+
+  it('rejects a missing title', () => {
+    const { title: _title, ...rest } = fixtureRoadmap()
+    expect(() => assertValidRoadmaps([rest])).toThrow(/valid "title"/)
+  })
+
+  it('rejects non-numeric timestamps', () => {
+    expect(() => assertValidRoadmaps([{ ...fixtureRoadmap(), updatedAt: null }])).toThrow(
+      /numeric "createdAt" and "updatedAt"/,
+    )
+  })
+
+  it('rejects missing nodes or edges arrays', () => {
+    const { nodes: _nodes, ...noNodes } = fixtureRoadmap()
+    expect(() => assertValidRoadmaps([noNodes])).toThrow(/"nodes" array/)
+    const { edges: _edges, ...noEdges } = fixtureRoadmap()
+    expect(() => assertValidRoadmaps([noEdges])).toThrow(/"edges" array/)
+  })
+
+  it('rejects a node missing its deck or coordinates', () => {
+    expect(() =>
+      assertValidRoadmaps([{ ...fixtureRoadmap(), nodes: [{ id: 'n1', x: 0, y: 0 }] }]),
+    ).toThrow(/node at position 1/)
+    expect(() =>
+      assertValidRoadmaps([
+        { ...fixtureRoadmap(), nodes: [{ id: 'n1', deckId: 'd', x: 0, y: 'top' }] },
+      ]),
+    ).toThrow(/numeric "x"\/"y"/)
+  })
+
+  it('rejects an edge missing an endpoint', () => {
+    expect(() =>
+      assertValidRoadmaps([{ ...fixtureRoadmap(), edges: [{ id: 'e1', from: 'n1' }] }]),
+    ).toThrow(/edge at position 1/)
+  })
+
+  // Same reasoning as deck.parentId: a roadmap whose deck was later deleted is
+  // a legitimate export and must still import.
+  it('accepts a node pointing at a deck that no longer exists', () => {
+    const roadmaps: Roadmap[] = [
+      fixtureRoadmap({ nodes: [{ id: 'n1', deckId: 'deck-gone', x: 0, y: 0 }], edges: [] }),
+    ]
+    expect(() => assertValidRoadmaps(roadmaps)).not.toThrow()
   })
 })
 

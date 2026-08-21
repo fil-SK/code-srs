@@ -2,8 +2,9 @@ import { useRef, useState } from 'react'
 import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useDialogs } from '@/components/ui/dialogs'
-import { exportBackup, type ImportMode } from '@/data/backup'
+import { canReplaceImport, exportBackup, type ImportMode } from '@/data/backup'
 import { parseBackup, serializeBackup } from '@/domain/io/backup'
+import { describeImportFailure } from '@/domain/io/importFailure'
 import { downloadText } from '@/lib/download'
 import { useImportBackup } from '@/hooks/useBackup'
 import { Panel, SectionShell } from './SectionShell'
@@ -18,6 +19,9 @@ export function ImportExportSection() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [mode, setMode] = useState<ImportMode>('merge')
   const [status, setStatus] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+  // A capability of the active backend, not a branch on which backend it is:
+  // Replace is only offered where a failed one can be rolled back.
+  const replaceAvailable = canReplaceImport()
 
   async function handleExport() {
     const backup = await exportBackup()
@@ -45,12 +49,18 @@ export function ImportExportSection() {
       }
       await importBackup.mutateAsync({ backup, mode })
       const { cards, decks, drafts } = backup.data
+      const counts = `${cards.length} cards, ${decks.length} decks, ${drafts.length} drafts`
       setStatus({
         kind: 'ok',
-        text: `Imported ${cards.length} cards, ${decks.length} decks, ${drafts.length} drafts.`,
+        text:
+          mode === 'replace'
+            ? `Replaced everything with this backup: ${counts}.`
+            : `Imported ${counts}.`,
       })
     } catch (e) {
-      setStatus({ kind: 'err', text: (e as Error).message })
+      // Never the raw error: a rejected write reads as an IndexedDB DataError,
+      // and only describeImportFailure knows whether storage actually changed.
+      setStatus({ kind: 'err', text: describeImportFailure(e) })
     } finally {
       if (fileRef.current) fileRef.current.value = ''
     }
@@ -100,16 +110,33 @@ export function ImportExportSection() {
             />
             Merge
           </label>
-          <label className="flex items-center gap-1.5 text-sm text-itera-muted">
+          {/* Kept in the DOM and in tab order when unavailable, per the
+              project's aria-disabled convention, so the reason is discoverable
+              rather than the option silently vanishing. */}
+          <label
+            className={`flex items-center gap-1.5 text-sm ${
+              replaceAvailable ? 'text-itera-muted' : 'text-itera-muted/50'
+            }`}
+          >
             <input
               type="radio"
               name="import-mode"
               checked={mode === 'replace'}
-              onChange={() => setMode('replace')}
+              aria-disabled={!replaceAvailable}
+              onChange={() => {
+                if (replaceAvailable) setMode('replace')
+              }}
             />
             Replace
           </label>
         </div>
+
+        {!replaceAvailable && (
+          <p className="mt-3 text-sm text-itera-muted">
+            Replace is unavailable while your data is synced to the cloud: the existing data
+            could not be restored if the upload failed partway through. Merge is unaffected.
+          </p>
+        )}
 
         {status && (
           <p

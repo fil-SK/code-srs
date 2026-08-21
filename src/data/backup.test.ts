@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { buildBackup, type BackupData } from '@/domain/io/backup'
-import { fixtureCard, fixtureDeck } from '@/domain/io/backupFixtures'
+import { buildBackup, parseBackup, serializeBackup, type BackupData } from '@/domain/io/backup'
+import {
+  fixtureCard,
+  fixtureDeck,
+  fixtureDraft,
+  fixtureReviewLog,
+  fixtureRoadmap,
+} from '@/domain/io/backupFixtures'
 import { getRepository } from './index'
-import { exportBackup, importBackup } from './backup'
+import { canReplaceImport, exportBackup, importBackup } from './backup'
 
 const repo = getRepository()
 
@@ -12,6 +18,7 @@ beforeEach(async () => {
     repo.decks.clear(),
     repo.drafts.clear(),
     repo.reviews.clear(),
+    repo.roadmaps.clear(),
   ])
 })
 
@@ -19,6 +26,17 @@ const deck = fixtureDeck()
 const card = fixtureCard('recall', { id: 'c1' })
 
 const emptyData: BackupData = { cards: [], decks: [], drafts: [], reviewLogs: [] }
+
+async function storedIds() {
+  const sorted = (rows: { id: string }[]) => rows.map((r) => r.id).sort()
+  return {
+    cards: sorted(await repo.cards.getAll()),
+    decks: sorted(await repo.decks.getAll()),
+    drafts: sorted(await repo.drafts.getAll()),
+    reviewLogs: sorted(await repo.reviews.all()),
+    roadmaps: sorted(await repo.roadmaps.getAll()),
+  }
+}
 
 describe('export/import round-trip', () => {
   it('restores cards and decks via replace import', async () => {
@@ -36,6 +54,52 @@ describe('export/import round-trip', () => {
     expect(await repo.cards.getAll()).toHaveLength(1)
     expect((await repo.cards.getById('c1'))?.deckId).toBe('deck-1')
     expect(await repo.decks.getAll()).toHaveLength(1)
+  })
+
+  // Every store round-trips, not just the two the original case covered - the
+  // replace path now writes all five as one unit.
+  it('round-trips a full workspace through export and replace import', async () => {
+    await repo.decks.put(deck)
+    await repo.cards.put(card)
+    await repo.drafts.put(fixtureDraft({ id: 'd1' }))
+    await repo.reviews.append(fixtureReviewLog({ id: 'r1', cardId: 'c1' }))
+    await repo.roadmaps.put(fixtureRoadmap({ id: 'm1' }))
+
+    const backup = await exportBackup()
+    const before = await storedIds()
+
+    // Through the real file path, so serialization and validation are covered.
+    await importBackup(parseBackup(serializeBackup(backup)), 'replace')
+
+    expect(await storedIds()).toEqual(before)
+  })
+
+  // Workspace A replaced by workspace B: only B may remain, in every store.
+  it('replace leaves only the incoming workspace', async () => {
+    await repo.decks.put(fixtureDeck({ id: 'a-deck', name: 'PRIOR USER DECK' }))
+    await repo.cards.put(fixtureCard('recall', { id: 'a-card', deckId: 'a-deck' }))
+    await repo.drafts.put(fixtureDraft({ id: 'a-draft' }))
+    await repo.reviews.append(fixtureReviewLog({ id: 'a-log', cardId: 'a-card' }))
+    await repo.roadmaps.put(fixtureRoadmap({ id: 'a-roadmap' }))
+
+    await importBackup(
+      buildBackup({
+        cards: [fixtureCard('ordering', { id: 'b-card', deckId: 'b-deck' })],
+        decks: [fixtureDeck({ id: 'b-deck', name: 'INCOMING DECK' })],
+        drafts: [fixtureDraft({ id: 'b-draft' })],
+        reviewLogs: [fixtureReviewLog({ id: 'b-log', cardId: 'b-card' })],
+        roadmaps: [fixtureRoadmap({ id: 'b-roadmap' })],
+      }),
+      'replace',
+    )
+
+    expect(await storedIds()).toEqual({
+      cards: ['b-card'],
+      decks: ['b-deck'],
+      drafts: ['b-draft'],
+      reviewLogs: ['b-log'],
+      roadmaps: ['b-roadmap'],
+    })
   })
 
   it('merge import upserts without wiping existing', async () => {
@@ -83,6 +147,37 @@ describe('deck reference validation', () => {
     )
   })
 
+  it('merge keeps existing entities in every store and upserts the incoming ones', async () => {
+    await repo.decks.put(deck)
+    await repo.cards.put(card)
+    await repo.drafts.put(fixtureDraft({ id: 'kept-draft' }))
+    await repo.reviews.append(fixtureReviewLog({ id: 'kept-log', cardId: 'c1' }))
+    await repo.roadmaps.put(fixtureRoadmap({ id: 'kept-roadmap' }))
+
+    await importBackup(
+      buildBackup({
+        // No decks in the file: the existing library must satisfy the card's
+        // deckId under Merge.
+        cards: [fixtureCard('recall', { id: 'c1', deckId: 'deck-1', suspended: true })],
+        decks: [],
+        drafts: [fixtureDraft({ id: 'new-draft' })],
+        reviewLogs: [fixtureReviewLog({ id: 'new-log', cardId: 'c1' })],
+        roadmaps: [fixtureRoadmap({ id: 'new-roadmap' })],
+      }),
+      'merge',
+    )
+
+    expect(await storedIds()).toEqual({
+      cards: ['c1'],
+      decks: ['deck-1'],
+      drafts: ['kept-draft', 'new-draft'],
+      reviewLogs: ['kept-log', 'new-log'],
+      roadmaps: ['kept-roadmap', 'new-roadmap'],
+    })
+    // The matching id was upserted, not duplicated or ignored.
+    expect((await repo.cards.getById('c1'))?.suspended).toBe(true)
+  })
+
   it('writes nothing and clears nothing when a replace import is rejected', async () => {
     await repo.decks.put(deck)
     await repo.cards.put(card)
@@ -100,5 +195,60 @@ describe('deck reference validation', () => {
     expect((await repo.cards.getById('c1'))?.id).toBe('c1')
     expect(await repo.decks.getAll()).toHaveLength(1)
     expect(await repo.decks.getById('deck-2')).toBeUndefined()
+  })
+})
+
+// The whole path the Settings section drives: file text -> parseBackup ->
+// importBackup. Audit P1-1's file cleared five stores before failing; nothing
+// malformed may now reach the repository at all.
+describe('a malformed file never mutates the repository', () => {
+  async function seedWorkspace() {
+    await repo.decks.put(deck)
+    await repo.cards.put(card)
+    await repo.drafts.put(fixtureDraft({ id: 'd1' }))
+    await repo.reviews.append(fixtureReviewLog({ id: 'r1', cardId: 'c1' }))
+    await repo.roadmaps.put(fixtureRoadmap({ id: 'm1' }))
+  }
+
+  const INTACT = {
+    cards: ['c1'],
+    decks: ['deck-1'],
+    drafts: ['d1'],
+    reviewLogs: ['r1'],
+    roadmaps: ['m1'],
+  }
+
+  it('rejects the audit reproduction file and leaves every store untouched', async () => {
+    await seedWorkspace()
+
+    // Structurally valid except one roadmap without an id, exactly as reproduced.
+    const json = serializeBackup(
+      buildBackup({
+        cards: [fixtureCard('recall', { id: 'incoming', deckId: 'incoming-deck' })],
+        decks: [fixtureDeck({ id: 'incoming-deck', name: 'INCOMING DECK' })],
+        drafts: [],
+        reviewLogs: [],
+        roadmaps: [{ title: 'no id here' } as never],
+      }),
+    )
+
+    expect(() => parseBackup(json)).toThrow(/Roadmap 1 is missing a valid "id"/)
+    expect(await storedIds()).toEqual(INTACT)
+  })
+
+  it('rejects a malformed draft and leaves every store untouched', async () => {
+    await seedWorkspace()
+    const { id: _id, ...draft } = fixtureDraft()
+    const json = serializeBackup(buildBackup({ ...emptyData, drafts: [draft as never] }))
+
+    expect(() => parseBackup(json)).toThrow(/Draft 1 is missing a valid "id"/)
+    expect(await storedIds()).toEqual(INTACT)
+  })
+})
+
+describe('replace availability', () => {
+  it('is offered on the local backend, which can roll a failure back', () => {
+    expect(repo.importGuarantee).toBe('transactional')
+    expect(canReplaceImport()).toBe(true)
   })
 })

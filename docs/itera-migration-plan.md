@@ -53,7 +53,7 @@ Requirements this implies:
 - **Idempotent** — re-running `apply()` (e.g. after a partial failure) must not duplicate or corrupt anything; already-migrated entities are detected and skipped.
 - **Deterministic** — no randomness, no wall-clock-dependent branching, so the same input always yields the same output and the dry-run report is trustworthy.
 - **Orphan and duplicate detection** are first-class outputs of the report, not something inferred after the fact.
-- **Rollback** is always "restore from the pre-migration `Settings → Export JSON` backup," which already exists and works today — no new export tooling is required, only the discipline of taking one immediately before `apply()`.
+- **Rollback** is always "restore from the pre-migration `Settings → Export JSON` backup," which already exists and works today — no new export tooling is required, only the discipline of taking one immediately before `apply()`. Since 2026-08-22 (audit P1-1, decisions D240-D242) that restore is a genuine all-or-nothing operation on the local backend: `repo.replaceAll()` runs the clear and the write in one Dexie transaction, so a rollback that fails leaves the workspace exactly as the failed migration left it rather than emptying it. **On the Supabase backend replace-import is refused**, so a cloud rollback currently has no one-step path and this precondition is not satisfied there.
 
 ## 1. Card type migration (8 → 6) — the one migration allowed to run lazily on read
 

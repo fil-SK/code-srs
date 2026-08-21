@@ -6,8 +6,10 @@ import type {
   CardRepo,
   CrudRepo,
   DueQuery,
+  ImportGuarantee,
   Repository,
   ReviewRepo,
+  WorkspaceSnapshot,
 } from '../repository'
 import { AppDB, db as defaultDb } from './db'
 
@@ -107,11 +109,54 @@ export class DexieRepository implements Repository {
   readonly reviews: ReviewRepo
   readonly roadmaps: CrudRepo<Roadmap>
 
+  // IndexedDB gives real all-or-nothing semantics across these five stores, so
+  // this backend can promise them without any compensating restore logic.
+  readonly importGuarantee: ImportGuarantee = 'transactional'
+
+  private readonly db: AppDB
+
   constructor(db: AppDB = defaultDb) {
+    this.db = db
     this.cards = createCardRepo(db)
     this.decks = crud(db.decks)
     this.drafts = crud(db.drafts)
     this.reviews = createReviewRepo(db)
     this.roadmaps = crud(db.roadmaps)
+  }
+
+  // One readwrite transaction over every store an import touches. If anything
+  // inside rejects, Dexie aborts and IndexedDB rolls the whole scope back
+  // itself - including the clears - so a failed replace cannot leave an empty
+  // or half-written workspace. Snapshot-and-restore was rejected as the
+  // alternative because the restore can fail too (audit P1-1).
+  private workspaceWrite(scope: () => Promise<void>): Promise<void> {
+    const { cards, decks, drafts, reviewLogs, roadmaps } = this.db
+    return this.db.transaction('rw', cards, decks, drafts, reviewLogs, roadmaps, scope)
+  }
+
+  replaceAll(snapshot: WorkspaceSnapshot): Promise<void> {
+    return this.workspaceWrite(async () => {
+      // Sequential, not Promise.all: inside one transaction there is nothing to
+      // gain from overlapping, and a single ordered chain makes the failing
+      // operation unambiguous.
+      await this.db.cards.clear()
+      await this.db.decks.clear()
+      await this.db.drafts.clear()
+      await this.db.reviewLogs.clear()
+      await this.db.roadmaps.clear()
+      await this.writeSnapshot(snapshot)
+    })
+  }
+
+  mergeAll(snapshot: WorkspaceSnapshot): Promise<void> {
+    return this.workspaceWrite(() => this.writeSnapshot(snapshot))
+  }
+
+  private async writeSnapshot(snapshot: WorkspaceSnapshot): Promise<void> {
+    await this.db.cards.bulkPut(snapshot.cards)
+    await this.db.decks.bulkPut(snapshot.decks)
+    await this.db.drafts.bulkPut(snapshot.drafts)
+    await this.db.reviewLogs.bulkPut(snapshot.reviewLogs)
+    await this.db.roadmaps.bulkPut(snapshot.roadmaps)
   }
 }

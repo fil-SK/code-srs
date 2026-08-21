@@ -2,7 +2,9 @@ import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
 import {
   assertValidCards,
   assertValidDecks,
+  assertValidDrafts,
   assertValidReviewLogs,
+  assertValidRoadmaps,
 } from './validateBackupEntities'
 
 // 2 = the single card model. Version 1 files hold the old 8-type v1 cards and
@@ -85,16 +87,24 @@ export function parseBackup(json: string): BackupFile {
       throw new Error(`Backup is missing or has an invalid "${key}" list.`)
     }
   }
+  // `roadmaps` stays optional so older v2 exports still import, but a present
+  // one must be a list: anything else reached bulkPut unchecked.
+  if (data.roadmaps !== undefined && !Array.isArray(data.roadmaps)) {
+    throw new Error('Backup has an invalid "roadmaps" list.')
+  }
 
-  // Entity-level structure. Cards, decks, and ReviewLogs are validated before
-  // import. ReviewLog validation is what prevents a version-2 backup from
-  // silently reintroducing prototype history without required stateBefore.
-  // Drafts and roadmaps keep list-presence validation only.
+  // Entity-level structure for every array the import writes. ReviewLog
+  // validation is what prevents a version-2 backup from silently reintroducing
+  // prototype history without required stateBefore; Draft and Roadmap
+  // validation is what stops an entity IndexedDB cannot key from reaching a
+  // bulkPut (the replace-import data-loss path, audit P1-1).
   // Referential integrity (card.deckId) needs repository state and therefore
   // lives in the import layer, src/data/backup.ts.
   assertValidDecks(data.decks as unknown[])
   assertValidCards(data.cards as unknown[])
   assertValidReviewLogs(data.reviewLogs as unknown[])
+  assertValidDrafts(data.drafts as unknown[])
+  if (data.roadmaps !== undefined) assertValidRoadmaps(data.roadmaps as unknown[])
 
   return parsed as BackupFile
 }

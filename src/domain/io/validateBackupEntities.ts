@@ -1,9 +1,11 @@
 import type {
   Card,
   Deck,
+  Draft,
   ID,
   InteractionType,
   ReviewLog,
+  Roadmap,
   SchedulingState,
 } from '@/types'
 import { CARD_SCHEMA_VERSION } from '@/types/card'
@@ -279,6 +281,97 @@ export function assertValidReviewLogs(logs: unknown[]): asserts logs is ReviewLo
     }
     if (raw.dueAfter !== undefined && !isFiniteNumber(raw.dueAfter)) {
       fail('ReviewLog', i, id, 'has a "dueAfter" that is not a number.')
+    }
+  })
+}
+
+// ---- Draft ----
+
+export function assertValidDrafts(drafts: unknown[]): asserts drafts is Draft[] {
+  drafts.forEach((raw, i) => {
+    if (!isObject(raw)) fail('Draft', i, undefined, 'is not an object.')
+    const id = raw.id
+    if (!isNonEmptyString(id)) fail('Draft', i, id, 'is missing a valid "id".')
+    if (typeof raw.rawText !== 'string') fail('Draft', i, id, 'is missing a valid "rawText".')
+    if (!isFiniteNumber(raw.createdAt)) {
+      fail('Draft', i, id, 'needs a numeric "createdAt" timestamp.')
+    }
+    if (raw.code !== undefined) {
+      const code = raw.code
+      if (!isObject(code) || typeof code.language !== 'string' || typeof code.code !== 'string') {
+        fail('Draft', i, id, 'has a "code" that is not { "language": "…", "code": "…" }.')
+      }
+    }
+    if (
+      raw.intendedType !== undefined &&
+      !INTERACTION_TYPES.includes(raw.intendedType as InteractionType)
+    ) {
+      fail(
+        'Draft',
+        i,
+        id,
+        `has an unsupported "intendedType" ${JSON.stringify(raw.intendedType)}. ` +
+          `Supported types: ${INTERACTION_TYPES.join(', ')}.`,
+      )
+    }
+    if (raw.intendedDeckId !== undefined && typeof raw.intendedDeckId !== 'string') {
+      fail('Draft', i, id, 'has an "intendedDeckId" that is not a string.')
+    }
+  })
+}
+
+// ---- Roadmap ----
+
+// Node and edge ids are checked for presence but deliberately NOT resolved
+// against each other or against decks, matching the reasoning behind leaving
+// deck.parentId unchecked: a legitimate export of a roadmap whose deck was
+// later deleted must still import.
+export function assertValidRoadmaps(roadmaps: unknown[]): asserts roadmaps is Roadmap[] {
+  roadmaps.forEach((raw, i) => {
+    if (!isObject(raw)) fail('Roadmap', i, undefined, 'is not an object.')
+    const id = raw.id
+    if (!isNonEmptyString(id)) fail('Roadmap', i, id, 'is missing a valid "id".')
+    if (typeof raw.title !== 'string') fail('Roadmap', i, id, 'is missing a valid "title".')
+    if (raw.description !== undefined && typeof raw.description !== 'string') {
+      fail('Roadmap', i, id, 'has a "description" that is not a string.')
+    }
+    if (!isFiniteNumber(raw.createdAt) || !isFiniteNumber(raw.updatedAt)) {
+      fail('Roadmap', i, id, 'needs numeric "createdAt" and "updatedAt" timestamps.')
+    }
+
+    if (!Array.isArray(raw.nodes)) fail('Roadmap', i, id, 'needs a "nodes" array.')
+    const badNode = raw.nodes.findIndex(
+      (n) =>
+        !isObject(n) ||
+        !isNonEmptyString(n.id) ||
+        !isNonEmptyString(n.deckId) ||
+        !isFiniteNumber(n.x) ||
+        !isFiniteNumber(n.y),
+    )
+    if (badNode >= 0) {
+      fail(
+        'Roadmap',
+        i,
+        id,
+        `has a node at position ${badNode + 1} without a valid "id", "deckId" and numeric "x"/"y".`,
+      )
+    }
+
+    if (!Array.isArray(raw.edges)) fail('Roadmap', i, id, 'needs an "edges" array.')
+    const badEdge = raw.edges.findIndex(
+      (e) =>
+        !isObject(e) ||
+        !isNonEmptyString(e.id) ||
+        !isNonEmptyString(e.from) ||
+        !isNonEmptyString(e.to),
+    )
+    if (badEdge >= 0) {
+      fail(
+        'Roadmap',
+        i,
+        id,
+        `has an edge at position ${badEdge + 1} without a valid "id", "from" and "to".`,
+      )
     }
   })
 }

@@ -58,3 +58,47 @@ Notifications that some cards are pending to be done etc.
 Write Code currently compares against accepted complete answers, so semantically equivalent code written differently can be marked objectively wrong. That's already a known product constraint, not a reason to change this dataset.
 
 This is now okay. I write the cards and I know which answer I expect, so I test myself on it. For production, this might not be the best approach to do it.
+
+## Transactional replace-import on Supabase
+
+Deferred by D242 (2026-08-22, audit P1-1). Replace-import is all-or-nothing on
+the local backend because Dexie gives a real transaction across all five stores;
+PostgREST gives no equivalent, so `SupabaseRepository.replaceAll` refuses rather
+than clearing tables it could not restore, and the Import / Export section shows
+Replace as an `aria-disabled` option with the reason. Merge is unaffected.
+
+Closing it needs a database-side function — one transaction doing the delete +
+insert for cards, decks, drafts, review_logs and roadmaps for `auth.uid()` —
+shipped as a new sequential `supabase/migrations/` file with its RLS/GRANT
+implications and rollback notes, then `SupabaseRepository` calling it and
+reporting `importGuarantee: 'transactional'`. It was not written blind: the
+project's Supabase instance no longer exists, so the SQL could not be executed
+or verified, and untested destructive SQL is a worse trade than a stated
+limitation.
+
+## Remaining risk after the replace-import fix (audit P1-1)
+
+Recorded 2026-08-22 alongside D237-D243, so the parts of the P1-1 report that
+were *not* closed are not re-derived later. The local Replace path is genuinely
+all-or-nothing; these are what that guarantee does not cover.
+
+1. **Supabase Replace is unavailable, not fixed.** A cloud user has no one-step
+   restore. Merge is the workaround and cannot remove entities the backup no
+   longer contains, so a cloud workspace cannot be rolled back to an earlier
+   state at all. See "Transactional replace-import on Supabase" above for what
+   closing it requires.
+2. **Supabase Merge stays best-effort.** Five sequential upserts, so a failure
+   part-way leaves some entities applied and others not. Additive only, so
+   nothing is destroyed, and `importGuarantee: 'best-effort'` already makes the
+   UI say "may now be incomplete" rather than claiming safety. Unchanged by the
+   P1-1 pass and only worth revisiting together with item 1 - the same RPC could
+   carry merge.
+3. **The local guarantee is IndexedDB's guarantee.** The transaction protects
+   against a failed write, not against the browser evicting the origin's
+   storage, a corrupted database, or a user clearing site data. No
+   application-level change helps; the answer is the export file, which is why
+   `Settings -> Export JSON` stays the documented backup story.
+4. **The intermittent single-run test flake is still unidentified.** Not
+   observed in either full run of the P1-1 pass and not investigated there; it
+   belongs to the audit's own §9, and `CURRENT_STATE.md` §16 carries the
+   standing instruction to capture the complete output when it next appears.

@@ -6,7 +6,13 @@ import {
   serializeBackup,
   type BackupData,
 } from './backup'
-import { fixtureCard, fixtureCards, fixtureDeck } from './backupFixtures'
+import {
+  fixtureCard,
+  fixtureCards,
+  fixtureDeck,
+  fixtureDraft,
+  fixtureRoadmap,
+} from './backupFixtures'
 import type { ReviewLog } from '@/types'
 
 const empty: BackupData = { cards: [], decks: [], drafts: [], reviewLogs: [] }
@@ -111,6 +117,48 @@ describe('backup build/serialize/parse', () => {
       buildBackup({ ...empty, decks: [fixtureDeck()], cards: [card as never] }),
     )
     expect(() => parseBackup(bad)).toThrow(/numeric "scheduling.due"/)
+  })
+
+  it('round-trips drafts and roadmaps', () => {
+    const data: BackupData = {
+      ...empty,
+      drafts: [fixtureDraft()],
+      roadmaps: [fixtureRoadmap()],
+    }
+    const parsed = parseBackup(serializeBackup(buildBackup(data)))
+    expect(parsed.data.drafts[0].id).toBe('draft-1')
+    expect(parsed.data.roadmaps?.[0].nodes).toHaveLength(2)
+  })
+
+  it('rejects a malformed draft before anything can be written', () => {
+    const { id: _id, ...draft } = fixtureDraft()
+    const bad = serializeBackup(buildBackup({ ...empty, drafts: [draft as never] }))
+    expect(() => parseBackup(bad)).toThrow(/Draft 1 is missing a valid "id"/)
+  })
+
+  // The audit's reproduction file: valid everywhere except one keyless roadmap,
+  // which used to survive parse and blow up after replace had cleared storage.
+  it('rejects a roadmap without an id before anything can be written', () => {
+    const bad = serializeBackup(
+      buildBackup({ ...empty, roadmaps: [{ title: 'no id here' } as never] }),
+    )
+    expect(() => parseBackup(bad)).toThrow(/Roadmap 1 is missing a valid "id"/)
+  })
+
+  // roadmaps is optional (added after v2 shipped), but present-and-not-a-list
+  // used to reach bulkPut unchecked.
+  it('accepts a v2 backup with no roadmaps key at all', () => {
+    const json = JSON.stringify({ app: 'code-srs', version: 2, data: empty })
+    expect(() => parseBackup(json)).not.toThrow()
+  })
+
+  it('rejects a roadmaps value that is not a list', () => {
+    const json = JSON.stringify({
+      app: 'code-srs',
+      version: 2,
+      data: { ...empty, roadmaps: { id: 'r1' } },
+    })
+    expect(() => parseBackup(json)).toThrow(/invalid "roadmaps" list/)
   })
 
   it('rejects a malformed deck', () => {

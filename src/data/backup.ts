@@ -1,7 +1,9 @@
 import type { ID } from '@/types'
 import { getRepository } from './index'
+import type { WorkspaceSnapshot } from './repository'
 import { buildBackup, type BackupFile } from '@/domain/io/backup'
 import { findUnresolvedDeckReference } from '@/domain/io/validateBackupEntities'
+import { ImportFailure } from '@/domain/io/importFailure'
 
 export type ImportMode = 'merge' | 'replace'
 
@@ -18,14 +20,27 @@ export async function exportBackup(): Promise<BackupFile> {
   return buildBackup({ cards, decks, drafts, reviewLogs, roadmaps })
 }
 
-// Write a backup into storage. 'replace' wipes existing data first; 'merge'
+// Whether the active backend can perform a replace-import safely. False means
+// the backend cannot restore what a failed replace would already have deleted,
+// so the mode is not offered at all rather than offered with a warning.
+export function canReplaceImport(): boolean {
+  return getRepository().importGuarantee === 'transactional'
+}
+
+// Write a backup into storage. 'replace' discards existing data first; 'merge'
 // upserts (entries with matching ids are overwritten).
 //
-// parseBackup has already checked every entity's own structure. The one rule it
-// cannot check is referential: whether each card's deck exists, which under
-// Merge legitimately includes decks the repository already holds. That check
-// therefore lives here, and runs BEFORE the replace-mode clear() so a rejected
-// import can never leave the store half-written.
+// Two guards stand in front of the write, and neither is optional:
+//
+//  1. parseBackup has already checked every entity's own structure. The one
+//     rule it cannot check is referential - whether each card's deck exists,
+//     which under Merge legitimately includes decks the repository already
+//     holds - so that check runs here, before anything is written.
+//  2. The write itself goes through the seam's whole-workspace operations,
+//     because validation alone cannot prevent a quota, IndexedDB or network
+//     failure mid-write. On Dexie those are one transaction and a failure rolls
+//     back; on Supabase replaceAll is refused outright. Either way a failed
+//     import never silently costs the user their workspace (audit P1-1).
 export async function importBackup(
   backup: BackupFile,
   mode: ImportMode,
@@ -34,23 +49,29 @@ export async function importBackup(
 
   await assertDeckReferencesResolve(backup, mode, repo)
 
-  if (mode === 'replace') {
-    await Promise.all([
-      repo.cards.clear(),
-      repo.decks.clear(),
-      repo.drafts.clear(),
-      repo.reviews.clear(),
-      repo.roadmaps.clear(),
-    ])
+  const snapshot: WorkspaceSnapshot = {
+    cards: backup.data.cards,
+    decks: backup.data.decks,
+    drafts: backup.data.drafts,
+    reviewLogs: backup.data.reviewLogs,
+    roadmaps: backup.data.roadmaps ?? [],
   }
 
-  await Promise.all([
-    repo.cards.bulkPut(backup.data.cards),
-    repo.decks.bulkPut(backup.data.decks),
-    repo.drafts.bulkPut(backup.data.drafts),
-    repo.reviews.bulkPut(backup.data.reviewLogs),
-    repo.roadmaps.bulkPut(backup.data.roadmaps ?? []),
-  ])
+  try {
+    if (mode === 'replace') await repo.replaceAll(snapshot)
+    else await repo.mergeAll(snapshot)
+  } catch (cause) {
+    if (cause instanceof ImportFailure) throw cause
+    throw new ImportFailure(
+      'The backup could not be written to storage.',
+      'write',
+      // Merge is additive: a failure leaves the previous workspace intact but
+      // may already have upserted part of the file, so only a transactional
+      // backend can claim nothing changed.
+      repo.importGuarantee === 'transactional',
+      { cause },
+    )
+  }
 }
 
 async function assertDeckReferencesResolve(
@@ -67,9 +88,11 @@ async function assertDeckReferencesResolve(
   const orphan = findUnresolvedDeckReference(backup.data.cards, known)
   if (!orphan) return
 
-  throw new Error(
+  throw new ImportFailure(
     `Card "${orphan.id}" belongs to deck "${orphan.deckId}", which is not in this file` +
       (mode === 'merge' ? ' or in your library' : '') +
       '. Nothing was imported.',
+    'validation',
+    true,
   )
 }
