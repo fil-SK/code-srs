@@ -64,7 +64,7 @@ import {
   leafDecks,
   selectionToSearchParams,
 } from './collectionTree'
-import { computeDeckMetrics, metricsFor } from './deckMetrics'
+import { computeDeckMetrics, metricsFor } from '@/domain/stats/deckMetrics'
 import { formatLastStudied } from '@/features/cards/shared/format'
 import { Stat } from './shared/Stat'
 

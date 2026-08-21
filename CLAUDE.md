@@ -61,6 +61,7 @@ Terse rules only. The mechanisms behind them — the seam, both registries, the 
 - **One storage seam.** Everything depends on `Repository` (`src/data/repository.ts`); `getRepository()` (`src/data/index.ts`) picks Dexie or Supabase. **Never import a backend from a component, hook or page**, and never bypass the TanStack Query hooks in `src/hooks/` (keys centralized in `queryKeys.ts`).
 - **One card model.** `src/types/card.ts` — a single `Card` (content + its own embedded `scheduling`) with six `CardInteraction` members. The v1 8-type union, `CardV2`/`CardV2Record`, `migrateCard` and the `cardStates` store were all deleted when the two models converged. **There is no second card type and no on-read migration.**
 - **New card types are new interactions** — add a `CardInteraction` member and follow the checklist in `docs/architecture.md`, which the compiler enforces.
+- **One streak definition.** `computeStreak` (`src/domain/stats/streak.ts`) serves Today, `StreakBadge` and Progress. Do not add a second streak calculation; surfaces may present it differently.
 - **Scheduling lives on `Card.scheduling`**, embedded in the card. If it is ever extracted into its own entity, that is a deliberate schema change with a migration, not a refactor.
 - **Review is generic.** `ReviewSessionScreen` contains no per-type logic, and the flow is strictly two-phase (Question → reveal → Answer → one FSRS grade).
 - **Auth lives in one place.** `RequireAuth` is one pathless layout route wrapping every product route; `localSession.ts` is the **only** file that may touch auth storage — do not add a `localStorage` session check anywhere else.
@@ -92,7 +93,8 @@ Ask before doing any of these; none of them is implied by an ordinary feature re
 Read the module comment before editing these; each encodes measured product feedback or an invariant that is not obvious from the code:
 
 - `src/features/today/SuggestedSessionHero.tsx` — pixel-tuned 4-layer stacked card. Change offsets/rotations/colors only when asked.
-- `src/features/today/TodayPage.tsx` — real CSS Grid with named `grid-template-areas` + a `matchMedia` breakpoint, both necessarily inline `style`.
+- `src/features/today/TodayPage.tsx` — real CSS Grid with named `grid-template-areas` + a `matchMedia` breakpoint, both necessarily inline `style`. Also the route's **only** fetcher: the four panels take computed props, and every Today calculation lives in `src/domain/stats/`.
+- `src/features/review/useSessionQueue.ts` — the review queue is a per-mount snapshot, and `ReviewSessionV2` must stay keyed on its `id`. Keying on the live queue's length (what it used to do) makes every grade remount the session.
 - `src/features/login/LearningCardsIllustration.tsx` — a card may never cover the next card's title; the leaning geometry means this must be re-checked in a browser, not in the numbers.
 - `src/features/reviewV2/interactions/ordering/OrderingRow.tsx` — the up/down buttons stay in the DOM and in tab order at all times (faded with `opacity-0`, never `hidden`).
 - `src/components/layout/AccountMenuContent.tsx` — quick navigation only; new settings go to `src/features/settings/`.

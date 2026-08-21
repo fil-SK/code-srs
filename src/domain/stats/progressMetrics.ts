@@ -1,13 +1,8 @@
 import type { ID, Millis, ReviewLog } from '@/types'
-import { previousPeriod, type DateRange } from './dateRange'
+import { DAY_MS, previousPeriod, startOfDay, type DateRange } from './dateRange'
+import { computeStreak } from './streak'
 
-const DAY = 86_400_000
-
-function startOfDay(ms: Millis): Millis {
-  const d = new Date(ms)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
-}
+const DAY = DAY_MS
 
 function inRange(logs: ReviewLog[], range: DateRange): ReviewLog[] {
   return logs.filter((l) => l.reviewedAt >= range.from && l.reviewedAt < range.to)
@@ -17,11 +12,20 @@ function inRange(logs: ReviewLog[], range: DateRange): ReviewLog[] {
 // state, the share rated Hard/Good/Easy (not Again). Inherited from the
 // deleted v1 stats module's definition, but parametrized by an arbitrary
 // window instead of a fixed trailing 30 days.
-function retentionOf(logs: ReviewLog[]): number | null {
+//
+// Exported because Today's Momentum panel shows the same metric and must not
+// carry its own definition: this calculation is known to be semantically
+// imperfect (it reads the review's post-grade FSRS state rather than the state
+// the card was in when it was asked), and the correction belongs to the
+// Progress-correctness milestone. One function means that fix reaches both
+// surfaces at once.
+export function computeRetention(logs: ReviewLog[]): number | null {
   const mature = logs.filter((l) => l.state === 'review' || l.state === 'relearning')
   if (!mature.length) return null
   return mature.filter((l) => l.rating >= 2).length / mature.length
 }
+
+const retentionOf = computeRetention
 
 // Accuracy: the same "not Again" success rate, but over *all* reviews in the
 // window regardless of card state (new/learning cards count too). Deliberately
@@ -81,37 +85,6 @@ export function clusterSessions(
   return sessions
 }
 
-// ---- Streaks ----------------------------------------------------------------
-
-function calcStreaks(logs: ReviewLog[], now: Millis): { streak: number; bestStreak: number } {
-  const days = [...new Set(logs.map((l) => startOfDay(l.reviewedAt)))].sort((a, b) => a - b)
-  const daySet = new Set(days)
-
-  // Current streak: consecutive days with a review, counting back from today
-  // (with a one-day grace so it doesn't drop to 0 until today's review log is
-  // written). Independent of any selected date range — it's always "current".
-  let streak = 0
-  let cursor = startOfDay(now)
-  if (!daySet.has(cursor)) cursor -= DAY
-  while (daySet.has(cursor)) {
-    streak++
-    cursor -= DAY
-  }
-
-  // Best-ever streak: longest run of consecutive calendar days across all
-  // history.
-  let bestStreak = 0
-  let run = 0
-  let prevDay: Millis | null = null
-  for (const d of days) {
-    run = prevDay !== null && d - prevDay === DAY ? run + 1 : 1
-    if (run > bestStreak) bestStreak = run
-    prevDay = d
-  }
-
-  return { streak, bestStreak }
-}
-
 // ---- KPI row ----------------------------------------------------------------
 
 export interface KpiSet {
@@ -135,7 +108,9 @@ export function computeKpis(logs: ReviewLog[], range: DateRange, now: Millis = D
   const currentAccuracy = accuracyOf(current)
   const previousAccuracy = accuracyOf(previous)
 
-  const { streak, bestStreak } = calcStreaks(logs, now)
+  // Streak is deliberately independent of the selected range - it is always
+  // "current" - and comes from the one shared definition in ./streak.
+  const { current: streak, best: bestStreak } = computeStreak(logs, now)
 
   return {
     totalSessions: { value: currentSessions, deltaPct: pctDelta(currentSessions, previousSessions) },

@@ -1,8 +1,13 @@
 import type { Millis } from '@/types'
 
-const DAY = 86_400_000
+export const DAY_MS = 86_400_000
+const DAY = DAY_MS
 
-function startOfDay(ms: Millis): Millis {
+// The one local-calendar-day boundary every stats module shares. Exported
+// because streaks, the activity heatmap, the Today pace series and this
+// module's range building all have to agree on where a day starts, and three
+// private copies of it is exactly how they would silently stop agreeing.
+export function startOfDay(ms: Millis): Millis {
   const d = new Date(ms)
   d.setHours(0, 0, 0, 0)
   return d.getTime()

@@ -1,20 +1,32 @@
-// Placeholder series (docs/itera-decisions.md). No real pace tracking exists
-// yet. The chart is hand-rolled SVG to preserve the project's no-charting-
-// dependency convention while matching the supplied dashboard composition.
-const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-const VALUES = [4, 9, 13, 11, 17, 12, 14]
+import type { PaceDay } from '@/domain/stats/todayMetrics'
 
+// Real seven-day activity: one bucket per local calendar day, counting
+// reviews completed. It replaced a hard-coded minute series
+// (`[4,9,13,11,17,12,14]` against a fixed 20-minute axis) and the caption
+// "You're on track", which claimed progress toward a goal this product does
+// not have. There is deliberately no target line here for the same reason.
+//
+// Still hand-rolled SVG - the no-charting-dependency convention is unchanged.
 const WIDTH = 390
 const HEIGHT = 164
 const LEFT = 42
 const RIGHT = 12
 const TOP = 12
 const BOTTOM = 28
-const MAX_MINUTES = 20
 
-function chartPoint(value: number, index: number): [number, number] {
-  const x = LEFT + (index / (VALUES.length - 1)) * (WIDTH - LEFT - RIGHT)
-  const y = TOP + (1 - value / MAX_MINUTES) * (HEIGHT - TOP - BOTTOM)
+// Floor on the axis so a one-review day does not fill the panel and read as a
+// huge day.
+const MIN_AXIS_MAX = 4
+
+function axisMaxFor(counts: number[]): number {
+  const peak = Math.max(MIN_AXIS_MAX, ...counts)
+  // Round up to something the three ticks can divide evenly.
+  return Math.ceil(peak / 2) * 2
+}
+
+function chartPoint(value: number, index: number, count: number, axisMax: number): [number, number] {
+  const x = LEFT + (index / Math.max(1, count - 1)) * (WIDTH - LEFT - RIGHT)
+  const y = TOP + (1 - value / axisMax) * (HEIGHT - TOP - BOTTOM)
   return [x, y]
 }
 
@@ -28,13 +40,23 @@ function smoothPath(points: [number, number][]): string {
   }, '')
 }
 
-export function PaceChart() {
-  const points = VALUES.map(chartPoint)
+const DAY_NAME = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
+
+export function PaceChart({ days }: { days: PaceDay[] }) {
+  const counts = days.map((d) => d.count)
+  const axisMax = axisMaxFor(counts)
+  const total = counts.reduce((sum, n) => sum + n, 0)
+
+  const points = days.map((day, index) => chartPoint(day.count, index, days.length, axisMax))
   const linePath = smoothPath(points)
   const first = points[0]
   const last = points[points.length - 1]
   const chartBottom = HEIGHT - BOTTOM
   const areaPath = `${linePath} L ${last[0]} ${chartBottom} L ${first[0]} ${chartBottom} Z`
+
+  const description = days
+    .map((d) => `${DAY_NAME.format(new Date(d.date))} ${d.count}`)
+    .join(', ')
 
   return (
     <section
@@ -44,13 +66,15 @@ export function PaceChart() {
       <h2 id="pace-heading" className="text-base font-semibold text-itera-ink-brand">
         Today&rsquo;s pace
       </h2>
-      <p className="mt-1 text-xs font-medium text-itera-success">You&rsquo;re on track</p>
+      <p className="mt-1 text-xs font-medium text-itera-muted">
+        {total === 0 ? 'No reviews in the last 7 days' : 'Reviews completed per day'}
+      </p>
 
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="mt-2 w-full"
         role="img"
-        aria-label="Minutes studied this week: 4 Monday, 9 Tuesday, 13 Wednesday, 11 Thursday, 17 Friday, 12 Saturday, and 14 Sunday"
+        aria-label={`Reviews completed per day over the last seven days: ${description}`}
       >
         <defs>
           <linearGradient id="pace-area" x1="0" y1="0" x2="0" y2="1">
@@ -59,10 +83,10 @@ export function PaceChart() {
           </linearGradient>
         </defs>
 
-        {[0, 10, 20].map((minutes) => {
-          const y = TOP + (1 - minutes / MAX_MINUTES) * (HEIGHT - TOP - BOTTOM)
+        {[0, axisMax / 2, axisMax].map((tick) => {
+          const y = TOP + (1 - tick / axisMax) * (HEIGHT - TOP - BOTTOM)
           return (
-            <g key={minutes}>
+            <g key={tick}>
               <line
                 x1={LEFT}
                 x2={WIDTH - RIGHT}
@@ -78,17 +102,17 @@ export function PaceChart() {
                 fontSize="11"
                 fontFamily="var(--font-itera-sans)"
               >
-                {minutes}m
+                {tick}
               </text>
             </g>
           )
         })}
 
-        {DAYS.map((day, index) => {
-          const [x] = chartPoint(0, index)
+        {days.map((day, index) => {
+          const [x] = chartPoint(0, index, days.length, axisMax)
           return (
             <text
-              key={`${day}-${index}`}
+              key={day.date}
               x={x}
               y={HEIGHT - 5}
               textAnchor="middle"
@@ -96,7 +120,7 @@ export function PaceChart() {
               fontSize="11"
               fontFamily="var(--font-itera-sans)"
             >
-              {day}
+              {day.label}
             </text>
           )
         })}
@@ -112,6 +136,8 @@ export function PaceChart() {
         />
         <circle cx={last[0]} cy={last[1]} r="3.5" fill="var(--itera-accent)" />
 
+        {/* Shifted left of the end point so the callout cannot clip the SVG's
+            right edge (found in an earlier browser pass). */}
         <g transform={`translate(${last[0] - 66} ${last[1] - 34})`}>
           <rect width="60" height="24" rx="6" fill="var(--itera-navy-soft)" />
           <text

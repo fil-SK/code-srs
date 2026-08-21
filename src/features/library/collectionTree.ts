@@ -1,4 +1,5 @@
 import type { Deck, ID } from '@/types'
+import { leafDecks as leafDecksOf, parentDeckIds } from '@/domain/decks/tree'
 
 export interface LibraryCollection {
   id: ID
@@ -26,7 +27,7 @@ export interface CollectionNode {
 // deck-with-children (it has that deck as a descendant), so a collection's
 // parentId always resolves to another collection or is absent (top-level).
 export function deriveCollections(decks: Deck[]): LibraryCollection[] {
-  const parentIds = new Set(decks.map((d) => d.parentId).filter((id): id is string => !!id))
+  const parentIds = parentDeckIds(decks)
   return decks
     .filter((d) => parentIds.has(d.id))
     .map((d) => ({
@@ -38,8 +39,7 @@ export function deriveCollections(decks: Deck[]): LibraryCollection[] {
 
 // The actual browsable Library decks: leaves of the deck tree (no children).
 export function leafDecks(decks: Deck[]): Deck[] {
-  const parentIds = new Set(decks.map((d) => d.parentId).filter((id): id is string => !!id))
-  return decks.filter((d) => !parentIds.has(d.id))
+  return leafDecksOf(decks)
 }
 
 // A leaf deck's collection is its parent, if any (always a valid collection

@@ -68,6 +68,20 @@ export function subtreeIds(decks: Deck[], rootId: ID): ID[] {
   return ids
 }
 
+// Ids of every deck that has at least one child deck. A deck absent from this
+// set is a leaf. The Library calls the two halves "Collections" and "decks"
+// (features/library/collectionTree, which delegates here); Today needs the
+// same split so a parent deck's row does not double-count its children's
+// cards. Structural question, so it lives with the rest of the deck tree.
+export function parentDeckIds(decks: Deck[]): Set<ID> {
+  return new Set(decks.map((d) => d.parentId).filter((id): id is ID => !!id))
+}
+
+export function leafDecks(decks: Deck[]): Deck[] {
+  const parents = parentDeckIds(decks)
+  return decks.filter((d) => !parents.has(d.id))
+}
+
 export interface FlatDeck {
   deck: Deck
   depth: number

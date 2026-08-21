@@ -4,7 +4,8 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import { getRepository } from '@/data'
-import type { Deck } from '@/types'
+import type { Card, Deck } from '@/types'
+import { richText } from '@/types/card'
 import { ReviewPage } from './ReviewPage'
 
 const deck: Deck = {
@@ -12,6 +13,31 @@ const deck: Deck = {
   name: 'Compilers',
   createdAt: 0,
   updatedAt: 0,
+}
+
+function dueCard(id: string, dueOffsetMs: number): Card {
+  return {
+    id,
+    schemaVersion: 2,
+    deckId: 'deck-1',
+    prompt: richText(`Question ${id}`),
+    interaction: { type: 'recall', answer: richText(`Answer ${id}`) },
+    tags: [],
+    createdAt: 0,
+    updatedAt: 0,
+    suspended: false,
+    scheduling: {
+      due: Date.now() + dueOffsetMs,
+      stability: 4,
+      difficulty: 5,
+      elapsedDays: 1,
+      scheduledDays: 4,
+      reps: 2,
+      lapses: 0,
+      learningSteps: 0,
+      state: 'review',
+    },
+  }
 }
 
 function renderPage(entry: string) {
@@ -52,5 +78,39 @@ describe('ReviewPage empty state', () => {
     expect(cta.getAttribute('href')).toBe('/decks/deck-1')
     // The secondary escape hatch back to an all-decks session stays.
     expect(screen.getByRole('link', { name: 'All decks' }).getAttribute('href')).toBe('/review')
+  })
+})
+
+// `limit` is a transient session size, never persisted. A URL that carries a
+// nonsense value should still start a usable session rather than error or
+// silently study nothing.
+describe('ReviewPage limit parameter', () => {
+  beforeEach(async () => {
+    const repo = getRepository()
+    await Promise.all([repo.cards.clear(), repo.decks.clear(), repo.reviews.clear()])
+    await repo.decks.put(deck)
+    await repo.cards.bulkPut([
+      dueCard('a', -4 * 3_600_000),
+      dueCard('b', -3 * 3_600_000),
+      dueCard('c', -2 * 3_600_000),
+    ])
+  })
+
+  afterEach(() => cleanup())
+
+  it('takes the first n cards of the queue', async () => {
+    renderPage('/review?limit=2')
+    expect(await screen.findByText('1 of 2')).toBeTruthy()
+    expect(screen.getByText('Question a')).toBeTruthy()
+  })
+
+  it.each(['0', '-3', 'abc', '2.5', ''])('ignores the malformed limit %o', async (raw) => {
+    renderPage(`/review?limit=${raw}`)
+    expect(await screen.findByText('1 of 3')).toBeTruthy()
+  })
+
+  it('caps at what is available rather than inventing cards', async () => {
+    renderPage('/review?limit=50')
+    expect(await screen.findByText('1 of 3')).toBeTruthy()
   })
 })

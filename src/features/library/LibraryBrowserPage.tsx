@@ -14,7 +14,7 @@ import {
   selectionFromSearchParams,
   type LibrarySelection,
 } from './collectionTree'
-import { computeDeckMetrics, metricsFor } from './deckMetrics'
+import { computeDeckMetrics, metricsFor } from '@/domain/stats/deckMetrics'
 import { LibraryShell } from './shared/LibraryShell'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
 import { EmptyState } from './shared/EmptyState'

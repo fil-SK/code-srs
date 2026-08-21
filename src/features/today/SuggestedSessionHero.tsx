@@ -4,11 +4,15 @@ import { ChevronRight, Clock, Play, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import iteraSymbolMask from '@/assets/itera-symbol-mask.png'
 
-// Placeholder content (docs/itera-decisions.md): no suggested-session
-// algorithm exists yet, so the numbers here are illustrative, not computed
-// from real due-card data. "Start session" is real navigation (/review,
-// today's actual queue) — a dead primary action would be worse than an
-// honest placeholder around it. "Adjust session" has no behavior yet.
+// Every value on this card is real (Milestone 2). The due count and the deck
+// line come from the same repository due query /review runs, and the duration
+// is an estimate from the learner's own review history
+// (domain/stats/todayMetrics). The illustrative 24 cards / 15 minutes / three
+// invented topic names it shipped with are gone.
+//
+// Two states, one composition: `dueCount > 0` shows the session, `dueCount ===
+// 0` shows a caught-up card in the same box. The caught-up state drops the
+// Adjust session control entirely - adjusting cannot conjure due work.
 //
 // This is the one sanctioned reuse of the logo's stacked-card motif outside
 // the mark itself (spec §4.2: "within the Today session hero when
@@ -50,9 +54,40 @@ import iteraSymbolMask from '@/assets/itera-symbol-mask.png'
 // controlled here directly.
 
 interface SessionHeroProps {
-  cardCount?: number
-  estimatedMinutes?: number
-  topics?: string[]
+  /** Real due count, from the same query /review uses. */
+  cardCount: number
+  /** Estimate from historical review durations; only shown when cards are due. */
+  estimatedMinutes: number
+  /** Names of the decks contributing to the queue, already truncated. */
+  deckNames: string[]
+  /** Contributing decks beyond `deckNames`, rendered as "+N more". */
+  extraDeckCount: number
+  /** Earliest future due instant, for the caught-up state. */
+  nextDue?: number
+  onAdjust: () => void
+}
+
+// "in 20 minutes" / "in 4 hours" / "tomorrow" / "in 3 days". Deliberately not
+// cards/shared/format's formatDue, which rounds straight to whole days and so
+// reports "in 1 day" for a card due in twenty minutes - too coarse for the
+// caught-up hero, where this is the only concrete fact on the card.
+function formatNextDue(due: number, now: number = Date.now()): string {
+  const minute = 60_000
+  const hour = 60 * minute
+  const day = 24 * hour
+  const diff = due - now
+
+  if (diff <= minute) return 'in a moment'
+  if (diff < hour) {
+    const minutes = Math.round(diff / minute)
+    return `in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`
+  }
+  if (diff < day) {
+    const hours = Math.round(diff / hour)
+    return `in ${hours} ${hours === 1 ? 'hour' : 'hours'}`
+  }
+  const days = Math.round(diff / day)
+  return days === 1 ? 'tomorrow' : `in ${days} days`
 }
 
 // Horizontal stroke is ~2x the vertical one (24 vs 9 units) — a wide flat
@@ -109,10 +144,17 @@ function useHasRearLayers(): boolean {
 }
 
 export function SuggestedSessionHero({
-  cardCount = 24,
-  estimatedMinutes = 15,
-  topics = ['C++', 'Type deduction', 'Storage duration'],
+  cardCount,
+  estimatedMinutes,
+  deckNames,
+  extraDeckCount,
+  nextDue,
+  onAdjust,
 }: SessionHeroProps) {
+  const hasDue = cardCount > 0
+  const deckLine = [...deckNames, ...(extraDeckCount > 0 ? [`+${extraDeckCount} more`] : [])].join(
+    ' · ',
+  )
   const [mounted, setMounted] = useState(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   )
@@ -281,36 +323,47 @@ export function SuggestedSessionHero({
 
         <div className="relative max-w-md">
           <div className="text-[13px] font-semibold tracking-[0.06em] text-itera-accent uppercase">
-            Today&rsquo;s session
+            {hasDue ? <>Today&rsquo;s session</> : 'All caught up'}
           </div>
           <div className="mt-4 text-[40px] leading-[0.95] font-bold tracking-tight text-white sm:text-[56px]">
-            {cardCount} cards
+            {hasDue ? `${cardCount} ${cardCount === 1 ? 'card' : 'cards'}` : 'Nothing due'}
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-[16px] text-[rgba(248,250,252,0.72)]">
             <Clock size={16} />
-            Approximately {estimatedMinutes} minutes
+            {hasDue
+              ? `Approximately ${estimatedMinutes} ${estimatedMinutes === 1 ? 'minute' : 'minutes'}`
+              : nextDue !== undefined
+                ? `Next card due ${formatNextDue(nextDue)}`
+                : 'Nothing scheduled yet'}
           </div>
 
           <div className="mt-5 border-t border-[rgba(255,255,255,0.12)]" />
 
-          <div className="mt-[22px] text-[16px] font-medium text-[#F8FAFC]/85">{topics.join(' · ')}</div>
+          <div className="mt-[22px] text-[16px] font-medium text-[#F8FAFC]/85">
+            {hasDue ? deckLine : 'Come back later, or study a deck ahead of schedule.'}
+          </div>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <Link
-              to="/review"
+              to={hasDue ? '/review' : '/decks'}
               className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[9px] bg-[#FF6902] px-7 text-[16px] font-semibold text-white shadow-[0_8px_18px_rgba(255,105,2,0.22)] transition-all duration-150 ease-out hover:-translate-y-px hover:bg-[#F66200] hover:shadow-[0_10px_22px_rgba(255,105,2,0.25)] motion-reduce:transition-none"
             >
-              <Play size={16} className="fill-white" />
-              Start session
+              {hasDue && <Play size={16} className="fill-white" />}
+              {hasDue ? 'Start session' : 'Go to Library'}
             </Link>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
-            >
-              <SlidersHorizontal size={15} />
-              Adjust session
-              <ChevronRight size={14} />
-            </button>
+            {/* Omitted when nothing is due: no scope or size can produce due
+                cards that do not exist. */}
+            {hasDue && (
+              <button
+                type="button"
+                onClick={onAdjust}
+                className="inline-flex cursor-pointer items-center gap-1.5 text-[14px] font-medium text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
+              >
+                <SlidersHorizontal size={15} />
+                Adjust session
+                <ChevronRight size={14} />
+              </button>
+            )}
           </div>
         </div>
       </div>

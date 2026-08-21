@@ -37,7 +37,7 @@ import {
   type LibraryCollection,
   type LibrarySelection,
 } from './collectionTree'
-import { aggregateMetrics, metricsFor, type DeckMetrics } from './deckMetrics'
+import { aggregateMetrics, metricsFor, type DeckMetrics } from '@/domain/stats/deckMetrics'
 import { sortDecks, type DeckSortKey } from './shared/sortDecks'
 import { formatLastStudied } from '@/features/cards/shared/format'
 

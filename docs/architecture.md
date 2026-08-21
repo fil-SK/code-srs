@@ -47,18 +47,21 @@ src/
 │   ├── migration/    runner.ts (the contract; nothing implements it today)
 │   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, state.ts, format.ts
 │   ├── search/       searchableText.ts
-│   └── stats/        dateRange.ts, progressMetrics.ts, cardDeckIndex.ts, reviewHistory.ts
+│   └── stats/        dateRange.ts, progressMetrics.ts, streak.ts, todayMetrics.ts,
+│                      deckMetrics.ts, cardDeckIndex.ts, reviewHistory.ts
 ├── features/
 │   ├── cards/          the authoring UI — see "Card creation" below
 │   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
 │   │                   production ReviewSessionScreen, so they cannot drift from /review
-│   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId), deckMetrics.ts, DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, sortDecks, useIsWideLibrary)
+│   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId; the leaf/parent split itself lives in domain/decks/tree.ts), DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, sortDecks, useIsWideLibrary)
 │   ├── preview/        PreviewPage — flip through cards, no scheduling impact (renders the v2 shell)
-│   ├── review/         ReviewPage, ReviewSessionV2 (production, wraps reviewV2)
+│   ├── review/         ReviewPage, useSessionQueue.ts (the queue snapshot), ReviewSessionV2
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
 │   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG) — hidden from primary nav, route/data preserved
 │   ├── settings/       AccountSettingsPage, SettingsNav, settingsSections.ts, sections/*
-│   └── today/          TodayPage, SuggestedSessionHero, MomentumPanel, ContinueLearningList, PaceChart — renders through the shared AppShell now, no separate TodayShell
+│   └── today/          TodayPage (the only fetcher), SuggestedSessionHero, MomentumPanel,
+│                        ContinueLearningList, PaceChart, AdjustSessionDialog, greetings.ts —
+│                        renders through the shared AppShell, no separate TodayShell
 ├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
 ├── lib/          cn.ts (clsx+twMerge), id.ts (newId), lazyWithRetry.ts
 ├── test/         setup.ts (global Vitest setup)
@@ -275,6 +278,53 @@ interface ReviewService {
 `submit()` computes `{after, log}` and returns them **without persisting anything** — callers persist the result themselves.
 
 `usePersistReviewResult` (used by `ReviewSessionV2` via `reviewService.submit`) takes an already-computed `{after, log}` rather than recomputing it, so the session and the persistence hook can't silently diverge on the FSRS math.
+
+---
+
+## Review sessions: the queue is a snapshot
+
+`/review` accepts two query parameters, neither of them persisted:
+
+| Parameter | Meaning |
+|---|---|
+| *(none)* | every due card |
+| `?deck=<id>` | that deck **and its whole subtree** (`subtreeIds`, `src/domain/decks/tree.ts`) |
+| `?limit=<n>` | the first `n` cards of the resolved queue. Parsed by `resolveSessionLimit` (`domain/stats/todayMetrics.ts`): a positive integer, or **no limit**. `0`, negatives, decimals, text and out-of-range values are ignored rather than rejected, so a malformed URL still starts a usable session. |
+
+A later plain `/review` is the default queue again — Today's Adjust session dialog builds these URLs and stores nothing.
+
+**`src/features/review/useSessionQueue.ts` freezes the queue when a session starts.** Everything `ReviewPage` renders below the fetch reads that snapshot, never the live query.
+
+This is load-bearing, not a nicety. Grading invalidates the `cards` query key, `useDueCards` refetches, and the graded card drops out of the due array. When the session was driven by that live array — and keyed on `cards.length` — every grade remounted it: the position reset to the first remaining card, the `X of Y` total shrank (`1 of 5` → `2 of 5` → `2 of 4` → `2 of 3`), the undo stack was lost, and after the last card the empty due list sent `ReviewPage` into its pre-session "Nothing due" state instead of the session's own "All done" screen.
+
+Lifecycle contract:
+
+| Stage | Rule |
+|---|---|
+| **Created** | when there is no snapshot, or when the resolved `scopeKey` (`deck|limit`) changes because the URL changed in place. Taking a snapshot increments a monotonic `id`. |
+| **Lives** | for as long as `ReviewPage` stays mounted on that `scopeKey`. Refetches, invalidations, reordering and shrinking of the live due result are all ignored: the queue, its order, and its total are whatever the session started with. |
+| **Ends** | when `ReviewPage` unmounts. Both exits (Exit session, and Back to Today on the completion screen) navigate away from `/review`, so React Router unmounts the route element and the state goes with it. |
+
+That last rule is what makes a *later* session with identical query parameters correct: it is a new mount holding no state, so it resolves the due queue again from current repository state. **`ReviewSessionV2` is keyed on the snapshot `id`, never on `cards.length`** — a genuinely new snapshot is the only thing that may remount a session.
+
+Session identity is deliberately transient and per-mount. The `StudySession` type in `src/types/review.ts` is still unused; nothing here persists a session, and resumable sessions remain out of scope.
+
+---
+
+## Today's statistics boundary
+
+Today computes nothing in a component. `TodayPage` is the only fetcher on the route (`useSearchCards`, `useDueCards`, `useDecks`, `useReviewLogs`, with `now` snapshotted once per mount so it agrees with `/review`); it memoizes calls into `src/domain/stats/` and passes plain props to four presentational panels. `UI → hooks → pure domain → Repository`, with no shortcuts.
+
+- **`streak.ts`** — `computeStreak(logs, now)` → `{ current, best, activeToday }`. **The one streak definition in the product**, consumed by Today's Momentum panel, the top-nav `StreakBadge` and Progress's KPI tile (through `computeKpis`), so the three can present it differently but cannot disagree. Grace behavior: studying through yesterday keeps the streak alive until a full local calendar day is actually missed.
+- **`todayMetrics.ts`** — `summarizeDueQueue`, `estimateSessionMinutes`, `nextDueAt`, `computePaceSeries`, `buildContinueLearning`, `selectNextMilestone`, `resolveSessionLimit`. Pure, `now` always explicit.
+- **`deckMetrics.ts`** — moved here from `src/features/library/`. Today's Continue Learning and Next Milestone need the same per-deck due/last-studied/mastery numbers the Library shows, and `src/domain` may not import from `src/features`.
+- **`progressMetrics.ts`** — `computeRetention(logs)` is exported so Today shares Progress's definition rather than carrying its own. That calculation reads each review's post-grade FSRS state and is known to be semantically imperfect; the `stateBefore` correction belongs to the Progress-correctness milestone, and one shared function means the fix reaches both surfaces at once.
+- **`dateRange.ts`** — `startOfDay` and `DAY_MS` are exported, so streaks, the heatmap and the pace series share one local-day boundary instead of three private copies.
+
+Two definitions worth stating exactly, because the UI copy depends on them:
+
+- **Learned** (Next milestone) = a **current, non-suspended card with at least one `ReviewLog`**. Unique cards, not a log count; cards are attributed to the deck they are in *now*, matching `buildCardDeckMap`. It is never called mastery.
+- **Pace** = **reviews completed per local calendar day**, seven buckets ending today, zero-days included. `durationMs` is deliberately not consulted; it backs the session-duration estimate and nothing else.
 
 ---
 

@@ -1,20 +1,27 @@
+import { useMemo } from 'react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
+import { computeStreak } from '@/domain/stats/streak'
+import { useReviewLogs } from '@/hooks/useReview'
 
-// Illustrative only, matching Today's MomentumPanel ("7-day streak" row,
-// explicitly commented there as placeholder) - there is no real streak
-// concept in the domain layer yet (no day-over-day review-log aggregation
-// wired up anywhere). Shown here because product feedback asked for the
-// fire-icon treatment in the top nav specifically, not because a real number
-// exists to back it; swap for a real computed value once that exists.
+// The top nav's compact streak. It hard-coded 7 until Milestone 2; it now
+// reads the one canonical calculation (domain/stats/streak), the same one
+// Today's Momentum panel and Progress's KPI tile use, so the three surfaces
+// can present the number differently but can never disagree about it.
+//
+// A zero streak is shown rather than hidden: the badge disappearing and
+// reappearing would be a stranger signal than an honest 0.
 export function StreakBadge() {
+  const logs = useReviewLogs()
+  const streak = useMemo(() => computeStreak(logs.data ?? []).current, [logs.data])
+
   return (
     <div className="flex shrink-0 items-center gap-2">
       <StreakFlameIcon size={24} className="text-itera-accent" />
       <div className="hidden leading-tight sm:block">
-        <div className="text-base font-bold text-itera-ink-brand">7</div>
+        <div className="text-base font-bold text-itera-ink-brand">{streak}</div>
         <div className="text-xs text-itera-muted">day streak</div>
       </div>
-      <span className="text-sm font-semibold text-itera-ink-brand sm:hidden">7</span>
+      <span className="text-sm font-semibold text-itera-ink-brand sm:hidden">{streak}</span>
     </div>
   )
 }

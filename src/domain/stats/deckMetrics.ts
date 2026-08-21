@@ -13,6 +13,10 @@ const EMPTY: DeckMetrics = { cardCount: 0, dueCount: 0, masteryFraction: 0 }
 // studied" concept exists yet (see docs/itera-decisions.md), so
 // masteryFraction is an honest proxy (share of non-suspended cards that have
 // reached FSRS's "review" state) rather than a fabricated number.
+//
+// Lives in src/domain/stats (not src/features/library, its original home)
+// because Today's Continue Learning and Next Milestone need exactly these
+// numbers, and src/domain may not import from src/features.
 export function computeDeckMetrics(
   allCards: Card[],
   dueCards: Card[],

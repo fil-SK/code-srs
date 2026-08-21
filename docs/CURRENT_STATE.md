@@ -2,7 +2,7 @@
 
 **Last verified against the working tree: 2026-08-18** (branch `app_redesign`).
 
-The most recent milestone **converged the two card models into one**. `src/types/card.ts` now defines a single `Card` (content plus its own embedded `scheduling`) with six `CardInteraction` members; the v1 8-type union, `CardV2`/`CardV2Record`, `migrateCard`, the `cardsV2` store and the write-only `CardState` extraction are all gone. **Card, review and deck data was deliberately reset rather than migrated** — it was generated prototype content — and the Dexie database was renamed `code-srs` to `itera` with a single `version(1)`. See the 2026-08-18 entries in [`itera-decisions.md`](itera-decisions.md).
+The most recent milestone **made Today real** (Milestone 2): every learning value on `/` is now computed from real `Card`/`Deck`/`ReviewLog` data through a new pure statistics boundary in `src/domain/stats/`, the top-nav streak shares one calculation with Today and Progress, **Adjust session works**, and the Review queue is now a real per-session snapshot (it used to be rebuilt on every grade). The milestone before it **converged the two card models into one**. `src/types/card.ts` now defines a single `Card` (content plus its own embedded `scheduling`) with six `CardInteraction` members; the v1 8-type union, `CardV2`/`CardV2Record`, `migrateCard`, the `cardsV2` store and the write-only `CardState` extraction are all gone. **Card, review and deck data was deliberately reset rather than migrated** — it was generated prototype content — and the Dexie database was renamed `code-srs` to `itera` with a single `version(1)`. See the 2026-08-18 entries in [`itera-decisions.md`](itera-decisions.md).
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -26,15 +26,18 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Milestone reached: "MVP integrity cleanup" (2026-08-18), on top of "Single card model" (2026-08-18).**
+**Milestone reached: "Make Today real" (2026-08-18), on top of "MVP integrity cleanup" and "Single card model" (both 2026-08-18).**
+
+Today's placeholder content is gone. The hero reads the real due queue (count, contributing deck names, and a duration estimated from the learner's own review history); Momentum is four real rows (Current streak, Retention, Due today, Next milestone); Continue Learning lists real decks with real due counts and deck-scoped links; the pace chart plots real reviews-per-day; and the page has honest new-user and caught-up states. Weekly Goal was **removed rather than computed** — no goal concept exists. `Adjust session` is now a working dialog (deck scope + card count, nothing persisted). Fixing it surfaced a genuine Review bug: the session queue was driven by the live due query and keyed on its length, so every grade remounted the session — that is now a per-mount snapshot. No page was redesigned; the pixel-tuned hero geometry was re-measured and is unchanged.
+
 
 The integrity pass removed the MVP-adjacent surfaces that were telling the user something untrue: the AI card-generation prompt now emits the real v2 single-card import contract instead of the deleted 8-type schema; imported backups are validated structurally (and referentially, per import mode) before anything is written; the account menu's Spaced repetition row no longer navigates to a non-existent settings section; the fabricated "Your name" identity line is gone; and the Library empty state no longer promises an automatic Inbox deck. No page was redesigned and no new feature system was added.
 
 The redesign has converged *and* the retreat is finished. Previously the redesign was complete but the pages it replaced were still mounted-but-unlinked, so a user could reach a pre-redesign screen by URL and two redesigned pages still linked into them. Those pages, their entire transitive closure, and the `/design-preview` Library fork are now gone: 78 production files and 7 test files, leaving exactly one implementation of every surface.
 
-What is real: one shared Itera app shell, one Library/Deck implementation, one Review surface, one flip primitive, **one card model**, one card store, one hook family, all six authoring editors, a real Progress page with a real Review history, a real Account settings page, and a real auth gate in front of everything. Every card authored in any of the six editors is immediately schedulable in `/review` — the integration hole that used to sit between authoring and reviewing is closed by construction. The remaining work is the Collection/Deck migration, replacing Today's placeholder content with real product logic, and the one remaining reskinned-only surface (Roadmaps).
+What is real: one shared Itera app shell, one Library/Deck implementation, one Review surface, one flip primitive, **one card model**, one card store, one hook family, all six authoring editors, a real Progress page with a real Review history, a real Account settings page, and a real auth gate in front of everything. Every card authored in any of the six editors is immediately schedulable in `/review` — the integration hole that used to sit between authoring and reviewing is closed by construction. The remaining work is Progress correctness (retention's `stateBefore` semantics and the KPI definitions), the Collection/Deck migration, and the one remaining reskinned-only surface (Roadmaps).
 
-Recent milestone sequence (newest first): single card model -> Review history -> v1 legacy surface deleted → Progress iconography → Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
+Recent milestone sequence (newest first): Today made real -> MVP integrity cleanup -> single card model -> Review history -> v1 legacy surface deleted → Progress iconography → Login visual refinement → Login + session boundary → Account menu + Account settings → Ordering card redesign → Library row/preview fixes → Matching board (3 columns) → Progress page → Library polish → flashcard/Library redesign → App Shell and Visual Foundation Convergence.
 
 ---
 
@@ -61,7 +64,7 @@ Real data, real behavior, production-routed:
 
 | Page | What is real | What is placeholder |
 |---|---|---|
-| **Today** (`/`, `src/features/today/`) | Layout, greeting rotation (`greetings.ts`), the shared shell. | **All numbers.** Streak, weekly goal, recall %, milestone, Continue Learning rows, pace-chart series are illustrative constants. No streak/momentum/suggested-session domain logic exists. "Adjust session" has no behavior. |
+| **Today** (`/`, `src/features/today/`) | **Everything.** Due count, contributing deck names and the duration estimate in the hero; current streak; retention; due today; the derived Next milestone; Continue Learning rows; the seven-day pace series; the Adjust session dialog; and the new-user / caught-up / loading states. All computed in `src/domain/stats/{todayMetrics,streak,deckMetrics,progressMetrics}.ts` — `TodayPage` is the only fetcher and the four panels are presentational. | Nothing on the page is fabricated. **Deliberately deferred, not faked:** Weekly Goal (removed — no goal concept exists), a richer milestone/achievement system (the row is a derived deck continuation, not an entity), and advanced session controls (time-boxed, weak-cards, new-vs-review, difficulty/interaction/tag filters, custom FSRS). Retention inherits Progress's known-imperfect definition on purpose, so the coming `stateBefore` fix reaches both at once. Continue Learning lists leaf decks only, so cards filed directly on a deck-with-children get no row (they are still counted in the hero and Due today). |
 | **Progress** (`/progress`, `/progress/history`) | KPI tiles, heat map, retention chart, deck-performance table, milestones — all computed from real `ReviewLog`/`Card`/`Deck` via `src/domain/stats/{dateRange,progressMetrics}.ts`. "Sessions" are gap-clustered from review timestamps, not a persisted entity. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | 7 of 9 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Overview and Review history are live. |
 | **Account settings** (`/settings`) | **Import / Export** (JSON backup) is fully functional. | Profile, Email & password, Appearance, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
 | **Login** (`/login`) | Page, session minting, redirect-back-to-requested-route, Supabase magic link. | In local mode the password is a dev/demo shell: never stored, sent, or verified. "Forgot password" is a deliberate `aria-disabled` placeholder — no reset backend. |
@@ -73,7 +76,7 @@ Real data, real behavior, production-routed:
 
 - `src/components/layout/AppShell.tsx` = `IteraSurface` (`.itera-scope` + `ForceLightTheme`) → `TopNav` → `<main class="mx-auto max-w-[1280px]">` → `<Outlet/>`.
 - `TopNav` is presentational: logo, primary nav links, `rightSlot`. Its wordmark matches the finalized login branding in Inter Variable at weight 650. Primary destinations come from `primaryNavLinks.ts` and are exactly **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
-- Right side of the nav: `StreakBadge` + `AccountMenu`. Nothing else.
+- Right side of the nav: `StreakBadge` + `AccountMenu`. Nothing else. `StreakBadge` reads the canonical `computeStreak` (`src/domain/stats/streak.ts`) — the same calculation Today and Progress use — and the Today link's due badge (`useNavBadges`) has always been a real count.
 - **There is no global Search and no global Create action** — removed as a product call (both are scoped concepts; search lives inside Library, create inside a deck). `CreateMenu.tsx` and `TopNav`'s search affordance were deleted, not hidden.
 - No left sidebar, no bottom nav, no per-route topbar title slot. `Sidebar.tsx` / `BottomNav.tsx` / `navItems.ts` / `PageHeaderOverride.tsx` / `TodayShell.tsx` **were deleted**. A route that needs a heading renders it as ordinary page content.
 - Local (page-level) sidebars do exist and are the convention for section navigation: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`.
@@ -100,7 +103,14 @@ Real data, real behavior, production-routed:
 
 ## 7. Today state
 
-Shell converged, content not. See §3. `TodayPage.tsx` is a real CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, one column below 980px via a `matchMedia` hook) driven by inline `style`, because Tailwind has no grid-area utility. Its page typography now uses Inter Variable throughout, matching the finalized login family, including the greeting and the large session-card count. `ContinueLearningList` has an external sentence-case heading plus **View all topics**, with each deck row presenting its content badge, title/truncated description, bold due count, progress + percentage and Continue action. `MomentumPanel` uses sentence-case hierarchy and grouped icon metrics without per-row dividers; streak, weekly goal and recall follow the supplied `inspiration/5.png` direction, while Next milestone retains one section divider. `PaceChart` is the reference-aligned minute-by-weekday area chart with a direct Today label. `SuggestedSessionHero.tsx` is a bespoke, pixel-tuned 4-layer stacked-card component — **do not adjust its offsets/rotations/colors incidentally**; they came from many rounds of measured product feedback. On mount its layers stack themselves back-to-front (each drops from a lift onto its resting box, D170); the resting geometry is unchanged by that reveal.
+**Real, production.** `TodayPage.tsx` is still the same CSS Grid with named `grid-template-areas` (`"hero momentum" / "continue pace"`, one column below 980px via a `matchMedia` hook) driven by inline `style`, because Tailwind has no grid-area utility, and the page typography is unchanged. What changed is the data: `TodayPage` is now the route's only fetcher (`useSearchCards`, `useDueCards`, `useDecks`, `useReviewLogs`, `now` snapshotted once per mount so it agrees with `/review`), memoizes pure calls into `src/domain/stats/`, and hands plain props to four presentational panels.
+
+- **`SuggestedSessionHero.tsx`** — the bespoke, pixel-tuned 4-layer stacked card is untouched (**do not adjust its offsets/rotations/colors incidentally**; the settled transforms were re-measured against D170 after this milestone and match exactly). Its content is now the real due count, real contributing deck names in queue order (`A · B · C · +N more`), and a duration estimate from the median of the learner's own recent review durations, with a documented 20s-per-card fallback below 10 usable samples. When nothing is due the same box reads **All caught up / Nothing due** with the real next-due time, the primary action becomes Go to Library, and **Adjust session is not rendered** — no scope or size can create due work.
+- **`MomentumPanel.tsx`** — four real rows in the same visual slots: **Current streak** (canonical `computeStreak`), **Retention** (Progress's shared `computeRetention` over a trailing 30 days; an em dash, never `0%`, when nothing is mature), **Due today** (the same count as the hero and `/review`), and **Next milestone** (a derived in-progress-deck continuation — "Finish X / n of m cards learned" — linking at a real session only when one exists). Weekly Goal was deleted; Retention took its slot, so the row rhythm and the single divider above Next milestone are unchanged.
+- **`ContinueLearningList.tsx`** — real leaf decks with real due counts, real mastery percentages and the deck's own description when it has one, ordered due-first then most-recently-studied. A deck with due cards links to `/review?deck=<id>` ("Continue"); one without links to `/decks/<id>` ("Open"). The heading link is now **View all decks** — there is no topic concept in this product.
+- **`PaceChart.tsx`** — the same hand-rolled SVG, now plotting **reviews completed per local calendar day** over seven buckets ending today, with a data-derived axis. `You're on track` is gone: it claimed progress toward a target that does not exist.
+- **`AdjustSessionDialog.tsx`** — new. Deck scope (all due / one deck, using `/review`'s own `subtreeIds` semantics and listing every deck by full path) plus session size (all / 10 / 20 / 30 / custom), starting `/review?deck=&limit=`. Centered modal on desktop, bottom sheet below 480px. **Nothing is persisted.**
+- **Page states** — a `Loading…` line until the four queries resolve (an empty due result is otherwise indistinguishable from "not fetched", and the grid would flash "All caught up"); one intentional empty state when there are no decks and no cards; otherwise the grid.
 
 ## 8. Library state
 
@@ -144,6 +154,7 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 ## 11. Review integration state
 
 - `/review` is a **top-level, chrome-free route** (no `AppShell` ancestor), inside `RequireAuth`. It renders `ReviewSessionV2` → `ReviewSessionScreen`, the exact same shell `/design-preview/review/*` uses. One shell, not two. The shared width-safe Review strip follows `recall-card.png`: a literal **< Exit session** control left, bold position centered, and a bordered keyboard key plus action hint right. Exit and the right-side status/action use the same UI typography; Exit has the expected pointing-hand cursor. The strip's white background and border are full-bleed, while its controls share `TopNav`'s centered 1280px frame so the left/right controls align with the logo/profile edges. Session-backed surfaces also reserve 56px beneath their final content, matching the strip-to-card gap above.
+- **The session queue is a snapshot.** `/review` accepts `?deck=<id>` (that deck plus its subtree) and `?limit=<n>` (the first n cards, ignored unless it is a positive integer); `src/features/review/useSessionQueue.ts` freezes the resolved queue when the session starts, and `ReviewSessionV2` is keyed on that snapshot's id. It used to be keyed on `cards.length` over the live due query, so every grade remounted the session — the counter shrank (`1 of 5` → `2 of 5` → `2 of 4`), the undo stack was lost, and the last card landed on the pre-session "Nothing due" state instead of "All done". A snapshot lives for one mount, so leaving `/review` ends the session and a later visit at the identical URL resolves a fresh queue. Neither parameter is persisted; there is still no `StudySession` entity.
 - Flow is strictly two-phase: Question → reveal → Answer → one FSRS grade. Objective types compute an `ObjectiveResult` from `src/domain/grading/*`, show a pass/fail banner, and pre-select a rating the user can override.
 - The shared rating controls follow the locked `answer-icons.png` reference: Again uses refresh, Hard ascending bars, Good a circled check, and Easy double chevrons. Each card shows its numeric shortcut plus the real FSRS next interval; the suggested/selected grade receives the single orange outline/icon signal. They render four-across from `sm` upward and 2×2 on phones.
 - `/preview` renders the **real card** through `ReviewSessionScreen` with `hideRating`. It uses the shared Review strip instead of its former tag/jump-input header; `AppShell` gives preview routes a full-width, zero-top-padding main surface so the strip sits flush beneath and spans the same page width as the navbar. In deck flip-through, bordered Prev/Next controls sit immediately around the centered `X of Y`; Left/Right arrows perform the same navigation unless focus is inside an interactive card control or editor. At phone widths the redundant shortcut hint yields its space to this centered navigation group. `/cards/:id/study` uses the same strip treatment without deck navigation. After reveal, preview-only cards say **Answer revealed**; surfaces with rating controls say **Rate your answer** instead of the old `1–4 to rate` hint.
@@ -175,7 +186,6 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 - **`InteractionLabel` is a grey pill; the locked mockups draw it orange** (a soft-orange pill in `matching-card.png`, plain orange text in `ordering-card.png`). Left alone deliberately — the label is shared by all six interaction types, so changing it is a six-card decision, not a per-card one. **Open.**
 - **Matching on narrow viewports:** a two-column card now lays out side by side at 390px (verified live). Cards with 3+ columns fall back to the stacked flow. The spec's "stepwise pairing flow on mobile" is only partly satisfied.
-- **Today's placeholder numbers** are visible product surface that reads as real data (streak 7, weekly goal, recall %, pace chart). Same for `StreakBadge` in the top nav.
 - **Roadmaps is the last reskinned-only surface** — it carries Itera colors but pre-redesign layout/density. It is the only one left; Browse, Drafts, Stats and the v1 card editor were deleted rather than redesigned.
 
 ## 15. Known problems — technical, compatibility and data-risk debt
@@ -197,10 +207,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-18, after the MVP integrity cleanup:
+Measured 2026-08-18, after Milestone 2 ("Make Today real"):
 
 ```
-npx vitest run       → 62 test files, 425 tests, all passing (35-55s)
+npx vitest run       → 68 test files, 535 tests, all passing (~45s)
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -208,7 +218,9 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**425 is the current correct test count.** Earlier revisions of this section carried two contradictory numbers (390 and 451); 390 was the measured count immediately after the single-card-model pass, and 451 was a stale carry-over from before it. Both are superseded. The single-card-model pass had brought the count down from 432 by deleting the migration and CardState suites outright (their subjects no longer exist) and removing the six per-type "migrates a legacy v1 card" cases plus the legacy form-hydration cases — not a coverage loss, since none of that code remains. This milestone then added 35: backup entity validation, deck-reference validation across Merge/Replace, and the account-menu placeholder/identity assertions.
+**535 is the current correct test count**, up from 425 across 62 files. Milestone 2 added 110 and removed none: the canonical streak, the whole Today statistics module, the four Today page states, the Adjust session dialog, the `StreakBadge`, the `limit` query parameter, and the Review queue-snapshot regression suite (stable total, stable ordering, real completion, completion-screen Undo, a later same-URL session getting a fresh queue, and deck+limit).
+
+**425 was the count before it.** Earlier revisions of this section carried two contradictory numbers (390 and 451); 390 was the measured count immediately after the single-card-model pass, and 451 was a stale carry-over from before it. Both are superseded. The single-card-model pass had brought the count down from 432 by deleting the migration and CardState suites outright (their subjects no longer exist) and removing the six per-type "migrates a legacy v1 card" cases plus the legacy form-hydration cases — not a coverage loss, since none of that code remains. The MVP integrity cleanup then added 35: backup entity validation, deck-reference validation across Merge/Replace, and the account-menu placeholder/identity assertions.
 
 Older counts quoted in [`itera-decisions.md`](itera-decisions.md) (429, 445, 447) remain historical, because that log is append-only.
 
@@ -218,23 +230,19 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 ## 17. Exact recommended next milestone
 
-**Replace Today's placeholder content with real product logic.**
+**Progress correctness / KPI definitions.**
 
-Today is now the only surface that shows numbers a user would reasonably believe and that are not real: streak, weekly goal, recall %, the milestone line, the Continue Learning rows and the pace-chart series are all illustrative constants, and "Adjust session" has no behavior. Every other primary surface (Library, Review, Progress, Review history, Settings) reads real data.
-
-An older recommendation in this slot — bringing the second card store's records into the real due queue — is **superseded, not skipped**: the card-model convergence closed that hole by construction, since there is now one store and `/review` reads it directly.
+With Today real, every primary surface now reads real data — but Progress's *definitions* are the weakest remaining link, and Today now consumes one of them, so a wrong number is visible in two places instead of one.
 
 Concrete scope:
 
-1. A real streak/momentum domain module over `ReviewLog` (Progress already computes a streak in `progressMetrics.ts` — reuse it rather than inventing a second definition).
-2. A suggested-session concept behind `SuggestedSessionHero`, with a real card count.
-3. Real Continue Learning rows (recently-studied decks with real due counts).
-4. Either a real pace series or an honest empty state for `PaceChart`.
-5. `StreakBadge` in the top nav reads the same real streak.
+1. **Retention's `stateBefore` semantics.** `computeRetention` (`src/domain/stats/progressMetrics.ts`) filters on `ReviewLog.state`, which is the FSRS state the card ended in, not the state it was in when the question was asked. "Mature-card recall" therefore includes reviews that only *became* mature by being answered, and excludes lapses that dropped out of `review`. `ReviewLog` has `stabilityBefore`/`difficultyBefore` but **no `stateBefore`**, so this needs a field added to the log (new logs only — old rows genuinely cannot recover it) and a documented rule for history written before it. Today's Momentum row deliberately consumes the same function, so the fix lands on both surfaces at once; its label is the cautious "Retention" until then.
+2. **The Learned / Due / Reviews KPI definitions.** State each one exactly, the way Milestone 2 had to state "learned = a current, non-suspended card with at least one `ReviewLog`", and check the tiles against them. `masteryFraction` (share of non-suspended cards in FSRS `review` state) is an honest proxy but is labelled "progress" in some places and "mastery" in others.
+3. **Deck Performance actionability.** The table reports retention/accuracy/trend per deck but does not tell the learner what to do about a weak deck.
 
-Explicitly **not** in this milestone: the Collection/Deck split (Phase G) and the Roadmaps reskin. Those are the next two candidates, in that order.
+Explicitly **not** in that milestone: the Collection/Deck split (Phase G) and the Roadmaps reskin, which remain the next two candidates in that order.
 
-The 2026-08-18 MVP integrity cleanup found **no blocker in front of this work.** Today remains the only primary surface showing numbers a user would believe and that are not real.
+**The repository is ready for it.** Milestone 2 introduced no blocker: `computeRetention` is already the single shared definition, `src/domain/stats/` is already the boundary, and the only new consumer (Today's Momentum row) is one call site that needs no change when the semantics are corrected.
 
 ---
 

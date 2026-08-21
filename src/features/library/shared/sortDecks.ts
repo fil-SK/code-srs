@@ -1,5 +1,5 @@
 import type { Deck } from '@/types'
-import { metricsFor, type DeckMetrics } from '../deckMetrics'
+import { metricsFor, type DeckMetrics } from '@/domain/stats/deckMetrics'
 import type { ID } from '@/types'
 
 export type DeckSortKey = 'name' | 'due' | 'lastStudied' | 'cardCount'
