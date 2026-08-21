@@ -7,6 +7,7 @@ import { useDecks } from '@/hooks/useDecks'
 import { subtreeIds } from '@/domain/decks/tree'
 import { buildRange, formatRangeLabel, previousPeriod, type DateRangePreset } from '@/domain/stats/dateRange'
 import { buildCardDeckMap } from '@/domain/stats/cardDeckIndex'
+import { formatDayCount } from '@/domain/stats/streak'
 import {
   computeKpis,
   computeHeatmap,
@@ -165,9 +166,11 @@ export function ProgressPage() {
               <KpiTile
                 icon={StreakFlameIcon}
                 label="Current streak"
-                value={`${kpis.streak} day${kpis.streak === 1 ? '' : 's'}`}
+                value={formatDayCount(kpis.streak)}
                 iconTone="accent"
-                footer={<span className="text-itera-muted">Best: {kpis.bestStreak} days</span>}
+                footer={
+                  <span className="text-itera-muted">{`Best: ${formatDayCount(kpis.bestStreak)}`}</span>
+                }
               />
             </div>
 

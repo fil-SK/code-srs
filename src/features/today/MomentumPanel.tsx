@@ -3,6 +3,7 @@ import { CalendarClock, Flag, Target } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import type { NextMilestone } from '@/domain/stats/todayMetrics'
+import { formatDayCount } from '@/domain/stats/streak'
 
 function MetricIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
@@ -68,7 +69,7 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
             <div className="mt-0.5 text-xs text-itera-muted">
               {streak === 0
                 ? 'Review a card to start one'
-                : `${streak} ${streak === 1 ? 'day' : 'days'} in a row`}
+                : `${formatDayCount(streak)} in a row`}
             </div>
           </div>
           <div className="text-2xl leading-none font-semibold text-itera-ink-brand">{streak}</div>

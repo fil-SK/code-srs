@@ -1,6 +1,6 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-21** (branch `app_redesign`).
+**Last verified against the working tree: 2026-08-22** (branch `app_redesign`).
 
 The most recent milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress's headline row is exactly **Learned · Due · Reviews · Retention · Current streak**, and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`itera-decisions.md`](itera-decisions.md).
 
@@ -27,6 +27,8 @@ It describes state, not history. It contains no prompts and no conversation tran
 ## 1. Current product milestone
 
 **Milestone reached: "Progress correctness & KPI definitions" (2026-08-21), on top of "Make Today real", "MVP integrity cleanup" and "Single card model".**
+
+A temporal end-to-end QA pass on 2026-08-21 (import → review → real FSRS persistence → controlled calendar-time advance → due queries → Today → Progress → Review history) returned **PASS WITH ISSUES** with no correctness blocker; its evidence is kept in [`qa_report_21_aug_2026/`](qa_report_21_aug_2026/qa_report_21_8_2026.md). All three findings were closed on 2026-08-22 without new product scope: isolated retention buckets now render as points, streak copy is grammatically correct, and `newId()` no longer assumes a secure context. The phone-width observation in that report did not reproduce as a persistent overflow.
 
 Progress now answers five explicit questions with five honest tiles: unique current active cards learned, cards due now, ReviewLog entries in the selected period, mature retention in that period, and the canonical current streak. `stateBefore` is required on every new ReviewLog, so new/learning graduations never contaminate mature retention and a Review → Again remains an eligible failure. The page retains its heat map, deck-scopable retention chart and milestones; gaps in the retention chart are no longer interpolated. Deck Performance shows leaf/actionable decks with Learned, Due and Retention, including due decks with no period history, ordered around due work. No page was redesigned.
 
@@ -126,7 +128,7 @@ All three views render inside `LibraryShell` + `CollectionNav`: a centered, bord
 
 ## 9. Progress state
 
-Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. The five headline tiles are exactly **Learned · Due · Reviews · Retention · Current streak**. Learned is unique current non-suspended cards with at least one log; Due reuses `useDueCards`; Reviews is the number of logs in the selected period; Retention is successful mature attempts (`stateBefore` Review/Relearning and rating Hard or better) divided by all mature attempts; Current streak reuses `computeStreak`. Only Reviews and Retention receive period comparisons, and Retention renders that change in percentage points (`pp`). The page retains the activity heat map, deck-scopable retention chart and derived recent milestones. Missing retention buckets break the SVG into separate path segments instead of implying observations across gaps. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.**
+Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. The five headline tiles are exactly **Learned · Due · Reviews · Retention · Current streak**. Streak copy is singular at one day (`Best: 1 day`), through the shared `formatDayCount` in `src/domain/stats/streak.ts` that Today's Momentum panel uses too. Learned is unique current non-suspended cards with at least one log; Due reuses `useDueCards`; Reviews is the number of logs in the selected period; Retention is successful mature attempts (`stateBefore` Review/Relearning and rating Hard or better) divided by all mature attempts; Current streak reuses `computeStreak`. Only Reviews and Retention receive period comparisons, and Retention renders that change in percentage points (`pp`). The page retains the activity heat map, deck-scopable retention chart and derived recent milestones. Missing retention buckets break the SVG into separate path segments instead of implying observations across gaps, and an observed bucket with no observed neighbour is drawn as a point rather than dropped — `retentionChartPath.ts` owns the projection and returns both, so lines and markers cannot disagree. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.**
 
 Deck Performance contains **Deck · Learned · Due · Retention** and no misleading Trend. It intentionally lists **leaf/actionable decks only**, so every column in a row has one direct-card scope and parent/child work is not double-counted. A deck with active cards remains visible even with zero reviews in the selected period. Ordering is: has due work, larger due count, weaker valid retention, most recently studied, then name. Rows with work due open `/review?deck=<id>`; the others open the deck. The accepted leaf rule means cards filed directly on a deck-with-children do not get their own row, matching Continue Learning's existing tradeoff; they still contribute to global KPIs and the parent-scoped Review route.
 
@@ -212,10 +214,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-21, after Milestone 3 ("Progress correctness & KPI definitions"):
+Measured 2026-08-22, after the QA cleanup pass:
 
 ```
-npx vitest run       → 73 test files, 569 tests, all passing (52.62s)
+npx vitest run       → 75 test files, 588 tests, all passing (44.08s)
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -223,7 +225,9 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**569 is the current correct test count**, up from 535 across 68 files. Milestone 3 added 34 tests across five new files: pre/post scheduling-state logging, mature-retention examples, the canonical Learned helper, current/period KPI definitions, actionable leaf-deck rows, ReviewLog backup validation, the Dexie history reset, KPI presentation, and retention-chart gaps.
+**588 is the current correct test count.** The QA cleanup pass added 19 across two new files (`retentionChartPath.test.ts`, `id.test.ts`) plus additions to the retention-chart, streak and Progress suites: isolated retention buckets in every gap position, day-count pluralization, and both `newId()` branches.
+
+**569 was the count before it**, across 73 files, up from 535 across 68 files. Milestone 3 added 34 tests across five new files: pre/post scheduling-state logging, mature-retention examples, the canonical Learned helper, current/period KPI definitions, actionable leaf-deck rows, ReviewLog backup validation, the Dexie history reset, KPI presentation, and retention-chart gaps.
 
 **535 was the count before it.** Milestone 2 added 110 tests for the canonical streak, the Today statistics boundary, page states, Adjust session, the nav badge, `limit`, and the Review queue snapshot.
 
@@ -231,7 +235,7 @@ npm run build        → successful (existing chunk-size advisory only)
 
 Older counts quoted in [`itera-decisions.md`](itera-decisions.md) (429, 445, 447) remain historical, because that log is append-only.
 
-**The `MatchingEditorShell.test.tsx` timeout reported in an earlier audit does not reproduce.** Three full `npx vitest run` passes on 2026-08-18 (one before this milestone's changes, two after) completed in 36.0s, 35.5s and 54.7s with zero failures and no timeout; the slowest was simply a busier machine, and no individual test approached its limit. No test-timeout value was changed, and Vitest's global timeout was not raised. The unidentified single-run flake noted on 2026-08-17 has not resurfaced either; if it ever does, capture the file name.
+**The `MatchingEditorShell.test.tsx` timeout reported in an earlier audit does not reproduce.** Three full `npx vitest run` passes on 2026-08-18 (one before this milestone's changes, two after) completed in 36.0s, 35.5s and 54.7s with zero failures and no timeout; the slowest was simply a busier machine, and no individual test approached its limit. No test-timeout value was changed, and Vitest's global timeout was not raised. **The unidentified single-run flake noted on 2026-08-17 resurfaced once on 2026-08-22** — one test in one full run failed while the other **eight** full runs that day (two before it, six after) were clean at 588/588. Its name was lost to a truncated console capture, which is the whole reason it is still unidentified: **when a run fails, capture the complete output, not the tail.**
 
 Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment: 'node'` globally, `VITE_SUPABASE_*` blanked so tests always hit Dexie via `fake-indexeddb`); `globals` is **not** enabled, so every file imports `describe`/`it`/`expect` from `vitest` explicitly. Component tests opt into a DOM per file with `// @vitest-environment happy-dom` as line 1 **and must add their own `afterEach(() => cleanup())`** — RTL's auto-cleanup never registers without `globals`.
 

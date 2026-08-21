@@ -46,3 +46,10 @@ export function computeStreak(logs: ReviewLog[], now: Millis = Date.now()): Stre
 
   return { current, best, activeToday }
 }
+
+// The three streak surfaces share one calculation, so they share its wording
+// too - Progress's Best footer used to hard-code the plural and read
+// "Best: 1 days".
+export function formatDayCount(days: number): string {
+  return `${days} ${days === 1 ? 'day' : 'days'}`
+}

@@ -142,6 +142,27 @@ describe('Progress headline contract', () => {
   })
 })
 
+describe('Progress streak copy', () => {
+  it('pluralizes a multi-day current and best streak', async () => {
+    renderProgress()
+    const streak = await screen.findByRole('group', { name: 'Current streak' })
+    expect(within(streak).getByText('2 days')).toBeTruthy()
+    expect(within(streak).getByText('Best: 2 days')).toBeTruthy()
+  })
+
+  // The reported bug was "Best: 1 days" - the value above it was already
+  // singular, so only a shared formatter fixes both for good.
+  it('uses the singular for a one-day streak', async () => {
+    await repo.reviews.clear()
+    await repo.reviews.bulkPut([log('only-review', 'mature-card', Date.now(), 3, 'review')])
+
+    renderProgress()
+    const streak = await screen.findByRole('group', { name: 'Current streak' })
+    expect(within(streak).getByText('1 day')).toBeTruthy()
+    expect(within(streak).getByText('Best: 1 day')).toBeTruthy()
+  })
+})
+
 describe('Progress deck actionability', () => {
   it('keeps a zero-review due deck visible, first, and linked to its review scope', async () => {
     renderProgress()

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ReviewLog } from '@/types'
-import { computeStreak } from './streak'
+import { computeStreak, formatDayCount } from './streak'
 
 // Fixed clock throughout - a streak test that reads the machine's date would
 // pass or fail depending on the hour it ran.
@@ -80,5 +80,18 @@ describe('computeStreak', () => {
     const forwards = computeStreak([log(2), log(1), log(0)], NOW)
     const backwards = computeStreak([log(0), log(2), log(1)], NOW)
     expect(forwards).toEqual(backwards)
+  })
+})
+
+describe('formatDayCount', () => {
+  // Progress's "Best" footer read "Best: 1 days" until this existed.
+  it('is singular for exactly one day', () => {
+    expect(formatDayCount(1)).toBe('1 day')
+  })
+
+  it('is plural for zero and for more than one', () => {
+    expect(formatDayCount(0)).toBe('0 days')
+    expect(formatDayCount(2)).toBe('2 days')
+    expect(formatDayCount(30)).toBe('30 days')
   })
 })

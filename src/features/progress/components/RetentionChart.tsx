@@ -2,25 +2,16 @@ import { useMemo } from 'react'
 import { Info } from 'lucide-react'
 import type { RetentionPoint } from '@/domain/stats/progressMetrics'
 import { DeckScopeDropdown, type DropdownOption } from './DeckScopeDropdown'
-import { buildRetentionLinePaths } from './retentionChartPath'
-
-const WIDTH = 640
-const HEIGHT = 200
-const PAD_X = 8
-const PAD_TOP = 16
-const PAD_BOTTOM = 24
+import {
+  buildRetentionGeometry,
+  CHART_HEIGHT as HEIGHT,
+  CHART_WIDTH as WIDTH,
+  PAD_X,
+  xFor,
+  yFor,
+} from './retentionChartPath'
 
 const DATE_LABEL = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
-
-function xFor(i: number, count: number): number {
-  if (count <= 1) return PAD_X
-  return PAD_X + (i / (count - 1)) * (WIDTH - PAD_X * 2)
-}
-
-function yFor(value: number): number {
-  const plotHeight = HEIGHT - PAD_TOP - PAD_BOTTOM
-  return PAD_TOP + (1 - value) * plotHeight
-}
 
 export function RetentionChart({
   points,
@@ -35,7 +26,7 @@ export function RetentionChart({
 }) {
   const known = points.filter((p) => p.retention !== null) as (RetentionPoint & { retention: number })[]
 
-  const linePaths = useMemo(() => buildRetentionLinePaths(points), [points])
+  const geometry = useMemo(() => buildRetentionGeometry(points), [points])
 
   const average = known.length
     ? known.reduce((sum, p) => sum + p.retention, 0) / known.length
@@ -98,7 +89,7 @@ export function RetentionChart({
               />
             )}
 
-            {linePaths.map((linePath) => (
+            {geometry.segments.map((linePath) => (
               <path
                 key={linePath}
                 data-retention-segment="true"
@@ -108,6 +99,21 @@ export function RetentionChart({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+              />
+            ))}
+
+            {/* A bucket with no observed neighbour has no line to belong to, so
+                it is drawn as a point. The final observation is not excluded
+                here: when it is itself isolated, its own emphasized marker
+                below simply covers this identical dot. */}
+            {geometry.isolated.map((marker) => (
+              <circle
+                key={marker.index}
+                data-retention-point="true"
+                cx={marker.x}
+                cy={marker.y}
+                r="4"
+                fill="var(--itera-accent)"
               />
             ))}
 

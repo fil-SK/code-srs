@@ -151,7 +151,7 @@ Both `FloatingPanel` and `dialogs` portal into `document.body`, which sits **out
 
 `src/lib/cn.ts` — `cn(...inputs) = twMerge(clsx(inputs))`. Standard clsx (resolves conditional/falsy args) + tailwind-merge (resolves conflicting Tailwind classes on the same CSS property, so a trailing `className` prop can safely override earlier classes) combo. Use this for all conditional/merged class strings.
 
-`src/lib/id.ts` — `newId() = crypto.randomUUID()`. The one ID convention for every entity in the app.
+`src/lib/id.ts` — `newId()`. The one ID convention for every entity in the app: an RFC 4122 v4 UUID, from `crypto.randomUUID()` where it exists and otherwise assembled from `crypto.getRandomValues()`. `randomUUID` is **secure-context only**, so a plain-HTTP LAN dev origin (physical-phone testing) has no such method; `getRandomValues` carries no such restriction, so both branches produce the same format from the same CSPRNG. Never generate an id any other way.
 
 ---
 
