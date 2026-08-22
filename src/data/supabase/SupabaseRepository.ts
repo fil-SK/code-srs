@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
 import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
 import { searchableText } from '@/domain/search/searchableText'
 import type {
@@ -23,6 +23,54 @@ function unwrap<T>(rows: Row<T>[] | null): T[] {
   return (rows ?? []).map((r) => r.data)
 }
 
+// How many rows one request asks for. This is a round-trip/payload tradeoff and
+// nothing else: the loop below stays correct for any value, and for a project
+// row cap above or below it. It is not a product setting and is not exposed.
+const PAGE_SIZE = 500
+
+type Page<T> = {
+  data: Row<T>[] | null
+  count: number | null
+  error: PostgrestError | null
+}
+
+// Read every row a query matches, not just the first response's worth.
+//
+// PostgREST caps each response at the project's API "Max rows" setting and says
+// so only in the Content-Range header: an oversized select comes back as a 200
+// carrying the first N rows and no error at all. One successful request is
+// therefore not a complete read, which is how a cloud-mode backup could be
+// exported already missing rows (audit P1-4).
+//
+// Termination deliberately never infers "last page" from "shorter than I asked
+// for". A project whose cap is below PAGE_SIZE answers every request with a
+// short page, so that inference is the same truncation bug in a new place.
+// Instead the offset advances by however many rows actually arrived, and the
+// loop stops on an empty page - always correct, and independent of any server
+// metadata - or earlier when the exact count says the whole matching set is
+// already in hand. That count also bounds the loop, so a backend behaving
+// unexpectedly cannot spin forever and no arbitrary page limit is needed.
+//
+// `query` rebuilds the request per page rather than being handed a builder: a
+// PostgrestFilterBuilder is a one-shot thenable, and the filters and the
+// ordering belong to the caller.
+async function selectAll<T>(
+  query: (fromRow: number, toRow: number) => PromiseLike<Page<T>>,
+): Promise<T[]> {
+  const rows: T[] = []
+  for (;;) {
+    const { data, count, error } = await query(rows.length, rows.length + PAGE_SIZE - 1)
+    // A page that fails fails the whole read. Resolving with pages 1..N-1 would
+    // be exactly the silent truncation this helper exists to prevent.
+    if (error) throw error
+
+    const page = unwrap<T>(data)
+    rows.push(...page)
+    if (page.length === 0) return rows
+    if (count !== null && rows.length >= count) return rows
+  }
+}
+
 // Generic CRUD over one table whose entities carry an inline `id`.
 function crud<T extends { id: ID }>(
   sb: SupabaseClient,
@@ -30,9 +78,12 @@ function crud<T extends { id: ID }>(
 ): CrudRepo<T> {
   return {
     async getAll() {
-      const { data, error } = await sb.from(table).select('data')
-      if (error) throw error
-      return unwrap<T>(data)
+      // Ordered by the primary key because range paging needs a deterministic
+      // order; it also matches Dexie's toArray(), which yields primary-key
+      // order.
+      return selectAll<T>((fromRow, toRow) =>
+        sb.from(table).select('data', { count: 'exact' }).order('id').range(fromRow, toRow),
+      )
     },
     async getById(id) {
       const { data, error } = await sb
@@ -76,19 +127,27 @@ function createCardRepo(sb: SupabaseClient): CardRepo {
     async getDue({ now, deckId, tags, limit }: DueQuery): Promise<Card[]> {
       // Generated columns (due, suspended) do the heavy lifting in SQL; the
       // remaining predicates filter in memory, mirroring the Dexie backend.
-      const { data, error } = await sb
-        .from('cards')
-        .select('data')
-        .eq('suspended', false)
-        .lte('due', now)
-      if (error) throw error
+      // `id` is the tie-breaker that makes paging over the non-unique `due`
+      // column deterministic.
+      let cards = await selectAll<Card>((fromRow, toRow) =>
+        sb
+          .from('cards')
+          .select('data', { count: 'exact' })
+          .eq('suspended', false)
+          .lte('due', now)
+          .order('due')
+          .order('id')
+          .range(fromRow, toRow),
+      )
 
-      let cards = unwrap<Card>(data)
       if (deckId) cards = cards.filter((c) => c.deckId === deckId)
       if (tags?.length)
         cards = cards.filter((c) => tags.some((t) => c.tags.includes(t)))
 
       cards.sort((a, b) => a.scheduling.due - b.scheduling.due)
+      // `limit` stays in memory rather than becoming a PostgREST limit: deck
+      // and tag filtering still run client-side, so a server-side cut would
+      // discard candidates those filters have never seen.
       return limit ? cards.slice(0, limit) : cards
     },
 
@@ -100,10 +159,11 @@ function createCardRepo(sb: SupabaseClient): CardRepo {
       includeSuspended,
     }: CardQuery): Promise<Card[]> {
       // Text/tag/type filtering happens in memory, identical to Dexie, so both
-      // backends return the same results.
-      const { data, error } = await sb.from('cards').select('data')
-      if (error) throw error
-      let cards = unwrap<Card>(data)
+      // backends return the same results. That is also why the whole candidate
+      // set has to be read first: a match can sit on any page.
+      let cards = await selectAll<Card>((fromRow, toRow) =>
+        sb.from('cards').select('data', { count: 'exact' }).order('id').range(fromRow, toRow),
+      )
 
       if (!includeSuspended) cards = cards.filter((c) => !c.suspended)
       if (deckId) cards = cards.filter((c) => c.deckId === deckId)
@@ -139,31 +199,44 @@ function createReviewRepo(sb: SupabaseClient): ReviewRepo {
       if (error) throw error
     },
     async all() {
-      const { data, error } = await sb.from('review_logs').select('data')
-      if (error) throw error
-      return unwrap<ReviewLog>(data)
+      return selectAll<ReviewLog>((fromRow, toRow) =>
+        sb
+          .from('review_logs')
+          .select('data', { count: 'exact' })
+          .order('id')
+          .range(fromRow, toRow),
+      )
     },
     async clear() {
       const { error } = await sb.from('review_logs').delete().neq('id', '')
       if (error) throw error
     },
     async forCard(cardId: ID) {
-      const { data, error } = await sb
-        .from('review_logs')
-        .select('data')
-        .eq('card_id', cardId)
-        .order('reviewed_at', { ascending: true })
-      if (error) throw error
-      return unwrap<ReviewLog>(data)
+      // reviewed_at ascending is this method's contract; `id` only breaks ties,
+      // so two reviews sharing a timestamp cannot straddle a page boundary and
+      // be dropped or repeated.
+      return selectAll<ReviewLog>((fromRow, toRow) =>
+        sb
+          .from('review_logs')
+          .select('data', { count: 'exact' })
+          .eq('card_id', cardId)
+          .order('reviewed_at', { ascending: true })
+          .order('id')
+          .range(fromRow, toRow),
+      )
     },
     async range(from: Millis, to: Millis) {
-      const { data, error } = await sb
-        .from('review_logs')
-        .select('data')
-        .gte('reviewed_at', from)
-        .lte('reviewed_at', to)
-      if (error) throw error
-      return unwrap<ReviewLog>(data)
+      // Inclusive at both ends, matching Dexie's between(from, to, true, true).
+      return selectAll<ReviewLog>((fromRow, toRow) =>
+        sb
+          .from('review_logs')
+          .select('data', { count: 'exact' })
+          .gte('reviewed_at', from)
+          .lte('reviewed_at', to)
+          .order('reviewed_at')
+          .order('id')
+          .range(fromRow, toRow),
+      )
     },
   }
 }

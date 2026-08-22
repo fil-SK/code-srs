@@ -81,6 +81,30 @@ explicit, user-initiated one-way upload built on the existing backup format and
 `importBackup` merge semantics. It is not an auth concern and should not be
 attached to `AuthProvider`.
 
+## Live verification of Supabase pagination (audit P1-4)
+
+Recorded 2026-08-22 alongside D255-D261. The repository no longer inherits
+PostgREST's per-request row cap: every collection read pages to completion, and
+the loop is correct whether the project's **Max rows** setting is above or below
+the page size it asks for. That is the fix, and it does not depend on any server
+configuration — "set Max rows high" was explicitly rejected as an answer.
+
+What is still open is only evidence. The pagination loop has never run against a
+live PostgREST service: the project's Supabase instance no longer exists
+(`CURRENT_STATE.md` §15), so no real Max rows cap has ever truncated a real
+response here. Every assertion comes from the chainable fake client in
+`src/data/supabase/fakeSupabaseClient.ts`, which models the cap and the
+Content-Range total from the PostgREST contract rather than from an observed
+response.
+
+Closing it means, on the first real project: run `schema.sql`, then `0002`, then
+`0003`; note the project's Max rows value for the record; load one table past
+that value; and confirm a full `reviews.all()` and a backup export both come
+back complete. Two things only a live service can settle are worth checking
+specifically — that `count: 'exact'` is actually returned under RLS on every
+paged request, and that ordering by the generated `due` / `reviewed_at` columns
+performs acceptably at size.
+
 ## Transactional replace-import on Supabase
 
 Deferred by D242 (2026-08-22, audit P1-1). Replace-import is all-or-nothing on
