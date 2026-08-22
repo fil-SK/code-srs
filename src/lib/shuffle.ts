@@ -1,9 +1,8 @@
-// Fisher–Yates shuffle, returning a new array (does not mutate input).
-export function shuffle<T>(input: readonly T[]): T[] {
-  const a = [...input]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
+// Compatibility shim - defines nothing. The canonical implementation lives in
+// packages/core/src/lib/shuffle.ts and is published as @itera/core.
+//
+// It exists so relocating the domain layer did not have to be the same commit
+// as rewriting ~130 files' imports. New code should import from '@itera/core'
+// directly; this layer is transitional.
+
+export { shuffle } from '@itera/core'

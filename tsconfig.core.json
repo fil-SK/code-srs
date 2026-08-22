@@ -10,7 +10,15 @@
 
      No `composite`/`emitDeclarationOnly`: consumers typecheck core's TypeScript
      source directly (package `main`/`types` point at src/index.ts), so the
-     package has no build step, no dist/ and no watch process. */
+     package has no build step, no dist/ and no watch process.
+
+     Tests and test support are excluded *here* and checked by
+     tsconfig.core.test.json instead, which adds `types: ["node"]` (still no
+     DOM). A test may legitimately reach for `process.env.TZ` or
+     `globalThis.crypto`; production core may not, and mixing both into one
+     project would have meant relaxing this file's `types: []` - the exact
+     enforcement being protected. Core tests are still typechecked; they are
+     just checked by the project that is allowed to see Node. */
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.core.tsbuildinfo",
@@ -19,5 +27,6 @@
     "moduleResolution": "bundler",
     "types": []
   },
-  "include": ["packages/core/src"]
+  "include": ["packages/core/src"],
+  "exclude": ["packages/core/src/**/*.test.ts", "packages/core/src/test"]
 }

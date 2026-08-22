@@ -22,15 +22,15 @@
 // Self-graded types (Recall) skip `submitting` entirely: REVEAL goes straight
 // to `feedback` with `result: null`, since there is nothing to validate.
 
-export interface ObjectiveResult {
-  correct: boolean
-  // Partial credit, 0..1, for interaction types where "correct" alone loses
-  // information (Matching's per-relationship fraction, Walkthrough's
-  // per-step fraction). Optional and unused by Recall/Multiple
-  // Choice/Write Code, which stay binary. Added this milestone — see
-  // docs/itera-decisions.md.
-  score?: number
-}
+// `ObjectiveResult` used to be declared here, which made
+// domain/grading/walkthrough.ts import from features/ - a domain module reaching
+// into the UI layer. It is a grading contract, so it now lives with the graders
+// in @itera/core and is re-exported here so every existing
+// `from '@/features/reviewV2/reviewPhase'` import still resolves to the one
+// definition.
+import type { ObjectiveResult } from '@itera/core'
+
+export type { ObjectiveResult }
 
 export type ReviewPhase =
   | { kind: 'presenting' }

@@ -1,0 +1,30 @@
+{
+  /* @itera/core's tests.
+
+     The web app deliberately does not typecheck its tests (tsconfig.app.json
+     excludes *.test.ts(x)), and that historical choice was not copied here:
+     core is the code both platforms run, so a core test that drifted out of the
+     TypeScript build would rot silently and take a shared contract's only
+     regression net with it.
+
+     It exists as a second project rather than as an `include` in
+     tsconfig.core.json because tests need `types: ["node"]` - the DST helper
+     pins `process.env.TZ`, and id.test.ts stubs `globalThis.crypto` - while
+     production core must keep `types: []` so a `process.` reference there fails
+     the build. `lib` still omits DOM in both, so no core file, test or not, may
+     touch a browser global.
+
+     `include` covers the whole package on purpose: the tests import the source,
+     and checking that source a second time under Node types costs a second or
+     two and cannot hide anything (tsconfig.core.json checks it with nothing
+     ambient, and `tsc -b` runs both). No `composite`: core has no emit (D282). */
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.core.test.tsbuildinfo",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"]
+  },
+  "include": ["packages/core/src"]
+}

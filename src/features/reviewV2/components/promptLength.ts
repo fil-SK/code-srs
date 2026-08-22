@@ -1,11 +1,8 @@
-const LONG_PROMPT_CHARACTERS = 280
-const LONG_PROMPT_LINES = 6
+// Compatibility shim - defines nothing. The canonical implementation lives in
+// packages/core/src/interactions/promptLength.ts and is published as @itera/core.
+//
+// It exists so relocating the domain layer did not have to be the same commit
+// as rewriting ~130 files' imports. New code should import from '@itera/core'
+// directly; this layer is transitional.
 
-export function isLongCardPrompt(text: string): boolean {
-  const trimmed = text.trim()
-  if (!trimmed) return false
-
-  const characters = trimmed.replace(/\s+/g, ' ').length
-  const nonEmptyLines = trimmed.split(/\r?\n/).filter((line) => line.trim().length > 0).length
-  return characters > LONG_PROMPT_CHARACTERS || nonEmptyLines > LONG_PROMPT_LINES
-}
+export { isLongCardPrompt } from '@itera/core'

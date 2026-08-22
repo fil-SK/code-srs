@@ -1,49 +1,10 @@
-import type { Repository } from '@/data/repository'
-import type { Card } from '@/types/card'
-import { newId } from '@/lib/id'
-import { initialSchedulingState } from '@/domain/scheduling/state'
-import {
-  writeCodeFormToRecord,
-  type WriteCodeEnvelope,
-  type WriteCodeFormState,
-} from './writeCodeForm'
+// Compatibility shim - defines nothing. The canonical implementation lives in
+// packages/core/src/domain/cards/saveWriteCodeCard.ts and is published as @itera/core.
+//
+// It exists so relocating the domain layer did not have to be the same commit
+// as rewriting ~130 files' imports. New code should import from '@itera/core'
+// directly; this layer is transitional.
 
-export type SaveWriteCodeCardTarget =
-  | { kind: 'new' }
-  | { kind: 'existing'; record: Card }
+export { saveWriteCodeCard } from '@itera/core'
 
-// The Write Code editor's single save path, covering both entry points: a
-// brand-new card, or editing an existing one (which reuses its
-// id/createdAt/scheduling/suspended so ReviewLog history for that id stays
-// intact). Pulled out of the hook so this logic is directly unit-testable
-// against a repository without React Query plumbing.
-export async function saveWriteCodeCard(
-  repo: Repository,
-  form: WriteCodeFormState,
-  target: SaveWriteCodeCardTarget,
-  now: number = Date.now(),
-): Promise<Card> {
-  let envelope: WriteCodeEnvelope
-
-  if (target.kind === 'new') {
-    envelope = {
-      id: newId(),
-      createdAt: now,
-      suspended: false,
-      scheduling: initialSchedulingState(now),
-    }
-  } else {
-    envelope = {
-      id: target.record.id,
-      createdAt: target.record.createdAt,
-      suspended: target.record.suspended,
-      scheduling: target.record.scheduling,
-      order: target.record.order,
-    }
-  }
-
-  const record = writeCodeFormToRecord(form, envelope, now)
-  await repo.cards.put(record)
-
-  return record
-}
+export type { SaveWriteCodeCardTarget } from '@itera/core'

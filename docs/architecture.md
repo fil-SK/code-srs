@@ -20,7 +20,7 @@ Five constraints shape everything below. Breaking one of them is a decision, not
 
 1. **Local-first.** Card authoring, review, scheduling, search, history, import/export and previews all work with **no network and no account**. Dexie/IndexedDB is the default backend; Supabase is opt-in cloud sync, never a prerequisite. AI is optional external tooling (see [`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)) and never a runtime dependency.
 2. **One storage seam.** The entire app depends on the `Repository` interface and never learns which backend is live.
-3. **Layer separation.** `UI components → hooks (application/use-case) → domain models + scheduler boundary → repositories`. FSRS math, persistence and UI state must not share a component. Everything under `src/domain/` is pure and React-free.
+3. **Layer separation.** `UI components → hooks (application/use-case) → domain models + scheduler boundary → repositories`. FSRS math, persistence and UI state must not share a component. Everything under `packages/core/src/domain/` is pure and React-free.
 4. **History is immutable and separate.** `ReviewLog` is an append-mostly record that no feature rewrites. Scheduling currently lives *on* the `Card` rather than in its own entity: the half-built `CardState` extraction was removed with the card-model convergence because nothing read it. Separating content from learning state again is a real requirement for any future shared or purchased deck, but it is then a deliberate schema change with a migration, not an assumption the code already satisfies.
 5. **No destructive data change without an explicit, dry-runnable cutover.** Additive first; removal is always a separate, later, separately-decided step.
 
@@ -38,19 +38,40 @@ packages/core/        @itera/core - the shared engine
 
 **`@itera/core` is the one shared package.** It is consumed as **TypeScript source**: its `main`/`types` both point at `src/index.ts`, there is no build step, no `dist/`, no emitted declarations and no watch process. Resolution is the ordinary npm workspace symlink (`node_modules/@itera/core` -> `packages/core`), which is why TypeScript needs no `paths` entry for it and why **neither `vite.config.ts` nor `vitest.config.ts` contains an alias for it**. One mechanism, not three; see `itera-decisions.md` D282/D283.
 
-Its manifest has **no `exports` map and exactly one entry point**, so nothing may import a path inside the package. Today it owns the entity contracts only:
+Its manifest has **no `exports` map and exactly one entry point**, so nothing may import a path inside the package. It owns the entity contracts, the storage contract, and the whole platform-neutral domain engine:
 
 ```
 packages/core/
 └── src/
-    ├── index.ts      the single public barrel (re-exports types AND values)
-    └── types/        card.ts (the one Card model), common.ts, deck.ts,
-                      draft.ts, review.ts, roadmap.ts
+    ├── index.ts       the single public barrel (re-exports types AND values)
+    ├── types/         card.ts (the one Card model), common.ts, deck.ts,
+    │                  draft.ts, review.ts, roadmap.ts, index.ts (types-only barrel)
+    ├── data/
+    │   └── repository.ts   the Repository interface + CardQuery/DueQuery/
+    │                       WorkspaceSnapshot/WriteGuarantee/ReviewCommit/ReviewRevert.
+    │                       Contract only - no backend lives in core.
+    ├── lib/           id.ts (newId), shuffle.ts
+    ├── domain/        cards/ decks/ grading/ io/ migration/ review/
+    │                  scheduling/ search/ stats/ - the 40 modules that used to
+    │                  be src/domain/, moved verbatim
+    ├── library/       collectionTree.ts (Collection derivation), deckMark.ts, sortDecks.ts
+    ├── interactions/  matchingBadgeGeometry.ts, promptLength.ts
+    ├── charts/        retentionChartPath.ts
+    ├── today/         greetings.ts
+    ├── test/          timeZone.ts - the Europe/Belgrade DST pin, test support only
+    └── platformNeutrality.test.ts   the structural guard (below)
 ```
 
-`tsconfig.core.json` compiles it with `lib: ["ES2023"]` and `types: []` - **no DOM, no Node ambient globals** - so a `window.`, `document.` or `process.` reference in core fails `npx tsc -b --force` rather than surfacing later as a React Native runtime error. That is the mechanical enforcement of platform neutrality, and it is the reason browser-specific code must not be moved here (D287).
+`packages/core` declares exactly one dependency, `ts-fsrs`, and imports nothing else outside itself. The dependency list is not decoration: `platformNeutrality.test.ts` reads the manifest and fails on an import of anything it does not declare, so a package that happens to resolve off the workspace root's hoisted `node_modules` cannot silently become a Metro failure later. The same test fails on a browser token (`window`, `document`, `localStorage`, `indexedDB`, `import.meta`, `navigator`, `react-router`, `react-dom`, `dexie`, `@codemirror`, `dnd-kit`, `lucide-react`, `tailwind`) and on any import from the web app's `@/` alias.
 
-`src/types/*` remains as a **transitional re-export shim** so that relocating the contracts did not have to be the same commit as rewriting ~145 files' imports. It defines nothing; `src/types/coreSurface.test.ts` asserts at runtime that the shim and the package are the same module instance, so a redefinition cannot pass review unnoticed (D285/D286). **New code should import from `@itera/core` directly.**
+`tsconfig.core.json` compiles core's **source** with `lib: ["ES2023"]` and `types: []` - **no DOM, no Node ambient globals** - so a `window.`, `document.` or `process.` reference in core fails `npx tsc -b --force` rather than surfacing later as a React Native runtime error. That is the mechanical enforcement of platform neutrality, and it is the reason browser-specific code must not be moved here (D287). Two consequences worth knowing before writing core code:
+
+- **`newId()` cannot name the `crypto` global.** It declares the two members it uses (`randomUUID?`, `getRandomValues`) structurally and reads them off `globalThis` **at call time**. Runtime behaviour is unchanged: native `randomUUID()` when available, the secure `getRandomValues` v4 fallback otherwise. Native supplies `react-native-get-random-values` at its own entry point; core imports no polyfill.
+- **`URLSearchParams` is not available either**, which is why `selectionToSearchParams`/`selectionFromSearchParams` stayed in the web `src/features/library/collectionTree.ts` while every Collection *derivation* function moved. The `LibrarySelection` type is core's, so there is still one definition of what a selection is.
+
+**Core's tests are typechecked**, unlike the web app's. `tsconfig.core.test.json` is a second project over the same directory that adds `types: ["node"]` (still no DOM) so a test may use `process.env.TZ` or `globalThis.crypto`, while `tsconfig.core.json` excludes `*.test.ts` and `src/test/` and keeps `types: []`. Never merge the two: the empty `types` is the enforcement. `tsc -b` runs both, so core source is checked with nothing ambient *and* with Node.
+
+`src/types/*` remains as a **transitional re-export shim** so that relocating the contracts did not have to be the same commit as rewriting ~145 files' imports, and the domain move added the same kind of shim at `src/domain/*`, `src/lib/{id,shuffle}.ts` and `src/data/repository.ts`. They define nothing; `src/types/coreSurface.test.ts` asserts at runtime that the shim and the package are the same module instance - by **reference equality**, extended past `richText` to `computeStreak`, `reviewState`, `computeRetention`, `localDayIndex`, `gradeMatching`, `parseBackup`, `newId` and `leafDecks` - so a redefinition cannot pass review unnoticed (D285/D286). **New code should import from `@itera/core` directly.**
 
 ## Repository map
 
@@ -63,35 +84,32 @@ src/
 │   ├── ui/       Button, Field, FloatingPanel, dialogs — shared, generic UI primitives
 │   ├── code/     CodeView, CodeEditor, LazyCodeView, LazyCodeEditor, languageExtensions/languageList
 │   └── text/     RichText, InlineText (the markdown-subset renderer)
-├── data/         repository.ts (the interface), index.ts (getRepository), dexie/, supabase/, backup.ts
-├── domain/       pure logic, no React:
-│   ├── cards/        factory.ts (createCard)
-│   ├── decks/        tree.ts (nesting/flattening helpers)
-│   ├── grading/      one grade*/matches* fn per v2 interaction type
-│   ├── io/           backup.ts (versioned envelope), validateBackupEntities.ts
-│   │                 (structural card/deck/review-log validation), backupFixtures.ts
-│   ├── migration/    runner.ts (the contract; nothing implements it today)
-│   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, state.ts, format.ts
-│   ├── search/       searchableText.ts
-│   └── stats/        calendarDay.ts, dateRange.ts, progressMetrics.ts, streak.ts,
-│                      learned.ts, todayMetrics.ts, deckMetrics.ts, cardDeckIndex.ts,
-│                      reviewHistory.ts
+├── data/         index.ts (getRepository), dexie/, supabase/, backup.ts,
+│                 repository.ts — a re-export shim; the interface itself is core's
+├── domain/       re-export shims ONLY. The pure logic moved to
+│                 packages/core/src/domain/ (cards, decks, grading, io, migration,
+│                 review, scheduling, search, stats). Each file here re-exports the
+│                 named symbols from @itera/core and defines nothing. The six
+│                 save*Card.test.ts files are the exception: they are real tests that
+│                 drive a Dexie-backed getRepository(), so they stayed in the web app.
 ├── features/
 │   ├── cards/          the authoring UI — see "Card creation" below
 │   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
 │   │                   production ReviewSessionScreen, so they cannot drift from /review
-│   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (UI-only Collection derivation over Deck.parentId; the leaf/parent split itself lives in domain/decks/tree.ts), DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, sortDecks, useIsWideLibrary)
+│   ├── library/        LibraryBrowserPage (/decks), LibraryCollectionView, LibraryDeckPage (/decks/:id), collectionTree.ts (re-exports core's Collection derivation and adds the two URLSearchParams helpers that stayed web-side), DeckRow, DeckSettings, FilterMenu, shared/ (LibraryShell, CollectionNav, CollectionNavDrawer, CardTable, CardListFooter, DeckMark, MasteryRing, MeterBar, EmptyState, Stat, RowFilterDropdown, useIsWideLibrary; sortDecks and deckMark are shims over core)
 │   ├── preview/        PreviewPage — flip through cards, no scheduling impact (renders the v2 shell)
 │   ├── review/         ReviewPage, useSessionQueue.ts (the queue snapshot), ReviewSessionV2
 │   ├── reviewV2/        the actual v2 Review shell — see "Card v2 / migration" below
 │   ├── roadmaps/       RoadmapsPage, RoadmapEditorPage, RoadmapCanvas (hand-built SVG) — hidden from primary nav, route/data preserved
 │   ├── settings/       AccountSettingsPage, SettingsNav, settingsSections.ts, sections/*
 │   └── today/          TodayPage (the only fetcher), SuggestedSessionHero, MomentumPanel,
-│                        ContinueLearningList, PaceChart, AdjustSessionDialog, greetings.ts —
+│                        ContinueLearningList, PaceChart, AdjustSessionDialog, greetings.ts (a shim over core) —
 │                        renders through the shared AppShell, no separate TodayShell
 ├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
-├── lib/          cn.ts (clsx+twMerge), id.ts (newId), lazyWithRetry.ts
-├── test/         setup.ts (global Vitest setup)
+├── lib/          cn.ts (clsx+twMerge), lazyWithRetry.ts, download.ts;
+│                 id.ts and shuffle.ts are re-export shims over @itera/core
+├── test/         setup.ts (global Vitest setup). The DST timezone pin moved to
+│                 packages/core/src/test/timeZone.ts with the tests that use it.
 └── types/        re-export shim over @itera/core (see Workspace layout above);
                  the canonical definitions live in packages/core/src/types/
 ```
@@ -100,7 +118,7 @@ src/
 
 ## Storage seam
 
-`src/data/repository.ts` defines the one interface the entire app depends on:
+`packages/core/src/data/repository.ts` defines the one interface the entire app depends on:
 
 ```ts
 export interface CrudRepo<T> {
@@ -227,24 +245,24 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 | Entity | Type file | Repo | Dexie table | Supabase table | Tree/graph helpers |
 |---|---|---|---|---|---|
 | **Card** | `packages/core/src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |
-| **Deck** | `packages/core/src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
+| **Deck** | `packages/core/src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `packages/core/src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
 | **Draft** | `packages/core/src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
 | **ReviewLog** | `packages/core/src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Required `stateBefore` records the pre-grade scheduling state; existing `state` is the resulting post-grade state. Carries optional `dueAfter`; rows written before that older field existed can still render an em dash. |
 | **Roadmap** | `packages/core/src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
 
-A `ReviewLog` stores only a `cardId`, so deck attribution always joins through the current card. Retention series and Review history use `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`; Deck Performance takes current cards directly because it also needs active-card, Learned and Due membership. A moved card follows its current deck, while a deleted card's log remains in Review history but contributes to no current deck row.
+A `ReviewLog` stores only a `cardId`, so deck attribution always joins through the current card. Retention series and Review history use `packages/core/src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`; Deck Performance takes current cards directly because it also needs active-card, Learned and Due membership. A moved card follows its current deck, while a deleted card's log remains in Review history but contributes to no current deck row.
 
-Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
+Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `packages/core/src/domain/io/backup.ts`'s `BackupData`/`src/data/backup.ts`.
 
-**Backup format** (`src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `BACKUP_APP_MARKER` is the constant behind that `app` field: it is a **legacy backup-format identifier, not the product name**, and must stay `'code-srs'` so files exported before the Itera rebrand still import — do not rename it during branding cleanup.
+**Backup format** (`packages/core/src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `BACKUP_APP_MARKER` is the constant behind that `app` field: it is a **legacy backup-format identifier, not the product name**, and must stay `'code-srs'` so files exported before the Itera rebrand still import — do not rename it during branding cleanup.
 
 **Import safety runs in three layers, and none may be skipped:**
 
-1. `parseBackup()` (pure) rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2), then calls `src/domain/io/validateBackupEntities.ts` (`assertValidDecks`, `assertValidCards`, `assertValidReviewLogs`, `assertValidDrafts`, `assertValidRoadmaps`) — **every array the import writes**, since an entity IndexedDB cannot key is enough to fail a write. The hand-written validator checks each card's current shape and every ReviewLog field needed by analytics, including required `stateBefore`, post-grade `state`, rating, timestamps and before/after scheduling numbers. A version-2 backup with empty `reviewLogs` remains valid; a nonempty prototype backup lacking `stateBefore` is rejected. `roadmaps` stays optional so older v2 exports still import, but a present one must be a list and every element is validated. Roadmap node/edge ids and `node.deckId` are checked for presence but deliberately **not** resolved, for the same reason `deck.parentId` is not. The envelope version stays 2 because the array already existed and the AI-card workflow exports it empty; stricter validation of an already-required shape is not a format change.
+1. `parseBackup()` (pure) rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2), then calls `packages/core/src/domain/io/validateBackupEntities.ts` (`assertValidDecks`, `assertValidCards`, `assertValidReviewLogs`, `assertValidDrafts`, `assertValidRoadmaps`) — **every array the import writes**, since an entity IndexedDB cannot key is enough to fail a write. The hand-written validator checks each card's current shape and every ReviewLog field needed by analytics, including required `stateBefore`, post-grade `state`, rating, timestamps and before/after scheduling numbers. A version-2 backup with empty `reviewLogs` remains valid; a nonempty prototype backup lacking `stateBefore` is rejected. `roadmaps` stays optional so older v2 exports still import, but a present one must be a list and every element is validated. Roadmap node/edge ids and `node.deckId` are checked for presence but deliberately **not** resolved, for the same reason `deck.parentId` is not. The envelope version stays 2 because the array already existed and the AI-card workflow exports it empty; stricter validation of an already-required shape is not a format change.
 2. `importBackup()` (`src/data/backup.ts`) applies the one rule that needs repository state: every `card.deckId` must resolve. Under **Merge** that means the file's decks *plus* the decks already in the library; under **Replace**, the file's decks only, since replace discards the library first. It runs **before** any write. `deck.parentId` is deliberately *not* checked referentially — `useDeleteDeck` does not reparent children and `collectionTree.ts` already tolerates a dangling parent, so rejecting one would refuse a legitimate export.
-3. The write itself goes through `repo.replaceAll()` / `repo.mergeAll()`, because validation alone can never prevent a quota, IndexedDB or network failure mid-write. On **Dexie** both are one `db.transaction('rw', …)` over all five stores: if anything inside rejects, IndexedDB rolls the whole scope back — including the clears — so a failed replace cannot leave an empty, partial or mixed workspace. Snapshot-and-restore was rejected as the alternative because the restore can fail too. On **Supabase** there is no transaction spanning PostgREST requests, so `replaceAll` is **refused outright** rather than emulated, and the Import / Export section hides the mode (`canReplaceImport()`); Merge remains available and is additive. Failure copy is decided in one place, `src/domain/io/importFailure.ts` (`ImportFailure` + `describeImportFailure`), which never surfaces raw IndexedDB text and never claims data survived unless the backend guaranteed it. See the 2026-08-22 entry in `itera-decisions.md`. Review persistence follows the same three ideas — one seam operation, a real transaction per backend, and copy that reads the guarantee rather than assuming it (`src/domain/review/reviewPersistFailure.ts`) — but it is **not** the same operation, and it reports `reviewGuarantee`, not `importGuarantee`. Cloud Replace stays refused; only review persistence got a database function.
+3. The write itself goes through `repo.replaceAll()` / `repo.mergeAll()`, because validation alone can never prevent a quota, IndexedDB or network failure mid-write. On **Dexie** both are one `db.transaction('rw', …)` over all five stores: if anything inside rejects, IndexedDB rolls the whole scope back — including the clears — so a failed replace cannot leave an empty, partial or mixed workspace. Snapshot-and-restore was rejected as the alternative because the restore can fail too. On **Supabase** there is no transaction spanning PostgREST requests, so `replaceAll` is **refused outright** rather than emulated, and the Import / Export section hides the mode (`canReplaceImport()`); Merge remains available and is additive. Failure copy is decided in one place, `packages/core/src/domain/io/importFailure.ts` (`ImportFailure` + `describeImportFailure`), which never surfaces raw IndexedDB text and never claims data survived unless the backend guaranteed it. See the 2026-08-22 entry in `itera-decisions.md`. Review persistence follows the same three ideas — one seam operation, a real transaction per backend, and copy that reads the guarantee rather than assuming it (`packages/core/src/domain/review/reviewPersistFailure.ts`) — but it is **not** the same operation, and it reports `reviewGuarantee`, not `importGuarantee`. Cloud Replace stays refused; only review persistence got a database function.
 
-`src/domain/io/backupFixtures.ts` holds a valid deck, a valid draft, roadmap and ReviewLog, plus one valid card of every interaction type. It lives in a non-test module on purpose: `tsconfig.app.json` excludes `*.test.ts`, so a fixture written inline in a test can rot silently (`src/data/backup.test.ts` carried a deleted v1 card shape for exactly that reason).
+`packages/core/src/domain/io/backupFixtures.ts` holds a valid deck, a valid draft, roadmap and ReviewLog, plus one valid card of every interaction type. It lives in a non-test module on purpose: `tsconfig.app.json` excludes `*.test.ts`, so a fixture written inline in a **web** test can rot silently (`src/data/backup.test.ts` carried a deleted v1 card shape for exactly that reason; four `domain/cards` tests turned out to be asserting on functions deleted with the v1 card model, passing only because `.toThrow()` catches a `ReferenceError`, and were removed when core's tests entered the TypeScript build). Core's own tests are typechecked, so the hazard there is closed.
 
 ---
 
@@ -266,12 +284,12 @@ Content and scheduling live together on the one record. `interaction` is a discr
 Compiler-enforced touchpoints first; the build fails until each is handled.
 
 1. `packages/core/src/types/card.ts` — add the interface and a member to the `CardInteraction` union. It is exported automatically: `packages/core/src/index.ts` re-exports the whole module.
-2. `src/domain/search/searchableText.ts` — add a `case`; its `never` guard fails the build until you do.
+2. `packages/core/src/domain/search/searchableText.ts` — add a `case`; its `never` guard fails the build until you do.
 3. `src/features/reviewV2/interactions/<type>/` — a `View` component plus an `index.ts` exporting an `InteractionDefinition`.
 4. `src/features/reviewV2/interactions/registry.ts` — register it. **The registry is `Partial<...>`, so a missing entry throws at runtime rather than failing the build** — this is the one step the compiler does not enforce.
-5. `src/domain/grading/<type>.ts` — a grader, if the type auto-grades (Recall does not; it is self-graded).
-6. `src/domain/cards/<type>Form.ts` — form state, `<type>FormToRecord`, `cardRecordTo<Type>Form`, `validate<Type>Form`, `empty<Type>Form`.
-7. `src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `src/hooks/useCards.ts`.
+5. `packages/core/src/domain/grading/<type>.ts` — a grader, if the type auto-grades (Recall does not; it is self-graded).
+6. `packages/core/src/domain/cards/<type>Form.ts` — form state, `<type>FormToRecord`, `cardRecordTo<Type>Form`, `validate<Type>Form`, `empty<Type>Form`.
+7. `packages/core/src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `src/hooks/useCards.ts`.
 8. `src/features/cards/` — `<Type>EditorShell`, `<Type>Fields`, `<Type>LivePreview`, a `CardTypeChooser` tile, and arms in `CardCreatePage` + `CardEditEntry`.
 9. `src/features/cards/shared/interactionTypeMeta.ts` — label, icon and tile colour (`features/library/shared/rowVisuals.ts` reads this for table rows).
 
@@ -307,14 +325,14 @@ Local mode is gated: a fresh browser lands on `/login` and must sign in or conti
 
 ## Scheduling
 
-`src/domain/scheduling/scheduler.ts` wraps `ts-fsrs` (`const scheduler = fsrs()`, default params, including short-term learning steps):
+`packages/core/src/domain/scheduling/scheduler.ts` wraps `ts-fsrs` (`const scheduler = fsrs()`, default params, including short-term learning steps):
 
 - `toCardInput`/`fromCard` — bidirectional adapters between the app's own `SchedulingState` (persisted on `Card.scheduling`; `Millis` numbers, app field names) and `ts-fsrs`'s native `Card`/`CardInput` (`Date` objects, snake_case).
 - `reviewState(state, rating, now?)` — applies one grade via `scheduler.next(...)`. The single function that actually advances FSRS state.
 - `previewStates(state, now?)` — `scheduler.repeat(...)`, returning what each of the 4 ratings would produce, for labeling the rating buttons with resulting intervals.
 - `buildReviewLog(params)` — the single log-construction choke point. It records required `stateBefore: before.state`, preserves `state: after.state`, and assembles the remaining before/after fields from the same explicit pair (not FSRS's internal log).
 
-`src/domain/scheduling/reviewService.ts` is the `ReviewService` boundary spec §9.5 requires ("UI never calls scheduler.ts directly, it goes through this service"):
+`packages/core/src/domain/scheduling/reviewService.ts` is the `ReviewService` boundary spec §9.5 requires ("UI never calls scheduler.ts directly, it goes through this service"):
 
 ```ts
 interface ReviewService {
@@ -327,7 +345,7 @@ interface ReviewService {
 
 `usePersistReviewResult` (used by `ReviewSessionV2` via `reviewService.submit`) takes an already-computed `{after, log}`, applies it to the card once (`updatedAt` comes from `log.reviewedAt`, not `Date.now()`, so the graded card is byte-identical on every attempt), and hands the pair to `repo.commitReview`. Nothing below `reviewService` computes FSRS, so the session, the hook and the store cannot diverge on the math.
 
-**A review result is computed once and committed once.** The Review shell keeps that one result and drives an explicit phase machine around the write: `rating` while it is in flight, `transitioning` only once it committed, and `persistFailed` when it rejected. Retrying dispatches `RETRY_PERSIST` and re-sends the same object — same log id, same scheduling — so a retry can never produce a second review or a second scheduling advance. Failure copy comes from `src/domain/review/reviewPersistFailure.ts` and states only what `repo.reviewGuarantee` actually promises; raw backend error text is never rendered.
+**A review result is computed once and committed once.** The Review shell keeps that one result and drives an explicit phase machine around the write: `rating` while it is in flight, `transitioning` only once it committed, and `persistFailed` when it rejected. Retrying dispatches `RETRY_PERSIST` and re-sends the same object — same log id, same scheduling — so a retry can never produce a second review or a second scheduling advance. Failure copy comes from `packages/core/src/domain/review/reviewPersistFailure.ts` and states only what `repo.reviewGuarantee` actually promises; raw backend error text is never rendered.
 
 ---
 
@@ -338,7 +356,7 @@ interface ReviewService {
 | Parameter | Meaning |
 |---|---|
 | *(none)* | every due card |
-| `?deck=<id>` | that deck **and its whole subtree** (`subtreeIds`, `src/domain/decks/tree.ts`) |
+| `?deck=<id>` | that deck **and its whole subtree** (`subtreeIds`, `packages/core/src/domain/decks/tree.ts`) |
 | `?limit=<n>` | the first `n` cards of the resolved queue. Parsed by `resolveSessionLimit` (`domain/stats/todayMetrics.ts`): a positive integer, or **no limit**. `0`, negatives, decimals, text and out-of-range values are ignored rather than rejected, so a malformed URL still starts a usable session. |
 
 A later plain `/review` is the default queue again — Today's Adjust session dialog builds these URLs and stores nothing.
@@ -363,7 +381,7 @@ Session identity is deliberately transient and per-mount. The `StudySession` typ
 
 ## Today's statistics boundary
 
-Today computes nothing in a component. `TodayPage` is the only fetcher on the route (`useSearchCards`, `useDueCards`, `useDecks`, `useReviewLogs`, with `now` snapshotted once per mount so it agrees with `/review`); it memoizes calls into `src/domain/stats/` and passes plain props to four presentational panels. `UI → hooks → pure domain → Repository`, with no shortcuts.
+Today computes nothing in a component. `TodayPage` is the only fetcher on the route (`useSearchCards`, `useDueCards`, `useDecks`, `useReviewLogs`, with `now` snapshotted once per mount so it agrees with `/review`); it memoizes calls into `packages/core/src/domain/stats/` and passes plain props to four presentational panels. `UI → hooks → pure domain → Repository`, with no shortcuts.
 
 - **`streak.ts`** — `computeStreak(logs, now)` → `{ current, best, activeToday }`. **The one streak definition in the product**, consumed by Today's Momentum panel, the top-nav `StreakBadge` and Progress's KPI tile (through `computeKpis`), so the three can present it differently but cannot disagree. Grace behavior: studying through yesterday keeps the streak alive until a full local calendar day is actually missed. Days are compared as calendar-day indices from `calendarDay.ts`, never as elapsed milliseconds, so a run that crosses a DST transition is unbroken.
 - **`todayMetrics.ts`** — `summarizeDueQueue`, `estimateSessionMinutes`, `nextDueAt`, `computePaceSeries`, `buildContinueLearning`, `selectNextMilestone`, `resolveSessionLimit`. Pure, `now` always explicit; learned deck summaries call the canonical helper rather than counting separately.
@@ -384,7 +402,7 @@ Progress Deck Performance lists leaf decks only. Every row's Learned, Due and Re
 
 ## Migration machinery
 
-`src/domain/migration/runner.ts`'s `MigrationRunner` is the contract every data migration must satisfy — `dryRun()`, an idempotent `apply()`, and `rollbackInstructions()`, with `MigrationReport` carrying `beforeCounts`/`afterCounts`/`changed`/`skipped`/`orphans`/`duplicates`/`warnings`.
+`packages/core/src/domain/migration/runner.ts`'s `MigrationRunner` is the contract every data migration must satisfy — `dryRun()`, an idempotent `apply()`, and `rollbackInstructions()`, with `MigrationReport` carrying `beforeCounts`/`afterCounts`/`changed`/`skipped`/`orphans`/`duplicates`/`warnings`.
 
 **Nothing implements it today.** The two migrations that did — `migrateCard` (the on-read v1 adapter) and the `CardState` backfill — were both retired when the card model converged and `CardState` was removed. The contract is kept because the next real migration (the Collection/Deck split) must meet it, and because `CLAUDE.md` names it as the required mechanism. **No migration may run lazily on read**; that exemption existed only for `migrateCard`.
 
@@ -422,8 +440,8 @@ Each type contributes **one** `View` component (not separate Question/Answer com
 
 - `CardTypeChooser.tsx` — all six interaction tiles, all enabled (`ENABLED` array); Walkthrough was the last to lose its "Coming soon" caption.
 - Six thin type shells — `RecallEditorShell.tsx` / `MultipleChoiceEditorShell.tsx` / `WriteCodeEditorShell.tsx` / `OrderingEditorShell.tsx` / `MatchingEditorShell.tsx` / `WalkthroughEditorShell.tsx` — each own only form state, validation/save wiring, their `*Fields.tsx`, and their `*LivePreview.tsx`. Shared composition lives in `CardEditorShell.tsx`; shared Deck/Tags controls live in `CardOrganizeFields.tsx`. The create route wraps them in the locked `add-new-card.png` composition: a top Cancel/divider/**New card** row, one 880px bordered surface, the persistent six-tile chooser, numbered Card content and Organize sections with inset rules, then Save/Cancel in the footer. Recall is selected on first paint. Desktop preview is an opt-in 420px drawer that temporarily expands the surface to 1120px; below `useIsWideEditor`'s ~980px breakpoint, Editor/Preview tabs replace it. The preview still renders the production interaction view through the existing `*LivePreview` components, never a hand-authored lookalike. Walkthrough retains its step-aware preview path.
-- `src/domain/cards/{recallForm,multipleChoiceForm,writeCodeForm,orderingForm,matchingForm,walkthroughForm}.ts` — pure conversions between each editor's form state and a `Card`, in both directions (a throwaway preview card, and a persisted record). Each also exports its own `validate*Form` pure validator (e.g. `validateWalkthroughForm` checks shared prompt/scenario, per-step response requirements, and highlighted-range well-formedness against the shared code's actual line count). Walkthrough conversion also round-trips optional per-step tip/explanation fields; missing fields from older blobs hydrate as empty editor values.
-- `src/domain/cards/{saveRecallCard,…}.ts` — the single save path per type (unit-tested directly against a repository, independent of the `useSave*Card` hooks that wrap them), each covering two targets: `new` (fresh card) and `existing` (update in place, reusing id/createdAt/scheduling/suspended so `ReviewLog` history keeps resolving).
+- `packages/core/src/domain/cards/{recallForm,multipleChoiceForm,writeCodeForm,orderingForm,matchingForm,walkthroughForm}.ts` — pure conversions between each editor's form state and a `Card`, in both directions (a throwaway preview card, and a persisted record). Each also exports its own `validate*Form` pure validator (e.g. `validateWalkthroughForm` checks shared prompt/scenario, per-step response requirements, and highlighted-range well-formedness against the shared code's actual line count). Walkthrough conversion also round-trips optional per-step tip/explanation fields; missing fields from older blobs hydrate as empty editor values.
+- `packages/core/src/domain/cards/{saveRecallCard,…}.ts` — the single save path per type (unit-tested directly against a repository, independent of the `useSave*Card` hooks that wrap them), each covering two targets: `new` (fresh card) and `existing` (update in place, reusing id/createdAt/scheduling/suspended so `ReviewLog` history keeps resolving).
 - `CardEditEntry.tsx` (the element at `cards/:id/edit`) — one switch on `interaction.type` picking the matching editor shell. The switch covers every union member, so the fallthrough is a "Card not found" state reachable only for an id that resolves to no card.
 - `CardStudyPreviewPage.tsx` (`cards/:id/study`) — the Deck row's primary click target: the same non-committing `ReviewSessionScreen` embedding as the editor's live preview, dispatched by `card.interaction.type` (`getInteractionDefinition(card.interaction.type)`), seeded from the real record but a fresh scheduling baseline.
   (`CardRowV2.tsx` and `shared/InteractionTypeBadge.tsx` were deleted with the unrouted `DeckDetailPage` that was their only consumer; `features/library/shared/CardTable.tsx` renders both card kinds over a unified `RowMeta`. There is still no separate read-only card detail screen — `CardDetailPage` was built, then removed after hands-on use showed it was just an extra click in front of Study/Edit/overflow; see `itera-decisions.md`.)
@@ -433,7 +451,7 @@ Every card authored here is in the real due queue: `ReviewPage`/`useDueCards` re
 
 ---
 
-## Grading (`src/domain/grading/`)
+## Grading (`packages/core/src/domain/grading/`)
 
 One pure function per v2 auto-gradable interaction type, each with a colocated `*.test.ts`. Recall has no grading file — it's self-graded (reveal, then rate yourself).
 
@@ -457,7 +475,7 @@ Component tests are the exception: opt into a DOM per-file with `// @vitest-envi
 
 ## Things that coexist on purpose (not stale code)
 
-- **Computation and persistence are separate on purpose**: `src/domain/scheduling/reviewService.ts` computes the result, `src/hooks/useReview.ts`'s `usePersistReviewResult` writes it, and the hook never recomputes what `submit` already did. The third path that used to sit beside them, `useGradeCard`, was deleted with the P2-B pass: nothing imported it, and it carried its own FSRS computation plus the two-write sequence the seam operation replaced.
+- **Computation and persistence are separate on purpose**: `packages/core/src/domain/scheduling/reviewService.ts` computes the result, `src/hooks/useReview.ts`'s `usePersistReviewResult` writes it, and the hook never recomputes what `submit` already did. The third path that used to sit beside them, `useGradeCard`, was deleted with the P2-B pass: nothing imported it, and it carried its own FSRS computation plus the two-write sequence the seam operation replaced.
 - **`src/hooks/useDrafts.ts` with no caller**: the drafts UI was deleted but the `Draft` entity, its Dexie store and its backup array were kept, so the hook is retained rather than removed. Deleting it is the first step toward dropping data that backup files still round-trip.
 
 The earlier entries here are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `src/components/ui/FlipCard.tsx` were deleted on 2026-08-17, and the **two card models** converged into one on 2026-08-18. There is one Review surface, one flip primitive, and one card model.

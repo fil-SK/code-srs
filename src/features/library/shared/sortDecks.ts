@@ -1,23 +1,10 @@
-import type { Deck } from '@/types'
-import { metricsFor, type DeckMetrics } from '@/domain/stats/deckMetrics'
-import type { ID } from '@/types'
+// Compatibility shim - defines nothing. The canonical implementation lives in
+// packages/core/src/library/sortDecks.ts and is published as @itera/core.
+//
+// It exists so relocating the domain layer did not have to be the same commit
+// as rewriting ~130 files' imports. New code should import from '@itera/core'
+// directly; this layer is transitional.
 
-export type DeckSortKey = 'name' | 'due' | 'lastStudied' | 'cardCount'
+export { sortDecks } from '@itera/core'
 
-// Shared by the root Library browser and a Collection's Decks section - both
-// sort the same shape of leaf-deck list against the same metrics map.
-export function sortDecks(decks: Deck[], sort: DeckSortKey, metrics: Map<ID, DeckMetrics>): Deck[] {
-  const copy = [...decks]
-  switch (sort) {
-    case 'name':
-      return copy.sort((a, b) => a.name.localeCompare(b.name))
-    case 'due':
-      return copy.sort((a, b) => metricsFor(metrics, b.id).dueCount - metricsFor(metrics, a.id).dueCount)
-    case 'lastStudied':
-      return copy.sort(
-        (a, b) => (metricsFor(metrics, b.id).lastStudied ?? 0) - (metricsFor(metrics, a.id).lastStudied ?? 0),
-      )
-    case 'cardCount':
-      return copy.sort((a, b) => metricsFor(metrics, b.id).cardCount - metricsFor(metrics, a.id).cardCount)
-  }
-}
+export type { DeckSortKey } from '@itera/core'
