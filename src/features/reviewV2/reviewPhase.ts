@@ -9,9 +9,14 @@
 //   feedback      -> answer/result + explanation + rating controls are all
 //                    visible together (matches spec §10.1's actual layout —
 //                    rating is not a separate screen from the explanation).
-//   rating        -> the learner has picked a grade and it is being recorded
-//                    (persistence is genuinely async, so this is a real,
-//                    observable phase, not just decorative).
+//   rating        -> the learner has picked a grade, the result is computed,
+//                    and it is being written (persistence is genuinely async,
+//                    so this is a real, observable phase, not just decorative).
+//   persistFailed -> the write rejected. A distinct state on purpose: a failure
+//                    used to land in `transitioning` alongside success, which
+//                    is how a failed grade could look like a finished one and
+//                    strand the session (audit §10 item 5). The computed result
+//                    is untouched and the same one is retried from here.
 //   transitioning -> grade recorded, about to advance to the next card.
 //
 // Self-graded types (Recall) skip `submitting` entirely: REVEAL goes straight
@@ -32,6 +37,7 @@ export type ReviewPhase =
   | { kind: 'submitting' }
   | { kind: 'feedback'; result: ObjectiveResult | null }
   | { kind: 'rating' }
+  | { kind: 'persistFailed' }
   | { kind: 'transitioning' }
 
 export type ReviewPhaseAction =
@@ -39,7 +45,9 @@ export type ReviewPhaseAction =
   | { type: 'SUBMIT_RESPONSE' } // auto-graded: presenting -> submitting
   | { type: 'RESPONSE_VALIDATED'; result: ObjectiveResult | null } // submitting -> feedback
   | { type: 'CHOOSE_RATING' } // feedback -> rating
-  | { type: 'GRADED' } // rating -> transitioning
+  | { type: 'GRADED' } // rating -> transitioning (the write committed)
+  | { type: 'PERSIST_FAILED' } // rating -> persistFailed (the write rejected)
+  | { type: 'RETRY_PERSIST' } // persistFailed -> rating (same result, written again)
   | { type: 'RESET' } // -> presenting (new card)
 
 export const initialReviewPhase: ReviewPhase = { kind: 'presenting' }
@@ -63,6 +71,13 @@ export function reviewPhaseReducer(
       return state.kind === 'feedback' ? { kind: 'rating' } : state
     case 'GRADED':
       return state.kind === 'rating' ? { kind: 'transitioning' } : state
+    case 'PERSIST_FAILED':
+      return state.kind === 'rating' ? { kind: 'persistFailed' } : state
+    // Guarded like every other transition, which is what makes a second retry
+    // click while the first is still in flight a no-op rather than a second
+    // write of the same result.
+    case 'RETRY_PERSIST':
+      return state.kind === 'persistFailed' ? { kind: 'rating' } : state
     case 'RESET':
       return initialReviewPhase
     default: {

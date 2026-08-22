@@ -101,13 +101,21 @@ export interface Repository {
 
   // Whole-workspace import. Only the backend knows whether five stores can be
   // written as one unit, so the operation and its guarantee both live here.
-  readonly importGuarantee: 'transactional' | 'best-effort'
+  readonly importGuarantee: WriteGuarantee
   replaceAll(snapshot: WorkspaceSnapshot): Promise<void>
   mergeAll(snapshot: WorkspaceSnapshot): Promise<void>
+
+  // One graded review: the card carrying its advanced scheduling, and the
+  // immutable log describing that transition. Same reasoning, two stores.
+  readonly reviewGuarantee: WriteGuarantee
+  commitReview(commit: ReviewCommit): Promise<void>   // { card, log }
+  revertReview(revert: ReviewRevert): Promise<void>   // { card, logId } — undo
 }
 ```
 
-`replaceAll`/`mergeAll` are the **only** multi-store write on the seam, added because import is the only operation that touches every store at once and must not be able to half-apply. `importGuarantee` is a capability, not a backend name: `'transactional'` means a failure leaves storage exactly as it was, `'best-effort'` means the write is a sequence that can stop halfway. Callers report the difference rather than assuming one, and no UI code branches on which backend is live.
+`replaceAll`/`mergeAll` and `commitReview`/`revertReview` are the **only** multi-store writes on the seam. Both pairs are there for the same reason: the operation must not be able to half-apply, and only a backend knows whether it can promise that. `WriteGuarantee` is a capability, not a backend name: `'transactional'` means a failure leaves storage exactly as it was, `'best-effort'` means the write is a sequence that can stop halfway. Callers report the difference rather than assuming one, and no UI code branches on which backend is live.
+
+Review persistence earned its place here after the audit found the alternative: a hook doing `cards.put(graded)` then `reviews.append(log)` as two operations. Whichever order those run in, a failure between them leaves the workspace inconsistent — a card scheduled forward with no history row is invisible to Progress, retention, streak and the heat map, all of which derive from the logs. `commitReview` takes the result `reviewService` already computed; **no backend recomputes FSRS and none mints an id**, which is what lets a failed write be retried by re-sending the identical `ReviewCommit`. Current guarantees: Dexie one `db.transaction('rw', cards, reviewLogs, …)`; Supabase the `commit_review`/`revert_review` database functions (`supabase/migrations/0004_review_commit_rpc.sql`), `security invoker` so the existing `own rows` policies remain the ownership check, both statements inside PostgREST's per-request transaction. The Supabase side has not been verified against a live database.
 
 Timestamp bookkeeping (`createdAt`/`updatedAt`) is deliberately kept **out** of this layer — it lives in the hooks (see below).
 
@@ -179,7 +187,7 @@ Parameterized keys (`cardsDue`, `cardsSearch`) embed the query object itself, so
 | `useCards.ts` | `useCard`, `useDueCards`, `useSearchCards`, `useCreateCard`, `useSaveCard`, `useDeleteCard`, `useMoveCard`, `useReorderCards`, plus one `useSave*Card` per interaction type | `useSaveCard` also toggles `suspended`. `useMoveCard` drops manual `order` on move. `useReorderCards` bulk-assigns sequential `order`, preserving `updatedAt` (reordering isn't an edit). |
 | `useDecks.ts` | `useDecks`, `useCreateDeck`, `useSaveDeck`, `useDeleteDeck` | Plain CRUD over `CrudRepo<Deck>`. |
 | `useDrafts.ts` | `useDrafts`, `useDraft`, `useCreateDraft`, `useDeleteDraft` | `useDrafts` sorts newest-first client-side. |
-| `useReview.ts` | `useReviewLogs`, `useGradeCard`, `usePersistReviewResult`, `useUndoGrade` | The grading write path — see "Scheduling" below. |
+| `useReview.ts` | `useReviewLogs`, `usePersistReviewResult`, `useUndoGrade`, `reviewWriteGuarantee` | The grading write path — see "Scheduling" below. Both mutations go through one seam operation; neither recomputes FSRS. |
 | `useRoadmaps.ts` | `useRoadmaps`, `useRoadmap`, `useCreateRoadmap`, `useSaveRoadmap`, `useDeleteRoadmap` | `useSaveRoadmap` is the **only** hook using `qc.setQueryData` for an optimistic write, alongside invalidation. |
 | `useBackup.ts` | `useImportBackup` | `onSuccess: () => qc.invalidateQueries()` with no key filter — appropriate after a bulk multi-entity replace/merge. |
 
@@ -207,7 +215,7 @@ Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `vers
 
 1. `parseBackup()` (pure) rejects a version newer than the app supports **and** a version below `MIN_SUPPORTED_BACKUP_VERSION` (2), then calls `src/domain/io/validateBackupEntities.ts` (`assertValidDecks`, `assertValidCards`, `assertValidReviewLogs`, `assertValidDrafts`, `assertValidRoadmaps`) — **every array the import writes**, since an entity IndexedDB cannot key is enough to fail a write. The hand-written validator checks each card's current shape and every ReviewLog field needed by analytics, including required `stateBefore`, post-grade `state`, rating, timestamps and before/after scheduling numbers. A version-2 backup with empty `reviewLogs` remains valid; a nonempty prototype backup lacking `stateBefore` is rejected. `roadmaps` stays optional so older v2 exports still import, but a present one must be a list and every element is validated. Roadmap node/edge ids and `node.deckId` are checked for presence but deliberately **not** resolved, for the same reason `deck.parentId` is not. The envelope version stays 2 because the array already existed and the AI-card workflow exports it empty; stricter validation of an already-required shape is not a format change.
 2. `importBackup()` (`src/data/backup.ts`) applies the one rule that needs repository state: every `card.deckId` must resolve. Under **Merge** that means the file's decks *plus* the decks already in the library; under **Replace**, the file's decks only, since replace discards the library first. It runs **before** any write. `deck.parentId` is deliberately *not* checked referentially — `useDeleteDeck` does not reparent children and `collectionTree.ts` already tolerates a dangling parent, so rejecting one would refuse a legitimate export.
-3. The write itself goes through `repo.replaceAll()` / `repo.mergeAll()`, because validation alone can never prevent a quota, IndexedDB or network failure mid-write. On **Dexie** both are one `db.transaction('rw', …)` over all five stores: if anything inside rejects, IndexedDB rolls the whole scope back — including the clears — so a failed replace cannot leave an empty, partial or mixed workspace. Snapshot-and-restore was rejected as the alternative because the restore can fail too. On **Supabase** there is no transaction spanning PostgREST requests, so `replaceAll` is **refused outright** rather than emulated, and the Import / Export section hides the mode (`canReplaceImport()`); Merge remains available and is additive. Failure copy is decided in one place, `src/domain/io/importFailure.ts` (`ImportFailure` + `describeImportFailure`), which never surfaces raw IndexedDB text and never claims data survived unless the backend guaranteed it. See the 2026-08-22 entry in `itera-decisions.md`.
+3. The write itself goes through `repo.replaceAll()` / `repo.mergeAll()`, because validation alone can never prevent a quota, IndexedDB or network failure mid-write. On **Dexie** both are one `db.transaction('rw', …)` over all five stores: if anything inside rejects, IndexedDB rolls the whole scope back — including the clears — so a failed replace cannot leave an empty, partial or mixed workspace. Snapshot-and-restore was rejected as the alternative because the restore can fail too. On **Supabase** there is no transaction spanning PostgREST requests, so `replaceAll` is **refused outright** rather than emulated, and the Import / Export section hides the mode (`canReplaceImport()`); Merge remains available and is additive. Failure copy is decided in one place, `src/domain/io/importFailure.ts` (`ImportFailure` + `describeImportFailure`), which never surfaces raw IndexedDB text and never claims data survived unless the backend guaranteed it. See the 2026-08-22 entry in `itera-decisions.md`. Review persistence follows the same three ideas — one seam operation, a real transaction per backend, and copy that reads the guarantee rather than assuming it (`src/domain/review/reviewPersistFailure.ts`) — but it is **not** the same operation, and it reports `reviewGuarantee`, not `importGuarantee`. Cloud Replace stays refused; only review persistence got a database function.
 
 `src/domain/io/backupFixtures.ts` holds a valid deck, a valid draft, roadmap and ReviewLog, plus one valid card of every interaction type. It lives in a non-test module on purpose: `tsconfig.app.json` excludes `*.test.ts`, so a fixture written inline in a test can rot silently (`src/data/backup.test.ts` carried a deleted v1 card shape for exactly that reason).
 
@@ -288,9 +296,11 @@ interface ReviewService {
 }
 ```
 
-`submit()` computes `{after, log}` and returns them **without persisting anything** — callers persist the result themselves.
+`submit()` computes `{after, log}` and returns them **without persisting anything** — callers persist the result themselves. That separation is load bearing rather than incidental: the returned result is immutable, so a write that fails is retried by re-sending it, not by grading again.
 
-`usePersistReviewResult` (used by `ReviewSessionV2` via `reviewService.submit`) takes an already-computed `{after, log}` rather than recomputing it, so the session and the persistence hook can't silently diverge on the FSRS math.
+`usePersistReviewResult` (used by `ReviewSessionV2` via `reviewService.submit`) takes an already-computed `{after, log}`, applies it to the card once (`updatedAt` comes from `log.reviewedAt`, not `Date.now()`, so the graded card is byte-identical on every attempt), and hands the pair to `repo.commitReview`. Nothing below `reviewService` computes FSRS, so the session, the hook and the store cannot diverge on the math.
+
+**A review result is computed once and committed once.** The Review shell keeps that one result and drives an explicit phase machine around the write: `rating` while it is in flight, `transitioning` only once it committed, and `persistFailed` when it rejected. Retrying dispatches `RETRY_PERSIST` and re-sends the same object — same log id, same scheduling — so a retry can never produce a second review or a second scheduling advance. Failure copy comes from `src/domain/review/reviewPersistFailure.ts` and states only what `repo.reviewGuarantee` actually promises; raw backend error text is never rendered.
 
 ---
 
@@ -420,7 +430,7 @@ Component tests are the exception: opt into a DOM per-file with `// @vitest-envi
 
 ## Things that coexist on purpose (not stale code)
 
-- **Two grade-persistence paths**: `src/hooks/useReview.ts`'s `usePersistReviewResult` (what production calls) alongside `src/domain/scheduling/reviewService.ts` (which computes the result). The hook deliberately does not recompute what `reviewService.submit` already did.
+- **Computation and persistence are separate on purpose**: `src/domain/scheduling/reviewService.ts` computes the result, `src/hooks/useReview.ts`'s `usePersistReviewResult` writes it, and the hook never recomputes what `submit` already did. The third path that used to sit beside them, `useGradeCard`, was deleted with the P2-B pass: nothing imported it, and it carried its own FSRS computation plus the two-write sequence the seam operation replaced.
 - **`src/hooks/useDrafts.ts` with no caller**: the drafts UI was deleted but the `Draft` entity, its Dexie store and its backup array were kept, so the hook is retained rather than removed. Deleting it is the first step toward dropping data that backup files still round-trip.
 
 The earlier entries here are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `src/components/ui/FlipCard.tsx` were deleted on 2026-08-17, and the **two card models** converged into one on 2026-08-18. There is one Review surface, one flip primitive, and one card model.

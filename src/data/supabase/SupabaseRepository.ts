@@ -8,8 +8,11 @@ import type {
   DueQuery,
   ImportGuarantee,
   Repository,
+  ReviewCommit,
   ReviewRepo,
+  ReviewRevert,
   WorkspaceSnapshot,
+  WriteGuarantee,
 } from '../repository'
 import { ImportFailure } from '@/domain/io/importFailure'
 import { getSupabase } from './client'
@@ -255,12 +258,47 @@ export class SupabaseRepository implements Repository {
   // too. This backend says so rather than pretending otherwise.
   readonly importGuarantee: ImportGuarantee = 'best-effort'
 
+  // Grading is the exception, and only because a database-side function exists
+  // for it. `commit_review` / `revert_review` (supabase/migrations/
+  // 0004_review_commit_rpc.sql) each run their two statements inside PostgREST's
+  // per-request transaction, so this is a real guarantee rather than a hopeful
+  // sequence. The functions are SECURITY INVOKER, so RLS still decides which
+  // rows the caller may touch.
+  readonly reviewGuarantee: WriteGuarantee = 'transactional'
+
+  private readonly sb: SupabaseClient
+
   constructor(sb: SupabaseClient = getSupabase()) {
+    this.sb = sb
     this.cards = createCardRepo(sb)
     this.decks = crud<Deck>(sb, 'decks')
     this.drafts = crud<Draft>(sb, 'drafts')
     this.reviews = createReviewRepo(sb)
     this.roadmaps = crud<Roadmap>(sb, 'roadmaps')
+  }
+
+  // Deliberately not `cards.put()` followed by `reviews.append()`: those are two
+  // requests and therefore two commits, which is the inconsistency this whole
+  // operation exists to prevent (audit §10 item 6). There is no client-side
+  // fallback to that sequence - if the function is missing from the database the
+  // call fails loudly rather than half-writing.
+  async commitReview({ card, log }: ReviewCommit): Promise<void> {
+    const { error } = await this.sb.rpc('commit_review', {
+      p_card_id: card.id,
+      p_card: card,
+      p_log_id: log.id,
+      p_log: log,
+    })
+    if (error) throw error
+  }
+
+  async revertReview({ card, logId }: ReviewRevert): Promise<void> {
+    const { error } = await this.sb.rpc('revert_review', {
+      p_card_id: card.id,
+      p_card: card,
+      p_log_id: logId,
+    })
+    if (error) throw error
   }
 
   // Refused, not attempted. Clearing the cloud workspace before uploads that

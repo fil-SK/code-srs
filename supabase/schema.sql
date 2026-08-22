@@ -122,3 +122,91 @@ create policy "own rows" on public.roadmaps
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 grant select, insert, update, delete on public.roadmaps to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Atomic review persistence. Grading writes two tables - the card's advanced
+-- scheduling and its immutable log - and a card scheduled forward without its
+-- log is unreconstructible, because every stat derives from the logs. Two
+-- PostgREST requests are two committed statements, so the pair runs inside one
+-- function instead. Undo is the exact inverse. Added after the initial schema;
+-- this whole block is a self-contained migration you can paste and run on an
+-- existing database (see supabase/migrations/0004_review_commit_rpc.sql, whose
+-- comments carry the full reasoning).
+--
+-- SECURITY INVOKER: the body runs as the caller, so the `own rows` policies
+-- above are the ownership check - an update against someone else's card
+-- matches zero rows and raises. search_path is pinned. No FSRS is computed
+-- here; the already-computed entities are stored verbatim.
+-- ---------------------------------------------------------------------------
+create or replace function public.commit_review(
+  p_card_id text,
+  p_card    jsonb,
+  p_log_id  text,
+  p_log     jsonb
+) returns void
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if p_card ->> 'id' is distinct from p_card_id then
+    raise exception 'card payload id % does not match row key %',
+      p_card ->> 'id', p_card_id;
+  end if;
+  if p_log ->> 'id' is distinct from p_log_id then
+    raise exception 'review log payload id % does not match row key %',
+      p_log ->> 'id', p_log_id;
+  end if;
+
+  update public.cards set data = p_card where id = p_card_id;
+  if not found then
+    raise exception 'card % is not available to this user', p_card_id;
+  end if;
+
+  -- Idempotent on retry: re-sending an identical result after a lost response
+  -- must not write a second log or advance scheduling twice.
+  insert into public.review_logs (id, data)
+  values (p_log_id, p_log)
+  on conflict (id) do nothing;
+
+  -- The conflict is resolved by the primary-key index, which RLS does not
+  -- filter. This RLS-scoped select proves the log now present is ours.
+  if not exists (select 1 from public.review_logs where id = p_log_id) then
+    raise exception 'review log % is not available to this user', p_log_id;
+  end if;
+end;
+$$;
+
+create or replace function public.revert_review(
+  p_card_id text,
+  p_card    jsonb,
+  p_log_id  text
+) returns void
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if p_card ->> 'id' is distinct from p_card_id then
+    raise exception 'card payload id % does not match row key %',
+      p_card ->> 'id', p_card_id;
+  end if;
+
+  update public.cards set data = p_card where id = p_card_id;
+  if not found then
+    raise exception 'card % is not available to this user', p_card_id;
+  end if;
+
+  -- Not checked for a match: an undo retried after the delete committed must
+  -- succeed rather than fail on a row that is already gone.
+  delete from public.review_logs where id = p_log_id;
+end;
+$$;
+
+-- Postgres grants execute on a new function to PUBLIC by default; revoke that
+-- first so only signed-in users can call these, matching the table grants
+-- above (anon is intentionally left out).
+revoke all on function public.commit_review(text, jsonb, text, jsonb) from public;
+revoke all on function public.revert_review(text, jsonb, text) from public;
+grant execute on function public.commit_review(text, jsonb, text, jsonb) to authenticated;
+grant execute on function public.revert_review(text, jsonb, text) to authenticated;

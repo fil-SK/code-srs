@@ -10,13 +10,11 @@ import { buildReviewLog, previewStates, reviewState } from './scheduler'
 // service's public shape stable means the Review UI built against it would not
 // need to change, only this file's internals.
 //
-// This service does not persist anything today. There is no Card
-// repository yet (explicitly out of scope for this milestone — no schema
-// changes), so callers (the design-preview routes) pass in whatever
-// SchedulingState they have (a fresh baseline for a fixture) and get back the
-// computed next state + log; nothing is written anywhere. Once Card has a
-// real backing store, `submit` starts persisting `after` and appending `log`,
-// with no change to the function's signature.
+// `submit` computes and returns; it never persists. That separation is load
+// bearing: the result it returns is immutable and is what gets written, so a
+// failed write is retried by re-sending the same result rather than grading
+// again. Persisting it is one storage operation (`Repository.commitReview`),
+// reached through `usePersistReviewResult`. Nothing downstream recomputes FSRS.
 
 export interface SubmitReviewCommand {
   cardId: string

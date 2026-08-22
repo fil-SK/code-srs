@@ -8,6 +8,7 @@ import { ReviewTopBar } from './components/ReviewTopBar'
 import { TipPanel } from './components/TipPanel'
 import { ExplanationPanel } from './components/ExplanationPanel'
 import { RatingControls } from './components/RatingControls'
+import { ReviewPersistError } from './components/ReviewPersistError'
 import { initialReviewPhase, reviewPhaseReducer } from './reviewPhase'
 import type { InteractionDefinition, InteractionResponse } from './interactions/types'
 
@@ -50,17 +51,22 @@ export function ReviewSessionScreen<T extends InteractionType>({
   onNext,
   previousDisabled,
   nextDisabled,
+  persistErrorMessage = "We couldn't save this review. Try again.",
 }: {
   card: Card & { interaction: Extract<CardInteraction, { type: T }> }
   definition: InteractionDefinition<T>
   current: number
   total: number
   onExit: () => void
-  // No Card repository exists yet (see reviewService.ts) — callers supply
-  // whatever SchedulingState they have; the preview routes pass a fresh
-  // baseline since there is nothing real to persist against yet.
+  // The card's real, current scheduling in a production session. The preview
+  // routes pass a fresh baseline instead, because they omit `onGraded` and
+  // therefore persist nothing.
   schedulingBefore: SchedulingState
-  onGraded?: (result: SubmitReviewResult) => void
+  // Persists the computed result. Awaited: a rejection is what puts this screen
+  // into `persistFailed` rather than advancing the session, so a caller that
+  // swallows its own errors will look like success here. Omitted by the preview
+  // routes, which record nothing.
+  onGraded?: (result: SubmitReviewResult) => Promise<void> | void
   // Purely additive, optional seed for `response`'s initial value. Every
   // existing caller omits it (identical behavior to before). Added so a
   // multi-step type's editor preview (Walkthrough) can jump straight into an
@@ -84,11 +90,21 @@ export function ReviewSessionScreen<T extends InteractionType>({
   onNext?: () => void
   previousDisabled?: boolean
   nextDisabled?: boolean
+  // Domain copy for a failed write, from describeReviewCommitFailure. The
+  // default is only for callers that persist nothing and can never show it;
+  // raw backend text must never be passed here.
+  persistErrorMessage?: string
 }) {
   const [phase, dispatch] = useReducer(reviewPhaseReducer, initialReviewPhase)
   const [response, setResponse] = useState<InteractionResponse>(initialResponse)
   const [presentedAt] = useState(() => Date.now())
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
+  // The one immutable result this card's grade produced. Kept so a failed write
+  // can be retried by re-sending exactly this, rather than calling
+  // reviewService.submit again - a second submit would recompute FSRS (from the
+  // same `before`, but at a later `now`) and mint a second ReviewLog id, which
+  // is how a retry turns into a second review.
+  const [pendingResult, setPendingResult] = useState<SubmitReviewResult | null>(null)
 
   const ratingIntervals = useMemo(() => {
     const preview = reviewService.previewNextStates(schedulingBefore, presentedAt)
@@ -143,6 +159,22 @@ export function ReviewSessionScreen<T extends InteractionType>({
     dispatch({ type: 'RESPONSE_VALIDATED', result })
   }
 
+  // GRADED is dispatched only once the write actually committed. It used to fire
+  // before persistence, with `onGraded` left un-awaited, so a rejection became an
+  // unhandled promise rejection while the session sat in `transitioning` with the
+  // ratings disabled and nothing to tell the learner (audit §10 item 5).
+  async function persist(result: SubmitReviewResult) {
+    try {
+      await onGraded?.(result)
+      dispatch({ type: 'GRADED' })
+    } catch {
+      // The reason is deliberately dropped here: the caller owns both the
+      // user-facing copy and any logging, and backend error text must not reach
+      // the screen.
+      dispatch({ type: 'PERSIST_FAILED' })
+    }
+  }
+
   async function rate(rating: Rating) {
     if (phase.kind !== 'feedback') return
     setSelectedRating(rating)
@@ -155,8 +187,16 @@ export function ReviewSessionScreen<T extends InteractionType>({
       autoGraded,
       durationMs: Date.now() - presentedAt,
     })
-    dispatch({ type: 'GRADED' })
-    onGraded?.(result)
+    setPendingResult(result)
+    await persist(result)
+  }
+
+  async function retryPersist() {
+    if (phase.kind !== 'persistFailed' || !pendingResult) return
+    // Dispatched synchronously before the await, exactly as rate() does, so the
+    // reducer's source-state guard makes a second click a no-op.
+    dispatch({ type: 'RETRY_PERSIST' })
+    await persist(pendingResult)
   }
 
   useEffect(() => {
@@ -261,18 +301,29 @@ export function ReviewSessionScreen<T extends InteractionType>({
         {showExplanation && <ExplanationPanel text={card.explanation?.value} />}
 
         {showRating && !hideRating && (
-          <RatingControls
-            selected={selectedRating}
-            suggested={suggested}
-            intervals={ratingIntervals}
-            disabled={phase.kind !== 'feedback'}
-            onRate={rate}
-            note={
-              phase.kind === 'transitioning'
-                ? 'Preview only — nothing recorded.'
-                : undefined
-            }
-          />
+          <>
+            <RatingControls
+              selected={selectedRating}
+              suggested={suggested}
+              intervals={ratingIntervals}
+              // Stays disabled through rating, persistFailed and transitioning:
+              // once a grade is chosen its result is fixed, and a retry re-sends
+              // that result rather than offering a fresh grade.
+              disabled={phase.kind !== 'feedback'}
+              onRate={rate}
+              // Only for callers that persist nothing. This used to show during
+              // `transitioning`, which in a real session is exactly the window
+              // in which the grade is being recorded.
+              note={
+                onGraded == null && phase.kind === 'transitioning'
+                  ? 'Preview only — nothing recorded.'
+                  : undefined
+              }
+            />
+            {phase.kind === 'persistFailed' && (
+              <ReviewPersistError message={persistErrorMessage} onRetry={retryPersist} />
+            )}
+          </>
         )}
       </div>
     </div>

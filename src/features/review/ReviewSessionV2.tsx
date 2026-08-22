@@ -6,7 +6,15 @@ import type { SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
 import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
 import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
-import { usePersistReviewResult, useUndoGrade } from '@/hooks/useReview'
+import {
+  reviewWriteGuarantee,
+  usePersistReviewResult,
+  useUndoGrade,
+} from '@/hooks/useReview'
+import {
+  describeReviewCommitFailure,
+  describeReviewUndoFailure,
+} from '@/domain/review/reviewPersistFailure'
 
 interface UndoEntry {
   card: Card // the pre-grade card, restored verbatim on undo
@@ -19,12 +27,15 @@ interface UndoEntry {
 //
 // `schedulingBefore` is the real, current value from the snapshot queue, and
 // grading persists back onto the card's own embedded scheduling via
-// `usePersistReviewResult`.
+// `usePersistReviewResult` - one atomic write of the graded card and its log
+// together. This component owns the queue position and the undo stack, so it
+// only advances either once that write has actually committed.
 export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   const navigate = useNavigate()
   const [queue] = useState(() => cards)
   const [index, setIndex] = useState(0)
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([])
+  const [undoError, setUndoError] = useState<string | null>(null)
   const persist = usePersistReviewResult()
   const undo = useUndoGrade()
 
@@ -32,7 +43,13 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   const isComplete = index >= queue.length
   const busy = persist.isPending || undo.isPending
 
+  // Rejects on purpose. ReviewSessionScreen awaits this and shows its own retry
+  // state on a rejection, so swallowing the error here would put the session
+  // back in the stuck-and-silent behaviour this replaced. Nothing below the
+  // await runs on failure, so a failed write can neither advance the queue nor
+  // push an undo entry for a review that was never recorded.
   async function handleGraded(original: Card, result: SubmitReviewResult) {
+    if (busy) return
     await persist.mutateAsync({ card: original, after: result.after, log: result.log })
     setUndoStack((s) => [...s, { card: original, logId: result.log.id }])
     setIndex((i) => i + 1)
@@ -41,7 +58,15 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   async function undoLast() {
     const entry = undoStack[undoStack.length - 1]
     if (!entry || busy) return
-    await undo.mutateAsync(entry)
+    setUndoError(null)
+    try {
+      await undo.mutateAsync(entry)
+    } catch {
+      // revertReview is atomic, so the grade is still fully recorded. Leaving
+      // the stack and the index alone keeps the UI matching what is stored.
+      setUndoError(describeReviewUndoFailure(reviewWriteGuarantee()))
+      return
+    }
     setUndoStack((s) => s.slice(0, -1))
     setIndex((i) => Math.max(0, i - 1))
   }
@@ -54,6 +79,11 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
           <p className="mt-2 text-sm text-itera-muted">
             Reviewed {queue.length} card{queue.length === 1 ? '' : 's'}.
           </p>
+          {undoError && (
+            <p role="alert" className="mt-3 text-sm leading-relaxed text-itera-error">
+              {undoError}
+            </p>
+          )}
           <div className="mt-5 flex justify-center gap-2.5">
             {undoStack.length > 0 && (
               <button
@@ -90,6 +120,7 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
         onExit={() => navigate('/')}
         schedulingBefore={current.scheduling}
         onGraded={(result) => handleGraded(current, result)}
+        persistErrorMessage={describeReviewCommitFailure(reviewWriteGuarantee())}
       />
     </IteraSurface>
   )

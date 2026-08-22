@@ -42,14 +42,17 @@ export interface FakeOrder {
 // One request the repository actually issued, recorded after it was awaited so
 // the record is the finished query, not a half-built chain.
 export interface FakeRequest {
+  // For an rpc call this is the function name rather than a table: an RPC is
+  // one request like any other, and callers assert on `requests` as a whole.
   table: string
-  op: 'select' | 'upsert' | 'insert' | 'delete'
+  op: 'select' | 'upsert' | 'insert' | 'delete' | 'rpc'
   filters: FakeFilter[]
   order: FakeOrder[]
   range?: { from: number; to: number }
   count?: 'exact'
   single?: boolean
   rows?: unknown
+  args?: Record<string, unknown>
 }
 
 export interface FakeSupabaseOptions {
@@ -64,6 +67,10 @@ export interface FakeSupabaseOptions {
   // 1-based index of the select request that fails, the way a network or RLS
   // error arrives mid-pagination.
   failSelectAt?: number
+  // Make every call to this function reject, the way a raised exception inside
+  // the function or a lost connection arrives. The transaction it models never
+  // half-applies, so no row changes.
+  failRpc?: string
 }
 
 export interface FakeSupabase {
@@ -266,7 +273,66 @@ export function fakeSupabase(options: FakeSupabaseOptions = {}): FakeSupabase {
     return { eq: apply('eq'), neq: apply('neq') }
   }
 
+  // supabase/schema.sql's commit_review / revert_review, modelled at the level
+  // that matters to the repository: both statements apply, or neither does.
+  // The functions are plpgsql inside PostgREST's per-request transaction, so a
+  // raise anywhere in the body rolls the whole call back - which is exactly the
+  // guarantee SupabaseRepository advertises and therefore the one worth faking.
+  function runRpc(fn: string, args: Record<string, unknown>) {
+    requests.push({ table: fn, op: 'rpc', filters: [], order: [], args })
+
+    if (options.failRpc === fn) {
+      return Promise.resolve({
+        data: null,
+        error: postgrestError(`${fn} failed`),
+        status: 500,
+        statusText: 'Internal Server Error',
+      })
+    }
+
+    const cards = rowsOf('cards')
+    const logs = rowsOf('review_logs')
+    const cardId = args.p_card_id as string
+    const logId = args.p_log_id as string
+    const cardAt = cards.findIndex((r) => r.id === cardId)
+
+    // `update ... where id = $1` matching zero rows, which the function turns
+    // into a raise. Nothing is written, mirroring the rollback.
+    if (cardAt < 0) {
+      return Promise.resolve({
+        data: null,
+        error: postgrestError(`card ${cardId} is not available to this user`),
+        status: 400,
+        statusText: 'Bad Request',
+      })
+    }
+
+    if (fn === 'commit_review') {
+      cards[cardAt] = toRow('cards', cardId, args.p_card)
+      // `on conflict (id) do nothing` - re-committing an identical result is a
+      // no-op rather than a duplicate row.
+      if (!logs.some((r) => r.id === logId)) {
+        logs.push(toRow('review_logs', logId, args.p_log))
+      }
+    } else if (fn === 'revert_review') {
+      cards[cardAt] = toRow('cards', cardId, args.p_card)
+      const kept = logs.filter((r) => r.id !== logId)
+      logs.length = 0
+      logs.push(...kept)
+    } else {
+      return Promise.resolve({
+        data: null,
+        error: postgrestError(`function public.${fn} does not exist`),
+        status: 404,
+        statusText: 'Not Found',
+      })
+    }
+
+    return Promise.resolve({ data: null, error: null, status: 204, statusText: 'No Content' })
+  }
+
   const sb = {
+    rpc: (fn: string, args: Record<string, unknown>) => runRpc(fn, args),
     from(table: string) {
       return {
         select(_columns?: string, opts?: { count?: 'exact' }) {
@@ -292,6 +358,18 @@ export function fakeSupabase(options: FakeSupabaseOptions = {}): FakeSupabase {
 // for "did it page, and did it page correctly".
 export function selectsOn(requests: FakeRequest[], table: string): FakeRequest[] {
   return requests.filter((r) => r.op === 'select' && r.table === table)
+}
+
+// The rpc calls the repository issued, in order.
+export function rpcCalls(requests: FakeRequest[], fn?: string): FakeRequest[] {
+  return requests.filter((r) => r.op === 'rpc' && (fn === undefined || r.table === fn))
+}
+
+// Every request that wrote through the table API. A review commit must produce
+// none of these: a surviving cards.upsert + review_logs.insert pair would be the
+// non-atomic sequence the RPC replaced.
+export function tableWrites(requests: FakeRequest[]): FakeRequest[] {
+  return requests.filter((r) => r.op === 'upsert' || r.op === 'insert' || r.op === 'delete')
 }
 
 export function rangesOf(requests: FakeRequest[], table: string): (string | undefined)[] {

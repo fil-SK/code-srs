@@ -8,8 +8,11 @@ import type {
   DueQuery,
   ImportGuarantee,
   Repository,
+  ReviewCommit,
   ReviewRepo,
+  ReviewRevert,
   WorkspaceSnapshot,
+  WriteGuarantee,
 } from '../repository'
 import { AppDB, db as defaultDb } from './db'
 
@@ -113,6 +116,9 @@ export class DexieRepository implements Repository {
   // this backend can promise them without any compensating restore logic.
   readonly importGuarantee: ImportGuarantee = 'transactional'
 
+  // Same mechanism, narrower scope: cards + reviewLogs in one rw transaction.
+  readonly reviewGuarantee: WriteGuarantee = 'transactional'
+
   private readonly db: AppDB
 
   constructor(db: AppDB = defaultDb) {
@@ -150,6 +156,33 @@ export class DexieRepository implements Repository {
 
   mergeAll(snapshot: WorkspaceSnapshot): Promise<void> {
     return this.workspaceWrite(() => this.writeSnapshot(snapshot))
+  }
+
+  // Grading's transaction. Only the two stores a review touches are in scope -
+  // a narrower scope than workspaceWrite's five, because a review must not
+  // block or be blocked by writes to decks, drafts or roadmaps.
+  private reviewWrite(scope: () => Promise<void>): Promise<void> {
+    const { cards, reviewLogs } = this.db
+    return this.db.transaction('rw', cards, reviewLogs, scope)
+  }
+
+  commitReview({ card, log }: ReviewCommit): Promise<void> {
+    return this.reviewWrite(async () => {
+      await this.db.cards.put(card)
+      // `add`, not `put`: a log id that already exists means the caller is
+      // re-committing something already recorded, and aborting the whole scope
+      // is the honest answer. Snapshot-and-restore was never considered here
+      // for the same reason it was rejected for import - the restore is itself
+      // a write that can fail (audit P1-1, D241).
+      await this.db.reviewLogs.add(log)
+    })
+  }
+
+  revertReview({ card, logId }: ReviewRevert): Promise<void> {
+    return this.reviewWrite(async () => {
+      await this.db.cards.put(card)
+      await this.db.reviewLogs.delete(logId)
+    })
   }
 
   private async writeSnapshot(snapshot: WorkspaceSnapshot): Promise<void> {

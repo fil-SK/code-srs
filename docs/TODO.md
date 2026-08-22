@@ -105,6 +105,49 @@ specifically — that `count: 'exact'` is actually returned under RLS on every
 paged request, and that ordering by the generated `due` / `reviewed_at` columns
 performs acceptably at size.
 
+## Live verification of the review-commit RPC on Supabase (audit §10 item 6)
+
+Recorded 2026-08-22 alongside D270-D280. Review persistence is atomic on both
+backends now, but the two guarantees rest on different evidence. Dexie's is a
+real `db.transaction('rw', cards, reviewLogs, ...)` exercised by nine tests over
+fake-indexeddb, including forced failures at either store, and proven
+non-vacuous by removing the transaction and watching them fail. Supabase's rests
+on `supabase/migrations/0004_review_commit_rpc.sql`, which **has never run
+against a live Postgres** - the project's instance no longer exists
+(`CURRENT_STATE.md` §15). The client-side tests assert the RPC contract against
+the fake client in `src/data/supabase/fakeSupabaseClient.ts`, which models the
+function's semantics from the SQL rather than from an observed response.
+
+Run `schema.sql`, then `0002`, `0003` and `0004`, then confirm on the first real
+project:
+
+1. **A grade writes both rows.** One `commit_review` call advances the card's
+   `data`/`due` and inserts the log; `/progress/history` shows exactly one new
+   entry.
+2. **A failure writes neither.** Feed a log missing `stateBefore`: the
+   `review_logs_state_before_check` constraint must abort the whole call and
+   leave the card's `data` at its pre-grade value. This is the one that proves
+   the transaction, and it cannot be proven anywhere else.
+3. **Ownership is enforced by RLS, not by trust.** From a second account, call
+   `commit_review` with the first account's card id: it must raise
+   `card ... is not available to this user` and write nothing. `SECURITY
+   INVOKER` is what makes that true, so this check is what validates D274.
+4. **A retry is a no-op.** Calling `commit_review` twice with the identical
+   arguments must leave exactly one log and one scheduling advance
+   (`on conflict (id) do nothing`).
+5. **`anon` cannot execute either function.** `revoke all ... from public` plus
+   the single `grant ... to authenticated` is the whole access model; confirm an
+   unauthenticated call is refused.
+6. **Undo is the inverse, and is retry-safe.** `revert_review` restores the card
+   and removes the log in one call, and calling it again after the log is gone
+   still succeeds.
+
+Until then, cloud review persistence is code- and contract-verified but not
+service-verified, and `CURRENT_STATE.md` §15 says so. Note that without `0004`
+applied, cloud grading fails loudly on every attempt rather than writing
+partially - the client has no fallback to the old card-then-log sequence, which
+is deliberate.
+
 ## Transactional replace-import on Supabase
 
 Deferred by D242 (2026-08-22, audit P1-1). Replace-import is all-or-nothing on

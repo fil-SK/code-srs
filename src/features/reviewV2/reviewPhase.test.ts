@@ -41,6 +41,38 @@ describe('reviewPhaseReducer', () => {
     expect(reviewPhaseReducer(deep, { type: 'RESET' })).toEqual(initialReviewPhase)
   })
 
+  it('feedback -> rating -> persistFailed when the write rejects', () => {
+    const rating = run([{ type: 'REVEAL' }, { type: 'CHOOSE_RATING' }])
+    const failed = reviewPhaseReducer(rating, { type: 'PERSIST_FAILED' })
+    expect(failed).toEqual({ kind: 'persistFailed' })
+    // The whole point of the extra state: a failed write must not land where a
+    // successful one does, or the session looks graded when nothing was saved.
+    expect(failed).not.toEqual({ kind: 'transitioning' })
+  })
+
+  it('RETRY_PERSIST goes back to rating, and a committed retry reaches transitioning', () => {
+    const failed = run([
+      { type: 'REVEAL' },
+      { type: 'CHOOSE_RATING' },
+      { type: 'PERSIST_FAILED' },
+    ])
+    const retrying = reviewPhaseReducer(failed, { type: 'RETRY_PERSIST' })
+    expect(retrying).toEqual({ kind: 'rating' })
+    expect(reviewPhaseReducer(retrying, { type: 'GRADED' })).toEqual({
+      kind: 'transitioning',
+    })
+  })
+
+  it('a second RETRY_PERSIST while the retry is in flight is a no-op', () => {
+    const retrying = run([
+      { type: 'REVEAL' },
+      { type: 'CHOOSE_RATING' },
+      { type: 'PERSIST_FAILED' },
+      { type: 'RETRY_PERSIST' },
+    ])
+    expect(reviewPhaseReducer(retrying, { type: 'RETRY_PERSIST' })).toEqual(retrying)
+  })
+
   it('out-of-order actions are no-ops (guards against double-fire)', () => {
     // REVEAL while already in feedback must not throw or change state.
     const feedback = run([{ type: 'REVEAL' }])
@@ -54,5 +86,17 @@ describe('reviewPhaseReducer', () => {
     ).toEqual(initialReviewPhase)
     // GRADED while still in feedback (no CHOOSE_RATING first).
     expect(reviewPhaseReducer(feedback, { type: 'GRADED' })).toEqual(feedback)
+    // PERSIST_FAILED once the write already committed: a late rejection must
+    // not drag a finished card back into an error state.
+    const transitioning = run([
+      { type: 'REVEAL' },
+      { type: 'CHOOSE_RATING' },
+      { type: 'GRADED' },
+    ])
+    expect(reviewPhaseReducer(transitioning, { type: 'PERSIST_FAILED' })).toEqual(
+      transitioning,
+    )
+    // RETRY_PERSIST with nothing to retry.
+    expect(reviewPhaseReducer(feedback, { type: 'RETRY_PERSIST' })).toEqual(feedback)
   })
 })

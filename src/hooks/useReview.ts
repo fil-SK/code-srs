@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { Card, ID, Rating, ReviewLog, SchedulingState } from '@/types'
+import type { Card, ID, ReviewLog, SchedulingState } from '@/types'
 import { getRepository } from '@/data'
-import { buildReviewLog, reviewState } from '@/domain/scheduling/scheduler'
+import type { WriteGuarantee } from '@/data/repository'
 import { qk } from './queryKeys'
 
 const repo = getRepository()
@@ -10,39 +10,11 @@ export function useReviewLogs() {
   return useQuery({ queryKey: qk.reviewsAll, queryFn: () => repo.reviews.all() })
 }
 
-export interface GradeInput {
-  card: Card
-  rating: Rating
-  durationMs: number
-  autoGraded: boolean
-}
-
-// Apply a grade: compute next scheduling, persist the updated card, append the log.
-export function useGradeCard() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ card, rating, durationMs, autoGraded }: GradeInput) => {
-      const now = Date.now()
-      const after = reviewState(card.scheduling, rating, now)
-      const log = buildReviewLog({
-        cardId: card.id,
-        before: card.scheduling,
-        after,
-        rating,
-        autoGraded,
-        durationMs,
-        now,
-      })
-      const graded = { ...card, scheduling: after, updatedAt: now }
-      await repo.cards.put(graded)
-      await repo.reviews.append(log)
-      return { log }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.cards })
-      qc.invalidateQueries({ queryKey: qk.reviewsAll })
-    },
-  })
+// What the live backend can promise for a review write, so failure copy can
+// state it instead of guessing. Mirrors canReplaceImport() in src/data/backup.ts:
+// the UI reads one value and never branches on which backend is live.
+export function reviewWriteGuarantee(): WriteGuarantee {
+  return repo.reviewGuarantee
 }
 
 export interface PersistReviewResultInput {
@@ -55,13 +27,23 @@ export interface PersistReviewResultInput {
 // embedded scheduling. Takes `{after, log}` rather than recomputing them
 // (reviewService.submit already produced both), so the session and this hook
 // can't silently diverge — it only ever writes what reviewService decided.
+//
+// The card and the log go down as one `commitReview`, not as `cards.put` then
+// `reviews.append`: those were two commits, and a failure between them advanced
+// scheduling with no history row behind it (audit §10 item 6).
+//
+// Invalidation stays onSuccess-only. A rejected commit rolled back on both
+// backends, so there is nothing new to read and announcing otherwise would make
+// the cache disagree with storage.
 export function usePersistReviewResult() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ card, after, log }: PersistReviewResultInput) => {
-      const graded = { ...card, scheduling: after, updatedAt: Date.now() }
-      await repo.cards.put(graded)
-      await repo.reviews.append(log)
+      // `log.reviewedAt`, not Date.now(): the graded card must be byte-identical
+      // on every attempt, so retrying a failed commit re-sends the same result
+      // instead of a slightly newer one.
+      const graded = { ...card, scheduling: after, updatedAt: log.reviewedAt }
+      await repo.commitReview({ card: graded, log })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.cards })
@@ -75,14 +57,14 @@ export interface UndoInput {
   logId: ID
 }
 
-// Reverse the most recent grade: restore the original card verbatim and
-// remove its log.
+// Reverse the most recent grade: restore the original card verbatim and remove
+// its log. The exact inverse of the commit above, and atomic for the same
+// reason — a half-undone review is its own inconsistency.
 export function useUndoGrade() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ card, logId }: UndoInput) => {
-      await repo.cards.put(card)
-      await repo.reviews.delete(logId)
+      await repo.revertReview({ card, logId })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.cards })
