@@ -1,0 +1,27 @@
+{
+  /* Options shared by every project in the workspace (web app, node tooling,
+     @itera/core). Anything that legitimately differs per target - lib, module,
+     moduleResolution, ambient `types`, jsx, paths, tsBuildInfoFile, include -
+     stays in the extending config, so this file cannot quietly change what a
+     particular target compiles against.
+
+     Kept byte-for-byte identical to what tsconfig.app.json and
+     tsconfig.node.json already declared; this is a de-duplication, not a
+     strictness change. */
+  "compilerOptions": {
+    "target": "es2023",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  }
+}

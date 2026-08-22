@@ -1,0 +1,23 @@
+{
+  /* @itera/core - the platform-neutral shared package.
+
+     `lib` deliberately omits DOM and `types` is empty: core must compile with
+     no browser and no Node ambient globals, so a `window.`, `document.` or
+     `process.` reference fails `tsc -b --force` here rather than surfacing
+     later as a Metro/Hermes runtime error in a React Native app. That is the
+     mechanical enforcement of the platform-neutrality invariant, not a style
+     preference - see the 2026-08-22 workspace entry in docs/itera-decisions.md.
+
+     No `composite`/`emitDeclarationOnly`: consumers typecheck core's TypeScript
+     source directly (package `main`/`types` point at src/index.ts), so the
+     package has no build step, no dist/ and no watch process. */
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.core.tsbuildinfo",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": []
+  },
+  "include": ["packages/core/src"]
+}

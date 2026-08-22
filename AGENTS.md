@@ -25,6 +25,8 @@ Claude Code reads [`CLAUDE.md`](CLAUDE.md), which points at the **same** shared 
 
 Stack: React 19 + Vite 8 + TypeScript, Tailwind v4, React Router 7 (`createBrowserRouter`), TanStack Query 5 for all data access, `vite-plugin-pwa` (`registerType: 'autoUpdate'`). Path alias `@` → `src`.
 
+The repository is an **npm workspace**: the web app is the root package, and `packages/core` (`@itera/core`) is the shared, platform-neutral package a future React Native / Expo app will consume too. It currently owns the **entity type contracts only**. See [`docs/architecture.md`](docs/architecture.md) "Workspace layout".
+
 ## Package manager and commands
 
 **npm** (there is a `package-lock.json`; do not introduce pnpm/yarn/bun).
@@ -57,10 +59,12 @@ Component tests opt into a DOM per file with `// @vitest-environment happy-dom` 
 
 ## Architecture constraints
 
+- **One shared package.** `packages/core` (`@itera/core`) is consumed as TypeScript **source** - no build step, no `dist/`, no watch process - and resolves through the npm workspace symlink, so it needs **no** Vite alias, no Vitest alias and no `tsconfig` `paths` entry. `tsconfig.core.json` compiles it with **no DOM and no Node ambient types**, so a `window.`/`document.`/`process.` reference there fails `npx tsc -b --force`. Do not move browser-specific code into it, and do not give it an `exports` map or a second entry point.
+- **`src/types/*` is a transitional re-export shim, not a definition site.** It defines nothing and must never redefine a contract; `src/types/coreSurface.test.ts` enforces that at runtime. New code imports from `@itera/core`.
 - **One storage seam.** Everything depends on `Repository` (`src/data/repository.ts`); `getRepository()` (`src/data/index.ts`) picks `DexieRepository` or `SupabaseRepository`. **Never import a backend from a component, hook or page.**
 - **All data access goes through the TanStack Query hooks in `src/hooks/`**, with keys centralized in `src/hooks/queryKeys.ts`.
 - **Entities are opaque JSON blobs** keyed by an inline `id`; Supabase's few generated columns exist only for indexing, and all text/tag/type filtering happens **in memory identically in both backends**. Adding a field to a type needs no migration.
-- **One card model.** `src/types/card.ts` — a single `Card` (content + embedded `scheduling`) with six `CardInteraction` members, registry in `src/features/reviewV2/interactions/registry.ts`. The v1 union, `CardV2`/`CardV2Record` and `migrateCard` were deleted when the models converged.
+- **One card model.** `packages/core/src/types/card.ts`, imported as `@itera/core` — a single `Card` (content + embedded `scheduling`) with six `CardInteraction` members, registry in `src/features/reviewV2/interactions/registry.ts`. The v1 union, `CardV2`/`CardV2Record` and `migrateCard` were deleted when the models converged.
 - **New card types are new interactions**; see `docs/architecture.md`.
 - **One streak definition.** `computeStreak` (`src/domain/stats/streak.ts`) serves Today, the top-nav `StreakBadge` and Progress. Do not add a second streak calculation; surfaces may present it differently.
 - **One calendar-day definition.** Local days come from `src/domain/stats/calendarDay.ts` (`localDayIndex`, `startOfDay`, `addCalendarDays`, `calendarDaysBetween`, `isNextCalendarDay`, `eachCalendarDay`). **Never step or compare calendar days by adding 86,400,000 ms** — a local day is 23 or 25 hours on the two DST transition days, which is what broke streaks, pace, the heat map and "Yesterday" (audit P1-2). Elapsed time (FSRS intervals, durations, "in 4 hours") stays in milliseconds; the two are different concepts.

@@ -26,6 +26,32 @@ Five constraints shape everything below. Breaking one of them is a decision, not
 
 ---
 
+## Workspace layout
+
+The repository is an **npm workspace**. The web application is still the root package and still owns every web dependency; `packages/*` holds shared, platform-neutral code.
+
+```
+package.json          the web app AND the workspace root (workspaces: ["packages/*"])
+src/                  the web application (map below)
+packages/core/        @itera/core - the shared engine
+```
+
+**`@itera/core` is the one shared package.** It is consumed as **TypeScript source**: its `main`/`types` both point at `src/index.ts`, there is no build step, no `dist/`, no emitted declarations and no watch process. Resolution is the ordinary npm workspace symlink (`node_modules/@itera/core` -> `packages/core`), which is why TypeScript needs no `paths` entry for it and why **neither `vite.config.ts` nor `vitest.config.ts` contains an alias for it**. One mechanism, not three; see `itera-decisions.md` D282/D283.
+
+Its manifest has **no `exports` map and exactly one entry point**, so nothing may import a path inside the package. Today it owns the entity contracts only:
+
+```
+packages/core/
+└── src/
+    ├── index.ts      the single public barrel (re-exports types AND values)
+    └── types/        card.ts (the one Card model), common.ts, deck.ts,
+                      draft.ts, review.ts, roadmap.ts
+```
+
+`tsconfig.core.json` compiles it with `lib: ["ES2023"]` and `types: []` - **no DOM, no Node ambient globals** - so a `window.`, `document.` or `process.` reference in core fails `npx tsc -b --force` rather than surfacing later as a React Native runtime error. That is the mechanical enforcement of platform neutrality, and it is the reason browser-specific code must not be moved here (D287).
+
+`src/types/*` remains as a **transitional re-export shim** so that relocating the contracts did not have to be the same commit as rewriting ~145 files' imports. It defines nothing; `src/types/coreSurface.test.ts` asserts at runtime that the shim and the package are the same module instance, so a redefinition cannot pass review unnoticed (D285/D286). **New code should import from `@itera/core` directly.**
+
 ## Repository map
 
 ```
@@ -66,7 +92,8 @@ src/
 ├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
 ├── lib/          cn.ts (clsx+twMerge), id.ts (newId), lazyWithRetry.ts
 ├── test/         setup.ts (global Vitest setup)
-└── types/        card.ts (the one Card model), deck.ts, review.ts, roadmap.ts
+└── types/        re-export shim over @itera/core (see Workspace layout above);
+                 the canonical definitions live in packages/core/src/types/
 ```
 
 ---
@@ -199,11 +226,11 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 
 | Entity | Type file | Repo | Dexie table | Supabase table | Tree/graph helpers |
 |---|---|---|---|---|---|
-| **Card** | `src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |
-| **Deck** | `src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
-| **Draft** | `src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
-| **ReviewLog** | `src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Required `stateBefore` records the pre-grade scheduling state; existing `state` is the resulting post-grade state. Carries optional `dueAfter`; rows written before that older field existed can still render an em dash. |
-| **Roadmap** | `src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
+| **Card** | `packages/core/src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |
+| **Deck** | `packages/core/src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
+| **Draft** | `packages/core/src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
+| **ReviewLog** | `packages/core/src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Required `stateBefore` records the pre-grade scheduling state; existing `state` is the resulting post-grade state. Carries optional `dueAfter`; rows written before that older field existed can still render an em dash. |
+| **Roadmap** | `packages/core/src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `src/features/roadmaps/` (no graph library) |
 
 A `ReviewLog` stores only a `cardId`, so deck attribution always joins through the current card. Retention series and Review history use `src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`; Deck Performance takes current cards directly because it also needs active-card, Learned and Due membership. A moved card follows its current deck, while a deleted card's log remains in Review history but contributes to no current deck row.
 
@@ -223,7 +250,7 @@ Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `vers
 
 ## The card model
 
-`src/types/card.ts` defines exactly one `Card`:
+`packages/core/src/types/card.ts` (reachable as `@itera/core`) defines exactly one `Card`:
 
 ```ts
 { id, schemaVersion, deckId, prompt, tip?, explanation?, interaction, tags,
@@ -238,7 +265,7 @@ Content and scheduling live together on the one record. `interaction` is a discr
 
 Compiler-enforced touchpoints first; the build fails until each is handled.
 
-1. `src/types/card.ts` — add the interface and a member to the `CardInteraction` union.
+1. `packages/core/src/types/card.ts` — add the interface and a member to the `CardInteraction` union. It is exported automatically: `packages/core/src/index.ts` re-exports the whole module.
 2. `src/domain/search/searchableText.ts` — add a `case`; its `never` guard fails the build until you do.
 3. `src/features/reviewV2/interactions/<type>/` — a `View` component plus an `index.ts` exporting an `InteractionDefinition`.
 4. `src/features/reviewV2/interactions/registry.ts` — register it. **The registry is `Partial<...>`, so a missing entry throws at runtime rather than failing the build** — this is the one step the compiler does not enforce.
@@ -330,7 +357,7 @@ Lifecycle contract:
 
 That last rule is what makes a *later* session with identical query parameters correct: it is a new mount holding no state, so it resolves the due queue again from current repository state. **`ReviewSessionV2` is keyed on the snapshot `id`, never on `cards.length`** — a genuinely new snapshot is the only thing that may remount a session.
 
-Session identity is deliberately transient and per-mount. The `StudySession` type in `src/types/review.ts` is still unused; nothing here persists a session, and resumable sessions remain out of scope.
+Session identity is deliberately transient and per-mount. The `StudySession` type in `packages/core/src/types/review.ts` is still unused; nothing here persists a session, and resumable sessions remain out of scope.
 
 ---
 

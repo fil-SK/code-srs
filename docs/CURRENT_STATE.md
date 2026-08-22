@@ -1,6 +1,6 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-22** (branch `app_redesign`).
+**Last verified against the working tree: 2026-08-22** (branch `mvp_demo_cleaning`).
 
 The most recent milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress's headline row is exactly **Learned · Due · Reviews · Retention · Current streak**, and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`itera-decisions.md`](itera-decisions.md).
 
@@ -25,6 +25,8 @@ It describes state, not history. It contains no prompts and no conversation tran
 ---
 
 ## 1. Current product milestone
+
+**Structural: the repository is now an npm workspace with one shared package, `@itera/core`.** This is the first implementation step of the web + native (React Native / Expo) convergence work, and deliberately the smallest one: `packages/core` was created and the **entity type contracts moved into it**; nothing else did. No domain logic, repository code, hooks, auth, RichText or UI moved, no persisted contract changed, and **there is no Expo, React Native or `apps/` directory yet**. The web application is still the repository root package and still owns every web dependency. `src/types/*` remains as a transitional re-export shim so the move did not have to be the same commit as rewriting ~145 files' imports; it defines nothing, and a runtime test asserts the shim and the package are one module instance. Evidence that behaviour did not change: all six type files are recorded by git as 100% renames, no file outside `src/types/` and the config set changed, and `npm run build` emitted byte-identical bundle hashes. See [`architecture.md`](architecture.md) "Workspace layout" and the 2026-08-22 workspace entry in [`itera-decisions.md`](itera-decisions.md) (D281-D287). **New code should import shared contracts from `@itera/core`.**
 
 **Milestone reached: "Progress correctness & KPI definitions" (2026-08-21), on top of "Make Today real", "MVP integrity cleanup" and "Single card model".**
 
@@ -224,10 +226,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-22, after the P2-B review-persistence pass:
+Measured 2026-08-22, after the workspace / `@itera/core` extraction:
 
 ```
-npx vitest run       → 90 test files, 825 tests, all passing (47.30s)
+npx vitest run       → 91 test files, 828 tests, all passing (56.92s)
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -235,7 +237,9 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**825 is the current correct test count.** The P2-B pass added 35 across four new files: `src/data/dexie/reviewTransaction.test.ts` (9 - commit and revert against the real Dexie transaction over fake-indexeddb, with forced failures at either store, a duplicate log id, and unrelated data checked untouched), `src/data/supabase/reviewRpc.test.ts` (9 - the `commit_review`/`revert_review` call contract, that a commit issues **no** table writes at all, error rejection, and idempotency on a repeated commit), `src/features/review/reviewPersistFailure.test.tsx` (9 - the whole failure UX through the real session: no advance, friendly alert, no raw backend text, retry of the identical result, no duplicate submission, and completion Undo including a failed undo), and `src/domain/review/reviewPersistFailure.test.ts` (5 - copy that matches the guarantee and never leaks backend vocabulary), plus 3 phase-machine cases. Anti-vacuity was checked both ways: replacing the Dexie `rw` scope with two bare awaits fails 3 of the transaction cases, and restoring the pre-fix "dispatch GRADED then fire-and-forget" ordering fails 5 of the 9 UI cases.
+**828 is the current correct test count.** The workspace step added exactly 3, in one new file: `src/types/coreSurface.test.ts` asserts that `@itera/core` resolves as a workspace package from the web app, that the `@/types` shim re-exports the *same function reference* rather than a copy, and that `richText` still produces the unchanged `RichContent` shape. **No existing test moved, was renamed or was edited** - only type modules relocated, and the shim keeps every `@/types*` specifier valid. Non-vacuity was checked: rewriting the shim to redefine `richText` fails the identity case.
+
+**825 across 90 files was the count before it.** The P2-B pass added 35 across four new files: `src/data/dexie/reviewTransaction.test.ts` (9 - commit and revert against the real Dexie transaction over fake-indexeddb, with forced failures at either store, a duplicate log id, and unrelated data checked untouched), `src/data/supabase/reviewRpc.test.ts` (9 - the `commit_review`/`revert_review` call contract, that a commit issues **no** table writes at all, error rejection, and idempotency on a repeated commit), `src/features/review/reviewPersistFailure.test.tsx` (9 - the whole failure UX through the real session: no advance, friendly alert, no raw backend text, retry of the identical result, no duplicate submission, and completion Undo including a failed undo), and `src/domain/review/reviewPersistFailure.test.ts` (5 - copy that matches the guarantee and never leaks backend vocabulary), plus 3 phase-machine cases. Anti-vacuity was checked both ways: replacing the Dexie `rw` scope with two bare awaits fails 3 of the transaction cases, and restoring the pre-fix "dispatch GRADED then fire-and-forget" ordering fails 5 of the 9 UI cases.
 
 **790 was the count before it.** The P2-A pass added 40 across two new files and three existing ones: `src/components/ui/dialogs.test.tsx` (14 - focus entry per dialog kind, Tab/Shift+Tab wrap, containment against a background control, focus return on cancel/Escape/confirm/alert, a vanished opener, and the unchanged promise results) and `src/lib/download.test.ts` (8 - anchor in the document at click time and a deferred `revokeObjectURL`, on fake timers), plus 8 `collectionPathFor` cases in `collectionTree.test.ts`, 7 in `RequireAuth.test.tsx` and 3 in `LoginPage.test.tsx`. Each set was run against the unfixed module first: 9 of 14 dialog cases, 2 of 8 download cases, 6 of 9 auth cases and 4 of 8 cycle cases fail there, the cycle ones by not terminating at all.
 

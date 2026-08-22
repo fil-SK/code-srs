@@ -80,7 +80,7 @@ A study session is **temporary and generated**, not a persisted entity: sources 
 
 **Undo is available only on the end-of-session "All done" screen**, where it steps back one card and reverts the last grade — restoring the card and removing its history entry as one all-or-nothing write, the exact inverse of the grade. A failed undo changes nothing and says so, leaving the review recorded and Undo still offered. There is no mid-session undo: `ReviewSessionV2` renders the Undo control only once the queue is exhausted, and `ReviewSessionScreen`'s key handler covers Escape / Space / Enter / 1–4 only. The `useUndoGrade` mutation itself is fully general — it is the in-session UI entry point that is missing (see "Capabilities removed with the v1 surface" below).
 
-**Not implemented:** the `StudySession` type exists in `src/types/review.ts` but nothing constructs or stores one, so there is no session goal (card count / target minutes), no session id on history rows, and no resumable session. Progress's "sessions" are **gap-clustered from review timestamps** for display purposes, not read from a session record.
+**Not implemented:** the `StudySession` type exists in `packages/core/src/types/review.ts` but nothing constructs or stores one, so there is no session goal (card count / target minutes), no session id on history rows, and no resumable session. Progress's "sessions" are **gap-clustered from review timestamps** for display purposes, not read from a session record.
 
 ### Account and login — implemented
 
