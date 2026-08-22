@@ -1,17 +1,10 @@
 import type { Millis } from '@/types'
+import { addCalendarDays, calendarDaysBetween, startOfDay } from './calendarDay'
 
-export const DAY_MS = 86_400_000
-const DAY = DAY_MS
-
-// The one local-calendar-day boundary every stats module shares. Exported
-// because streaks, the activity heatmap, the Today pace series and this
-// module's range building all have to agree on where a day starts, and three
-// private copies of it is exactly how they would silently stop agreeing.
-export function startOfDay(ms: Millis): Millis {
-  const d = new Date(ms)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
-}
+// Re-exported so the many existing `from './dateRange'` imports keep resolving;
+// the calculation itself lives in ./calendarDay with the rest of the local
+// calendar-day arithmetic.
+export { startOfDay }
 
 export type DateRangePreset = '7d' | '30d' | '90d' | '1y'
 
@@ -29,18 +22,21 @@ export interface DateRange {
 }
 
 // `to` is exclusive so a review logged any time "today" is included without
-// needing a separate end-of-day boundary case.
+// needing a separate end-of-day boundary case. Both ends are local midnights
+// reached by calendar stepping, so the window is `days` calendar dates whatever
+// the UTC offset does inside it.
 export function buildRange(preset: DateRangePreset, now: Millis = Date.now()): DateRange {
   const days = DATE_RANGE_PRESETS.find((p) => p.value === preset)?.days ?? 30
-  const to = startOfDay(now) + DAY
-  return { from: to - days * DAY, to, days }
+  const to = addCalendarDays(now, 1)
+  return { from: addCalendarDays(to, -days), to, days }
 }
 
 // The immediately-preceding, equal-length window — used for KPI "vs last
-// period" deltas.
+// period" deltas. Equal length in *calendar days*: subtracting the elapsed span
+// instead would leave a phantom one-hour gap (or overlap) whenever a transition
+// falls inside one of the two windows.
 export function previousPeriod(range: DateRange): DateRange {
-  const span = range.to - range.from
-  return { from: range.from - span, to: range.from, days: range.days }
+  return { from: addCalendarDays(range.from, -range.days), to: range.from, days: range.days }
 }
 
 const MONTH_DAY = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
@@ -52,7 +48,7 @@ const MONTH_DAY_YEAR = new Intl.DateTimeFormat('en-US', {
 
 export function formatRangeLabel(range: DateRange): string {
   const start = new Date(range.from)
-  const end = new Date(range.to - DAY) // last included day
+  const end = new Date(addCalendarDays(range.to, -1)) // last included day
   const sameYear = start.getFullYear() === end.getFullYear()
   const startLabel = sameYear ? MONTH_DAY.format(start) : MONTH_DAY_YEAR.format(start)
   return `${startLabel} – ${MONTH_DAY_YEAR.format(end)}`
@@ -70,7 +66,9 @@ export function formatEventDate(date: Millis, now: Millis = Date.now()): string 
   const day = startOfDay(date)
   const today = startOfDay(now)
   if (day === today) return 'Today'
-  if (today - day === DAY) return 'Yesterday'
+  // Yesterday is the previous local calendar date, not "24 hours before the
+  // current local midnight" - those differ on both transition days.
+  if (calendarDaysBetween(date, now) === 1) return 'Yesterday'
   const d = new Date(day)
   return d.getFullYear() === new Date(today).getFullYear()
     ? MONTH_DAY.format(d)

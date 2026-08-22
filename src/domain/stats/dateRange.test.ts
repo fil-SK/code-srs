@@ -1,15 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import { buildRange, previousPeriod, formatRangeLabel, formatEventDate } from './dateRange'
+import { addCalendarDays, calendarDaysBetween } from './calendarDay'
 
 // Fixed "now": Sunday 2025-06-01 12:00 local time.
 const NOW = new Date(2025, 5, 1, 12, 0, 0).getTime()
-const DAY = 86_400_000
+
+// Ranges are measured in calendar days, never in elapsed milliseconds: a window
+// containing a DST transition is still N dates long while being N*24h ± 1h of
+// elapsed time. The transition cases themselves live in dstMetrics.dst.test.ts,
+// which pins a DST-observing zone.
 
 describe('buildRange', () => {
   it('spans exactly `days` calendar days ending today, `to` exclusive', () => {
     const range = buildRange('30d', NOW)
     expect(range.days).toBe(30)
-    expect(range.to - range.from).toBe(30 * DAY)
+    expect(calendarDaysBetween(range.from, range.to)).toBe(30)
     // `to` is the start of the day after today.
     const tomorrow = new Date(2025, 5, 2, 0, 0, 0).getTime()
     expect(range.to).toBe(tomorrow)
@@ -27,7 +32,7 @@ describe('previousPeriod', () => {
     const range = buildRange('7d', NOW)
     const prev = previousPeriod(range)
     expect(prev.to).toBe(range.from)
-    expect(prev.to - prev.from).toBe(range.to - range.from)
+    expect(calendarDaysBetween(prev.from, prev.to)).toBe(calendarDaysBetween(range.from, range.to))
   })
 })
 
@@ -48,10 +53,10 @@ describe('formatRangeLabel', () => {
 describe('formatEventDate', () => {
   it('labels today and yesterday specially', () => {
     expect(formatEventDate(NOW, NOW)).toBe('Today')
-    expect(formatEventDate(NOW - DAY, NOW)).toBe('Yesterday')
+    expect(formatEventDate(addCalendarDays(NOW, -1), NOW)).toBe('Yesterday')
   })
 
   it('falls back to an absolute date further back', () => {
-    expect(formatEventDate(NOW - 10 * DAY, NOW)).toBe('May 22')
+    expect(formatEventDate(addCalendarDays(NOW, -10), NOW)).toBe('May 22')
   })
 })

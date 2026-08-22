@@ -1,10 +1,15 @@
 import type { Card, Deck, ID, Millis, ReviewLog } from '@/types'
 import { leafDecks } from '@/domain/decks/tree'
-import { DAY_MS, previousPeriod, startOfDay, type DateRange } from './dateRange'
+import { previousPeriod, type DateRange } from './dateRange'
+import {
+  addCalendarDays,
+  eachCalendarDay,
+  isNextCalendarDay,
+  localDayIndex,
+  startOfDay,
+} from './calendarDay'
 import { computeLearned } from './learned'
 import { computeStreak } from './streak'
-
-const DAY = DAY_MS
 
 function inRange(logs: ReviewLog[], range: DateRange): ReviewLog[] {
   return logs.filter((l) => l.reviewedAt >= range.from && l.reviewedAt < range.to)
@@ -119,18 +124,18 @@ export interface ReviewCountPoint {
   count: number
 }
 
-// Reviews per equal-width time bucket for the selected range. The KPI's
-// sparkline therefore visualizes the same ReviewLog count the tile names.
+// Reviews per equal-width bucket for the selected range, measured in calendar
+// days so every boundary is a local midnight. The KPI's sparkline therefore
+// visualizes the same ReviewLog count the tile names.
 export function computeReviewSeries(
   logs: ReviewLog[],
   range: DateRange,
   targetBuckets = 30,
 ): ReviewCountPoint[] {
   const bucketDays = Math.max(1, Math.ceil(range.days / targetBuckets))
-  const bucketMs = bucketDays * DAY
   const points: ReviewCountPoint[] = []
-  for (let start = range.from; start < range.to; start += bucketMs) {
-    const end = Math.min(start + bucketMs, range.to)
+  for (let start = range.from; start < range.to; start = addCalendarDays(start, bucketDays)) {
+    const end = Math.min(addCalendarDays(start, bucketDays), range.to)
     points.push({
       bucketStart: start,
       bucketEnd: end,
@@ -170,22 +175,23 @@ export function heatmapDaysFor(value: HeatmapRangeValue): number {
   return HEATMAP_RANGE_OPTIONS.find((r) => r.value === value)?.days ?? 30
 }
 
+// Exactly `days` cells, one per local calendar date ending today. Counts are
+// keyed by calendar-day index so a review on a DST-transition date lands in
+// that date's cell rather than in a neighbour's.
 export function computeHeatmap(logs: ReviewLog[], days: number, now: Millis = Date.now()): HeatmapDay[] {
-  const today = startOfDay(now)
-  const from = today - (days - 1) * DAY
-  const counts = new Map<Millis, number>()
+  const todayIndex = localDayIndex(now)
+  const fromIndex = todayIndex - (days - 1)
+  const counts = new Map<number, number>()
   for (const log of logs) {
-    const d = startOfDay(log.reviewedAt)
-    if (d < from || d > today) continue
+    const d = localDayIndex(log.reviewedAt)
+    if (d < fromIndex || d > todayIndex) continue
     counts.set(d, (counts.get(d) ?? 0) + 1)
   }
   const max = Math.max(0, ...counts.values())
-  const result: HeatmapDay[] = []
-  for (let d = from; d <= today; d += DAY) {
-    const count = counts.get(d) ?? 0
-    result.push({ date: d, count, level: levelFor(count, max) })
-  }
-  return result
+  return eachCalendarDay(addCalendarDays(now, -(days - 1)), days).map((date) => {
+    const count = counts.get(localDayIndex(date)) ?? 0
+    return { date, count, level: levelFor(count, max) }
+  })
 }
 
 // ---- Retention over time ------------------------------------------------------
@@ -217,10 +223,9 @@ export function computeRetentionSeries(
     })
   }
   const bucketDays = Math.max(1, Math.round(range.days / targetBuckets))
-  const bucketMs = bucketDays * DAY
   const points: RetentionPoint[] = []
-  for (let start = range.from; start < range.to; start += bucketMs) {
-    const end = Math.min(start + bucketMs, range.to)
+  for (let start = range.from; start < range.to; start = addCalendarDays(start, bucketDays)) {
+    const end = Math.min(addCalendarDays(start, bucketDays), range.to)
     const bucketLogs = scoped.filter((l) => l.reviewedAt >= start && l.reviewedAt < end)
     points.push({ bucketStart: start, bucketEnd: end, retention: retentionOf(bucketLogs) })
   }
@@ -332,7 +337,9 @@ export function deriveMilestones(logs: ReviewLog[]): MilestoneEvent[] {
   let prevDay: Millis | null = null
   const crossedStreak = new Set<number>()
   for (const d of days) {
-    run = prevDay !== null && d - prevDay === DAY ? run + 1 : 1
+    // Calendar adjacency, matching computeStreak - a run that crosses a DST
+    // transition used to break here and never award its badge.
+    run = prevDay !== null && isNextCalendarDay(prevDay, d) ? run + 1 : 1
     prevDay = d
     for (const threshold of STREAK_THRESHOLDS) {
       if (run === threshold && !crossedStreak.has(threshold)) {
@@ -350,8 +357,9 @@ export function deriveMilestones(logs: ReviewLog[]): MilestoneEvent[] {
 
   const crossedRetention = new Set<number>()
   for (const day of days) {
-    const windowStart = day - 30 * DAY
-    const windowLogs = sorted.filter((l) => l.reviewedAt >= windowStart && l.reviewedAt < day + DAY)
+    const windowStart = addCalendarDays(day, -30)
+    const windowEnd = addCalendarDays(day, 1)
+    const windowLogs = sorted.filter((l) => l.reviewedAt >= windowStart && l.reviewedAt < windowEnd)
     const r = retentionOf(windowLogs)
     if (r === null) continue
     for (const threshold of RETENTION_THRESHOLDS) {

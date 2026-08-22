@@ -8,12 +8,15 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReviewLog } from '@/types'
 import { getRepository } from '@/data'
+import { calendarDaysBetween } from '@/domain/stats/calendarDay'
 import { computeStreak } from '@/domain/stats/streak'
 import { StreakBadge } from './StreakBadge'
 
 const repo = getRepository()
-const DAY = 86_400_000
 
+// The badge reads the live clock through the hook, so these fixtures are placed
+// relative to the real current date - but by calendar day, mid-morning, never by
+// subtracting fixed milliseconds.
 function log(daysAgo: number): ReviewLog {
   const d = new Date()
   d.setDate(d.getDate() - daysAgo)
@@ -98,9 +101,12 @@ describe('StreakBadge', () => {
   })
 })
 
-// A guard against the DAY constant drifting out of the fixture helper.
+// A guard that the fixture helper really produces consecutive local dates.
+// Deliberately calendar adjacency, not a 24-hour difference: the two DST
+// transition days are 23 and 25 hours long, so the millisecond form of this
+// assertion was itself false twice a year.
 describe('fixture sanity', () => {
-  it('places consecutive fixtures exactly one day apart', () => {
-    expect(log(1).reviewedAt - log(2).reviewedAt).toBe(DAY)
+  it('places consecutive fixtures on adjacent local calendar dates', () => {
+    expect(calendarDaysBetween(log(2).reviewedAt, log(1).reviewedAt)).toBe(1)
   })
 })

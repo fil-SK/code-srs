@@ -1,5 +1,5 @@
 import type { Millis, ReviewLog } from '@/types'
-import { DAY_MS, startOfDay } from './dateRange'
+import { localDayIndex } from './calendarDay'
 
 export interface StreakSummary {
   /** Consecutive local days with at least one review, counting back from today. */
@@ -20,26 +20,29 @@ export interface StreakSummary {
 // yet today still has an active streak. The cursor starts at today and steps
 // back one day when today is empty, so the count only drops to 0 once a full
 // local calendar day has actually been missed.
+//
+// Days are compared as calendar-day indices, never as elapsed milliseconds: a
+// local day is 23 or 25 hours on the two DST transition days, and counting in
+// 24-hour steps truncated real streaks that crossed one.
 export function computeStreak(logs: ReviewLog[], now: Millis = Date.now()): StreakSummary {
-  const days = [...new Set(logs.map((l) => startOfDay(l.reviewedAt)))].sort((a, b) => a - b)
+  const days = [...new Set(logs.map((l) => localDayIndex(l.reviewedAt)))].sort((a, b) => a - b)
   const daySet = new Set(days)
 
-  const today = startOfDay(now)
+  const today = localDayIndex(now)
   const activeToday = daySet.has(today)
 
   let current = 0
-  let cursor = today
-  if (!activeToday) cursor -= DAY_MS
+  let cursor = activeToday ? today : today - 1
   while (daySet.has(cursor)) {
     current++
-    cursor -= DAY_MS
+    cursor--
   }
 
   let best = 0
   let run = 0
-  let prevDay: Millis | null = null
+  let prevDay: number | null = null
   for (const d of days) {
-    run = prevDay !== null && d - prevDay === DAY_MS ? run + 1 : 1
+    run = prevDay !== null && d === prevDay + 1 ? run + 1 : 1
     if (run > best) best = run
     prevDay = d
   }

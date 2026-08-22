@@ -1,6 +1,6 @@
 import type { Card, Deck, ID, Millis, ReviewLog } from '@/types'
 import { leafDecks } from '@/domain/decks/tree'
-import { DAY_MS, startOfDay } from './dateRange'
+import { addCalendarDays, eachCalendarDay, localDayIndex } from './calendarDay'
 import { metricsFor, type DeckMetrics } from './deckMetrics'
 import { computeLearned } from './learned'
 
@@ -121,26 +121,27 @@ const WEEKDAY_INITIAL = new Intl.DateTimeFormat('en-US', { weekday: 'narrow' })
 // exists in this product, and durationMs is deliberately not consulted here -
 // it backs the session estimate above and nothing else.
 export function computePaceSeries(logs: ReviewLog[], now: Millis): PaceDay[] {
-  const today = startOfDay(now)
-  const from = today - 6 * DAY_MS
+  const todayIndex = localDayIndex(now)
+  const fromIndex = todayIndex - 6
 
-  const counts = new Map<Millis, number>()
+  // Keyed by calendar-day index rather than by a millisecond midnight, so a
+  // review on a 23- or 25-hour local day still lands in that day's bucket.
+  const counts = new Map<number, number>()
   for (const log of logs) {
-    const day = startOfDay(log.reviewedAt)
-    if (day < from || day > today) continue
+    const day = localDayIndex(log.reviewedAt)
+    if (day < fromIndex || day > todayIndex) continue
     counts.set(day, (counts.get(day) ?? 0) + 1)
   }
 
-  const days: PaceDay[] = []
-  for (let d = from; d <= today; d += DAY_MS) {
-    days.push({
-      date: d,
-      label: WEEKDAY_INITIAL.format(new Date(d)),
-      count: counts.get(d) ?? 0,
-      isToday: d === today,
-    })
-  }
-  return days
+  return eachCalendarDay(addCalendarDays(now, -6), 7).map((date) => {
+    const index = localDayIndex(date)
+    return {
+      date,
+      label: WEEKDAY_INITIAL.format(new Date(date)),
+      count: counts.get(index) ?? 0,
+      isToday: index === todayIndex,
+    }
+  })
 }
 
 // ---- Continue learning -----------------------------------------------------

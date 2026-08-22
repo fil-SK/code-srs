@@ -7,10 +7,17 @@ import { MemoryRouter } from 'react-router-dom'
 import type { Card, Deck, ReviewLog, SchedulingStateKind } from '@/types'
 import { richText } from '@/types/card'
 import { getRepository } from '@/data'
+import { addCalendarDays } from '@/domain/stats/calendarDay'
 import { ProgressPage } from './ProgressPage'
 
 const repo = getRepository()
-const DAY = 86_400_000
+const DAY = 86_400_000 // card due offsets only: elapsed time, not calendar days
+
+// The page reads the live clock, so review fixtures are placed by local calendar
+// date - mid-morning on the Nth date back. Subtracting fixed milliseconds would
+// land on the wrong date on the two DST transition days and take the streak
+// assertions below down with it.
+const daysAgo = (now: number, n: number) => addCalendarDays(now, -n) + 10 * 60 * 60 * 1000
 
 const decks: Deck[] = [
   { id: 'due-deck', name: 'Due deck', createdAt: 0, updatedAt: 0 },
@@ -74,10 +81,10 @@ async function seed() {
     card('suspended-due', 'due-deck', now - DAY, true),
   ]
   const logs = [
-    log('current-good', 'mature-card', now - DAY, 3, 'review'),
-    log('current-again', 'mature-card', now - 2 * DAY, 1, 'review'),
-    log('current-new-easy', 'new-card', now - 10 * DAY, 4, 'new'),
-    log('previous-again', 'mature-card', now - 40 * DAY, 1, 'review'),
+    log('current-good', 'mature-card', daysAgo(now, 1), 3, 'review'),
+    log('current-again', 'mature-card', daysAgo(now, 2), 1, 'review'),
+    log('current-new-easy', 'new-card', daysAgo(now, 10), 4, 'new'),
+    log('previous-again', 'mature-card', daysAgo(now, 40), 1, 'review'),
   ]
   await Promise.all([repo.cards.clear(), repo.decks.clear(), repo.reviews.clear()])
   await repo.decks.bulkPut(decks)

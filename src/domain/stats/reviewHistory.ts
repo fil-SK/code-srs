@@ -1,14 +1,7 @@
 import type { Deck, ID, Millis, Rating, ReviewLog } from '@/types'
 import { subtreeIds } from '@/domain/decks/tree'
 import type { DateRange } from './dateRange'
-
-const DAY = 86_400_000
-
-function startOfDay(ms: Millis): Millis {
-  const d = new Date(ms)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
-}
+import { addCalendarDays } from './calendarDay'
 
 // Review history's own range presets, deliberately *not* DATE_RANGE_PRESETS.
 // Overview's presets feed period-over-period deltas, where an unbounded window
@@ -38,8 +31,8 @@ export function buildHistoryRange(
 ): DateRange | null {
   if (value === 'all') return null
   const days = RANGE_DAYS[value]
-  const to = startOfDay(now) + DAY
-  return { from: to - days * DAY, to, days }
+  const to = addCalendarDays(now, 1)
+  return { from: addCalendarDays(to, -days), to, days }
 }
 
 export interface ReviewHistoryRow {

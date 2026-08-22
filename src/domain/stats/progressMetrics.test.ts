@@ -13,14 +13,20 @@ import {
   deriveMilestones,
 } from './progressMetrics'
 
-const DAY = 86_400_000
 const MIN = 60_000
+
+// Fixed clock, matching streak.test.ts. These statistics are defined over local
+// calendar dates, so fixtures are placed by date - `Date.now() - n * 86_400_000`
+// is not "n days ago" on either DST transition day. Transition behavior itself
+// is covered in dstMetrics.dst.test.ts under a pinned zone.
+const NOW = new Date(2026, 7, 18, 14, 30).getTime() // 2026-08-18, local
+const daysAgo = (n: number, hour = 10) => new Date(2026, 7, 18 - n, hour, 0).getTime()
 
 function log(overrides: Partial<ReviewLog>): ReviewLog {
   return {
     id: overrides.id ?? `log-${Math.random()}`,
     cardId: 'card-1',
-    reviewedAt: Date.now(),
+    reviewedAt: NOW,
     rating: 3,
     autoGraded: false,
     durationMs: 1000,
@@ -39,7 +45,7 @@ function card(overrides: Partial<Card>): Card {
     id: overrides.id ?? 'card-1',
     deckId: 'deck-1',
     scheduling: {
-      due: Date.now(),
+      due: NOW,
       stability: 1,
       difficulty: 5,
       elapsedDays: 0,
@@ -51,7 +57,7 @@ function card(overrides: Partial<Card>): Card {
     },
     suspended: false,
     order: 0,
-    createdAt: Date.now(),
+    createdAt: NOW,
     updatedAt: Date.now(),
     ...overrides,
   } as unknown as Card
@@ -88,14 +94,14 @@ describe('clusterSessions', () => {
 
 describe('computeKpis', () => {
   it('counts ReviewLog entries and compares the selected period with the previous one', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('7d', now)
     const logs = [
       // 2 reviews in the current 7d window
-      log({ reviewedAt: now - DAY, rating: 3 }),
-      log({ reviewedAt: now - 2 * DAY, rating: 3 }),
+      log({ reviewedAt: daysAgo(1), rating: 3 }),
+      log({ reviewedAt: daysAgo(2), rating: 3 }),
       // 1 review in the previous window
-      log({ reviewedAt: now - 10 * DAY, rating: 3 }),
+      log({ reviewedAt: daysAgo(10), rating: 3 }),
     ]
     const kpis = computeKpis([], [], logs, range, now)
     expect(kpis.reviews.value).toBe(2)
@@ -103,11 +109,11 @@ describe('computeKpis', () => {
   })
 
   it('counts repeated reviews as Reviews but one current card as Learned', () => {
-    const now = Date.now()
+    const now = NOW
     const cards = [card({ id: 'a' }), card({ id: 'b' })]
     const logs = [
-      log({ cardId: 'a', reviewedAt: now - DAY }),
-      log({ cardId: 'a', reviewedAt: now - 2 * DAY }),
+      log({ cardId: 'a', reviewedAt: daysAgo(1) }),
+      log({ cardId: 'a', reviewedAt: daysAgo(2) }),
     ]
     const kpis = computeKpis(cards, [cards[1]], logs, buildRange('7d', now), now)
     expect(kpis.learned).toEqual({ value: 1, total: 2 })
@@ -123,12 +129,12 @@ describe('computeKpis', () => {
   })
 
   it('computes streak counting back from today with a one-day grace', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('30d', now)
     const logs = [
-      log({ reviewedAt: now - DAY }),
-      log({ reviewedAt: now - 2 * DAY }),
-      log({ reviewedAt: now - 3 * DAY }),
+      log({ reviewedAt: daysAgo(1) }),
+      log({ reviewedAt: daysAgo(2) }),
+      log({ reviewedAt: daysAgo(3) }),
     ]
     const kpis = computeKpis([], [], logs, range, now)
     expect(kpis.streak).toBe(3)
@@ -179,13 +185,13 @@ describe('computeRetention', () => {
 
 describe('computeReviewSeries', () => {
   it('counts every review in selected-range time buckets', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('7d', now)
     const series = computeReviewSeries(
       [
-        log({ cardId: 'same', reviewedAt: now - DAY }),
-        log({ cardId: 'same', reviewedAt: now - DAY + MIN }),
-        log({ reviewedAt: now - 10 * DAY }),
+        log({ cardId: 'same', reviewedAt: daysAgo(1) }),
+        log({ cardId: 'same', reviewedAt: daysAgo(1) + MIN }),
+        log({ reviewedAt: daysAgo(10) }),
       ],
       range,
       7,
@@ -196,8 +202,8 @@ describe('computeReviewSeries', () => {
 
 describe('computeHeatmap', () => {
   it('returns one entry per day and marks the max day at the top level', () => {
-    const now = Date.now()
-    const logs = [log({ reviewedAt: now }), log({ reviewedAt: now }), log({ reviewedAt: now - DAY })]
+    const now = NOW
+    const logs = [log({ reviewedAt: now }), log({ reviewedAt: now }), log({ reviewedAt: daysAgo(1) })]
     const days = computeHeatmap(logs, 7, now)
     expect(days).toHaveLength(7)
     const today = days[days.length - 1]
@@ -213,11 +219,11 @@ describe('computeHeatmap', () => {
 
 describe('computeRetentionSeries', () => {
   it('buckets the range and computes per-bucket retention', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('7d', now)
     const logs = [
-      log({ reviewedAt: now - DAY, rating: 3, state: 'review' }),
-      log({ reviewedAt: now - DAY, rating: 1, state: 'review' }),
+      log({ reviewedAt: daysAgo(1), rating: 3, state: 'review' }),
+      log({ reviewedAt: daysAgo(1), rating: 1, state: 'review' }),
     ]
     const series = computeRetentionSeries(logs, range, new Map())
     const total = series.reduce((sum, p) => sum + (p.retention !== null ? 1 : 0), 0)
@@ -225,12 +231,12 @@ describe('computeRetentionSeries', () => {
   })
 
   it('scopes to a single deck via the cardId -> deckId join', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('7d', now)
     const cards = [card({ id: 'a', deckId: 'deck-a' }), card({ id: 'b', deckId: 'deck-b' })]
     const logs = [
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, state: 'review' }),
-      log({ cardId: 'b', reviewedAt: now - DAY, rating: 1, state: 'review' }),
+      log({ cardId: 'a', reviewedAt: daysAgo(1), rating: 3, state: 'review' }),
+      log({ cardId: 'b', reviewedAt: daysAgo(1), rating: 1, state: 'review' }),
     ]
     const series = computeRetentionSeries(logs, range, buildCardDeckMap(cards), new Set(['deck-a']))
     const bucketWithData = series.find((p) => p.retention !== null)
@@ -240,7 +246,7 @@ describe('computeRetentionSeries', () => {
 
 describe('computeDeckPerformance', () => {
   it('computes Learned, Due, and mature Retention for a leaf study scope', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('7d', now)
     const cards = [
       card({ id: 'a', deckId: 'deck-a' }),
@@ -248,9 +254,9 @@ describe('computeDeckPerformance', () => {
       card({ id: 'suspended', deckId: 'deck-a', suspended: true }),
     ]
     const logs = [
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 3, stateBefore: 'review' }),
-      log({ cardId: 'a', reviewedAt: now - DAY, rating: 1, stateBefore: 'review' }),
-      log({ cardId: 'deleted-card', reviewedAt: now - DAY, rating: 3 }),
+      log({ cardId: 'a', reviewedAt: daysAgo(1), rating: 3, stateBefore: 'review' }),
+      log({ cardId: 'a', reviewedAt: daysAgo(1), rating: 1, stateBefore: 'review' }),
+      log({ cardId: 'deleted-card', reviewedAt: daysAgo(1), rating: 3 }),
     ]
     const rows = computeDeckPerformance(logs, cards, [cards[1]], [deck('deck-a')], range)
     expect(rows).toHaveLength(1)
@@ -264,10 +270,10 @@ describe('computeDeckPerformance', () => {
   })
 
   it('keeps a due deck with zero selected-period reviews and orders it first', () => {
-    const now = Date.now()
+    const now = NOW
     const range = buildRange('7d', now)
     const cards = [card({ id: 'a', deckId: 'due' }), card({ id: 'b', deckId: 'studied' })]
-    const logs = [log({ cardId: 'b', reviewedAt: now - DAY })]
+    const logs = [log({ cardId: 'b', reviewedAt: daysAgo(1) })]
     const rows = computeDeckPerformance(
       logs,
       cards,
@@ -279,13 +285,13 @@ describe('computeDeckPerformance', () => {
   })
 
   it('uses non-overlapping leaf scopes and excludes parent rows', () => {
-    const now = Date.now()
+    const now = NOW
     const cards = [
       card({ id: 'parent-card', deckId: 'parent' }),
       card({ id: 'child-card', deckId: 'child' }),
     ]
     const rows = computeDeckPerformance(
-      [log({ cardId: 'child-card', reviewedAt: now - DAY })],
+      [log({ cardId: 'child-card', reviewedAt: daysAgo(1) })],
       cards,
       [cards[0], cards[1]],
       [deck('parent', 'Parent'), deck('child', 'Child', 'parent')],
@@ -296,11 +302,11 @@ describe('computeDeckPerformance', () => {
   })
 
   it('attributes a moved card to its current leaf deck and ignores deleted cards', () => {
-    const now = Date.now()
+    const now = NOW
     const cards = [card({ id: 'moved', deckId: 'to' })]
     const logs = [
-      log({ cardId: 'moved', reviewedAt: now - DAY }),
-      log({ cardId: 'deleted', reviewedAt: now - DAY }),
+      log({ cardId: 'moved', reviewedAt: daysAgo(1) }),
+      log({ cardId: 'deleted', reviewedAt: daysAgo(1) }),
     ]
     const rows = computeDeckPerformance(
       logs,
@@ -320,10 +326,10 @@ describe('deriveMilestones', () => {
   })
 
   it('detects a 3-day streak milestone dated on the third consecutive day', () => {
-    const now = Date.now()
+    const now = NOW
     const logs = [
-      log({ reviewedAt: now - 2 * DAY }),
-      log({ reviewedAt: now - DAY }),
+      log({ reviewedAt: daysAgo(2) }),
+      log({ reviewedAt: daysAgo(1) }),
       log({ reviewedAt: now }),
     ]
     const events = deriveMilestones(logs)
@@ -335,7 +341,7 @@ describe('deriveMilestones', () => {
   })
 
   it('detects a cumulative review-count milestone at the Nth review', () => {
-    const now = Date.now()
+    const now = NOW
     const logs = Array.from({ length: 100 }, (_, i) => log({ reviewedAt: now - (100 - i) * MIN }))
     const events = deriveMilestones(logs)
     const reviews100 = events.find((e) => e.type === 'reviews' && e.threshold === 100)
@@ -344,10 +350,10 @@ describe('deriveMilestones', () => {
   })
 
   it('sorts events most-recent first', () => {
-    const now = Date.now()
+    const now = NOW
     const logs = [
-      log({ reviewedAt: now - 2 * DAY }),
-      log({ reviewedAt: now - DAY }),
+      log({ reviewedAt: daysAgo(2) }),
+      log({ reviewedAt: daysAgo(1) }),
       log({ reviewedAt: now }),
     ]
     const events = deriveMilestones(logs)

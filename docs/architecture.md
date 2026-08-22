@@ -47,8 +47,9 @@ src/
 │   ├── migration/    runner.ts (the contract; nothing implements it today)
 │   ├── scheduling/   scheduler.ts (ts-fsrs wrapper), reviewService.ts, state.ts, format.ts
 │   ├── search/       searchableText.ts
-│   └── stats/        dateRange.ts, progressMetrics.ts, streak.ts, learned.ts,
-│                      todayMetrics.ts, deckMetrics.ts, cardDeckIndex.ts, reviewHistory.ts
+│   └── stats/        calendarDay.ts, dateRange.ts, progressMetrics.ts, streak.ts,
+│                      learned.ts, todayMetrics.ts, deckMetrics.ts, cardDeckIndex.ts,
+│                      reviewHistory.ts
 ├── features/
 │   ├── cards/          the authoring UI — see "Card creation" below
 │   ├── design-preview/ /design-preview/review/* only: six fixture routes that import the
@@ -326,12 +327,13 @@ Session identity is deliberately transient and per-mount. The `StudySession` typ
 
 Today computes nothing in a component. `TodayPage` is the only fetcher on the route (`useSearchCards`, `useDueCards`, `useDecks`, `useReviewLogs`, with `now` snapshotted once per mount so it agrees with `/review`); it memoizes calls into `src/domain/stats/` and passes plain props to four presentational panels. `UI → hooks → pure domain → Repository`, with no shortcuts.
 
-- **`streak.ts`** — `computeStreak(logs, now)` → `{ current, best, activeToday }`. **The one streak definition in the product**, consumed by Today's Momentum panel, the top-nav `StreakBadge` and Progress's KPI tile (through `computeKpis`), so the three can present it differently but cannot disagree. Grace behavior: studying through yesterday keeps the streak alive until a full local calendar day is actually missed.
+- **`streak.ts`** — `computeStreak(logs, now)` → `{ current, best, activeToday }`. **The one streak definition in the product**, consumed by Today's Momentum panel, the top-nav `StreakBadge` and Progress's KPI tile (through `computeKpis`), so the three can present it differently but cannot disagree. Grace behavior: studying through yesterday keeps the streak alive until a full local calendar day is actually missed. Days are compared as calendar-day indices from `calendarDay.ts`, never as elapsed milliseconds, so a run that crosses a DST transition is unbroken.
 - **`todayMetrics.ts`** — `summarizeDueQueue`, `estimateSessionMinutes`, `nextDueAt`, `computePaceSeries`, `buildContinueLearning`, `selectNextMilestone`, `resolveSessionLimit`. Pure, `now` always explicit; learned deck summaries call the canonical helper rather than counting separately.
 - **`deckMetrics.ts`** — moved here from `src/features/library/`. Today's Continue Learning and Next Milestone need the same per-deck due/last-studied/mastery numbers the Library shows, and `src/domain` may not import from `src/features`.
 - **`learned.ts`** — `computeLearned(cards, logs, deckIds?)` is the one unique-current-active-card definition used by Progress, Today milestones and Deck Performance.
 - **`progressMetrics.ts`** — `computeRetention(logs)` is the one shared definition for Today and Progress: eligible iff `stateBefore` is `review` or `relearning`; successful iff `rating >= 2` (Hard); `null` when there are no eligible attempts. It also owns the exact Progress KPI, time-bucket, heat-map, retention-series, leaf-deck performance and milestone derivations.
-- **`dateRange.ts`** — `startOfDay` and `DAY_MS` are exported, so streaks, the heatmap and the pace series share one local-day boundary instead of three private copies.
+- **`calendarDay.ts`** — **the one home for local calendar-day arithmetic**: `localDayIndex`, `startOfDay` (local midnight, never UTC), `addCalendarDays`, `calendarDaysBetween`, `isSameCalendarDay`, `isNextCalendarDay`, `eachCalendarDay`. Every "previous / next / Nth local day" in the product goes through it, so streaks, the heat map, the pace series, milestones, ranges and the "Yesterday" label share one definition of a day boundary instead of private copies. **A local civil day is not 24 hours** — it is 23 or 25 on the two DST transition days — so adding `86_400_000` ms is never a way to reach the next calendar day, and the old `DAY_MS` export was deleted rather than left available. Elapsed-time arithmetic (FSRS intervals, durations, "in 4 hours", the 30-minute session gap) is a different concept and deliberately stays in milliseconds.
+- **`dateRange.ts`** — presets, `buildRange`/`previousPeriod` (`from` inclusive, `to` exclusive, both local midnights stepped by calendar days) and the `Today`/`Yesterday`/absolute event-date formatting, all built on `calendarDay.ts`.
 
 Two definitions worth stating exactly, because the UI copy depends on them:
 

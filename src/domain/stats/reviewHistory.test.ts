@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import type { Deck, ID, ReviewLog } from '@/types'
 import { buildHistoryRange, buildReviewHistory } from './reviewHistory'
+import { calendarDaysBetween } from './calendarDay'
 
-const DAY = 86_400_000
+const DAY = 86_400_000 // FSRS-style interval fixtures below; never a calendar day
 
 function log(overrides: Partial<ReviewLog>): ReviewLog {
   return {
@@ -42,7 +43,9 @@ describe('buildHistoryRange', () => {
     const now = Date.parse('2026-08-18T12:00:00Z')
     const range = buildHistoryRange('30d', now)!
     expect(range.days).toBe(30)
-    expect(range.to - range.from).toBe(30 * DAY)
+    // Thirty local calendar dates, which is not the same as 30 x 24h whenever
+    // the window contains a DST transition (see dstMetrics.dst.test.ts).
+    expect(calendarDaysBetween(range.from, range.to)).toBe(30)
     // `to` is the start of tomorrow, so anything logged today is included.
     expect(range.to).toBeGreaterThan(now)
   })
