@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Card } from '@/types'
-import { fixtureCard, fixtureReviewLog } from '@/domain/io/backupFixtures'
+import type { Card } from '../../types'
+import { fixtureCard, fixtureReviewLog } from '../../domain/io/backupFixtures'
 import { cardRow, fakeSupabase, rpcCalls, tableWrites } from './fakeSupabaseClient'
 import { SupabaseRepository } from './SupabaseRepository'
 

@@ -1,6 +1,6 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
-import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '@/types'
-import { searchableText } from '@/domain/search/searchableText'
+import type { Card, Deck, Draft, ID, Millis, ReviewLog, Roadmap } from '../../types'
+import { searchableText } from '../../domain/search/searchableText'
 import type {
   CardQuery,
   CardRepo,
@@ -14,8 +14,7 @@ import type {
   WorkspaceSnapshot,
   WriteGuarantee,
 } from '../repository'
-import { ImportFailure } from '@/domain/io/importFailure'
-import { getSupabase } from './client'
+import { ImportFailure } from '../../domain/io/importFailure'
 
 // Every row stores the whole entity in a `data` jsonb column, so reads unwrap
 // `row.data` and writes wrap `{ id, data: entity }`. user_id is filled by the
@@ -268,7 +267,13 @@ export class SupabaseRepository implements Repository {
 
   private readonly sb: SupabaseClient
 
-  constructor(sb: SupabaseClient = getSupabase()) {
+  // The client is injected, never constructed here. Building one means reading
+  // configuration, and every platform reads it differently - Vite exposes
+  // import.meta.env, Expo exposes process.env.EXPO_PUBLIC_*. Defaulting this
+  // argument to a web factory is what used to pull import.meta into this file's
+  // import graph and made the backend unusable off the browser. What the cloud
+  // backend does is shared; how a client is built is the platform's business.
+  constructor(sb: SupabaseClient) {
     this.sb = sb
     this.cards = createCardRepo(sb)
     this.decks = crud<Deck>(sb, 'decks')

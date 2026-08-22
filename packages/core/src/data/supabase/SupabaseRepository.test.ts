@@ -5,11 +5,12 @@ import {
   fixtureDraft,
   fixtureReviewLog,
   fixtureRoadmap,
-} from '@/domain/io/backupFixtures'
-import { ImportFailure } from '@/domain/io/importFailure'
+} from '../../domain/io/backupFixtures'
+import { ImportFailure } from '../../domain/io/importFailure'
 import type { WorkspaceSnapshot } from '../repository'
 import { fakeSupabase } from './fakeSupabaseClient'
 import { SupabaseRepository } from './SupabaseRepository'
+import { rejection } from '../../test/rejection'
 
 // Focused on the whole-workspace import contract only, against the fake client
 // in fakeSupabaseClient.ts: no live project, no network. What matters here is
@@ -44,9 +45,7 @@ describe('SupabaseRepository — whole-workspace import', () => {
 
   it('reports the refusal as a validation failure that changed nothing', async () => {
     const { sb } = fakeSupabase()
-    const error = await new SupabaseRepository(sb)
-      .replaceAll(snapshot())
-      .catch((e: unknown) => e as ImportFailure)
+    const error = await rejection<ImportFailure>(new SupabaseRepository(sb).replaceAll(snapshot()))
 
     expect(error.stage).toBe('validation')
     expect(error.workspaceUnchanged).toBe(true)

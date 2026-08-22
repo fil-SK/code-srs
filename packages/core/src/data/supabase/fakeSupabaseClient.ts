@@ -1,12 +1,14 @@
 import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js'
-import type { Card, Deck, Draft, ReviewLog, Roadmap } from '@/types'
+import type { Card, Deck, Draft, ReviewLog, Roadmap } from '../../types'
 
-// A chainable stand-in for the Supabase query builder, kept in a non-test module
-// on purpose: tsconfig.app.json excludes *.test.ts from the typecheck, so a fake
-// written inline in a test file can drift from the real client and from
-// supabase/schema.sql without anything failing (the same reason
-// src/domain/io/backupFixtures.ts lives outside the tests). Nothing in the app
-// imports it.
+// A chainable stand-in for the Supabase query builder, kept in core *source*
+// rather than under packages/core/src/test/ on purpose. A fake written inline in
+// a test file, or parked in the test directory, can drift from the real client
+// and from supabase/schema.sql without anything failing: platformNeutrality.test
+// skips both, and so does tsconfig.core.json's no-DOM/no-Node compile. Living
+// here keeps it inside every guard the shipped code answers to (the same reason
+// domain/io/backupFixtures.ts sits outside the tests). Nothing in an application
+// imports it, and it is deliberately absent from the package barrel.
 //
 // It exists because SupabaseRepository's reads cannot be judged from their
 // results alone - what matters is the sequence of requests they issue - and

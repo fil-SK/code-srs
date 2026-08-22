@@ -20,8 +20,14 @@
 // ---- entity contracts --------------------------------------------------------
 export * from './types'
 
-// ---- storage seam (the contract only; no backend lives in core) --------------
+// ---- storage seam: the contract, the cloud backend, backup orchestration -----
+// Dexie stays in the web app; the Supabase backend is portable because it takes
+// a ready client rather than building one. data/supabase/fakeSupabaseClient.ts
+// is deliberately absent: it is a test double, and the one test that needs it
+// from outside the package reaches it by source path instead.
 export * from './data/repository'
+export * from './data/backup'
+export * from './data/supabase/SupabaseRepository'
 
 // ---- platform-neutral utilities ----------------------------------------------
 export * from './lib/id'

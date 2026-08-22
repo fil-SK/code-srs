@@ -4,8 +4,16 @@ import { richText } from '@/types/card'
 import { fixtureCard, fixtureReviewLog } from '@/domain/io/backupFixtures'
 import { AppDB } from '../dexie/db'
 import { DexieRepository } from '../dexie/DexieRepository'
-import { cardRow, fakeSupabase, reviewLogRow } from './fakeSupabaseClient'
-import { SupabaseRepository } from './SupabaseRepository'
+import { SupabaseRepository } from '@itera/core'
+// The fake server moved into @itera/core with the backend it models, and is
+// deliberately not on the package barrel - a test double has no business on a
+// production surface. This one test needs both backends at once, so it is the
+// single place that reaches past the barrel to a source path.
+import {
+  cardRow,
+  fakeSupabase,
+  reviewLogRow,
+} from '@itera/core/src/data/supabase/fakeSupabaseClient'
 
 // The seam's standing promise is that the backend is invisible: the same stored
 // data yields the same results either way (CURRENT_STATE.md section 12). Audit

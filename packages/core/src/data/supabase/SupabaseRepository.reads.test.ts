@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { Card, ReviewLog } from '@/types'
-import { fixtureCard, fixtureDeck, fixtureReviewLog } from '@/domain/io/backupFixtures'
-import { richText } from '@/types/card'
+import type { Card, ReviewLog } from '../../types'
+import { fixtureCard, fixtureDeck, fixtureReviewLog } from '../../domain/io/backupFixtures'
+import { richText } from '../../types/card'
 import {
   cardRow,
   entityRow,

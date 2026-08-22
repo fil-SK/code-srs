@@ -93,7 +93,7 @@ What is still open is only evidence. The pagination loop has never run against a
 live PostgREST service: the project's Supabase instance no longer exists
 (`CURRENT_STATE.md` §15), so no real Max rows cap has ever truncated a real
 response here. Every assertion comes from the chainable fake client in
-`src/data/supabase/fakeSupabaseClient.ts`, which models the cap and the
+`packages/core/src/data/supabase/fakeSupabaseClient.ts`, which models the cap and the
 Content-Range total from the PostgREST contract rather than from an observed
 response.
 
@@ -115,7 +115,7 @@ non-vacuous by removing the transaction and watching them fail. Supabase's rests
 on `supabase/migrations/0004_review_commit_rpc.sql`, which **has never run
 against a live Postgres** - the project's instance no longer exists
 (`CURRENT_STATE.md` §15). The client-side tests assert the RPC contract against
-the fake client in `src/data/supabase/fakeSupabaseClient.ts`, which models the
+the fake client in `packages/core/src/data/supabase/fakeSupabaseClient.ts`, which models the
 function's semantics from the SQL rather than from an observed response.
 
 Run `schema.sql`, then `0002`, `0003` and `0004`, then confirm on the first real
