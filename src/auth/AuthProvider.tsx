@@ -24,11 +24,11 @@ export interface AuthIdentity {
 }
 
 interface AuthValue {
-  /** The Supabase session, or null. Null does NOT mean signed out — see `isAuthenticated`. */
+  /** The Supabase session, or null. Always null in local mode — see `isAuthenticated`. */
   session: Session | null
   loading: boolean
   email: string | undefined
-  /** Whoever is signed in, from either backing store. Null when signed out. */
+  /** Whoever is signed in, from the active mode's store only. Null when signed out. */
   identity: AuthIdentity | null
   isAuthenticated: boolean
   signInLocal: (email: string, opts: { remember: boolean }) => void
@@ -38,19 +38,32 @@ interface AuthValue {
 
 const AuthContext = createContext<AuthValue | null>(null)
 
-// Tracks who is signed in, from two independent sources:
-//   - the Supabase session, when cloud sync is configured (unchanged behavior);
-//   - a local session (src/auth/localSession.ts), which is how the default
-//     local-first mode has an account boundary at all.
-// Either one counts as signed in. Routing gates on `isAuthenticated`
-// (src/auth/RequireAuth.tsx); nothing else in the app inspects storage.
+// Tracks who is signed in. There are two auth models, and exactly one of them is
+// active: the one matching the backend `getRepository()` selected.
+//   - Supabase configured: the Supabase session is the only session. A leftover
+//     local record from a previous local-first build never authenticates.
+//   - Supabase not configured: a local session (src/auth/localSession.ts) is the
+//     only session, and is how local-first mode has an account boundary at all.
+// Letting either one count regardless of mode is what made a stale `itera.session`
+// admit someone to a cloud-backed app with no cloud user (audit P1-3). Routing gates
+// on `isAuthenticated` (src/auth/RequireAuth.tsx); nothing else inspects storage.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(isSupabaseConfigured)
-  const [local, setLocal] = useState<LocalSession | null>(() => readLocalSession())
+  // Not even read in Supabase mode, so there is no first-render window where a
+  // stale local record renders the app authenticated before the bootstrap lands.
+  const [local, setLocal] = useState<LocalSession | null>(() =>
+    isSupabaseConfigured ? null : readLocalSession(),
+  )
 
   useEffect(() => {
     if (!isSupabaseConfigured) return
+
+    // Supabase owns authentication here, so a leftover local/demo record is dead
+    // weight. This is session cleanup only: the learner's IndexedDB workspace is
+    // left untouched, and is never silently uploaded or deleted.
+    clearLocalSession()
+
     const sb = getSupabase()
 
     sb.auth.getSession().then(({ data }) => {
@@ -64,8 +77,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe()
   }, [])
 
+  // Both local sign-ins are no-ops in Supabase mode. SignInPanel already never
+  // calls them there (it sends a magic link and hides the demo divider); this stops
+  // any future caller minting a record that could never authenticate.
   const signInLocal = useCallback(
     (email: string, { remember }: { remember: boolean }) => {
+      if (isSupabaseConfigured) return
       const next = createLocalSession(email, 'local')
       writeLocalSession(next, { remember })
       setLocal(next)
@@ -76,6 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // The demo workspace is deliberately not remembered across browser restarts:
   // it is a look-around identity, not an account someone means to keep.
   const signInDemo = useCallback(() => {
+    if (isSupabaseConfigured) return
     const next = createLocalSession(DEMO_EMAIL, 'demo')
     writeLocalSession(next, { remember: false })
     setLocal(next)
@@ -88,10 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthValue>(() => {
-    // A real Supabase session outranks a local one: if both exist, the cloud
-    // identity is the one whose data the app is actually reading.
-    const identity: AuthIdentity | null = session?.user.email
-      ? { email: session.user.email, kind: 'supabase' }
+    // The active backend decides which session is a session. A stale record from
+    // the inactive mode is neither an identity nor an admission ticket.
+    const identity: AuthIdentity | null = isSupabaseConfigured
+      ? session?.user.email
+        ? { email: session.user.email, kind: 'supabase' }
+        : null
       : local
         ? { email: local.email, kind: local.kind }
         : null
@@ -101,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       email: identity?.email,
       identity,
-      isAuthenticated: session !== null || local !== null,
+      isAuthenticated: isSupabaseConfigured ? session !== null : local !== null,
       signInLocal,
       signInDemo,
       signOut,

@@ -59,6 +59,28 @@ Write Code currently compares against accepted complete answers, so semantically
 
 This is now okay. I write the cards and I know which answer I expect, so I test myself on it. For production, this might not be the best approach to do it.
 
+## Browser-local learning data when an origin moves to the cloud
+
+Deferred by D251 (2026-08-22, audit P1-3). Fixing the auth-mode bug settled what
+happens to the stale *session* when a local-first origin gains `VITE_SUPABASE_*`:
+it is cleared, and the user must sign in with Supabase. It deliberately did not
+answer what happens to their **workspace** - the decks, cards and review logs
+still sitting in that browser's IndexedDB, which the app no longer reads because
+`getRepository()` now returns `SupabaseRepository`.
+
+That data is left exactly where it is: not deleted, not uploaded. Auto-migrating
+it would silently write a whole workspace into a cloud account the user had not
+signed into at the time, and deleting it would discard data the app has no right
+to discard. The honest interim answer is the existing export/import path - the
+user can export before the switch and merge afterwards - but nothing in the UI
+tells them their local data is now unreachable, which is the real gap.
+
+Closing it means a deliberate product decision, not a refactor: at minimum a
+detected-local-data notice on the Supabase-mode login or account surface, and an
+explicit, user-initiated one-way upload built on the existing backup format and
+`importBackup` merge semantics. It is not an auth concern and should not be
+attached to `AuthProvider`.
+
 ## Transactional replace-import on Supabase
 
 Deferred by D242 (2026-08-22, audit P1-1). Replace-import is all-or-nothing on

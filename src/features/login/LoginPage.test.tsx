@@ -1,18 +1,52 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import type { Session } from '@supabase/supabase-js'
 import { AuthProvider } from '@/auth/AuthProvider'
 import { readLocalSession } from '@/auth/localSession'
 import { LoginPage } from './LoginPage'
+
+// Local mode by default, so every test below this line is unaffected. The Supabase
+// block flips the flag; see src/auth/RequireAuth.test.tsx for the same seam.
+const sb = vi.hoisted(() => ({
+  configured: false,
+  getSession: vi.fn(async () => ({ data: { session: null as Session | null } })),
+}))
+
+vi.mock('@/data/supabase/client', () => ({
+  get isSupabaseConfigured() {
+    return sb.configured
+  },
+  getSupabase: () => ({
+    auth: {
+      getSession: () => sb.getSession(),
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe: () => {} } },
+      }),
+      signOut: async () => ({ error: null }),
+    },
+  }),
+}))
+
+function fakeSession(email: string): Session {
+  return { access_token: 't', user: { id: 'u1', email } } as unknown as Session
+}
+
+function seedLocalSession() {
+  window.localStorage.setItem(
+    'itera.session',
+    JSON.stringify({ id: 'x', email: 'stale@local.test', kind: 'local', createdAt: '' }),
+  )
+}
 
 function LocationProbe() {
   const { pathname } = useLocation()
   return <div data-testid="pathname">{pathname}</div>
 }
 
-function renderLogin(initial = '/login') {
+function renderLogin(initial: string | { pathname: string; state?: unknown } = '/login') {
   return render(
     <AuthProvider>
       <MemoryRouter initialEntries={[initial]}>
@@ -20,6 +54,7 @@ function renderLogin(initial = '/login') {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<div>Today</div>} />
+          <Route path="/review" element={<div>Review</div>} />
         </Routes>
       </MemoryRouter>
     </AuthProvider>,
@@ -181,5 +216,48 @@ describe('LoginPage', () => {
 
     expect(screen.getByTestId('pathname').textContent).toBe('/')
     expect(screen.getByText('Today')).toBeTruthy()
+  })
+})
+
+// Audit P1-3: the local-mode counterpart is "redirects away when a session already
+// exists" above. With Supabase configured that same stale record must not redirect,
+// or the user is bounced off the only page that can sign them in.
+describe('LoginPage - Supabase mode', () => {
+  beforeEach(() => {
+    sb.configured = true
+    sb.getSession.mockClear()
+    sb.getSession.mockResolvedValue({ data: { session: null } })
+  })
+
+  afterEach(() => {
+    cleanup()
+    sb.configured = false
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
+
+  it('stays on /login when only a stale local session exists', async () => {
+    seedLocalSession()
+
+    await act(async () => {
+      renderLogin()
+    })
+
+    expect(screen.getByTestId('pathname').textContent).toBe('/login')
+    // Proves the page really is in Supabase mode: magic link, no password field.
+    expect(screen.getByRole('button', { name: 'Send magic link' })).toBeTruthy()
+    expect(screen.queryByLabelText('Password')).toBeNull()
+  })
+
+  it('redirects a real Supabase session to the route it was sent from', async () => {
+    seedLocalSession()
+    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@itera.test') } })
+
+    await act(async () => {
+      renderLogin({ pathname: '/login', state: { from: '/review' } })
+    })
+
+    expect(screen.getByTestId('pathname').textContent).toBe('/review')
+    expect(screen.getByText('Review')).toBeTruthy()
   })
 })

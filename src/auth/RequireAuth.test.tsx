@@ -1,10 +1,65 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import type { Session } from '@supabase/supabase-js'
 import { AuthProvider, useAuth } from './AuthProvider'
+import { readLocalSession } from './localSession'
 import { RequireAuth } from './RequireAuth'
+
+// The suite blanks VITE_SUPABASE_* (vitest.config.ts), so the Supabase half of the
+// auth path is otherwise unreachable. Mocking the config seam is the only way to
+// exercise it, and `isSupabaseConfigured` is a getter so a single file can render
+// both modes: AuthProvider reads it during render, never at module scope.
+const sb = vi.hoisted(() => {
+  const listeners: ((event: string, session: unknown) => void)[] = []
+  return {
+    configured: false,
+    listeners,
+    getSession: vi.fn(async () => ({ data: { session: null as Session | null } })),
+    signOut: vi.fn(async () => {
+      listeners.forEach((cb) => cb('SIGNED_OUT', null))
+      return { error: null }
+    }),
+  }
+})
+
+vi.mock('@/data/supabase/client', () => ({
+  get isSupabaseConfigured() {
+    return sb.configured
+  },
+  getSupabase: () => ({
+    auth: {
+      getSession: () => sb.getSession(),
+      onAuthStateChange: (cb: (event: string, session: unknown) => void) => {
+        sb.listeners.push(cb)
+        return {
+          data: {
+            subscription: {
+              unsubscribe: () => {
+                const i = sb.listeners.indexOf(cb)
+                if (i >= 0) sb.listeners.splice(i, 1)
+              },
+            },
+          },
+        }
+      },
+      signOut: () => sb.signOut(),
+    },
+  }),
+}))
+
+function fakeSession(email: string): Session {
+  return { access_token: 't', user: { id: 'u1', email } } as unknown as Session
+}
+
+function seedLocalSession(email = 'stale@local.test') {
+  window.localStorage.setItem(
+    'itera.session',
+    JSON.stringify({ id: 'x', email, kind: 'local', createdAt: '' }),
+  )
+}
 
 function LocationProbe() {
   const location = useLocation()
@@ -57,10 +112,13 @@ function renderApp(initial: string) {
 }
 
 function Protected() {
-  const { signOut } = useAuth()
+  const { signOut, identity } = useAuth()
   return (
     <>
       <div>Today</div>
+      <div data-testid="identity">
+        {identity ? `${identity.kind}:${identity.email}` : 'none'}
+      </div>
       <button type="button" onClick={() => void signOut()}>
         sign out
       </button>
@@ -108,5 +166,102 @@ describe('RequireAuth', () => {
     await user.click(screen.getByRole('button', { name: 'sign out' }))
     expect(screen.getByText('Login')).toBeTruthy()
     expect(screen.getByTestId('pathname').textContent).toContain('/login')
+  })
+})
+
+// Audit P1-3: with Supabase configured the repository is SupabaseRepository, so a
+// leftover `itera.session` from a previous local-first build must not authenticate.
+describe('RequireAuth - Supabase mode', () => {
+  beforeEach(() => {
+    sb.configured = true
+    sb.listeners.length = 0
+    sb.getSession.mockClear()
+    sb.getSession.mockResolvedValue({ data: { session: null } })
+    sb.signOut.mockClear()
+  })
+
+  afterEach(() => {
+    cleanup()
+    sb.configured = false
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
+
+  it('does not let a stale local session in, and clears it', async () => {
+    seedLocalSession()
+
+    await act(async () => {
+      renderApp('/review')
+    })
+
+    expect(screen.queryByText('Today')).toBeNull()
+    expect(screen.getByText('Login')).toBeTruthy()
+    expect(screen.getByTestId('pathname').textContent).toBe('/login from=/review')
+    // Cleared through the localSession seam, not by touching the key here.
+    expect(readLocalSession()).toBeNull()
+  })
+
+  it('leaves the learner IndexedDB workspace alone while clearing the session', async () => {
+    seedLocalSession()
+    window.localStorage.setItem('itera.unrelated', 'keep me')
+
+    await act(async () => {
+      renderApp('/')
+    })
+
+    expect(readLocalSession()).toBeNull()
+    expect(window.localStorage.getItem('itera.unrelated')).toBe('keep me')
+  })
+
+  it('authenticates a real Supabase session, and its identity wins over a stale local one', async () => {
+    seedLocalSession('stale@local.test')
+    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@itera.test') } })
+
+    await act(async () => {
+      renderApp('/')
+    })
+
+    expect(screen.getByText('Today')).toBeTruthy()
+    expect(screen.getByTestId('identity').textContent).toBe('supabase:cloud@itera.test')
+  })
+
+  it('never renders authenticated while the Supabase bootstrap is still pending', async () => {
+    seedLocalSession()
+    let settle: (v: { data: { session: Session | null } }) => void = () => {}
+    sb.getSession.mockReturnValue(
+      new Promise<{ data: { session: Session | null } }>((resolve) => {
+        settle = resolve
+      }),
+    )
+
+    renderApp('/')
+
+    // loading is still true: RequireAuth renders nothing rather than flashing the app.
+    expect(screen.queryByText('Today')).toBeNull()
+    expect(screen.queryByText('Login')).toBeNull()
+
+    await act(async () => {
+      settle({ data: { session: null } })
+    })
+
+    expect(screen.queryByText('Today')).toBeNull()
+    expect(screen.getByText('Login')).toBeTruthy()
+  })
+
+  it('signs out through Supabase, and no stale local session re-admits the user', async () => {
+    const user = userEvent.setup()
+    seedLocalSession()
+    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@itera.test') } })
+
+    await act(async () => {
+      renderApp('/')
+    })
+    expect(screen.getByText('Today')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'sign out' }))
+
+    expect(sb.signOut).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('Login')).toBeTruthy()
+    expect(readLocalSession()).toBeNull()
   })
 })
