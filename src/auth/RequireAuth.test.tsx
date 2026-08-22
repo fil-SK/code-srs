@@ -77,7 +77,7 @@ function LocationProbe() {
 // redirect-when-already-authenticated behavior, which is what carries a
 // just-signed-in visitor into the app.
 function LoginStub() {
-  const { signInDemo, isAuthenticated } = useAuth()
+  const { signInDemo, isAuthenticated, sessionError } = useAuth()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
 
@@ -86,6 +86,7 @@ function LoginStub() {
   return (
     <>
       <div>Login</div>
+      <div data-testid="session-error">{sessionError ?? ''}</div>
       <button type="button" onClick={signInDemo}>
         demo
       </button>
@@ -153,6 +154,16 @@ describe('RequireAuth', () => {
   it('leaves /design-preview reachable while signed out', () => {
     renderApp('/design-preview')
     expect(screen.getByText('Design preview')).toBeTruthy()
+  })
+
+  // Local mode never touches the Supabase bootstrap, so the getSession failure
+  // handling added for the audit cannot have changed anything here.
+  it('never consults the Supabase session bootstrap', () => {
+    sb.getSession.mockClear()
+    renderApp('/')
+
+    expect(screen.getByText('Login')).toBeTruthy()
+    expect(sb.getSession).not.toHaveBeenCalled()
   })
 
   it('closes the loop: sign in reaches the app, sign out returns to /login', async () => {
@@ -246,6 +257,99 @@ describe('RequireAuth - Supabase mode', () => {
 
     expect(screen.queryByText('Today')).toBeNull()
     expect(screen.getByText('Login')).toBeTruthy()
+  })
+
+  // The bootstrap must always end in a decided state. A bare `.then` meant a
+  // rejected getSession() never cleared `loading`, so AuthGate showed "Loading…"
+  // forever - the one path to a permanently blank app (audit 2026-08-22).
+  it('ends loading and signs the visitor out when getSession() rejects', async () => {
+    sb.getSession.mockRejectedValue(new Error('network down'))
+
+    await act(async () => {
+      renderApp('/review')
+    })
+
+    expect(screen.getByText('Login')).toBeTruthy()
+    expect(screen.queryByText('Today')).toBeNull()
+    expect(screen.getByTestId('pathname').textContent).toBe('/login from=/review')
+  })
+
+  it('explains a rejected bootstrap rather than silently signing the visitor out', async () => {
+    sb.getSession.mockRejectedValue(new Error('network down'))
+
+    await act(async () => {
+      renderApp('/')
+    })
+
+    expect(screen.getByTestId('session-error').textContent).toBe(
+      "Couldn't reach the account service. Check your connection and try again.",
+    )
+  })
+
+  it('treats a getSession() that resolves with an error the same as a rejection', async () => {
+    sb.getSession.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'Invalid Refresh Token' },
+    })
+
+    await act(async () => {
+      renderApp('/')
+    })
+
+    expect(screen.getByText('Login')).toBeTruthy()
+    expect(screen.getByTestId('session-error').textContent).toContain("Couldn't reach the account service")
+  })
+
+  it('does not admit a stale local session when the bootstrap rejects', async () => {
+    seedLocalSession()
+    sb.getSession.mockRejectedValue(new Error('network down'))
+
+    await act(async () => {
+      renderApp('/')
+    })
+
+    expect(screen.queryByText('Today')).toBeNull()
+    expect(screen.getByText('Login')).toBeTruthy()
+    expect(readLocalSession()).toBeNull()
+  })
+
+  it('clears the bootstrap error when a session arrives on the auth-state channel', async () => {
+    sb.getSession.mockRejectedValue(new Error('network down'))
+
+    await act(async () => {
+      renderApp('/')
+    })
+    expect(screen.getByTestId('session-error').textContent).toContain("Couldn't reach")
+
+    await act(async () => {
+      sb.listeners.forEach((cb) => cb('SIGNED_IN', fakeSession('cloud@itera.test')))
+    })
+
+    expect(screen.getByText('Today')).toBeTruthy()
+  })
+
+  it('does not update state after unmount when the bootstrap settles late', async () => {
+    let settle: (v: { data: { session: Session | null } }) => void = () => {}
+    let fail: (e: unknown) => void = () => {}
+    sb.getSession.mockReturnValue(
+      new Promise<{ data: { session: Session | null } }>((resolve, reject) => {
+        settle = resolve
+        fail = reject
+      }),
+    )
+
+    const { unmount } = renderApp('/')
+    unmount()
+
+    // Both outcomes, after the provider is gone. React would warn (and a
+    // future StrictMode double-mount would misbehave) if either were applied.
+    await act(async () => {
+      settle({ data: { session: fakeSession('cloud@itera.test') } })
+      fail(new Error('too late'))
+      await Promise.resolve()
+    })
+
+    expect(screen.queryByText('Today')).toBeNull()
   })
 
   it('signs out through Supabase, and no stale local session re-admits the user', async () => {

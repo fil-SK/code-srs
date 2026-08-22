@@ -260,4 +260,30 @@ describe('LoginPage - Supabase mode', () => {
     expect(screen.getByTestId('pathname').textContent).toBe('/review')
     expect(screen.getByText('Review')).toBeTruthy()
   })
+
+  // A failed session bootstrap lands the visitor here, so this screen is the
+  // only place that can say why. It reuses the panel's existing form-error
+  // region rather than adding an error surface (audit 2026-08-22).
+  it('shows why the visitor is signed out when the session bootstrap failed', async () => {
+    sb.getSession.mockRejectedValue(new Error('network down'))
+
+    await act(async () => {
+      renderLogin()
+    })
+
+    expect(screen.getByTestId('pathname').textContent).toBe('/login')
+    expect(screen.getByRole('alert').textContent).toBe(
+      "Couldn't reach the account service. Check your connection and try again.",
+    )
+    // Still a usable login screen, not an error page.
+    expect(screen.getByRole('button', { name: 'Send magic link' })).toBeTruthy()
+  })
+
+  it('shows no error at all on a healthy signed-out bootstrap', async () => {
+    await act(async () => {
+      renderLogin()
+    })
+
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
 })

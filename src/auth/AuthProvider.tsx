@@ -31,10 +31,20 @@ interface AuthValue {
   /** Whoever is signed in, from the active mode's store only. Null when signed out. */
   identity: AuthIdentity | null
   isAuthenticated: boolean
+  /**
+   * Set only when the Supabase session bootstrap failed, so Login can say why
+   * the visitor is signed out. Null in local mode and on every healthy path.
+   */
+  sessionError: string | null
   signInLocal: (email: string, opts: { remember: boolean }) => void
   signInDemo: () => void
   signOut: () => Promise<void>
 }
+
+// Deliberately not the raw Supabase/transport message: this is the very first
+// thing a visitor can see, and "TypeError: Failed to fetch" tells them nothing
+// they can act on.
+const BOOTSTRAP_ERROR = "Couldn't reach the account service. Check your connection and try again."
 
 const AuthContext = createContext<AuthValue | null>(null)
 
@@ -50,6 +60,7 @@ const AuthContext = createContext<AuthValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(isSupabaseConfigured)
+  const [sessionError, setSessionError] = useState<string | null>(null)
   // Not even read in Supabase mode, so there is no first-render window where a
   // stale local record renders the app authenticated before the bootstrap lands.
   const [local, setLocal] = useState<LocalSession | null>(() =>
@@ -65,16 +76,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearLocalSession()
 
     const sb = getSupabase()
+    let cancelled = false
 
-    sb.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setLoading(false)
-    })
+    // The bootstrap has to end in a decided state, always. Before the
+    // 2026-08-22 audit this was a bare `.then`, so a rejected getSession()
+    // never cleared `loading` and AuthGate showed "Loading…" forever - the one
+    // path that could leave the whole app blank with no way out. A failure is
+    // now simply "signed out, and here is why": no session is invented, and
+    // RequireAuth sends the visitor to /login where the message renders.
+    sb.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          setSessionError(BOOTSTRAP_ERROR)
+          return
+        }
+        setSession(data.session)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setSessionError(BOOTSTRAP_ERROR)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
 
     const { data: sub } = sb.auth.onAuthStateChange((_event, next) => {
       setSession(next)
+      // A session arriving later (magic-link return, refresh) resolves whatever
+      // the bootstrap could not reach.
+      if (next) setSessionError(null)
     })
-    return () => sub.subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      sub.subscription.unsubscribe()
+    }
   }, [])
 
   // Both local sign-ins are no-ops in Supabase mode. SignInPanel already never
@@ -122,11 +159,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: identity?.email,
       identity,
       isAuthenticated: isSupabaseConfigured ? session !== null : local !== null,
+      sessionError,
       signInLocal,
       signInDemo,
       signOut,
     }
-  }, [session, loading, local, signInLocal, signInDemo, signOut])
+  }, [session, loading, sessionError, local, signInLocal, signInDemo, signOut])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -54,7 +54,7 @@ function LeadingIcon({ icon: Icon }: { icon: typeof Mail }) {
 
 export function SignInPanel({ redirectTo }: { redirectTo: string }) {
   const navigate = useNavigate()
-  const { signInLocal, signInDemo } = useAuth()
+  const { signInLocal, signInDemo, sessionError } = useAuth()
 
   const emailId = useId()
   const passwordId = useId()
@@ -236,9 +236,13 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             </>
           )}
 
-          {errors.form && (
+          {/* One alert region for both: a failed magic-link send, and a Supabase
+              session bootstrap that could not complete (AuthProvider.sessionError).
+              The bootstrap message is why the visitor is on this screen at all, so
+              a live form error from this session takes precedence over it. */}
+          {(errors.form ?? sessionError) && (
             <p role="alert" className="mt-4 text-[13px] text-itera-error">
-              {errors.form}
+              {errors.form ?? sessionError}
             </p>
           )}
 

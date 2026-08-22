@@ -219,10 +219,10 @@ Registry: `src/features/reviewV2/interactions/registry.ts` (deliberately `Partia
 
 ## 16. Tests / build status
 
-Measured 2026-08-22, after the Supabase pagination fix (audit P1-4):
+Measured 2026-08-22, after the P2-A release-hardening pass:
 
 ```
-npx vitest run       → 84 test files, 750 tests, all passing (47.44s)
+npx vitest run       → 86 test files, 790 tests, all passing (53.03s)
 npx tsc -b --force   → clean, no errors
 npm run lint         → clean, zero warnings
 npm run build        → successful (existing chunk-size advisory only)
@@ -230,7 +230,9 @@ npm run build        → successful (existing chunk-size advisory only)
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**750 is the current correct test count.** The Supabase pagination fix added 57 across three new files in `src/data/supabase/` — `SupabaseRepository.reads.test.ts` (the pagination edge matrix, the review-log and card read semantics, and the later-page error contract), `backupCompleteness.test.ts` (the real `exportBackup` against a row-capped cloud repository), and `backendParity.test.ts` (the same dataset read through a real `DexieRepository` and a capped Supabase one, compared outright) — all driven by the chainable fake client in `src/data/supabase/fakeSupabaseClient.ts`, which simulates a project **Max rows** cap of 3. Reverting the loop to the naive "stop on a page shorter than requested" termination fails 24 of the 31 cases in the reads suite.
+**790 is the current correct test count.** The P2-A pass added 40 across two new files and three existing ones: `src/components/ui/dialogs.test.tsx` (14 - focus entry per dialog kind, Tab/Shift+Tab wrap, containment against a background control, focus return on cancel/Escape/confirm/alert, a vanished opener, and the unchanged promise results) and `src/lib/download.test.ts` (8 - anchor in the document at click time and a deferred `revokeObjectURL`, on fake timers), plus 8 `collectionPathFor` cases in `collectionTree.test.ts`, 7 in `RequireAuth.test.tsx` and 3 in `LoginPage.test.tsx`. Each set was run against the unfixed module first: 9 of 14 dialog cases, 2 of 8 download cases, 6 of 9 auth cases and 4 of 8 cycle cases fail there, the cycle ones by not terminating at all.
+
+**750 was the count before it.** The Supabase pagination fix added 57 across three new files in `src/data/supabase/` — `SupabaseRepository.reads.test.ts` (the pagination edge matrix, the review-log and card read semantics, and the later-page error contract), `backupCompleteness.test.ts` (the real `exportBackup` against a row-capped cloud repository), and `backendParity.test.ts` (the same dataset read through a real `DexieRepository` and a capped Supabase one, compared outright) — all driven by the chainable fake client in `src/data/supabase/fakeSupabaseClient.ts`, which simulates a project **Max rows** cap of 3. Reverting the loop to the naive "stop on a page shorter than requested" termination fails 24 of the 31 cases in the reads suite.
 
 **693 was the count before it.** The auth-mode fix added 7: five in `src/auth/RequireAuth.test.tsx` and two in `src/features/login/LoginPage.test.tsx`, all in new Supabase-mode blocks. They are the first tests in the repo to exercise the Supabase branch at all - the suite blanks `VITE_SUPABASE_*`, so both files mock `@/data/supabase/client` with `isSupabaseConfigured` as a **getter**, which lets one file render both modes because `AuthProvider` reads the flag during render rather than at module scope. Existing local-mode tests are untouched and the mock defaults to local. Run against the pre-fix `AuthProvider`, 3 of the 7 fail, including the audit's own stale-session reproduction.
 
@@ -297,7 +299,7 @@ An unmatched path renders `RouteError`'s **"Page not found"** branch (`isRouteEr
 
 Status only. Usage rules — families, weights, scale, icon conventions, the orange rule, portal mechanics, the full token and radius tables — are owned by [`design-system.md`](design-system.md).
 
-**Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. Inter is the app-wide non-code default; `--font-itera-sans` and the compatibility `--font-itera-display` token both alias `--font-sans`. (The `--font-itera-mono` alias was deleted — it had no consumers; code surfaces use `font-mono`.) **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
+**Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. That last clause is only true because `vite.config.ts` sets `workbox.globPatterns` explicitly: workbox-build's default glob is js/css/html, so until the P2-A pass all twelve `.woff2` files and the Today hero's PNG mask were emitted but never precached (audit 2026-08-22). The precache manifest is now 24 entries and is the thing to check after any asset-pipeline change. Inter is the app-wide non-code default; `--font-itera-sans` and the compatibility `--font-itera-display` token both alias `--font-sans`. (The `--font-itera-mono` alias was deleted — it had no consumers; code surfaces use `font-mono`.) **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
 
 **Icons — implemented.** `lucide-react` remains the only icon library, at a single version. The small one-off SVG exceptions are the bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx`, plus `StreakFlameIcon.tsx`: one shared brand glyph added because Lucide's thin generic flame did not match the locked Progress reference at nav/KPI sizes.
 

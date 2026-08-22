@@ -148,3 +148,28 @@ all-or-nothing; these are what that guarantee does not cover.
    observed in either full run of the P1-1 pass and not investigated there; it
    belongs to the audit's own §9, and `CURRENT_STATE.md` §16 carries the
    standing instruction to capture the complete output when it next appears.
+
+## Focus return for dialogs opened from a row kebab menu (audit P2-A)
+
+Recorded 2026-08-22 alongside D266. `DialogHost` now returns focus to whatever
+was focused when the dialog opened, and that works for every dialog opened from
+an ordinary button - New deck, Rename, the Import/Export replace confirm, the
+card table's delete. It does **not** work for a dialog opened from a deck row's
+overflow menu, and the dialog is not the reason.
+
+Those row menus are `FloatingPanel`s rendered **without** `manageFocus`, which
+is deliberate (design-system §3: the pointer-driven row kebabs were shipped
+without menu keyboard semantics and were left that way). So the panel does not
+return focus to its kebab when it closes; clicking a menu item leaves focus on
+the removed item, and by the time `DialogHost` mounts and reads
+`document.activeElement` it is already `document.body`. There is no opener to
+return to, and the dialog correctly declines to invent one. Verified in Chromium
+at 1440x900 and 390x844: delete-deck from the row menu, cancel, focus lands on
+`body`.
+
+Closing it means turning `manageFocus` on for the row kebab menus (and passing
+`returnFocusTo`), which changes menu keyboard behaviour across the Library -
+focus enters the menu, arrows walk it, Tab closes it. That is a deliberate
+interaction change for those rows, not a bug fix, so it was left out of a pass
+scoped to six specific findings. Before this pass no dialog returned focus at
+all, so nothing regressed; this is the one path the improvement does not reach.

@@ -93,6 +93,13 @@ export function getSubtreeCollectionIds(collections: LibraryCollection[], rootId
 
 // Ancestor chain for a collection id, root-first — used by both the
 // focused Deck page's breadcrumb and the Collection/container view's.
+//
+// Cycle-safe via the `seen` set, the same idiom subtreeIds uses. Deck.parentId
+// is deliberately not validated referentially on import (src/data/backup.ts),
+// so a hand-edited backup can carry a parent ring that the UI itself cannot
+// create. Unguarded, that ring made this loop unshift forever and hang the tab
+// (audit 2026-08-22). A repeated collection ends the walk, so the breadcrumb is
+// truncated at the first repeat rather than duplicated or thrown away.
 export function collectionPathFor(
   collections: LibraryCollection[],
   collectionId: string | undefined,
@@ -100,8 +107,10 @@ export function collectionPathFor(
   if (!collectionId) return []
   const byId = new Map(collections.map((c) => [c.id, c]))
   const path: LibraryCollection[] = []
+  const seen = new Set<string>()
   let current = byId.get(collectionId)
-  while (current) {
+  while (current && !seen.has(current.id)) {
+    seen.add(current.id)
     path.unshift(current)
     current = current.parentId ? byId.get(current.parentId) : undefined
   }

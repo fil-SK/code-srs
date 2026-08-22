@@ -12,6 +12,20 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      // workbox-build's default glob is js/css/html only, which left every
+      // bundled .woff2 and the Today hero's PNG mask out of the precache: the
+      // installed PWA came back online rendering in system-ui without its
+      // imagery, contradicting the self-hosted-fonts intent (audit 2026-08-22).
+      // Scoped to the asset types this build actually emits and the app
+      // actually uses - not a catch-all - and still no runtimeCaching, so
+      // Supabase and auth requests keep going to the network.
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+      },
+      // The glob above already matches every manifest icon in dist/, and
+      // leaving this on adds a second, byte-identical precache entry for
+      // itera-logo.png.
+      includeManifestIcons: false,
       manifest: {
         name: 'Itera',
         short_name: 'Itera',

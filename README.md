@@ -122,7 +122,7 @@ The login is a compact, mockup-driven split surface using Inter Variable through
 Free and takes a few minutes.
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run the contents of [`supabase/schema.sql`](supabase/schema.sql). This creates the tables, generated columns, indexes, Row Level Security policies, and grants.
+2. In **SQL Editor**, run the contents of [`supabase/schema.sql`](supabase/schema.sql). This creates the tables, generated columns, indexes, Row Level Security policies, and grants. The script is safe to re-run on an existing database.
 3. In **Project Settings → API**, copy your **Project URL** and **publishable** key (`sb_publishable_…`; the new name for the anon key — safe to expose, RLS protects your data). Never put the secret key in the frontend.
 4. In **Authentication → URL Configuration**, set the Site URL and add your dev/prod URLs (e.g. `http://localhost:5173`) to the redirect allow-list.
 5. Copy `.env.local.example` to **`.env.local`** and fill in:

@@ -110,6 +110,13 @@ export function useDialogs(): Dialogs {
   return ctx
 }
 
+// Everything a modal must not let Tab escape past. `:not([disabled])` matters
+// for real: a prompt's Confirm button is disabled while the value is empty, and
+// a disabled button is not tabbable, so including it would make Tab appear to
+// stall on the wrap.
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 function DialogHost({
   request,
   onCancel,
@@ -120,18 +127,82 @@ function DialogHost({
   onSettle: (apply: (req: Request) => void) => void
 }) {
   const [value, setValue] = useState(request.kind === 'prompt' ? (request.options.initialValue ?? '') : '')
+  const panelRef = useRef<HTMLFormElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const confirmRef = useRef<HTMLButtonElement>(null)
+  const cancelRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
+
+  const danger = request.kind === 'confirm' && request.options.danger === true
 
   useEffect(() => {
-    const focusTarget = inputRef.current ?? confirmRef.current
+    // Read before focusing: at this point the dialog has mounted but has not
+    // taken focus, so activeElement is still whatever opened it.
+    // document.body is "nothing was focused", not an opener worth returning to.
+    const opener = document.activeElement as HTMLElement | null
+    openerRef.current = opener && opener !== document.body ? opener : null
+
+    // A destructive confirm opens on Cancel, so Enter or Space on a dialog the
+    // user did not expect dismisses instead of deleting. Every other kind keeps
+    // the focus target it has always had.
+    const focusTarget = inputRef.current ?? (danger ? cancelRef.current : confirmRef.current)
     focusTarget?.focus()
     if (inputRef.current) inputRef.current.select()
+
+    const panel = panelRef.current
+    return () => {
+      // Same two-part guard as FloatingPanel: only take focus back when it is
+      // still ours to move, and only when the opener is still in the document
+      // (deleting a deck removes the row whose menu opened the dialog).
+      const active = document.activeElement
+      if (active && active !== document.body && !panel?.contains(active)) return
+      const opener = openerRef.current
+      if (opener?.isConnected) opener.focus()
+    }
+    // Runs once per dialog; `danger` is fixed for the life of one request, and
+    // DialogProvider keys DialogHost per request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCancel()
+      if (e.key === 'Escape') {
+        onCancel()
+        return
+      }
+      if (e.key !== 'Tab') return
+
+      // Containment is handled at the document rather than on the portal root
+      // so it still holds when focus has somehow landed outside the dialog -
+      // a keydown there would never bubble through a React handler on the
+      // portal.
+      const panel = panelRef.current
+      if (!panel) return
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE))
+      if (items.length === 0) {
+        e.preventDefault()
+        return
+      }
+      // Position in the dialog's own control list, rather than a containment
+      // test plus two identity comparisons: one lookup answers both "is focus
+      // inside" and "which end is it at".
+      const index = items.indexOf(document.activeElement as HTMLElement)
+      const last = items.length - 1
+
+      if (index === -1) {
+        // Focus is somewhere behind the modal. Pull it back in rather than let
+        // Tab walk the page underneath.
+        e.preventDefault()
+        items[0].focus()
+        return
+      }
+      if (!e.shiftKey && index === last) {
+        e.preventDefault()
+        items[0].focus()
+      } else if (e.shiftKey && index === 0) {
+        e.preventDefault()
+        items[last].focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -146,7 +217,6 @@ function DialogHost({
   }
 
   const { options } = request
-  const danger = request.kind === 'confirm' && request.options.danger === true
   const confirmLabel =
     options.confirmLabel ??
     (request.kind === 'confirm' ? (danger ? 'Delete' : 'Confirm') : request.kind === 'prompt' ? 'Save' : 'OK')
@@ -169,6 +239,7 @@ function DialogHost({
       />
       <div className="absolute inset-0 grid place-items-center overflow-auto p-4">
         <form
+          ref={panelRef}
           onSubmit={(e) => {
             e.preventDefault()
             submit()
@@ -201,7 +272,7 @@ function DialogHost({
 
           <div className="mt-6 flex justify-end gap-2">
             {request.kind !== 'alert' && (
-              <Button type="button" variant="secondary" onClick={onCancel}>
+              <Button ref={cancelRef} type="button" variant="secondary" onClick={onCancel}>
                 {request.kind === 'confirm' ? (request.options.cancelLabel ?? 'Cancel') : 'Cancel'}
               </Button>
             )}

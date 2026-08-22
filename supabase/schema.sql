@@ -67,15 +67,27 @@ alter table public.decks       enable row level security;
 alter table public.drafts      enable row level security;
 alter table public.review_logs enable row level security;
 
+-- Each policy is dropped first so this whole script stays re-runnable, the way
+-- every `create table if not exists` above it already is. Postgres has no
+-- `create policy if not exists`, so an unguarded re-run aborts at the first
+-- one with 42710. Same pattern as the roadmaps block below and
+-- migrations/0002_single_card_model.sql.
+drop policy if exists "own rows" on public.cards;
 create policy "own rows" on public.cards
   for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.decks;
 create policy "own rows" on public.decks
   for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.drafts;
 create policy "own rows" on public.drafts
   for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "own rows" on public.review_logs;
 create policy "own rows" on public.review_logs
   for all to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
