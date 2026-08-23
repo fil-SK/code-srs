@@ -21,13 +21,31 @@
 export * from './types'
 
 // ---- storage seam: the contract, the cloud backend, backup orchestration -----
+// The registry is the seam's other half: core owns the Repository contract and
+// the hooks that read through it, and owns no way to build one. Each platform
+// entry point calls configureRepository() at boot.
 // Dexie stays in the web app; the Supabase backend is portable because it takes
 // a ready client rather than building one. data/supabase/fakeSupabaseClient.ts
 // is deliberately absent: it is a test double, and the one test that needs it
 // from outside the package reaches it by source path instead.
 export * from './data/repository'
+export * from './data/registry'
 export * from './data/backup'
 export * from './data/supabase/SupabaseRepository'
+
+// ---- shared data access: query keys + the TanStack hooks over the seam -------
+// React-but-not-DOM, so they run unmodified on React Native. They live here
+// rather than once per platform because duplicating them would duplicate `qk`,
+// the invalidation policy, and usePersistReviewResult's `updatedAt:
+// log.reviewedAt` subtlety that makes a retried commit byte-identical.
+// QueryClient construction and the provider stay in each application.
+export * from './hooks/queryKeys'
+export * from './hooks/useBackup'
+export * from './hooks/useCards'
+export * from './hooks/useDecks'
+export * from './hooks/useDrafts'
+export * from './hooks/useReview'
+export * from './hooks/useRoadmaps'
 
 // ---- platform-neutral utilities ----------------------------------------------
 export * from './lib/id'

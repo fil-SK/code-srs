@@ -8,5 +8,9 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
     "ts-fsrs": "^5.4.1"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.101.1",
+    "react": "^19.0.0"
   }
 }

@@ -1,22 +1,10 @@
-import { SupabaseRepository, type Repository } from '@itera/core'
-import { DexieRepository } from './dexie/DexieRepository'
-import { getSupabase, isSupabaseConfigured } from './supabase/client'
-
-let instance: Repository | null = null
-
-// Single entry point for storage. When Supabase env is configured the app uses
-// the cloud backend; otherwise it falls back to local Dexie. The rest of the app
-// depends on the Repository interface alone and never knows which is active.
+// Compatibility shim - defines nothing. The registry is
+// packages/core/src/data/registry.ts, published as @itera/core, and the web
+// app's choice of backend is made once in src/main.tsx.
 //
-// Reading the configuration and building the browser client is this layer's job:
-// SupabaseRepository takes a ready client and never looks at the environment.
-export function getRepository(): Repository {
-  if (!instance) {
-    instance = isSupabaseConfigured
-      ? new SupabaseRepository(getSupabase())
-      : new DexieRepository()
-  }
-  return instance
-}
+// It exists so relocating the seam did not have to be the same commit as
+// rewriting every call site. New code should import from '@itera/core'
+// directly; this layer is transitional.
 
+export { configureRepository, getRepository } from '@itera/core'
 export type { Repository } from './repository'

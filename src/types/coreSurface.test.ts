@@ -20,6 +20,8 @@ import { localDayIndex } from '@/domain/stats/calendarDay'
 import { gradeMatching } from '@/domain/grading/matching'
 import { parseBackup } from '@/domain/io/backup'
 import { newId } from '@/lib/id'
+import { qk } from '@/hooks/queryKeys'
+import { getRepository } from '@/data'
 import { leafDecks } from '@/features/library/collectionTree'
 
 describe('@itera/core resolution', () => {
@@ -53,6 +55,18 @@ describe('@itera/core domain surface', () => {
 
   it('is the same module instance the @/lib shim re-exports', () => {
     expect(newId).toBe(core.newId)
+  })
+
+  // Query keys and the registry are the two pieces of shared state where a
+  // second copy is not merely duplication but a silent correctness bug: two
+  // `qk` objects would invalidate different caches, and two registries would
+  // let one platform configure a backend the hooks never see.
+  it('is the same query-key table the @/hooks shim re-exports', () => {
+    expect(qk).toBe(core.qk)
+  })
+
+  it('is the same repository registry the @/data shim re-exports', () => {
+    expect(getRepository).toBe(core.getRepository)
   })
 
   // The Library's Collection derivation moved to core precisely so a native

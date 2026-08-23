@@ -7,9 +7,15 @@ import {
   fixtureReviewLog,
   fixtureRoadmap,
 } from '@/domain/io/backupFixtures'
+import { canReplaceImport, exportBackup, importBackup } from '@itera/core'
 import { getRepository } from './index'
-import { canReplaceImport, exportBackup, importBackup } from './backup'
 
+// Backup orchestration against the *local* backend. Core's own backup.test.ts
+// drives the same primitives against a Supabase double; this one exists for
+// what that cannot reach - real Dexie transactions, and therefore Replace.
+// It calls the explicit-repository primitives directly rather than the
+// configured-repository helpers in hooks/useBackup.ts, because the behaviour
+// under test is the orchestration, not the registry.
 const repo = getRepository()
 
 beforeEach(async () => {
@@ -43,14 +49,14 @@ describe('export/import round-trip', () => {
     await repo.decks.put(deck)
     await repo.cards.put(card)
 
-    const backup = await exportBackup()
+    const backup = await exportBackup(repo)
     expect(backup.data.cards).toHaveLength(1)
     expect(backup.data.decks).toHaveLength(1)
 
     await Promise.all([repo.cards.clear(), repo.decks.clear()])
     expect(await repo.cards.getAll()).toHaveLength(0)
 
-    await importBackup(backup, 'replace')
+    await importBackup(repo, backup, 'replace')
     expect(await repo.cards.getAll()).toHaveLength(1)
     expect((await repo.cards.getById('c1'))?.deckId).toBe('deck-1')
     expect(await repo.decks.getAll()).toHaveLength(1)
@@ -65,11 +71,11 @@ describe('export/import round-trip', () => {
     await repo.reviews.append(fixtureReviewLog({ id: 'r1', cardId: 'c1' }))
     await repo.roadmaps.put(fixtureRoadmap({ id: 'm1' }))
 
-    const backup = await exportBackup()
+    const backup = await exportBackup(repo)
     const before = await storedIds()
 
     // Through the real file path, so serialization and validation are covered.
-    await importBackup(parseBackup(serializeBackup(backup)), 'replace')
+    await importBackup(repo, parseBackup(serializeBackup(backup)), 'replace')
 
     expect(await storedIds()).toEqual(before)
   })
@@ -83,6 +89,7 @@ describe('export/import round-trip', () => {
     await repo.roadmaps.put(fixtureRoadmap({ id: 'a-roadmap' }))
 
     await importBackup(
+      repo,
       buildBackup({
         cards: [fixtureCard('ordering', { id: 'b-card', deckId: 'b-deck' })],
         decks: [fixtureDeck({ id: 'b-deck', name: 'INCOMING DECK' })],
@@ -105,10 +112,10 @@ describe('export/import round-trip', () => {
   it('merge import upserts without wiping existing', async () => {
     await repo.decks.put(deck)
     await repo.cards.put(card)
-    const backup = await exportBackup()
+    const backup = await exportBackup(repo)
     await repo.cards.put({ ...card, id: 'c2' })
 
-    await importBackup(backup, 'merge')
+    await importBackup(repo, backup, 'merge')
     expect(await repo.cards.getAll()).toHaveLength(2) // c2 kept, c1 upserted
   })
 })
@@ -119,7 +126,7 @@ describe('deck reference validation', () => {
 
     // A file holding only cards, the normal shape of an AI-generated top-up.
     const backup = buildBackup({ ...emptyData, cards: [fixtureCard('recall', { id: 'new-1' })] })
-    await importBackup(backup, 'merge')
+    await importBackup(repo, backup, 'merge')
 
     expect(await repo.cards.getAll()).toHaveLength(1)
   })
@@ -129,7 +136,7 @@ describe('deck reference validation', () => {
     const orphan = fixtureCard('recall', { id: 'orphan', deckId: 'deck-missing' })
     const backup = buildBackup({ ...emptyData, cards: [orphan] })
 
-    await expect(importBackup(backup, 'merge')).rejects.toThrow(
+    await expect(importBackup(repo, backup, 'merge')).rejects.toThrow(
       /Card "orphan" belongs to deck "deck-missing", which is not in this file or in your library/,
     )
     expect(await repo.cards.getAll()).toHaveLength(0)
@@ -142,7 +149,7 @@ describe('deck reference validation', () => {
     const orphan = fixtureCard('recall', { id: 'orphan', deckId: 'deck-1' })
     const backup = buildBackup({ ...emptyData, cards: [orphan] })
 
-    await expect(importBackup(backup, 'replace')).rejects.toThrow(
+    await expect(importBackup(repo, backup, 'replace')).rejects.toThrow(
       /not in this file\. Nothing was imported/,
     )
   })
@@ -155,6 +162,7 @@ describe('deck reference validation', () => {
     await repo.roadmaps.put(fixtureRoadmap({ id: 'kept-roadmap' }))
 
     await importBackup(
+      repo,
       buildBackup({
         // No decks in the file: the existing library must satisfy the card's
         // deckId under Merge.
@@ -188,7 +196,7 @@ describe('deck reference validation', () => {
       cards: [fixtureCard('ordering', { id: 'bad', deckId: 'deck-missing' })],
     })
 
-    await expect(importBackup(backup, 'replace')).rejects.toThrow(/Nothing was imported/)
+    await expect(importBackup(repo, backup, 'replace')).rejects.toThrow(/Nothing was imported/)
 
     // The pre-existing data survived: validation ran before clear().
     expect(await repo.cards.getAll()).toHaveLength(1)
@@ -249,6 +257,6 @@ describe('a malformed file never mutates the repository', () => {
 describe('replace availability', () => {
   it('is offered on the local backend, which can roll a failure back', () => {
     expect(repo.importGuarantee).toBe('transactional')
-    expect(canReplaceImport()).toBe(true)
+    expect(canReplaceImport(repo)).toBe(true)
   })
 })

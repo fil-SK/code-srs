@@ -2,11 +2,15 @@ import { useRef, useState } from 'react'
 import { Download, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useDialogs } from '@/components/ui/dialogs'
-import { canReplaceImport, exportBackup, type ImportMode } from '@/data/backup'
 import { parseBackup, serializeBackup } from '@/domain/io/backup'
 import { describeImportFailure } from '@/domain/io/importFailure'
 import { downloadText } from '@/lib/download'
-import { useImportBackup } from '@/hooks/useBackup'
+import {
+  canReplaceConfiguredImport,
+  exportConfiguredBackup,
+  useImportBackup,
+  type ImportMode,
+} from '@/hooks/useBackup'
 import { Panel, SectionShell } from './SectionShell'
 
 // A real, working section — this is the app's only backup/restore path and it
@@ -21,10 +25,10 @@ export function ImportExportSection() {
   const [status, setStatus] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   // A capability of the active backend, not a branch on which backend it is:
   // Replace is only offered where a failed one can be rolled back.
-  const replaceAvailable = canReplaceImport()
+  const replaceAvailable = canReplaceConfiguredImport()
 
   async function handleExport() {
-    const backup = await exportBackup()
+    const backup = await exportConfiguredBackup()
     const date = new Date().toISOString().slice(0, 10)
     // Filename only. The `app` marker *inside* the file stays 'code-srs' so
     // every backup exported before the rebrand still imports (backup.ts).

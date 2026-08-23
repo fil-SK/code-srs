@@ -49,12 +49,16 @@ packages/core/
     ├── data/
     │   ├── repository.ts   the Repository interface + CardQuery/DueQuery/
     │   │                   WorkspaceSnapshot/WriteGuarantee/ReviewCommit/ReviewRevert
+    │   ├── registry.ts     configureRepository/getRepository - the factory
+    │   │                   registry each platform entry point configures at boot
     │   ├── backup.ts       exportBackup/importBackup/canReplaceImport - backend-neutral
     │   │                   persistence orchestration, each taking a Repository
     │   └── supabase/       SupabaseRepository.ts (the cloud backend; takes a ready
     │                       SupabaseClient) and fakeSupabaseClient.ts (the fake
     │                       PostgREST server that tests it, absent from the barrel).
     │                       Dexie is NOT here - it stays in the web app.
+    ├── hooks/         queryKeys.ts (the one `qk`) + the six TanStack Query data
+    │                  hooks. React, but not DOM - they run unmodified on native.
     ├── lib/           id.ts (newId), shuffle.ts
     ├── domain/        cards/ decks/ grading/ io/ migration/ review/
     │                  scheduling/ search/ stats/ - the 40 modules that used to
@@ -67,18 +71,20 @@ packages/core/
     └── platformNeutrality.test.ts   the structural guard (below)
 ```
 
-`packages/core` declares exactly two dependencies, `ts-fsrs` and `@supabase/supabase-js`, and imports nothing else outside itself. The Supabase one is declared even though both files import only *types* from it, because a specifier is a specifier: the guard below matches `from '...'` regardless of `import type`, and relying on the root app's hoisted copy is exactly the latent Metro failure it exists to prevent. The dependency list is not decoration: `platformNeutrality.test.ts` reads the manifest and fails on an import of anything it does not declare, so a package that happens to resolve off the workspace root's hoisted `node_modules` cannot silently become a Metro failure later. The same test fails on a browser token (`window`, `document`, `localStorage`, `indexedDB`, `import.meta`, `navigator`, `react-router`, `react-dom`, `dexie`, `@codemirror`, `dnd-kit`, `lucide-react`, `tailwind`) and on any import from the web app's `@/` alias.
+`packages/core` declares exactly two dependencies, `ts-fsrs` and `@supabase/supabase-js`, plus two **peer** dependencies, `react` and `@tanstack/react-query`, and imports nothing else outside itself. The two React packages are peers rather than dependencies on purpose: both carry context, a second copy of either breaks silently rather than loudly, and a `dependencies` entry is exactly what would let npm install one under `packages/core`. Each application supplies them; `npm ls react` and `npm ls @tanstack/react-query` must show a single deduped copy, and `packages/core` must have no `node_modules` of its own. The Supabase one is declared even though both files import only *types* from it, because a specifier is a specifier: the guard below matches `from '...'` regardless of `import type`, and relying on the root app's hoisted copy is exactly the latent Metro failure it exists to prevent. The dependency list is not decoration: `platformNeutrality.test.ts` reads the manifest and fails on an import of anything it does not declare, so a package that happens to resolve off the workspace root's hoisted `node_modules` cannot silently become a Metro failure later. The same test fails on a browser token (`window`, `document`, `localStorage`, `indexedDB`, `import.meta`, `navigator`, `react-router`, `react-dom`, `dexie`, `@codemirror`, `dnd-kit`, `lucide-react`, `tailwind`) and on any import from the web app's `@/` alias.
 
 `tsconfig.core.json` compiles core's **source** with `lib: ["ES2023"]` and `types: []` - **no DOM, no Node ambient globals** - so a `window.`, `document.` or `process.` reference in core fails `npx tsc -b --force` rather than surfacing later as a React Native runtime error. That is the mechanical enforcement of platform neutrality, and it is the reason browser-specific code must not be moved here (D287). Two consequences worth knowing before writing core code:
 
 - **`newId()` cannot name the `crypto` global.** It declares the two members it uses (`randomUUID?`, `getRandomValues`) structurally and reads them off `globalThis` **at call time**. Runtime behaviour is unchanged: native `randomUUID()` when available, the secure `getRandomValues` v4 fallback otherwise. Native supplies `react-native-get-random-values` at its own entry point; core imports no polyfill.
 - **`URLSearchParams` is not available either**, which is why `selectionToSearchParams`/`selectionFromSearchParams` stayed in the web `src/features/library/collectionTree.ts` while every Collection *derivation* function moved. The `LibrarySelection` type is core's, so there is still one definition of what a selection is.
 
+**Core and the web app are separate Vitest projects** (`vitest.config.ts`), and the top-level `npx vitest run` runs both. The web project owns `src/**/*.test.{ts,tsx}` with the `@` alias, the blanked `VITE_SUPABASE_*` env and `src/test/setup.ts` (fake-indexeddb plus an explicit `configureRepository(() => new DexieRepository())`). The core project owns `packages/core/src/**/*.test.ts` with **no setup file at all** — no fake IndexedDB, no alias, no configured backend. That separation exists because the alternative silently undermines the package boundary: running core's tests through the web bootstrap would prove core only under a browser storage shim with a backend it is not allowed to know about already registered, and a core test that came to depend on either would pass here and fail under Metro. A core test that needs any of it is telling you something about the code it covers.
+
 **Core's tests are typechecked**, unlike the web app's. `tsconfig.core.test.json` is a second project over the same directory that adds `types: ["node"]` (still no DOM) so a test may use `process.env.TZ` or `globalThis.crypto`, while `tsconfig.core.json` excludes `*.test.ts` and `src/test/` and keeps `types: []`. Never merge the two: the empty `types` is the enforcement. `tsc -b` runs both, so core source is checked with nothing ambient *and* with Node. Neither project maps the `@/` alias, so **core's tests import by relative path** — a moved test that keeps an `@/domain/...` specifier runs under Vitest and fails the typecheck.
 
 Two support modules deliberately sit in core *source* rather than under `src/test/`: `domain/io/backupFixtures.ts` and `data/supabase/fakeSupabaseClient.ts`. `platformNeutrality.test.ts` skips `*.test.ts` and the whole `src/test/` directory, and so does `tsconfig.core.json`, so parking a 380-line fake server there would quietly exempt it from every guard the shipped code answers to. Neither is exported from the barrel. The one consumer outside the package is `src/data/supabase/backendParity.test.ts`, which imports the fake by source path (`@itera/core/src/data/supabase/fakeSupabaseClient`) — the single, test-only exception to the one-entry-point rule, taken because the alternative was putting a test double on the production surface.
 
-`src/types/*` remains as a **transitional re-export shim** so that relocating the contracts did not have to be the same commit as rewriting ~145 files' imports, and the domain move added the same kind of shim at `src/domain/*`, `src/lib/{id,shuffle}.ts` and `src/data/repository.ts`. They define nothing; `src/types/coreSurface.test.ts` asserts at runtime that the shim and the package are the same module instance - by **reference equality**, extended past `richText` to `computeStreak`, `reviewState`, `computeRetention`, `localDayIndex`, `gradeMatching`, `parseBackup`, `newId` and `leafDecks` - so a redefinition cannot pass review unnoticed (D285/D286). **New code should import from `@itera/core` directly.**
+`src/types/*` remains as a **transitional re-export shim** so that relocating the contracts did not have to be the same commit as rewriting ~145 files' imports, and the domain move added the same kind of shim at `src/domain/*`, `src/lib/{id,shuffle}.ts` and `src/data/repository.ts`, the hook move at `src/hooks/*` and `src/data/index.ts`. They define nothing; `src/types/coreSurface.test.ts` asserts at runtime that the shim and the package are the same module instance - by **reference equality**, extended past `richText` to `computeStreak`, `reviewState`, `computeRetention`, `localDayIndex`, `gradeMatching`, `parseBackup`, `newId` and `leafDecks` - so a redefinition cannot pass review unnoticed (D285/D286). **New code should import from `@itera/core` directly.**
 
 ## Repository map
 
@@ -113,7 +119,7 @@ src/
 │   └── today/          TodayPage (the only fetcher), SuggestedSessionHero, MomentumPanel,
 │                        ContinueLearningList, PaceChart, AdjustSessionDialog, greetings.ts (a shim over core) —
 │                        renders through the shared AppShell, no separate TodayShell
-├── hooks/        one file per entity + queryKeys.ts — see "Data access hooks"
+├── hooks/        re-export shims over @itera/core/hooks — see "Data access hooks"
 ├── lib/          cn.ts (clsx+twMerge), lazyWithRetry.ts, download.ts;
 │                 id.ts and shuffle.ts are re-export shims over @itera/core
 ├── test/         setup.ts (global Vitest setup). The DST timezone pin moved to
@@ -172,21 +178,38 @@ Review persistence earned its place here after the audit found the alternative: 
 
 Timestamp bookkeeping (`createdAt`/`updatedAt`) is deliberately kept **out** of this layer — it lives in the hooks (see below).
 
-`src/data/index.ts`'s `getRepository()` is the single entry point:
+### Registration: who names the backend
+
+Core owns the Repository *contract* and the shared hooks that read through it, and owns no way to build one. `packages/core/src/data/registry.ts` is the whole seam:
 
 ```ts
+let factory: (() => Repository) | null = null
 let instance: Repository | null = null
+
+export function configureRepository(create: () => Repository): void {
+  factory = create
+  instance = null          // reconfiguration drops the cached instance
+}
+
 export function getRepository(): Repository {
-  if (!instance) {
-    instance = isSupabaseConfigured
-      ? new SupabaseRepository(getSupabase())
-      : new DexieRepository()
-  }
-  return instance
+  if (!factory) throw new Error('No repository configured. …')
+  return (instance ??= factory())
 }
 ```
 
-A lazily-constructed singleton, chosen purely by whether `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` are set (`isSupabaseConfigured` in `src/data/supabase/client.ts`). **This layer is where configuration is read and where the browser Supabase client is built**, and it is the only place either happens: `SupabaseRepository` lives in `@itera/core` and takes a ready client, so the same class serves a future Expo app configured from `EXPO_PUBLIC_*`. `src/data/supabase/client.ts` keeps the env lookup, `isSupabaseConfigured`, `createClient` and the browser session options (`persistSession`, `autoRefreshToken`, `detectSessionInUrl`) and must not move into core. Every hook calls `getRepository()` once at module scope, so the whole app shares one instance.
+Five properties, each load-bearing: configuration takes a **factory**, construction is **lazy**, the instance is **cached**, reconfiguration **resets** it, and use before configuration **throws**. There is deliberately no default — a missing `configureRepository()` fails loudly rather than silently selecting a backend, which is the failure this indirection exists to prevent. There is also no production reset export; a test that needs a pristine registry re-imports the module.
+
+**The platform composes; core does not.** The web app's single composition point is `src/main.tsx`, before `createRoot`:
+
+```ts
+configureRepository(() =>
+  isSupabaseConfigured ? new SupabaseRepository(getSupabase()) : new DexieRepository(),
+)
+```
+
+chosen purely by whether `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` are set (`isSupabaseConfigured` in `src/data/supabase/client.ts`) — the **same** value `AuthProvider` reads, so backend mode and authentication mode cannot disagree (audit P1-3). **This is where configuration is read and where the browser Supabase client is built**, and the only place either happens: `SupabaseRepository` lives in `@itera/core` and takes a ready client, so the same class serves a future Expo app configured from `EXPO_PUBLIC_*` at its own entry point. `src/data/supabase/client.ts` keeps the env lookup, `isSupabaseConfigured`, `createClient` and the browser session options (`persistSession`, `autoRefreshToken`, `detectSessionInUrl`) and must not move into core. `src/data/index.ts` is now a re-export shim over the registry and holds no selection logic.
+
+The web test suite configures Dexie explicitly in `src/test/setup.ts`. It used to get Dexie *by omission* — the `VITE_SUPABASE_*` vars are blanked and the old `getRepository()` fell back to local storage — and that implicit path is gone with the default.
 
 **Dexie backend** (`src/data/dexie/db.ts` + `DexieRepository.ts`) — the database is named `'itera'`; it was renamed from `'code-srs'` when the card models converged, and `db.ts` fire-and-forget `Dexie.delete('code-srs')`s the superseded prototype database to reclaim its storage. (The *backup file's* `app` marker is a separate thing and deliberately still reads `code-srs` — see "Backup" below.) Schema is additive/incremental:
 
@@ -217,7 +240,13 @@ Each `version()` call declares only new/changed stores — Dexie carries the res
 
 ## Data access hooks
 
-All hooks live in `src/hooks/`, call `getRepository()` once at module scope, and wrap calls in TanStack Query 5. Query keys are centralized in `src/hooks/queryKeys.ts`'s `qk` object:
+**The hooks live in `packages/core/src/hooks/` and are shared.** They are React but not DOM, so they run unmodified on React Native; duplicating them per platform would duplicate `qk`, the invalidation policy and `usePersistReviewResult`'s retry subtlety, which is exactly the class of contract the shared package exists to hold once. `src/hooks/*` remains as thin re-export shims so `@/hooks/...` call sites keep working.
+
+**Each hook resolves the repository inside its `queryFn`/`mutationFn`, never at module scope.** The old `const repo = getRepository()` at the top of every hook file is what made importing a hook transitively construct a backend — fine for one app, fatal for a package a native bundle must import before it has booted. Two tests protect the change: `packages/core/src/hooks/moduleScope.test.ts` imports every hook module against an *unconfigured* registry and asserts no throw, and `src/hooks/repositoryResolution.test.tsx` reconfigures the registry between renders and asserts the hooks follow it rather than a captured instance.
+
+**Each application still owns its `QueryClient` and `QueryClientProvider`** (`src/app/queryClient.ts`, `src/app/providers.tsx`). Core owns keys, queries and invalidation; the platform owns the client and its focus/online integration.
+
+Query keys are centralized in `packages/core/src/hooks/queryKeys.ts`'s `qk` object:
 
 ```ts
 export const qk = {
@@ -244,7 +273,7 @@ Parameterized keys (`cardsDue`, `cardsSearch`) embed the query object itself, so
 | `useDrafts.ts` | `useDrafts`, `useDraft`, `useCreateDraft`, `useDeleteDraft` | `useDrafts` sorts newest-first client-side. |
 | `useReview.ts` | `useReviewLogs`, `usePersistReviewResult`, `useUndoGrade`, `reviewWriteGuarantee` | The grading write path — see "Scheduling" below. Both mutations go through one seam operation; neither recomputes FSRS. |
 | `useRoadmaps.ts` | `useRoadmaps`, `useRoadmap`, `useCreateRoadmap`, `useSaveRoadmap`, `useDeleteRoadmap` | `useSaveRoadmap` is the **only** hook using `qc.setQueryData` for an optimistic write, alongside invalidation. |
-| `useBackup.ts` | `useImportBackup` | `onSuccess: () => qc.invalidateQueries()` with no key filter — appropriate after a bulk multi-entity replace/merge. |
+| `useBackup.ts` | `useImportBackup`, `exportConfiguredBackup`, `canReplaceConfiguredImport` | `onSuccess: () => qc.invalidateQueries()` with no key filter — appropriate after a bulk multi-entity replace/merge. The two non-hook helpers are read during render rather than through a query, so a hook would buy nothing; what matters is that they resolve the repository here and not in a component. |
 
 Conventions observed across all of them: query keys always go through `qk`, never inlined; every mutation is a thin async function calling 1+ repo methods directly (no separate service layer for plain CRUD); `onSuccess` invalidates the coarse list key and, where relevant, the specific item key.
 
@@ -262,11 +291,11 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 
 A `ReviewLog` stores only a `cardId`, so deck attribution always joins through the current card. Retention series and Review history use `packages/core/src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`; Deck Performance takes current cards directly because it also needs active-card, Learned and Due membership. A moved card follows its current deck, while a deleted card's log remains in Review history but contributes to no current deck row.
 
-Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry + inclusion in `packages/core/src/domain/io/backup.ts`'s `BackupData` and `packages/core/src/data/backup.ts`.
+Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry (both in `packages/core/src/hooks/`) + inclusion in `packages/core/src/domain/io/backup.ts`'s `BackupData` and `packages/core/src/data/backup.ts`.
 
 **Backup format** (`packages/core/src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'code-srs', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `BACKUP_APP_MARKER` is the constant behind that `app` field: it is a **legacy backup-format identifier, not the product name**, and must stay `'code-srs'` so files exported before the Itera rebrand still import — do not rename it during branding cleanup.
 
-**Backup orchestration is backend-neutral and takes its repository explicitly.** `exportBackup(repo)`, `importBackup(repo, backup, mode)` and `canReplaceImport(repo)` live in `packages/core/src/data/backup.ts` and know nothing about how the active platform chose that repository. The web app keeps `src/data/backup.ts` as an adapter holding **no** validation and no persistence logic — three one-line functions that pass `getRepository()` through, so existing call sites keep their zero-argument form until the hooks move (Step 1.4).
+**Backup orchestration is backend-neutral and takes its repository explicitly, and there is one thin tier above it.** `exportBackup(repo)`, `importBackup(repo, backup, mode)` and `canReplaceImport(repo)` live in `packages/core/src/data/backup.ts` and know nothing about how the active platform chose that repository — that explicitness is what lets `packages/core/src/data/backup.test.ts` drive them against a Supabase double with no registry configured, and it stays the primitive both platforms build on. `packages/core/src/hooks/useBackup.ts` adds the configured-repository convenience over it (`useImportBackup`, `exportConfiguredBackup`, `canReplaceConfiguredImport`), so the layering reads `UI → shared hook/helper → getRepository() → explicit-repo primitive` and no screen resolves storage itself. The web adapter that used to sit at `src/data/backup.ts` is deleted.
 
 **Import safety runs in three layers, and none may be skipped:**
 
@@ -301,7 +330,7 @@ Compiler-enforced touchpoints first; the build fails until each is handled.
 4. `src/features/reviewV2/interactions/registry.ts` — register it. **The registry is `Partial<...>`, so a missing entry throws at runtime rather than failing the build** — this is the one step the compiler does not enforce.
 5. `packages/core/src/domain/grading/<type>.ts` — a grader, if the type auto-grades (Recall does not; it is self-graded).
 6. `packages/core/src/domain/cards/<type>Form.ts` — form state, `<type>FormToRecord`, `cardRecordTo<Type>Form`, `validate<Type>Form`, `empty<Type>Form`.
-7. `packages/core/src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `src/hooks/useCards.ts`.
+7. `packages/core/src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `packages/core/src/hooks/useCards.ts`.
 8. `src/features/cards/` — `<Type>EditorShell`, `<Type>Fields`, `<Type>LivePreview`, a `CardTypeChooser` tile, and arms in `CardCreatePage` + `CardEditEntry`.
 9. `src/features/cards/shared/interactionTypeMeta.ts` — label, icon and tile colour (`features/library/shared/rowVisuals.ts` reads this for table rows).
 
@@ -487,8 +516,8 @@ Component tests are the exception: opt into a DOM per-file with `// @vitest-envi
 
 ## Things that coexist on purpose (not stale code)
 
-- **Computation and persistence are separate on purpose**: `packages/core/src/domain/scheduling/reviewService.ts` computes the result, `src/hooks/useReview.ts`'s `usePersistReviewResult` writes it, and the hook never recomputes what `submit` already did. The third path that used to sit beside them, `useGradeCard`, was deleted with the P2-B pass: nothing imported it, and it carried its own FSRS computation plus the two-write sequence the seam operation replaced.
-- **`src/hooks/useDrafts.ts` with no caller**: the drafts UI was deleted but the `Draft` entity, its Dexie store and its backup array were kept, so the hook is retained rather than removed. Deleting it is the first step toward dropping data that backup files still round-trip.
+- **Computation and persistence are separate on purpose**: `packages/core/src/domain/scheduling/reviewService.ts` computes the result, `packages/core/src/hooks/useReview.ts`'s `usePersistReviewResult` writes it, and the hook never recomputes what `submit` already did. The third path that used to sit beside them, `useGradeCard`, was deleted with the P2-B pass: nothing imported it, and it carried its own FSRS computation plus the two-write sequence the seam operation replaced.
+- **`packages/core/src/hooks/useDrafts.ts` with no caller**: the drafts UI was deleted but the `Draft` entity, its Dexie store and its backup array were kept, so the hook is retained rather than removed. Deleting it is the first step toward dropping data that backup files still round-trip.
 
 The earlier entries here are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `src/components/ui/FlipCard.tsx` were deleted on 2026-08-17, and the **two card models** converged into one on 2026-08-18. There is one Review surface, one flip primitive, and one card model.
 

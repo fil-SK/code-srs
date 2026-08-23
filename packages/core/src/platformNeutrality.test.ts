@@ -79,11 +79,17 @@ const FORBIDDEN = [
 // The packages core's shipped code may import are exactly the ones its own
 // manifest declares - read, not hardcoded, so importing something the package
 // does not depend on fails here instead of resolving off the workspace root's
-// hoisted node_modules and then failing under Metro. ts-fsrs is the only one,
-// and it is pure arithmetic over Date.
-const ALLOWED_PACKAGES = Object.keys(
-  JSON.parse(fs.readFileSync(path.join(CORE_SRC, '..', 'package.json'), 'utf8')).dependencies ?? {},
-)
+// hoisted node_modules and then failing under Metro.
+//
+// Peers count, and are read separately below so the *kind* of declaration is
+// asserted too. react and @tanstack/react-query must be peers rather than
+// dependencies: both carry context that breaks silently if two copies exist,
+// and a `dependencies` entry is exactly what lets npm install a second one
+// under packages/core. Each application supplies them.
+const MANIFEST = JSON.parse(fs.readFileSync(path.join(CORE_SRC, '..', 'package.json'), 'utf8'))
+const DEPENDENCIES = Object.keys(MANIFEST.dependencies ?? {})
+const PEER_DEPENDENCIES = Object.keys(MANIFEST.peerDependencies ?? {})
+const ALLOWED_PACKAGES = [...DEPENDENCIES, ...PEER_DEPENDENCIES]
 
 const files = sourceFiles(CORE_SRC)
 
@@ -125,6 +131,13 @@ describe('@itera/core platform neutrality', () => {
       }
     }
     expect(hits).toEqual([])
+  })
+
+  it('declares React and TanStack Query as peers, never as its own dependencies', () => {
+    for (const pkg of ['react', '@tanstack/react-query']) {
+      expect(PEER_DEPENDENCIES).toContain(pkg)
+      expect(DEPENDENCIES).not.toContain(pkg)
+    }
   })
 
   it('never imports its own package name, which would make the barrel circular', () => {

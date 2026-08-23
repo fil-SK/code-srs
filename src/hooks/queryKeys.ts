@@ -1,17 +1,8 @@
-import type { CardQuery, DueQuery } from '@/data/repository'
-import type { ID } from '@/types'
+// Compatibility shim - defines nothing. The canonical implementation lives in
+// packages/core/src/hooks/ and is published as @itera/core.
+//
+// It exists so moving the data hooks into the shared package did not have to be
+// the same commit as rewriting every feature's imports. New code should import
+// from '@itera/core' directly; this layer is transitional.
 
-// Centralized query keys so invalidation stays consistent across hooks.
-export const qk = {
-  decks: ['decks'] as const,
-  cards: ['cards'] as const,
-  card: (id: ID) => ['cards', 'byId', id] as const,
-  cardsDue: (query: DueQuery) => ['cards', 'due', query] as const,
-  cardsSearch: (query: CardQuery) => ['cards', 'search', query] as const,
-  reviewsForCard: (cardId: ID) => ['reviews', 'card', cardId] as const,
-  reviewsAll: ['reviews', 'all'] as const,
-  drafts: ['drafts'] as const,
-  draft: (id: ID) => ['drafts', 'byId', id] as const,
-  roadmaps: ['roadmaps'] as const,
-  roadmap: (id: ID) => ['roadmaps', 'byId', id] as const,
-}
+export { qk } from '@itera/core'
