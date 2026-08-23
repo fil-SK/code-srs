@@ -1,6 +1,6 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-23** (branch `mvp_demo_cleaning`).
+**Last verified against the working tree: 2026-08-24** (branch `mvp_demo_cleaning`).
 
 The most recent product-correctness milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress's headline row is exactly **Learned · Due · Reviews · Retention · Current streak**, and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`itera-decisions.md`](itera-decisions.md).
 
@@ -26,7 +26,7 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Structural: `@itera/core` owns the platform-neutral engine; Phase 2 owns the stable web workspace; Phase 3.0 now adds only the native bootstrap.** The full Phase 1/2 extraction history remains in the 2026-08-22 and 2026-08-23 entries of [`itera-decisions.md`](itera-decisions.md). `apps/mobile` now exists as `@itera/mobile`, created from the official Expo SDK 54 default TypeScript/Expo Router template and reduced with its reset mechanism to one neutral technical route. Metro resolves the ordinary `@itera/core` workspace package with no alias and no custom `metro.config.js`; the route calls `parseRichText('mobile-bootstrap')` and shows `@itera/core: OK` only after the expected shared node is returned. No repository, Supabase client, auth, navigation design, product screen, interaction View, custom font, brand token, or native-specific feature library has been added. Physical-device execution through Expo Go is **confirmed on the owner's iOS device**: the neutral route rendered all three expected lines after executing the shared core import. Metro/Hermes Android export, Expo Doctor, Expo config, mobile TypeScript and mobile lint are clean. **No persisted shape or web product behavior changed.**
+**Structural: `@itera/core` owns the platform-neutral engine; Phase 2 owns the stable web workspace; Phase 3.0 established the device-confirmed native bootstrap; the first native GUI milestone is now implemented and awaiting device review.** `apps/mobile` has a fixture-backed, presentational Today screen adapted from the owner-approved mobile reference plus a persistent five-item Expo Router shell (`Library · Review · Today · Progress · Profile`). Today consumes shared Itera colors, radii, greeting behavior, `Deck` field types and deck-mark semantics from `@itera/core`; it does not copy scheduling, statistics, repository or auth logic. Library, Review, Progress and Profile are deliberately neutral placeholders. Real mobile data, repository composition, auth, persistence and sync are not connected, and no native interaction View exists. **No persisted shape or web product behavior changed.**
 
 ### Web + mobile convergence checkpoint
 
@@ -35,9 +35,9 @@ The Phase 0 architecture and migration roadmap exists at [`mobile_app_conversion
 - the root is workspace orchestration only;
 - `apps/web` is the stable production web app;
 - `packages/core` is the shared product, domain, data, auth, content and interaction engine;
-- `apps/mobile` is the Expo SDK 54 / React Native presentation and composition workspace; today it contains only the disposable technical smoke route.
+- `apps/mobile` is the Expo SDK 54 / React Native presentation and composition workspace; its first real presentation is the fixture-backed Today screen, while every other product destination remains a neutral placeholder.
 
-The current project checkpoint is: **Phase 3.0 is complete and device-confirmed.** The project owner is still designing the mobile GUI, and no native visual or product implementation may begin until that direction is approved. The next product milestone resumes from the Phase 0 master plan one bounded milestone at a time after that approval; this infrastructure pass does not authorize the older plan's auth or screen work.
+The current project checkpoint is: **the first native Today GUI is implemented from the owner-approved design and awaits physical-device review.** This is intentionally an intermediate presentation milestone: one typed mobile-owned fixture supplies its values, and real mobile data/auth/sync remain unconnected. Do not mark Today capability parity complete, and do not design or implement another mobile product screen until the owner reviews this one on the physical phone.
 
 > Web and native must share product semantics, but render platform-appropriate UIs.
 
@@ -104,6 +104,7 @@ Real data, real behavior, production-routed:
 | Page | What is real | What is placeholder |
 |---|---|---|
 | **Today** (`/`, `apps/web/src/features/today/`) | **Everything.** Due count, contributing deck names and the duration estimate in the hero; current streak; corrected mature retention; due today; the derived Next milestone; Continue Learning rows; the seven-day pace series; the Adjust session dialog; and the new-user / caught-up / loading states. All computed in `packages/core/src/domain/stats/{todayMetrics,streak,learned,deckMetrics,progressMetrics}.ts` — `TodayPage` is the only fetcher and the four panels are presentational. | Nothing on the page is fabricated. **Deliberately deferred, not faked:** Weekly Goal (removed — no goal concept exists), a richer milestone/achievement system (the row is a derived deck continuation, not an entity), and advanced session controls (time-boxed, weak-cards, new-vs-review, difficulty/interaction/tag filters, custom FSRS). Continue Learning lists leaf decks only, so cards filed directly on a deck-with-children get no row (they are still counted in the hero and Due today). |
+| **Mobile Today** (`/today`, `apps/mobile/src/components/today/`) | Owner-approved native composition: Itera header, shared greeting behavior, stacked hero, Due today / Current streak / Retention / Est. session metrics, Start CTA, four Continue Learning rows, scrolling, safe-area handling, and the persistent five-item tab shell with a raised center Today control. | The typed values come from the one intentional fixture in `apps/mobile/src/fixtures/today.ts`; no real mobile repository, hooks, auth or sync are composed yet. The other four tab routes are neutral placeholders, and physical-device visual acceptance is pending. |
 | **Progress** (`/progress`, `/progress/history`) | Headline KPIs are exactly **Learned · Due · Reviews · Retention · Current streak**. Learned/Due/Streak are current-state values with no invented period delta; Reviews/Retention follow the selected period, with retention comparison in percentage points. The heat map, gap-aware deck-scopable retention chart, leaf-deck actionable performance table and milestones are all computed from real `ReviewLog`/`Card`/`Deck` data. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | 7 of 9 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Overview and Review history are live. |
 | **Account settings** (`/settings`) | **Import / Export** (JSON backup) is fully functional. | Profile, Email & password, Appearance, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
 | **Login** (`/login`) | Page, session minting, redirect-back-to-requested-route, Supabase magic link. | In local mode the password is a dev/demo shell: never stored, sent, or verified. "Forgot password" is a deliberate `aria-disabled` placeholder — no reset backend. |
@@ -259,10 +260,10 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 ## 16. Tests / build status
 
-Measured 2026-08-23 after the Phase 3.0 Expo scaffold. The established web/core counts remain unchanged.
+Measured 2026-08-24 after the fixture-backed native Today implementation. The established web/core counts remain unchanged.
 
 ```
-npx vitest run       → 111 test files, 1064 tests, all passing (94.19s)
+npx vitest run       → 111 test files, 1064 tests, all passing (75.94s)
                        two projects: core 48 files / 614 tests, web 63 / 450
                        (identical to the pre-move baseline; no test moved package)
 npx tsc -b --force   → clean, no errors (four projects: core, core tests, app, node)
@@ -271,7 +272,7 @@ npm run build        → successful (existing chunk-size advisory only) -> apps/
 npm ls react         → one deduped React 19.1.0; one @tanstack/react-query 5.101.1
 ```
 
-Mobile is intentionally checked outside the root TypeScript solution: Expo's generated config is not converted into a composite project. `expo-doctor` passes 18/18 checks; `expo config --type public` reports SDK 54.0.0; Expo's TypeScript 5.9.3 check and `expo lint` are clean; and `expo export --platform android` bundles 1,097 modules into a Hermes bundle without custom Metro configuration. The same neutral route is confirmed running through Expo Go on the owner's physical iOS device.
+Mobile is intentionally checked outside the root TypeScript solution: Expo's generated config is not converted into a composite project. `expo-doctor` passes 18/18 checks, Expo's TypeScript 5.9.3 check and `expo lint` are clean, and the native iOS Metro bundle succeeds with the Today screen and copied Itera asset. Browser QA at 390×844 and 320×700 found no horizontal document overflow; all five tabs, the Start CTA and See all destination work, and the last deck row clears the persistent tab bar. Physical-device visual acceptance of the new GUI remains pending owner review.
 
 **Bundle after the relocation.** JS is byte-for-byte the same size — main chunk `1,074.44 kB` / `305.94 kB` gzip, the three lazy chunks unchanged. Content hashes moved because module ids are path-derived. **CSS shrank `68.43 kB` → `66.79 kB`** (gzip `15.19` → `14.89`): Tailwind v4 auto-detects sources from the Vite root, which is now `apps/web` rather than the whole repository, so 20 bare utilities that existed only because Tailwind was reading class names out of `docs/*.md` and the agent instruction files are no longer emitted. Each was verified unused by the app, and every variant form the app does render was verified still present. PWA precache is unchanged at **24 entries** (2409.23 KiB vs 2410.83 KiB, the same 1.6 KiB of CSS).
 
@@ -362,7 +363,7 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 ## 17. Exact recommended next milestone
 
-**Approve the mobile GUI/design direction before any native visual implementation.** The Phase 3.0 smoke route is disposable infrastructure proof, not the mobile home page. Once the direction is approved, resume the Phase 0 master plan as one separately authorized, bounded milestone rather than treating this bootstrap as approval for auth or screen work.
+**Review the implemented native Today screen on the owner's physical iOS device.** Reload the Expo Go app from the running Metro server and inspect the header, greeting, hero stack, four metrics, CTA, Continue Learning scroll, tab destinations, raised Today control and safe-area spacing. Stop after that review; do not design or implement Library, Review, Progress or Profile until the owner separately approves the next screen.
 
 Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither should be folded into mobile work implicitly: Phase G is a real data-model migration and Roadmaps is deliberately outside the primary MVP navigation.
 

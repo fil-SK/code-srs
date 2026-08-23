@@ -1,7 +1,9 @@
-# Itera mobile bootstrap
+# Itera mobile
 
-This workspace is the Phase 3.0 Expo/React Native infrastructure shell. It is
-not an Itera mobile design and contains no product screens yet.
+This workspace is Itera's Expo/React Native presentation and composition app.
+Phase 3.0 proved Expo Go and ordinary `@itera/core` workspace resolution on a
+physical iOS device. The first native product screen is now a fixture-backed
+Today presentation awaiting project-owner device review.
 
 From the repository root:
 
@@ -11,13 +13,9 @@ npm run dev:mobile
 ```
 
 Install or update Expo Go on the phone, keep the phone and PC on the same local
-network, then scan Metro's QR code. The temporary screen should report:
-
-```text
-Itera mobile bootstrap
-Expo runtime: OK
-@itera/core: OK
-```
+network, then scan Metro's QR code. Today opens by default. Library, Review,
+Progress and Profile are neutral placeholders until each receives a separately
+approved design.
 
 On iOS, scan with Camera. On Android, use Expo Go's scanner. If the LAN route is
 blocked by the network or Windows firewall, retry from the repository root with:

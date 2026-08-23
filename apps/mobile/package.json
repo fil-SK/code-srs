@@ -10,6 +10,7 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@itera/core": "*",
     "@tanstack/react-query": "^5.101.1",
     "expo": "~54.0.36",
