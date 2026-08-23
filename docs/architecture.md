@@ -16,13 +16,14 @@ This complements, but doesn't replace:
 
 ## Architectural principles
 
-Five constraints shape everything below. Breaking one of them is a decision, not a refactor.
+Six constraints shape everything below. Breaking one of them is a decision, not a refactor.
 
 1. **Local-first.** Card authoring, review, scheduling, search, history, import/export and previews all work with **no network and no account**. Dexie/IndexedDB is the default backend; Supabase is opt-in cloud sync, never a prerequisite. AI is optional external tooling (see [`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)) and never a runtime dependency.
 2. **One storage seam.** The entire app depends on the `Repository` interface and never learns which backend is live.
 3. **Layer separation.** `UI components → hooks (application/use-case) → domain models + scheduler boundary → repositories`. FSRS math, persistence and UI state must not share a component. Everything under `packages/core/src/domain/` is pure and React-free.
 4. **History is immutable and separate.** `ReviewLog` is an append-mostly record that no feature rewrites. Scheduling currently lives *on* the `Card` rather than in its own entity: the half-built `CardState` extraction was removed with the card-model convergence because nothing read it. Separating content from learning state again is a real requirement for any future shared or purchased deck, but it is then a deliberate schema change with a migration, not an assumption the code already satisfies.
 5. **No destructive data change without an explicit, dry-runnable cutover.** Additive first; removal is always a separate, later, separately-decided step.
+6. **Card content is data, never markup — and parsing is shared while rendering is not.** A card's text arrives from the learner *or* from an imported backup, is persisted, and is shown to whoever opens the card later, so it is untrusted by construction. `packages/core/src/content/` turns it into a closed union of semantic nodes carrying only plain strings; each platform renders that tree with its own elements. No production module in `src/` may convert a string into markup or code — `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `DOMParser`, `eval(`, `new Function(` — and `src/components/text/renderingSinks.test.ts` fails the build if one appears. The corollary matters as much: because rendering is safe, content is **never sanitized**. Angle brackets, generics, templates and whole HTML examples are legitimate flashcard material and survive byte for byte through import, storage and display.
 
 ---
 
@@ -68,6 +69,15 @@ packages/core/
     │                  read and the route guards are NOT here.
     ├── hooks/         queryKeys.ts (the one `qk`) + the six TanStack Query data
     │                  hooks. React, but not DOM - they run unmodified on native.
+    ├── content/       the one interpretation of the Itera text syntax:
+    │                  richTextNodes.ts (the closed semantic node union),
+    │                  parseRichText.ts (parseRichText/parseRichInline),
+    │                  plainText.ts (stripInlineMarkers, for accessible names)
+    │                  and imageSource.ts (the card image URL allowlist).
+    │                  Parsing only - no JSX, no DOM, no renderer.
+    ├── design/        tokens.ts - the Itera palette, radii and font roles as
+    │                  values a platform with no CSS can read. src/index.css
+    │                  stays the web's source; a drift test asserts they agree.
     ├── lib/           id.ts (newId), shuffle.ts
     ├── domain/        cards/ decks/ grading/ io/ migration/ review/
     │                  scheduling/ search/ stats/ - the 40 modules that used to
@@ -76,7 +86,9 @@ packages/core/
     ├── interactions/  matchingBadgeGeometry.ts, promptLength.ts
     ├── charts/        retentionChartPath.ts
     ├── today/         greetings.ts
-    ├── test/          timeZone.ts - the Europe/Belgrade DST pin, test support only
+    ├── test/          timeZone.ts - the Europe/Belgrade DST pin; attackPayloads.ts -
+    │                  the content-security fixture. Test support only, kept out of
+    │                  the barrel so it cannot reach a production bundle.
     └── platformNeutrality.test.ts   the structural guard (below)
 ```
 
@@ -527,7 +539,7 @@ One pure function per v2 auto-gradable interaction type, each with a colocated `
 
 ## Testing conventions
 
-`vitest.config.ts` sets `environment: 'node'` globally (no DOM, fast) and **blanks `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`** so every test run hits the local Dexie backend via `fake-indexeddb`, regardless of a developer's real `.env.local`. `globals` is not enabled, so every test file imports `describe`/`it`/`expect` explicitly from `vitest`.
+`vitest.config.ts` declares **two projects**, not one global config (see "Core and the web app are separate Vitest projects" above). Both set `environment: 'node'` (no DOM, fast); the **web** project additionally **blanks `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`** and loads `src/test/setup.ts`, so every web test hits the local Dexie backend via `fake-indexeddb` regardless of a developer's real `.env.local`, while the **core** project has no setup file, no alias and no env at all. `globals` is not enabled in either, so every test file imports `describe`/`it`/`expect` explicitly from `vitest`.
 
 Component tests are the exception: opt into a DOM per-file with `// @vitest-environment happy-dom` as the file's first line, and add your own `afterEach(() => cleanup())` — RTL's automatic cleanup never registers without `globals: true`, so renders otherwise accumulate across `it` blocks in that file (a real failure mode, first documented in `itera-decisions.md` D24).
 

@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
+import { stripInlineMarkers } from '@itera/core'
 import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { MatchingColumn, MatchingColumnItem } from '@/types/card'
@@ -74,12 +75,11 @@ const FIXED_COLUMN_TRACK = 'minmax(0,0.6fr)'
 const COLUMN_TRACK = 'minmax(0,1fr)'
 const GUTTER_TRACK = 'clamp(2.5rem,6vw,5rem)'
 
-// RichText's inline syntax (`code`, **bold**, *italic*) is markup, not content:
+// Itera's inline syntax (`code`, **bold**, *italic*) is markup, not content:
 // the visible label renders it, but an accessible name has to read the words
-// rather than spelling out the markers.
-function plainLabel(text: string): string {
-  return text.replace(/[`*]/g, '')
-}
+// rather than spelling out the markers. The flattening lives in @itera/core
+// beside the parser, so a native announcer reads labels the same way.
+const plainLabel = stripInlineMarkers
 
 function labelOf(col: MatchingColumn): string {
   return col.label ?? col.id

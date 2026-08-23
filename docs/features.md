@@ -72,6 +72,10 @@ Two distinct optional fields; do not merge them or use one for the other's job.
 
 Tip is a genuinely new field, authored per card (and, for Walkthrough, per step).
 
+**Card text is a small markdown subset, shared and safe.** Fenced code blocks, inline code, `**bold**` and `*italic*` — no links, no images-in-markdown, no headings, no lists. Underscores are never emphasis markers, so `snake_case` stays literal. The syntax is interpreted once in `packages/core/src/content/`; each platform renders the resulting nodes with its own elements. Content is **never sanitized**: angle brackets, generics, templates and whole HTML examples are legitimate flashcard material and are stored and displayed byte for byte, including when they arrive from an imported backup.
+
+**Walkthrough's optional shared image accepts PNG, JPEG, GIF, WebP and AVIF**, embedded in the card. SVG is not accepted, and an image cannot be a link to a remote file — an imported card whose image points anywhere off the device is refused at import, so opening a flashcard never causes a network request. Existing cards authored before this rule keep their data; an image outside the accepted formats simply does not render.
+
 Walkthrough supports both scopes at once. The card-wide tip remains available throughout the unfinished sequence and the card-wide explanation appears after the final step. Independently, the active step may show its own optional tip before that step's first submission, then replace it with that step's optional explanation after submission. Returning to an answered step shows its explanation, not its pre-answer tip. Older Walkthrough records have neither step field and continue to render unchanged.
 
 ### Study sessions

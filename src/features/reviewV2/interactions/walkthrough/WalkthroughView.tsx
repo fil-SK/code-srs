@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { isSafeImageSource } from '@itera/core'
 import { RichText } from '@/components/text/RichText'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { cn } from '@/lib/cn'
@@ -102,7 +103,12 @@ export function WalkthroughView({
           />
         </div>
       )}
-      {interaction.image && (
+      {/* The card's image is the only field that reaches a URL sink, and a card
+          can arrive from an imported backup, so its source is checked here as
+          well as at import. A value outside the allowlist renders nothing at
+          all rather than a broken image: the point is that no request is made.
+          See packages/core/src/content/imageSource.ts. */}
+      {isSafeImageSource(interaction.image) && (
         <img
           src={interaction.image}
           alt=""

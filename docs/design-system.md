@@ -75,6 +75,10 @@ This re-pointing is the whole trick: every pre-redesign component already used `
 
 `--blue` has no dedicated Itera token (informational, not success/warning/error) — it re-points to `--itera-accent-active` instead.
 
+**The same palette exists as platform-neutral values, and drift is mechanically impossible.** `src/index.css` stays the source that paints the browser — nothing is generated, injected or built from TypeScript. `packages/core/src/design/tokens.ts` carries the same identity as values a React Native app can read (`iteraColors`, `iteraRadii`, `iteraFonts`, `iteraFontWeights`, and `ITERA_SHADOW_INTENTS`), because a native app cannot resolve a CSS custom property. `src/design/tokenDrift.test.ts` parses the `.itera-scope` block and the `--radius-itera-*` declarations and asserts the two agree **in both directions**, so neither an edited hex nor a newly added `--itera-*` variable can land without its shared counterpart. The two shadow values are the only exemption — `box-shadow` and React Native's elevation model are different models, not different syntaxes, so only the intent *names* are shared — and the test asserts that exemption set is exactly those two.
+
+**What is deliberately not in that module:** the type/spacing scale (below — it is a design rule, not a token), page widths, breakpoints, nav heights and sidebar widths. Those are layout mechanics, and web and native are meant to differ in layout while sharing identity.
+
 Radii: `--radius-itera-code: 8px`, `--radius-itera-control: 9px`, `--radius-itera-card: 14px`, `--radius-itera-dialog: 16px`, `--radius-itera-pill: 999px` (pills/tags/small labels only — don't round everything equally).
 
 Fonts: `font-itera-sans` (Inter) and `font-itera-mono` (JetBrains Mono). The legacy `font-itera-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
@@ -179,7 +183,9 @@ Other conventions seen across `src/features/today/*.tsx`:
 
 ---
 
-## 5. Markdown / RichText (`src/components/text/RichText.tsx`)
+## 5. Markdown / RichText
+
+**The syntax is shared; the rendering is not.** What `**bold**`, `*italic*`, `` `code` `` and a fenced block *mean* is decided once, in `packages/core/src/content/parseRichText.ts`, which turns a card's text into a closed union of semantic nodes (`paragraph`/`code`, and `text`/`strong`/`em`/`inlineCode` inside them). `src/components/text/RichText.tsx` is the **web renderer** over that tree: it maps nodes onto DOM elements and parses nothing. A future native renderer maps the same tree onto its own elements, so the two platforms cannot end up with two interpretations of the syntax.
 
 A deliberately small, custom markdown subset — not a full parser, no `dangerouslySetInnerHTML` (nodes are built as real React elements, XSS-safe by construction). Supported syntax:
 
@@ -190,7 +196,13 @@ A deliberately small, custom markdown subset — not a full parser, no `dangerou
 
 Two entry points: `RichText` (block-level — handles fences + text) and `InlineText` (inline-only, for short labels like MCQ options, no wrapping element).
 
-**Underscores are never emphasis markers** — the regex only matches `*`/`**`, never `_`/`__`. This is deliberate: flashcard content is often code-adjacent, so `snake_case_identifiers` render literally instead of being mangled by an underscore-based emphasis rule. Do not pull in a markdown library that would reintroduce this.
+**Underscores are never emphasis markers** — the regex only matches `*`/`**`, never `_`/`__`. This is deliberate: flashcard content is often code-adjacent, so `snake_case_identifiers` render literally instead of being mangled by an underscore-based emphasis rule. Do not pull in a markdown library that would reintroduce this. `packages/core/src/content/parseRichText.test.ts` locks this rule, along with inline-code-beats-emphasis and bold-beats-italic — the three a native re-implementation is most likely to get wrong.
+
+**Card content is data, never markup.** Every node carries plain strings and (for a fenced block) a language id; there is no `html`, `raw` or `url` node, so no renderer is ever handed something to execute or navigate to. Nothing is escaped or stripped on the way in either — `<`, `>`, `&`, generics like `Vec<T>` and whole HTML examples are legitimate flashcard content and survive byte for byte. Safety is the *shape* of the tree plus each renderer's refusal to use a raw-HTML sink, never input mutation. `src/components/text/renderingSinks.test.ts` scans every production module in `src/` and fails on `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `DOMParser`, `eval(` or `new Function(`; the malicious-content regression suites are `src/components/text/RichText.test.tsx`, `src/features/reviewV2/contentSecurity.test.tsx` and `src/data/importedContentSecurity.test.ts`.
+
+**Screen-reader flattening** (`stripInlineMarkers`, also in `packages/core/src/content/`) strips `` ` `` and `*` for accessible names, so an announcer reads the words rather than spelling out the markers. It is deliberately marker-blind rather than parse-derived — see the module comment.
+
+**One image field, one URL rule.** `WalkthroughInteraction.image` is the only card field that becomes a URL the app loads, and `isSafeImageSource` (`packages/core/src/content/imageSource.ts`) accepts only base64 `data:` URLs of type PNG, JPEG, GIF, WebP or AVIF — exactly what the authoring file picker produces. SVG is excluded on purpose. The same predicate gates the file picker, backup validation and the Review renderer, so no layer can accept what another would refuse.
 
 ---
 

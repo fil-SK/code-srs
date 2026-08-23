@@ -9,6 +9,7 @@ import type {
   SchedulingState,
 } from '../../types'
 import { CARD_SCHEMA_VERSION } from '../../types/card'
+import { ALLOWED_IMAGE_MIME, isSafeImageSource } from '../../content/imageSource'
 
 // Structural validation for the entities inside a backup file, run by
 // parseBackup before anything is handed to the import layer.
@@ -169,6 +170,18 @@ const INTERACTION_CHECKS: Record<
   },
   walkthrough: (i) => {
     if (!isRichContent(i.scenario)) return 'needs a rich-text "scenario"'
+    // The one card field that becomes a URL the app loads. Unlike the prose
+    // fields, an arbitrary string here is not inert: a remote source would
+    // make opening the card call out to whoever wrote the backup. Only the
+    // embedded raster data URLs the authoring flow itself produces are
+    // accepted (packages/core/src/content/imageSource.ts).
+    if (i.image !== undefined && !isSafeImageSource(i.image)) {
+      return (
+        'has an "image" that is not an embedded image. Only base64 data URLs of ' +
+        `type ${ALLOWED_IMAGE_MIME.join(', ')} are accepted; remote or linked ` +
+        'images are not'
+      )
+    }
     if (!Array.isArray(i.steps) || i.steps.length === 0) return 'needs a non-empty "steps" array'
     if (i.steps.some((s) => !isObject(s) || !isNonEmptyString(s.id) || !isRichContent(s.prompt) || !isObject(s.response)))
       return 'has a step without a valid "id", rich-text "prompt" and "response" object'

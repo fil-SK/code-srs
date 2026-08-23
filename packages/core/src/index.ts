@@ -59,6 +59,23 @@ export * from './hooks/useDrafts'
 export * from './hooks/useReview'
 export * from './hooks/useRoadmaps'
 
+// ---- content: one interpretation of the Itera text syntax --------------------
+// Parsing is shared; rendering is not. These modules turn a card's persisted
+// text into semantic nodes and never build markup, so the web renderer and a
+// future native renderer map the same tree onto their own elements instead of
+// re-tokenizing the syntax two ways. The image policy lives here for the same
+// reason: it is a rule about persisted content, not about one platform's <img>.
+export * from './content/richTextNodes'
+export * from './content/parseRichText'
+export * from './content/plainText'
+export * from './content/imageSource'
+
+// ---- design identity ---------------------------------------------------------
+// The brand palette, radii and font roles as values a platform without CSS can
+// read. src/index.css stays the web's rendering source; a drift test there
+// asserts the two agree. Layout mechanics are deliberately absent.
+export * from './design/tokens'
+
 // ---- platform-neutral utilities ----------------------------------------------
 export * from './lib/id'
 export * from './lib/shuffle'

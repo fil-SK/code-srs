@@ -1,5 +1,11 @@
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import {
+  ALLOWED_IMAGE_MIME,
+  IMAGE_FILE_ACCEPT,
+  isAllowedImageFileType,
+  isSafeImageSource,
+} from '@itera/core'
 import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { LazyCodeEditor } from '@/components/code/LazyCodeEditor'
@@ -32,6 +38,13 @@ import { WalkthroughStepEditor } from './WalkthroughStepEditor'
 
 const IMAGE_WARN_BYTES = 500 * 1024
 
+// "PNG, JPEG, GIF, WebP or AVIF", derived from the shared allowlist so the
+// copy cannot drift from the rule.
+const IMAGE_LABEL = ALLOWED_IMAGE_MIME.map((m) => m.replace('image/', '').toUpperCase())
+  .map((m) => (m === 'WEBP' ? 'WebP' : m))
+  .join(', ')
+  .replace(/, ([^,]+)$/, ' or $1')
+
 // The centerpiece is the ordered step list (add/remove/reorder), each
 // delegating its own response-type sub-editor to WalkthroughStepEditor —
 // mirrors MatchingFields.tsx's composition (shared fields at the edges, a
@@ -51,10 +64,24 @@ export function WalkthroughFields({
     onChange({ ...form, [key]: value })
   }
 
+  // Authoring is narrowed to exactly the formats a persisted card may carry,
+  // so the editor cannot mint a value that backup validation would later
+  // refuse. The result is re-checked as well as the file type: the stored
+  // value is what matters, and it is what both the validator and the Review
+  // renderer will test. See packages/core/src/content/imageSource.ts.
   function readImage(file: File) {
+    if (!isAllowedImageFileType(file.type)) {
+      setImgWarning(`That file type isn't supported. Use ${IMAGE_LABEL}.`)
+      return
+    }
     const reader = new FileReader()
     reader.onload = () => {
-      set('image', String(reader.result))
+      const dataUrl = String(reader.result)
+      if (!isSafeImageSource(dataUrl)) {
+        setImgWarning(`That image couldn't be read. Use ${IMAGE_LABEL}.`)
+        return
+      }
+      set('image', dataUrl)
       setImgWarning(
         file.size > IMAGE_WARN_BYTES
           ? `This image is ${Math.round(file.size / 1024)} KB and is stored inside the card. A smaller image keeps the database lean.`
@@ -117,11 +144,13 @@ export function WalkthroughFields({
         <div
           className="rounded-itera-control border border-dashed border-itera-border p-3"
           onPaste={(e) => {
-            const file = Array.from(e.clipboardData.files).find((f) => f.type.startsWith('image/'))
+            const file = Array.from(e.clipboardData.files).find((f) => isAllowedImageFileType(f.type))
             if (file) readImage(file)
           }}
         >
-          {form.image ? (
+          {/* Guarded like the Review renderer: an edited card may have been
+              hydrated from a workspace that predates the allowlist. */}
+          {isSafeImageSource(form.image) ? (
             <div className="space-y-2">
               <img
                 src={form.image}
@@ -143,7 +172,7 @@ export function WalkthroughFields({
             <div className="text-xs text-itera-muted">
               <input
                 type="file"
-                accept="image/*"
+                accept={IMAGE_FILE_ACCEPT}
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) readImage(file)
