@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Itera",
+    "slug": "itera-mobile",
+    "version": "1.0.0",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -25,7 +25,7 @@ Claude Code reads [`CLAUDE.md`](CLAUDE.md), which points at the **same** shared 
 
 Stack: React 19 + Vite 8 + TypeScript, Tailwind v4, React Router 7 (`createBrowserRouter`), TanStack Query 5 for all data access, `vite-plugin-pwa` (`registerType: 'autoUpdate'`). Path alias `@` → `src`.
 
-The repository is an **npm workspace with three owners**: the repository **root orchestrates only** (workspace declarations, delegating scripts, the repo-wide gates), `apps/web` (`@itera/web`) **is** the web application and owns every web dependency, and `packages/core` (`@itera/core`) is the shared, platform-neutral package a future React Native / Expo app will consume too. It owns the **entity contracts, the `Repository` interface and registry, the whole platform-neutral domain engine, the Supabase backend, backup orchestration, the query keys, all TanStack Query data hooks, and the authentication policy** - scheduling/FSRS, grading, stats, card forms, backup IO, search, the Collection tree, the chart projections, and `resolveAuthState`/`createAuthEngine`/`AuthProvider`/`useAuth`. **Dexie, the `VITE_SUPABASE_*` lookup, browser Supabase client construction, the choice of backend, browser session storage, the route guards, the Login UI, and `QueryClient`/`QueryClientProvider` stay in the web app.** `react` and `@tanstack/react-query` are **peer** dependencies of core - never add them as dependencies, that is how a second React or Query context gets installed. The web app keeps thin re-export shims at the old `@/domain/*`, `@/lib/{id,shuffle}`, `@/data/repository`, `@/data` and `@/hooks/*` paths. See [`docs/architecture.md`](docs/architecture.md) "Workspace layout".
+The repository is an **npm workspace with four owners**: the repository **root orchestrates only**; `apps/web` (`@itera/web`) is the stable web application; `apps/mobile` (`@itera/mobile`) is the Expo/React Native presentation and composition shell; and `packages/core` (`@itera/core`) is the shared, platform-neutral engine. Mobile currently contains only the Phase 3.0 technical smoke route: no product GUI, auth, repository composition, or native interaction Views. Core owns shared semantics and keeps `react` and `@tanstack/react-query` as peers; both applications supply the one deduplicated compatible runtime. See [`docs/architecture.md`](docs/architecture.md) "Workspace layout" for the full ownership boundary.
 
 ## Package manager and commands
 
@@ -34,6 +34,7 @@ The repository is an **npm workspace with three owners**: the repository **root 
 ```bash
 npm install             # install dependencies (all workspaces)
 npm run dev             # -> @itera/web: Vite dev server, http://localhost:5173
+npm run dev:mobile      # -> @itera/mobile: Expo/Metro + physical-device QR
 npm run build           # -> @itera/web: tsc -b (typecheck, all 4 projects) then vite build -> apps/web/dist/
 npm run preview         # -> @itera/web: serve the production build
 npm run lint            # oxlint over the whole tree (config in .oxlintrc.json)

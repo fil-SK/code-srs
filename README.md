@@ -107,7 +107,7 @@ The login is a compact, mockup-driven split surface using Inter Variable through
 
 ### Scripts
 
-All run from the repository root; the first three delegate to the `@itera/web` workspace.
+All run from the repository root. Existing web commands continue to delegate to `@itera/web`; the mobile bootstrap has its own command.
 
 | Command | Description |
 | --- | --- |
@@ -117,6 +117,7 @@ All run from the repository root; the first three delegate to the `@itera/web` w
 | `npm run lint` | Lint the whole tree with oxlint |
 | `npm run test` | Run the Vitest unit suite (web + core projects) |
 | `npm run dev --workspace @itera/web` | The same dev server, addressed directly |
+| `npm run dev:mobile` | Start Expo/Metro for the neutral physical-device smoke app |
 
 ---
 
@@ -174,7 +175,7 @@ Imports are validated before anything is written. If a generated file has an uns
 
 ## Project structure
 
-An npm workspace with three owners: the root orchestrates, `apps/*` holds applications, `packages/*` holds shared platform-neutral code.
+An npm workspace with four owners: the root orchestrates, `apps/*` holds applications, and `packages/*` holds shared platform-neutral code.
 
 ```
 package.json     workspace root only - scripts + repo-wide gates, no app code
@@ -189,6 +190,8 @@ apps/web/        @itera/web - the web application
     features/    cards, library, login, preview, progress, review, reviewV2,
                  roadmaps, settings, today
     domain/ hooks/ types/   thin re-export shims over @itera/core
+apps/mobile/     @itera/mobile - Expo SDK 54 + Expo Router presentation shell
+  app/           one temporary neutral bootstrap route; no product GUI yet
 packages/core/   @itera/core - the shared engine: entity contracts, the
                  Repository seam, the pure domain engine (scheduling/FSRS,
                  grading, stats, search, io), the Supabase backend, the
