@@ -223,7 +223,7 @@ Noticed during the 2026-08-22 P2 pass and recorded here on 2026-08-23, during
 the Step 1.5 auth extraction, because it is still open and was not written down
 anywhere but a parenthetical in D263.
 
-`sendMagicLink` in `src/features/login/SignInPanel.tsx` has two gaps, and they
+`sendMagicLink` in `apps/web/src/features/login/SignInPanel.tsx` has two gaps, and they
 are the two things D262/D263 closed on the *bootstrap* path but not on the
 *sign-in* path:
 
@@ -252,7 +252,7 @@ the transport's. That is Login polish and wants its own small pass.
 
 Step 1.6's audit covers the **web** content boundary and found no stored-XSS
 defect there; that finding is enforced by
-`src/components/text/renderingSinks.test.ts`, so this is deliberately **not** a
+`apps/web/src/components/text/renderingSinks.test.ts`, so this is deliberately **not** a
 standing "audit XSS someday" item and the web side needs no follow-up.
 
 What is genuinely open is only what does not exist yet. A native renderer will

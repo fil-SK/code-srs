@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 // "Card content is data, never markup" is only true while no module in the web
 // app has a way to turn a string into live DOM. That is a property of the whole
@@ -16,7 +17,11 @@ import path from 'node:path'
 // Test files are excluded: a test may legitimately construct DOM directly to
 // assert something about it.
 
-const SRC = path.resolve(process.cwd(), 'src')
+// Resolved from this file, not from process.cwd(): the web app lives under
+// apps/web while the Vitest runner is invoked from the repository root, and a
+// cwd-relative path would scan nothing - a guard that passes by finding no files
+// is worse than no guard at all.
+const SRC = fileURLToPath(new URL('../..', import.meta.url))
 
 // Every API that converts a string into executable markup or code. There is no
 // allowlist on purpose: this repo builds its markdown by hand precisely so it

@@ -107,13 +107,16 @@ The login is a compact, mockup-driven split surface using Inter Variable through
 
 ### Scripts
 
+All run from the repository root; the first three delegate to the `@itera/web` workspace.
+
 | Command | Description |
 | --- | --- |
 | `npm run dev` | Start the Vite dev server |
-| `npm run build` | Type-check and build for production (`dist/`) |
+| `npm run build` | Type-check and build for production (`apps/web/dist/`) |
 | `npm run preview` | Serve the production build locally |
-| `npm run lint` | Lint with oxlint |
-| `npm run test` | Run the Vitest unit suite |
+| `npm run lint` | Lint the whole tree with oxlint |
+| `npm run test` | Run the Vitest unit suite (web + core projects) |
+| `npm run dev --workspace @itera/web` | The same dev server, addressed directly |
 
 ---
 
@@ -142,7 +145,7 @@ Free and takes a few minutes.
 The app is a static build plus a Vercel rewrite (already in [`vercel.json`](vercel.json)) so client-side routing survives refreshes.
 
 1. Push the repo to GitHub.
-2. On [Vercel](https://vercel.com), **Add New → Project** and import the repo (connect GitHub if needed). It auto-detects Vite (`npm run build` → `dist/`).
+2. On [Vercel](https://vercel.com), **Add New → Project** and import the repo (connect GitHub if needed). Keep the project's **Root Directory** at the repository root: `npm run build` delegates to the `@itera/web` workspace and `vercel.json` declares the resulting `outputDirectory` as `apps/web/dist`. (If you instead point Root Directory at `apps/web`, drop that key — the output there is plain `dist`.)
 3. Add the two environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) for the **Production** environment.
 4. Deploy. Add your Vercel URL to the Supabase **redirect allow-list** (step 4 above) so magic links return to the site.
 
@@ -171,19 +174,28 @@ Imports are validated before anything is written. If a generated file has an uns
 
 ## Project structure
 
+An npm workspace with three owners: the root orchestrates, `apps/*` holds applications, `packages/*` holds shared platform-neutral code.
+
 ```
-src/
-  app/         providers, router, theme, query client
-  auth/        session boundary (provider, route guard, local/demo session)
-  components/  shared UI (buttons, fields, code views, RichText markdown)
-  data/        repository interface + Dexie and Supabase backends
-  domain/      pure logic: scheduling, grading, search, stats, decks, migration, io
-  features/    cards, library, login, preview, progress, review, reviewV2,
-               roadmaps, settings, today
-  hooks/       TanStack Query hooks
-  types/       entity types (Card discriminated union, Deck, Draft, ReviewLog)
-supabase/      schema.sql + migrations/ for cloud setup
-docs/          shared documentation (see docs/README.md)
+package.json     workspace root only - scripts + repo-wide gates, no app code
+apps/web/        @itera/web - the web application
+  index.html  public/  vite.config.ts  tsconfig.{app,node}.json
+  src/
+    app/         providers, router, theme, query client
+    auth/        the browser half of the session boundary (route guard,
+                 local/demo session storage, Login UI)
+    components/  web UI (buttons, fields, code views, the RichText renderer)
+    data/        Dexie backend + the Supabase browser client
+    features/    cards, library, login, preview, progress, review, reviewV2,
+                 roadmaps, settings, today
+    domain/ hooks/ types/   thin re-export shims over @itera/core
+packages/core/   @itera/core - the shared engine: entity contracts, the
+                 Repository seam, the pure domain engine (scheduling/FSRS,
+                 grading, stats, search, io), the Supabase backend, the
+                 TanStack Query hooks, the auth policy, the text parser and
+                 the design tokens. Consumed as TypeScript source.
+supabase/        schema.sql + migrations/ for cloud setup
+docs/            shared documentation (see docs/README.md)
 ```
 
 See [`docs/README.md`](docs/README.md) for the documentation index, and [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) for what is actually implemented right now.

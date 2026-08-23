@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 // "localSession.ts is the only file that may touch auth storage" has been a
 // documented rule since the login screen shipped, and until now it was enforced
@@ -16,7 +17,11 @@ import path from 'node:path'
 //
 // Test files are excluded: they seed and clear storage deliberately.
 
-const SRC = path.resolve(process.cwd(), 'src')
+// Resolved from this file, not from process.cwd(): the web app lives under
+// apps/web while the Vitest runner is invoked from the repository root, and a
+// cwd-relative path would scan nothing - a guard that passes by finding no files
+// is worse than no guard at all.
+const SRC = fileURLToPath(new URL('..', import.meta.url))
 
 // Every non-test module that may touch web storage, and why. A new entry here
 // is a deliberate decision, not a detail: read the note on each before adding.

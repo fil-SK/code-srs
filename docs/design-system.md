@@ -16,7 +16,7 @@ There are **two token systems** layered on top of each other. Understanding the 
 
 ## 1. The two token systems
 
-**General app tokens** — defined on `:root, [data-theme='light']` in `src/index.css`. The app is light-only: the `[data-theme='dark']` block and the `dark` custom-variant were deleted (nothing could match them, and zero `dark:` utilities exist), and `<html>` is stamped `data-theme="light"` statically:
+**General app tokens** — defined on `:root, [data-theme='light']` in `apps/web/src/index.css`. The app is light-only: the `[data-theme='dark']` block and the `dark` custom-variant were deleted (nothing could match them, and zero `dark:` utilities exist), and `<html>` is stamped `data-theme="light"` statically:
 
 | Token | Light | Dark | Tailwind utility |
 |---|---|---|---|
@@ -39,9 +39,9 @@ There are **two token systems** layered on top of each other. Understanding the 
 
 `--radius-card: 12px` (`rounded-card`). Fonts: `--font-sans` (Inter stack), `--font-mono` (JetBrains Mono stack) — same names in both themes.
 
-These are exposed to Tailwind via `@theme inline` in `src/index.css`, which makes utilities emit `var(--…)` directly — which is what lets `.itera-scope` re-point them at runtime (below) rather than needing a rebuild. Mappings whose utilities had no consumers left (`bg-bg`, `bg-bg-elev`, `bg-itera-canvas`, `font-itera-mono`, `rounded-itera-code`) have been removed.
+These are exposed to Tailwind via `@theme inline` in `apps/web/src/index.css`, which makes utilities emit `var(--…)` directly — which is what lets `.itera-scope` re-point them at runtime (below) rather than needing a rebuild. Mappings whose utilities had no consumers left (`bg-bg`, `bg-bg-elev`, `bg-itera-canvas`, `font-itera-mono`, `rounded-itera-code`) have been removed.
 
-**Itera-scope tokens** — an additive, **light-only** namespace (`.itera-scope` in `src/index.css`), applied via `IteraSurface`. It does two things at once:
+**Itera-scope tokens** — an additive, **light-only** namespace (`.itera-scope` in `apps/web/src/index.css`), applied via `IteraSurface`. It does two things at once:
 
 1. Defines the actual `--itera-*` custom properties (the locked brand palette).
 2. **Re-points the general tokens above** (`--bg`, `--panel`, `--text`, `--accent`, `--green`, `--amber`, `--red`, `--blue`, `--shadow`, `--code-bg`, ...) to the Itera values, scoped to `.itera-scope` and its descendants only.
@@ -75,7 +75,7 @@ This re-pointing is the whole trick: every pre-redesign component already used `
 
 `--blue` has no dedicated Itera token (informational, not success/warning/error) — it re-points to `--itera-accent-active` instead.
 
-**The same palette exists as platform-neutral values, and drift is mechanically impossible.** `src/index.css` stays the source that paints the browser — nothing is generated, injected or built from TypeScript. `packages/core/src/design/tokens.ts` carries the same identity as values a React Native app can read (`iteraColors`, `iteraRadii`, `iteraFonts`, `iteraFontWeights`, and `ITERA_SHADOW_INTENTS`), because a native app cannot resolve a CSS custom property. `src/design/tokenDrift.test.ts` parses the `.itera-scope` block and the `--radius-itera-*` declarations and asserts the two agree **in both directions**, so neither an edited hex nor a newly added `--itera-*` variable can land without its shared counterpart. The two shadow values are the only exemption — `box-shadow` and React Native's elevation model are different models, not different syntaxes, so only the intent *names* are shared — and the test asserts that exemption set is exactly those two.
+**The same palette exists as platform-neutral values, and drift is mechanically impossible.** `apps/web/src/index.css` stays the source that paints the browser — nothing is generated, injected or built from TypeScript. `packages/core/src/design/tokens.ts` carries the same identity as values a React Native app can read (`iteraColors`, `iteraRadii`, `iteraFonts`, `iteraFontWeights`, and `ITERA_SHADOW_INTENTS`), because a native app cannot resolve a CSS custom property. `apps/web/src/design/tokenDrift.test.ts` parses the `.itera-scope` block and the `--radius-itera-*` declarations and asserts the two agree **in both directions**, so neither an edited hex nor a newly added `--itera-*` variable can land without its shared counterpart. The two shadow values are the only exemption — `box-shadow` and React Native's elevation model are different models, not different syntaxes, so only the intent *names* are shared — and the test asserts that exemption set is exactly those two.
 
 **What is deliberately not in that module:** the type/spacing scale (below — it is a design rule, not a token), page widths, breakpoints, nav heights and sidebar widths. Those are layout mechanics, and web and native are meant to differ in layout while sharing identity.
 
@@ -124,7 +124,7 @@ Top bars — **DESIGN RULE:** global nav 68–72px desktop; the immersive Review
 
 ## 2. `IteraSurface` / `ForceLightTheme`
 
-`src/features/reviewV2/components/IteraSurface.tsx`:
+`apps/web/src/features/reviewV2/components/IteraSurface.tsx`:
 
 ```tsx
 export function IteraSurface({ children, className }) {
@@ -138,32 +138,32 @@ export function IteraSurface({ children, className }) {
 
 Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `RouteError` and `PreviewShell` (design-preview) — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the Itera visual system needs to be wrapped in `IteraSurface`** (or already be a descendant of one of the above).
 
-`ForceLightTheme` locally overrides `ThemeContext` (from `src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light Itera code background paired with a dark syntax palette. Only light values are defined in `.itera-scope` (spec §36 defers dark mode), so the app is light-only. `ThemeToggle.tsx` has been deleted and there is no theme toggle anywhere, but `Theme` keeps its `'dark'` member precisely because `CodeView`/`CodeEditor` select the `oneDark` palette from it.
+`ForceLightTheme` locally overrides `ThemeContext` (from `apps/web/src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light Itera code background paired with a dark syntax palette. Only light values are defined in `.itera-scope` (spec §36 defers dark mode), so the app is light-only. `ThemeToggle.tsx` has been deleted and there is no theme toggle anywhere, but `Theme` keeps its `'dark'` member precisely because `CodeView`/`CodeEditor` select the `oneDark` palette from it.
 
 ---
 
-## 3. Shared UI components (`src/components/ui/`)
+## 3. Shared UI components (`apps/web/src/components/ui/`)
 
 | Component | Purpose | Variants/props |
 |---|---|---|
 | `Button.tsx` | Base button | `variant?: 'primary' \| 'secondary' \| 'ghost' \| 'danger'` (default `secondary`). `primary`: `bg-accent text-white hover:brightness-110`. `secondary`: `border border-border bg-panel-2 hover:border-accent`. `ghost`: `text-muted hover:bg-panel`. `danger`: `bg-red text-white hover:brightness-110` (`--red` re-points to `--itera-error` inside `.itera-scope`, so it reads as the Itera error color without needing an itera-only token). Base radius `rounded-[9px]`, disabled → `opacity-50 pointer-events-none`. Props are `ComponentPropsWithRef<'button'>`, so `ref` passes through (React 19 ref-as-prop). |
 | `Field.tsx` | Labeled form field + shared input classes | Exports `fieldClass`/`selectClass` strings (`rounded-[9px] border border-border bg-code-bg ... focus:border-accent`) used across every card-type editor. `<Field label>` renders an uppercase, tracked-out `text-xs font-semibold text-muted` caption above its children. |
 | `FloatingPanel.tsx` | Portaled, viewport-aware popover panel anchored to a trigger | `anchor: HTMLElement \| null`, `onClose`, `align?: 'start' \| 'end'` (default `end`), `className?`, `role?`, `ariaLabel?`, `manageFocus?`, `returnFocusTo?`. Positions itself `fixed` against the anchor's rect, flips **above** the anchor when it would not fit below, clamps to 8px from every viewport edge, re-places on scroll (capture) / resize, and closes on outside `mousedown` or Escape. `manageFocus` (default **off**, so the pointer-driven row kebab menus are unchanged) adds real menu keyboard semantics: focus moves to the first non-`aria-disabled` `role="menuitem"` once the panel has been *measured* (focusing it earlier is a silent no-op — the panel is `visibility: hidden` until then), Arrow/Home/End walk the items with wrapping, Tab closes, and on unmount focus returns to `returnFocusTo` unless the user has already moved it elsewhere. |
-| `dialogs.tsx` | In-app replacements for `window.confirm` / `window.prompt` / `window.alert` | `<DialogProvider>` (mounted in `src/app/providers.tsx`) + `useDialogs()` → `{ confirm, prompt, alert }`, all promise-based so call sites read like the blocking builtins: `if (await dialogs.confirm({ title, description, danger }))`. `prompt` resolves the trimmed value or `null`; its submit button is disabled while empty. Rendered as a portaled modal with a `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape/scrim-click to dismiss. **Focus is contained and returned:** on open it moves to the prompt input, else the confirm button — except a `danger` confirm, which opens on **Cancel** so Enter on an unexpected delete dialog dismisses rather than deletes. Tab/Shift+Tab wrap within the dialog's own controls and pull focus back in if it has escaped, handled on a `document` keydown (the same listener that owns Escape) so containment holds even when focus is already behind the modal. On close, focus returns to whatever was focused when the dialog opened, when that element is still connected and the user has not moved focus themselves — the same two-part guard `FloatingPanel` uses. |
+| `dialogs.tsx` | In-app replacements for `window.confirm` / `window.prompt` / `window.alert` | `<DialogProvider>` (mounted in `apps/web/src/app/providers.tsx`) + `useDialogs()` → `{ confirm, prompt, alert }`, all promise-based so call sites read like the blocking builtins: `if (await dialogs.confirm({ title, description, danger }))`. `prompt` resolves the trimmed value or `null`; its submit button is disabled while empty. Rendered as a portaled modal with a `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape/scrim-click to dismiss. **Focus is contained and returned:** on open it moves to the prompt input, else the confirm button — except a `danger` confirm, which opens on **Cancel** so Enter on an unexpected delete dialog dismisses rather than deletes. Tab/Shift+Tab wrap within the dialog's own controls and pull focus back in if it has escaped, handled on a `document` keydown (the same listener that owns Escape) so containment holds even when focus is already behind the modal. On close, focus returns to whatever was focused when the dialog opened, when that element is still connected and the user has not moved focus themselves — the same two-part guard `FloatingPanel` uses. |
 
 Both `FloatingPanel` and `dialogs` portal into `document.body`, which sits **outside** `.itera-scope` — so each portal re-applies the `itera-scope` class on its own root and cancels that class's canvas `background` with an inline `background: transparent` (an overlay must not paint the page ground). Any future portal has to do the same or its `itera-*` tokens resolve to nothing.
 
-`src/lib/cn.ts` — `cn(...inputs) = twMerge(clsx(inputs))`. Standard clsx (resolves conditional/falsy args) + tailwind-merge (resolves conflicting Tailwind classes on the same CSS property, so a trailing `className` prop can safely override earlier classes) combo. Use this for all conditional/merged class strings.
+`apps/web/src/lib/cn.ts` — `cn(...inputs) = twMerge(clsx(inputs))`. Standard clsx (resolves conditional/falsy args) + tailwind-merge (resolves conflicting Tailwind classes on the same CSS property, so a trailing `className` prop can safely override earlier classes) combo. Use this for all conditional/merged class strings.
 
-`src/lib/id.ts` — `newId()`. The one ID convention for every entity in the app: an RFC 4122 v4 UUID, from `crypto.randomUUID()` where it exists and otherwise assembled from `crypto.getRandomValues()`. `randomUUID` is **secure-context only**, so a plain-HTTP LAN dev origin (physical-phone testing) has no such method; `getRandomValues` carries no such restriction, so both branches produce the same format from the same CSPRNG. Never generate an id any other way.
+`apps/web/src/lib/id.ts` — `newId()`. The one ID convention for every entity in the app: an RFC 4122 v4 UUID, from `crypto.randomUUID()` where it exists and otherwise assembled from `crypto.getRandomValues()`. `randomUUID` is **secure-context only**, so a plain-HTTP LAN dev origin (physical-phone testing) has no such method; `getRandomValues` carries no such restriction, so both branches produce the same format from the same CSPRNG. Never generate an id any other way.
 
 ---
 
 ## 4. Icon conventions
 
-Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lucide's set so its stroke width and geometry stay consistent. The deliberate SVG exceptions are a small bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx` (see §6), and `src/components/icons/StreakFlameIcon.tsx`: the one shared streak glyph used by the top nav, Progress, Today and Profile because Lucide's thin generic flame did not match the locked `progress.png` silhouette at small sizes.
+Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lucide's set so its stroke width and geometry stay consistent. The deliberate SVG exceptions are a small bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx` (see §6), and `apps/web/src/components/icons/StreakFlameIcon.tsx`: the one shared streak glyph used by the top nav, Progress, Today and Profile because Lucide's thin generic flame did not match the locked `progress.png` silhouette at small sizes.
 
-**The circular badge pattern** (`src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
+**The circular badge pattern** (`apps/web/src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
 
 ```tsx
 <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-itera-accent-soft text-itera-accent">
@@ -173,7 +173,7 @@ Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lu
 
 A 32px soft-orange circle with an orange glyph, used for the compact grouped metrics in Momentum — lucide icons inherit `currentColor`, so the wrapper's `text-itera-accent` is what colors the icon, not a prop on the icon itself.
 
-Other conventions seen across `src/features/today/*.tsx`:
+Other conventions seen across `apps/web/src/features/today/*.tsx`:
 - **Sizes**: 14–17px for ordinary inline/list icons and 15px for most nav/action chrome. The branded streak flame is 24px in the top nav, and Progress KPI badges use 17px glyphs inside 36px circles because those are compact data-visualization marks rather than inline controls.
 - **Inline chrome icons** (nav search, "Create" button) sit at `gap-1.5`–`gap-2` next to text, not inside a circular badge — badges are reserved for list-row icons, not nav/action chrome.
 - **Trailing affordance**: `ChevronRight` at 14–16px, colored `text-itera-muted` (decorative) or `text-itera-accent` (a clickable "Continue"/"View more" link).
@@ -185,7 +185,7 @@ Other conventions seen across `src/features/today/*.tsx`:
 
 ## 5. Markdown / RichText
 
-**The syntax is shared; the rendering is not.** What `**bold**`, `*italic*`, `` `code` `` and a fenced block *mean* is decided once, in `packages/core/src/content/parseRichText.ts`, which turns a card's text into a closed union of semantic nodes (`paragraph`/`code`, and `text`/`strong`/`em`/`inlineCode` inside them). `src/components/text/RichText.tsx` is the **web renderer** over that tree: it maps nodes onto DOM elements and parses nothing. A future native renderer maps the same tree onto its own elements, so the two platforms cannot end up with two interpretations of the syntax.
+**The syntax is shared; the rendering is not.** What `**bold**`, `*italic*`, `` `code` `` and a fenced block *mean* is decided once, in `packages/core/src/content/parseRichText.ts`, which turns a card's text into a closed union of semantic nodes (`paragraph`/`code`, and `text`/`strong`/`em`/`inlineCode` inside them). `apps/web/src/components/text/RichText.tsx` is the **web renderer** over that tree: it maps nodes onto DOM elements and parses nothing. A future native renderer maps the same tree onto its own elements, so the two platforms cannot end up with two interpretations of the syntax.
 
 A deliberately small, custom markdown subset — not a full parser, no `dangerouslySetInnerHTML` (nodes are built as real React elements, XSS-safe by construction). Supported syntax:
 
@@ -198,7 +198,7 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 **Underscores are never emphasis markers** — the regex only matches `*`/`**`, never `_`/`__`. This is deliberate: flashcard content is often code-adjacent, so `snake_case_identifiers` render literally instead of being mangled by an underscore-based emphasis rule. Do not pull in a markdown library that would reintroduce this. `packages/core/src/content/parseRichText.test.ts` locks this rule, along with inline-code-beats-emphasis and bold-beats-italic — the three a native re-implementation is most likely to get wrong.
 
-**Card content is data, never markup.** Every node carries plain strings and (for a fenced block) a language id; there is no `html`, `raw` or `url` node, so no renderer is ever handed something to execute or navigate to. Nothing is escaped or stripped on the way in either — `<`, `>`, `&`, generics like `Vec<T>` and whole HTML examples are legitimate flashcard content and survive byte for byte. Safety is the *shape* of the tree plus each renderer's refusal to use a raw-HTML sink, never input mutation. `src/components/text/renderingSinks.test.ts` scans every production module in `src/` and fails on `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `DOMParser`, `eval(` or `new Function(`; the malicious-content regression suites are `src/components/text/RichText.test.tsx`, `src/features/reviewV2/contentSecurity.test.tsx` and `src/data/importedContentSecurity.test.ts`.
+**Card content is data, never markup.** Every node carries plain strings and (for a fenced block) a language id; there is no `html`, `raw` or `url` node, so no renderer is ever handed something to execute or navigate to. Nothing is escaped or stripped on the way in either — `<`, `>`, `&`, generics like `Vec<T>` and whole HTML examples are legitimate flashcard content and survive byte for byte. Safety is the *shape* of the tree plus each renderer's refusal to use a raw-HTML sink, never input mutation. `apps/web/src/components/text/renderingSinks.test.ts` scans every production module in `apps/web/src/` and fails on `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `DOMParser`, `eval(` or `new Function(`; the malicious-content regression suites are `apps/web/src/components/text/RichText.test.tsx`, `apps/web/src/features/reviewV2/contentSecurity.test.tsx` and `apps/web/src/data/importedContentSecurity.test.ts`.
 
 **Screen-reader flattening** (`stripInlineMarkers`, also in `packages/core/src/content/`) strips `` ` `` and `*` for accessible names, so an announcer reads the words rather than spelling out the markers. It is deliberately marker-blind rather than parse-derived — see the module comment.
 
@@ -206,13 +206,13 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 ---
 
-## 6. Code display (`src/components/code/`)
+## 6. Code display (`apps/web/src/components/code/`)
 
 `CodeView.tsx` — a read-only CodeMirror 6 view: line numbers, non-editable, line wrapping, transparent background (so the wrapping container's `--code-bg` shows through), JetBrains Mono at 13px. Syntax palette is chosen from live `useTheme()` (`oneDarkHighlightStyle` vs `defaultHighlightStyle`) — this is exactly why `ForceLightTheme` (§2) has to exist wherever `.itera-scope` is used.
 
-`highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. The array comes from `src/features/reviewV2/interactions/walkthrough/focusLines.ts`'s `focusToHighlightLines`, which expands a step's authored `focus` ranges (`Array<{startLine, endLine}>`). The old `src/components/code/lineRanges.ts` (`parseLineRanges`, which parsed a typed string like `"26-34, 40, 42-45"`) was deleted with the v1 surface and has no successor: focus ranges are structured card data now, not a string a person types.
+`highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. The array comes from `apps/web/src/features/reviewV2/interactions/walkthrough/focusLines.ts`'s `focusToHighlightLines`, which expands a step's authored `focus` ranges (`Array<{startLine, endLine}>`). The old `apps/web/src/components/code/lineRanges.ts` (`parseLineRanges`, which parsed a typed string like `"26-34, 40, 42-45"`) was deleted with the v1 surface and has no successor: focus ranges are structured card data now, not a string a person types.
 
-`LazyCodeView`/`LazyCodeEditor` are `React.lazy()` wrappers (via `src/lib/lazyWithRetry.ts`'s `importWithReload`) around `CodeView`/`CodeEditor` — CodeMirror plus language grammars are heavy, kept out of the initial bundle, loaded on first actual use. `importWithReload` also recovers from a stale/missing chunk after a deploy (reloads once). Both CodeMirror surfaces use the self-hosted `JetBrains Mono Variable` family first and request a fresh geometry measurement after `document.fonts.ready`, preventing fallback-font wrapping from persisting until a scroll or edit.
+`LazyCodeView`/`LazyCodeEditor` are `React.lazy()` wrappers (via `apps/web/src/lib/lazyWithRetry.ts`'s `importWithReload`) around `CodeView`/`CodeEditor` — CodeMirror plus language grammars are heavy, kept out of the initial bundle, loaded on first actual use. `importWithReload` also recovers from a stale/missing chunk after a deploy (reloads once). Both CodeMirror surfaces use the self-hosted `JetBrains Mono Variable` family first and request a fresh geometry measurement after `document.fonts.ready`, preventing fallback-font wrapping from persisting until a scroll or edit.
 
 ---
 
@@ -227,7 +227,7 @@ The shape language is **structured softness**.
 
 **The logo / stacked-card motif is locked to sanctioned spots:** main navigation, onboarding and launch, the Today session hero, and completion or branded transition moments. It is explicitly **forbidden** as general decoration — not on every deck cover, not behind every card, never inside Review content, never as repeated filler. The failure mode named in the brand rules is *"look, here are more stacked cards because the logo has stacked cards."* The motif appears only where it carries meaning.
 
-**IMPLEMENTED:** `SuggestedSessionHero.tsx`'s 4-layer stacked treatment is the one sanctioned reuse of the motif outside the logo itself, and its own file comments say so. Do not lift that pattern into new components. `src/features/reviewV2/ReviewSessionScreen.tsx`'s `.itera-card-enter` next-card entrance is a second, narrower echo of it (the incoming card settles out of an off-stack rotated pose) and is likewise not a general-purpose animation.
+**IMPLEMENTED:** `SuggestedSessionHero.tsx`'s 4-layer stacked treatment is the one sanctioned reuse of the motif outside the logo itself, and its own file comments say so. Do not lift that pattern into new components. `apps/web/src/features/reviewV2/ReviewSessionScreen.tsx`'s `.itera-card-enter` next-card entrance is a second, narrower echo of it (the incoming card settles out of an off-stack rotated pose) and is likewise not a general-purpose animation.
 
 ---
 
@@ -235,7 +235,7 @@ The shape language is **structured softness**.
 
 **DESIGN RULE (locked IA).** One calm horizontal top navigation. Logo left, primary destinations centered-left, account at far right. No permanent dark header, no global left sidebar, no bottom nav forced from desktop onto mobile. The active destination gets a **thin orange marker**, not a filled orange pill.
 
-**IMPLEMENTED** (`src/components/layout/`):
+**IMPLEMENTED** (`apps/web/src/components/layout/`):
 
 - `TopNav.tsx` is presentational only: logo, primary links, and a `rightSlot`. Its wordmark uses the same Inter Variable/650 treatment as login. It holds no product logic and no per-route title slot.
 - `primaryNavLinks.ts` is the single source of truth for the primary destinations, and there are exactly three: **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
@@ -252,7 +252,7 @@ The shape language is **structured softness**.
 
 Never add to Review: global navigation, the Itera logo, a left sidebar, the upcoming queue, a card-information panel, a session-statistics panel, an explanation of spaced repetition, or persistent deck metadata. Those were tested and rejected because they distract from recall.
 
-**IMPLEMENTED:** `/review` is a **structurally separate top-level route with no `AppShell` ancestor** (`src/app/router.tsx`), so it is chrome-free by construction rather than by hiding the shell with CSS. `/login` and `/design-preview/*` use the same pattern. `ReviewTopBar.tsx` carries exit + counter + shortcut hint and nothing else. Because `AccountMenu` mounts from `AppShell`, Review has no account menu automatically.
+**IMPLEMENTED:** `/review` is a **structurally separate top-level route with no `AppShell` ancestor** (`apps/web/src/app/router.tsx`), so it is chrome-free by construction rather than by hiding the shell with CSS. `/login` and `/design-preview/*` use the same pattern. `ReviewTopBar.tsx` carries exit + counter + shortcut hint and nothing else. Because `AccountMenu` mounts from `AppShell`, Review has no account menu automatically.
 
 **Rating controls — DESIGN RULE (locked to `answer-icons.png`).** Again, Hard, Good and Easy use refresh, ascending-bars, circled-check and double-chevron icons respectively. Each is a compact surface card with the label followed by its visible numeric shortcut and the scheduler-computed next interval (`1 • <1m`, for example). Neutral choices use muted icons; only the suggested or selected choice gets an orange icon and border. The controls are four-across from `sm` upward and 2×2 below it. Icons are decorative (`aria-hidden`); the complete visible text remains the button's accessible name, and the existing 1–4 keyboard behavior is unchanged.
 
@@ -274,8 +274,8 @@ Never add to Review: global navigation, the Itera logo, a left sidebar, the upco
 
 **IMPLEMENTED:**
 
-- Deck rows (`src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-itera-accent`.
-- Card rows (`src/features/library/shared/CardTable.tsx`) render every card through one `RowMeta` projection, and clicking the row **opens the card in study preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
+- Deck rows (`apps/web/src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-itera-accent`.
+- Card rows (`apps/web/src/features/library/shared/CardTable.tsx`) render every card through one `RowMeta` projection, and clicking the row **opens the card in study preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
 - Shared row furniture: `MasteryRing`, `MeterBar`, `Stat`, `DeckMark`, `EmptyState`, `StatusBadge`, `OverflowMenu`.
 - **Deck marks are restrained, never rainbow icon art.** A designed deck-cover system is **FUTURE**, not something to improvise per deck.
 
@@ -297,8 +297,8 @@ Sidebar styling: quiet text hierarchy, indentation and subtle branches, **no yel
 
 - `FloatingPanel.tsx` is the one popover primitive (§3): portaled, viewport-aware, flips above the anchor when it will not fit below, clamps 8px from every edge, re-places on scroll/resize. Opt into real menu keyboard semantics with `manageFocus`.
 - `AccountMenu.tsx` / `AccountMenuContent.tsx` — the avatar popover: a 300px anchored, viewport-height-capped `FloatingPanel` with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger), collapsing below 480px (`useIsNarrowShell`) into a bottom sheet with identical content. Its divider groups follow `profile-menu.png`: Account settings + Preferences; Study settings + Spaced repetition (FSRS) + Import / Export; Keyboard shortcuts + Help; What's new + About Itera; Sign out. **Account settings, Import / Export and Sign out are live**; every unbuilt destination, Spaced repetition (FSRS) included, stays an `aria-disabled` "Soon" row. Its header block carries the session's real identity — the email, or "Demo workspace" for the demo session — over a line saying where the data lives; there is no profile record, so it shows no display name.
-- `AdjustSessionDialog.tsx` (`src/features/today/`) — **the settled treatment for a small form overlay**, and the pattern to copy for the next one. `useDialogs()` only covers confirm/prompt/alert, and `FloatingPanel` carries `role="menu"` semantics, so neither fits a form with validation. It is a `role="dialog" aria-modal="true"` portal that mirrors `DialogHost`'s structure — `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape and scrim-click to dismiss, focus into the first control on open, focus returned to the trigger on close — as a **centered modal on desktop and a bottom sheet below 480px** (`useIsNarrowShell`), exactly the split `AccountMenu` established. Content stays lightweight: a radio scope group, segmented `aria-pressed` size presets, one conditional number field, and a `role="status"` line that always states what Start will actually do. **The summary never advertises a count the Start button will not honor** — an unusable custom value asks for a number instead of silently falling back to the whole queue.
-- **The account menu is quick navigation only.** The requested study/backup shortcuts are the exception that proves the rule; do not mirror the full settings sidebar. New settings belong in `src/features/settings/`.
+- `AdjustSessionDialog.tsx` (`apps/web/src/features/today/`) — **the settled treatment for a small form overlay**, and the pattern to copy for the next one. `useDialogs()` only covers confirm/prompt/alert, and `FloatingPanel` carries `role="menu"` semantics, so neither fits a form with validation. It is a `role="dialog" aria-modal="true"` portal that mirrors `DialogHost`'s structure — `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape and scrim-click to dismiss, focus into the first control on open, focus returned to the trigger on close — as a **centered modal on desktop and a bottom sheet below 480px** (`useIsNarrowShell`), exactly the split `AccountMenu` established. Content stays lightweight: a radio scope group, segmented `aria-pressed` size presets, one conditional number field, and a `role="status"` line that always states what Start will actually do. **The summary never advertises a count the Start button will not honor** — an unusable custom value asks for a number instead of silently falling back to the whole queue.
+- **The account menu is quick navigation only.** The requested study/backup shortcuts are the exception that proves the rule; do not mirror the full settings sidebar. New settings belong in `apps/web/src/features/settings/`.
 - Portals sit outside `.itera-scope` and must re-apply the class plus cancel its canvas background (§3).
 
 ---
@@ -320,11 +320,11 @@ Timing guidance, with easing near `cubic-bezier(0.2, 0.8, 0.2, 1)`:
 | Card-to-card transition | 180–280ms |
 | Completion transition | 350–600ms |
 
-**IMPLEMENTED:** the flip lives in `.itera-flip*` (`src/index.css`), the next-card entrance in `.itera-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), the Today hero's mount-in stacking reveal in `SuggestedSessionHero.tsx` (four layers dropping onto the pile back-to-front, 460ms each on a 110ms stagger; D170), and the editor/preview width sync in `.card-editor-shell`.
+**IMPLEMENTED:** the flip lives in `.itera-flip*` (`apps/web/src/index.css`), the next-card entrance in `.itera-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), the Today hero's mount-in stacking reveal in `SuggestedSessionHero.tsx` (four layers dropping onto the pile back-to-front, 460ms each on a 110ms stagger; D170), and the editor/preview width sync in `.card-editor-shell`.
 
 **Two mechanics you must know before animating anything:**
 
-1. **Reduced motion is honored in CSS, per effect.** `@media (prefers-reduced-motion: reduce)` blocks in `src/index.css` neutralize `.itera-flip-face`, `.itera-card-enter`, `.flip-face`, `.reveal-in`, `.preview-drawer`, `.preview-shell-row` and `.card-editor-shell`. **Any new animated class must add its own reduced-motion rule** — there is no blanket `*` override doing it for you. JS-driven motion checks `window.matchMedia('(prefers-reduced-motion: reduce)')` directly (`AccountMenu.tsx`, `SuggestedSessionHero.tsx`). Reduced motion must never gate *content*: reveal happens synchronously regardless of motion settings, and there is a test asserting exactly that.
+1. **Reduced motion is honored in CSS, per effect.** `@media (prefers-reduced-motion: reduce)` blocks in `apps/web/src/index.css` neutralize `.itera-flip-face`, `.itera-card-enter`, `.flip-face`, `.reveal-in`, `.preview-drawer`, `.preview-shell-row` and `.card-editor-shell`. **Any new animated class must add its own reduced-motion rule** — there is no blanket `*` override doing it for you. JS-driven motion checks `window.matchMedia('(prefers-reduced-motion: reduce)')` directly (`AccountMenu.tsx`, `SuggestedSessionHero.tsx`). Reduced motion must never gate *content*: reveal happens synchronously regardless of motion settings, and there is a test asserting exactly that.
 2. **A CSS `transition` on a Tailwind-composed `transform` does not reliably animate.** `scale-*`/`rotate-*`/`translate-*` (including `group-hover:` variants) each write a separate custom property that a shared rule composes; transitioning the composed value was measured snapping instantly in Chromium despite a correct duration. Compute such transforms as **one literal `style.transform` string in JS**.
 
 ---
@@ -342,7 +342,7 @@ Intended Review shortcuts: `Escape` exit/pause with confirmation, `Space` flip a
 
 **IMPLEMENTED, and worth copying:**
 
-- `reviewV2/components/FlipCard.tsx` is **the** flip primitive and the only one: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. It replaced an earlier `src/components/ui/FlipCard.tsx` that was a plain `<div onClick>` with no keyboard or ARIA support; that file and its `.flip*` CSS have been deleted.
+- `reviewV2/components/FlipCard.tsx` is **the** flip primitive and the only one: real button semantics, `focus-visible` ring, `aria-pressed`, and `aria-hidden` on whichever face is turned away. It replaced an earlier `apps/web/src/components/ui/FlipCard.tsx` that was a plain `<div onClick>` with no keyboard or ARIA support; that file and its `.flip*` CSS have been deleted.
 - **Ordering** makes each complete row the pointer and keyboard drag target and shows a decorative 3×4 dot grip at its right edge. There are no separate arrow controls: focus a row, press Space to pick it up, use Arrow keys, then Space to drop. Positions are announced via `aria-live`.
 - **Multiple Choice** option rows pair a circular check marker with a navy selected-row tint and `aria-checked`; the marker is decorative to assistive technology because the row already owns the checkbox/radio semantics.
 - **Walkthrough** keeps card-wide Tip/Explanation panels and may also render a step-scoped panel inside the active step: the step tip is pre-answer only, while the step explanation appears after that step is submitted and remains visible when revisited. Code-backed Walkthrough cards use opacity-only entrance motion so CodeMirror glyphs are never scaled or rotated during rasterization.

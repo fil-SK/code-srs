@@ -12,16 +12,18 @@ import path from 'node:path'
 // depended on either would pass here and fail under Metro, which is the exact
 // class of bug the package boundary exists to catch.
 //
-// `npx vitest run` still runs both; there is no second command to remember.
+// `npx vitest run` still runs both; there is no second command to remember. This
+// config stays at the repository root - it is the one runner for both workspaces -
+// while each project's `root` points at the package it covers.
 const webProject = {
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, 'apps/web/src'),
     },
   },
   test: {
     name: 'web',
-    root: __dirname,
+    root: path.resolve(__dirname, 'apps/web'),
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     // Component tests opt into a DOM per file with a `// @vitest-environment
     // happy-dom` pragma; everything else stays in Node, which is faster.
@@ -39,8 +41,8 @@ const webProject = {
 const coreProject = {
   test: {
     name: 'core',
-    root: __dirname,
-    include: ['packages/core/src/**/*.test.ts'],
+    root: path.resolve(__dirname, 'packages/core'),
+    include: ['src/**/*.test.ts'],
     // No setup file on purpose: no fake-indexeddb, no repository configured,
     // no `@` alias, no VITE_* env. A core test that needs any of those is
     // telling you something about the code it covers.

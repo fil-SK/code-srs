@@ -48,6 +48,11 @@ export default defineConfig({
       },
     }),
   ],
+  // .env / .env.local stay at the repository root rather than moving into this
+  // workspace, so environment discovery is unchanged by the relocation. Resolved
+  // from this config file's own directory, never from process.cwd(), so `npm run
+  // dev` at the root and `npm run dev --workspace @itera/web` load the same files.
+  envDir: path.resolve(__dirname, '../..'),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

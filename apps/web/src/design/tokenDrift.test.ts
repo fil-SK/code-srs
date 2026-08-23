@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
-import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { ITERA_SHADOW_INTENTS, iteraColors, iteraRadii } from '@itera/core'
 
 // The seam between two representations of one brand.
@@ -20,7 +20,11 @@ import { ITERA_SHADOW_INTENTS, iteraColors, iteraRadii } from '@itera/core'
 // a new --itera-* variable be added with no shared counterpart, which is
 // exactly how the native side would end up missing a color it needs.
 
-const CSS = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8')
+// Resolved from this file, not from process.cwd(): the web app lives under
+// apps/web while the Vitest runner is invoked from the repository root, so a
+// cwd-relative path would read nothing and silently assert against an empty
+// stylesheet.
+const CSS = fs.readFileSync(fileURLToPath(new URL('../index.css', import.meta.url)), 'utf8')
 
 // Values that are deliberately NOT shared, because the platforms model them
 // differently rather than spelling them differently: a box-shadow string has no
