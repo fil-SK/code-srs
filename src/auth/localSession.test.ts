@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  browserSessionStore,
   clearLocalSession,
   createLocalSession,
   readLocalSession,
@@ -60,5 +61,45 @@ describe('localSession', () => {
   it('treats a corrupt stored value as signed out instead of throwing', () => {
     window.localStorage.setItem(KEY, 'not json')
     expect(readLocalSession()).toBeNull()
+  })
+})
+
+// The same three operations as @itera/core's LocalSessionStore sees them. The
+// shared auth layer only ever reaches storage through this object, so it is
+// what actually has to behave, not just the named functions beside it.
+describe('browserSessionStore', () => {
+  afterEach(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+  })
+
+  it('round-trips a remembered session through localStorage', () => {
+    browserSessionStore.write(createLocalSession('a@b.com'), { remember: true })
+
+    expect(window.localStorage.getItem(KEY)).toBeTruthy()
+    expect(window.sessionStorage.getItem(KEY)).toBeNull()
+    expect(browserSessionStore.read()?.email).toBe('a@b.com')
+  })
+
+  it('round-trips a non-remembered session through sessionStorage', () => {
+    browserSessionStore.write(createLocalSession('a@b.com'), { remember: false })
+
+    expect(window.localStorage.getItem(KEY)).toBeNull()
+    expect(window.sessionStorage.getItem(KEY)).toBeTruthy()
+    expect(browserSessionStore.read()?.email).toBe('a@b.com')
+  })
+
+  it('clears both stores', () => {
+    browserSessionStore.write(createLocalSession('a@b.com'), { remember: true })
+    browserSessionStore.clear()
+
+    expect(browserSessionStore.read()).toBeNull()
+    expect(window.localStorage.getItem(KEY)).toBeNull()
+    expect(window.sessionStorage.getItem(KEY)).toBeNull()
+  })
+
+  it('reads a corrupt stored value as signed out', () => {
+    window.sessionStorage.setItem(KEY, '{ half-written')
+    expect(browserSessionStore.read()).toBeNull()
   })
 })

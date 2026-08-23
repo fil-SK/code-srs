@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from '@/auth/AuthProvider'
+import { createWebAuthConfig } from '@/auth/webAuthConfig'
+import { isSupabaseConfigured } from '@/data/supabase/client'
 import { getRepository } from '@/data'
 import type { Deck } from '@/types'
 import { AppShell } from '@/components/layout/AppShell'
@@ -26,7 +28,7 @@ function renderCreateFlow() {
   )
   return render(
     <QueryClientProvider client={qc}>
-      <AuthProvider>
+      <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
         <RouterProvider router={router} />
       </AuthProvider>
     </QueryClientProvider>,

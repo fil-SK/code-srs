@@ -33,6 +33,18 @@ export * from './data/registry'
 export * from './data/backup'
 export * from './data/supabase/SupabaseRepository'
 
+// ---- authentication: the mode rule, the session model, the React binding -----
+// The audit P1-3 invariant (authentication mode follows repository mode) is a
+// pure function here, tested once, so no platform can answer "am I signed in?"
+// its own way. Storage technology, the Supabase client, the environment read,
+// the route guard and the sign-in screen all stay with each application, and
+// arrive as an AuthConfig at composition time.
+export * from './auth/types'
+export * from './auth/localSession'
+export * from './auth/resolveAuthState'
+export * from './auth/authEngine'
+export * from './auth/AuthProvider'
+
 // ---- shared data access: query keys + the TanStack hooks over the seam -------
 // React-but-not-DOM, so they run unmodified on React Native. They live here
 // rather than once per platform because duplicating them would duplicate `qk`,

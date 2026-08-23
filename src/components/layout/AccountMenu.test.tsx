@@ -4,6 +4,8 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider } from '@/auth/AuthProvider'
+import { createWebAuthConfig } from '@/auth/webAuthConfig'
+import { isSupabaseConfigured } from '@/data/supabase/client'
 import { AccountMenu } from './AccountMenu'
 
 function LocationProbe() {
@@ -13,7 +15,7 @@ function LocationProbe() {
 
 function renderMenu() {
   return render(
-    <AuthProvider>
+    <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
       <MemoryRouter initialEntries={['/decks']}>
         <button type="button">outside</button>
         <AccountMenu />

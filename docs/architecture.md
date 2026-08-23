@@ -57,6 +57,15 @@ packages/core/
     │                       SupabaseClient) and fakeSupabaseClient.ts (the fake
     │                       PostgREST server that tests it, absent from the barrel).
     │                       Dexie is NOT here - it stays in the web app.
+    ├── auth/          types.ts (AuthMode/AuthIdentity/LocalSession/
+    │                  LocalSessionStore/AuthConfig/AuthValue), localSession.ts
+    │                  (DEMO_EMAIL, createLocalSession, parseLocalSession),
+    │                  resolveAuthState.ts (the P1-3 mode rule, pure),
+    │                  authEngine.ts (the lifecycle, framework-neutral) and
+    │                  AuthProvider.ts (the React binding - createElement, not
+    │                  JSX, so core stays free of a `jsx` compiler option).
+    │                  Browser storage, the Supabase client, the environment
+    │                  read and the route guards are NOT here.
     ├── hooks/         queryKeys.ts (the one `qk`) + the six TanStack Query data
     │                  hooks. React, but not DOM - they run unmodified on native.
     ├── lib/           id.ts (newId), shuffle.ts
@@ -350,13 +359,23 @@ Compiler-enforced touchpoints first; the build fails until each is handled.
 
 ### Auth / session boundary
 
-`src/auth/` owns the entire concept of "signed in," in four files:
+The **policy** lives in `packages/core/src/auth/` and the **platform adapters** live in `src/auth/`. The split is the point: web and native are expected to have different sign-in interactions - web mails a magic link, native will enter a six-digit OTP - over identical session semantics, and the semantics are the half that must not be written twice.
+
+Shared, in `@itera/core`:
+
+- **`resolveAuthState()`** - the mode rule as a pure function, and the whole of audit P1-3. Given `{ mode, supabaseSession, localSession }` it answers `{ identity, isAuthenticated }`: the active backend decides which session is a session, and a record from the inactive mode is neither an identity nor an admission ticket. It is tested once, in core, with no renderer.
+- **`createAuthEngine(config)`** - the lifecycle, deliberately not a React component: the initial snapshot, the `getSession()` bootstrap, the `onAuthStateChange` subscription and its teardown, both local sign-ins and sign-out. Being framework-neutral is what lets "a bootstrap that settles after teardown applies nothing" be a core test rather than a component test.
+- **`AuthProvider` / `useAuth`** - the one React binding, over `useSyncExternalStore`. The engine caches its snapshot so it is stable under `Object.is`.
+- **`AuthConfig`** - what a platform injects: `{ mode }` plus a `LocalSessionStore`, plus a `getSupabaseClient` getter in Supabase mode. A discriminated union, so a missing client in Supabase mode is a compile error. Core reads no storage, no environment and no route.
+
+Web-specific, in `src/auth/`:
 
 - **`RequireAuth.tsx`** — a **single pathless layout route** in `router.tsx` wrapping every product route (the whole `AppShell` tree *and* `/review`). Signed-out visitors are redirected to `/login` carrying the route they wanted. `/login` and `/design-preview/*` sit outside it. "Signed out" is therefore answered in exactly one place, never per page.
-- **`AuthProvider.tsx`** — **authentication mode follows repository mode.** It reads the same `isSupabaseConfigured` predicate `getRepository()` selects the backend with, so exactly one auth model is active: Supabase configured means only a Supabase session is a session; otherwise only a `LocalSession` is. A session belonging to the inactive backend never authenticates, is never the `identity`, and a leftover local record is cleared through `clearLocalSession()` once during the Supabase bootstrap — session cleanup only, never touching the IndexedDB workspace. `session` still means the Supabase session specifically and is `null` in local mode. Before this, `isAuthenticated` was `session !== null || local !== null`, which let a stale `itera.session` admit someone to a Supabase-backed app with no Supabase user (audit P1-3).
-- **`AuthGate.tsx`** — blocks only on the Supabase session bootstrap. It does not decide what renders. Because a local record is never adopted in Supabase mode, nothing renders authenticated while that bootstrap is still pending.
-- **The bootstrap always ends.** `getSession()` is `.then`/`.catch`/`.finally`, guarded by a `cancelled` flag the effect cleanup sets, so `loading` clears whether the call resolves with a session, resolves signed out, resolves with an `error`, or rejects outright. A failure is signed out **plus** an explanation: `AuthValue.sessionError` carries one plain sentence that `SignInPanel` renders in its existing `role="alert"` region, so an unreachable cloud backend lands on a usable `/login` instead of "Loading…" forever (audit 2026-08-22). No session is invented on failure, and a stale local record is still cleared, so a bootstrap error cannot admit anyone.
-- **`localSession.ts`** — the **single storage seam for auth**: one key (`itera.session`), `localStorage` when "Remember me" is checked and `sessionStorage` otherwise, every access wrapped in `try/catch`, a corrupt value reading as signed out. **Do not add a session or `localStorage` auth check anywhere else in the app.**
+- **`webAuthConfig.ts` + `src/main.tsx`** — **authentication mode follows repository mode.** `main.tsx` reads `isSupabaseConfigured` **once** into `cloudEnabled` and uses it for both `configureRepository()` and `createWebAuthConfig()`, which is passed to `AuthProvider` as a prop. It is the only production module in the app that imports that predicate; product code reads `mode` from `useAuth()`. Exactly one auth model is active: Supabase configured means only a Supabase session is a session; otherwise only a `LocalSession` is. A session belonging to the inactive backend never authenticates, is never the `identity`, and a leftover local record is cleared through the injected session store once at engine start — session cleanup only, never touching the IndexedDB workspace. `session` still means the Supabase session specifically and is `null` in local mode. Before this, `isAuthenticated` was `session !== null || local !== null`, which let a stale `itera.session` admit someone to a Supabase-backed app with no Supabase user (audit P1-3).
+- **`AuthGate.tsx`** — web-only, and blocks only on the Supabase session bootstrap. It does not decide what renders. Because a local record is never adopted in Supabase mode, nothing renders authenticated while that bootstrap is still pending.
+- **The bootstrap always ends.** `getSession()` is `.then`/`.catch`/`.finally`, guarded by a `cancelled` flag the engine's teardown sets, so `loading` clears whether the call resolves with a session, resolves signed out, resolves with an `error`, or rejects outright. A failure is signed out **plus** an explanation: `AuthValue.sessionError` (set by the shared engine, `BOOTSTRAP_ERROR`) carries one plain sentence that `SignInPanel` renders in its existing `role="alert"` region, so an unreachable cloud backend lands on a usable `/login` instead of "Loading…" forever (audit 2026-08-22). No session is invented on failure, and a stale local record is still cleared, so a bootstrap error cannot admit anyone.
+- **`localSession.ts`** — the **single storage seam for auth**, and the browser's implementation of core's `LocalSessionStore` (exported as `browserSessionStore`): one key (`itera.session`, platform-owned - core never learns it), `localStorage` when "Remember me" is checked and `sessionStorage` otherwise, every access wrapped in `try/catch`, a corrupt value reading as signed out (core's `parseLocalSession` decides that part). **Do not add a session or `localStorage` auth check anywhere else in the app** — `src/auth/storageIsolation.test.ts` enforces it: exactly four web modules may name browser storage, and none of them is a login, settings or layout surface.
+- **`AuthProvider.ts`** — a re-export shim over `@itera/core`, kept so existing `@/auth/AuthProvider` imports resolve. It contains no auth logic.
 
 Local mode is gated: a fresh browser lands on `/login` and must sign in or continue with a demo workspace. **In local mode the password is a dev/demo shell — never stored, sent or verified.** With Supabase configured, the only real authentication is magic-link OTP: the password field and Remember me are hidden and the button mails a link. No password authentication exists anywhere in this codebase.
 

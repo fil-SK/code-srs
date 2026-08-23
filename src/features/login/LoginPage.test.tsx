@@ -5,6 +5,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { AuthProvider } from '@/auth/AuthProvider'
+import { createWebAuthConfig } from '@/auth/webAuthConfig'
+import { isSupabaseConfigured } from '@/data/supabase/client'
 import { readLocalSession } from '@/auth/localSession'
 import { LoginPage } from './LoginPage'
 
@@ -48,7 +50,7 @@ function LocationProbe() {
 
 function renderLogin(initial: string | { pathname: string; state?: unknown } = '/login') {
   return render(
-    <AuthProvider>
+    <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
       <MemoryRouter initialEntries={[initial]}>
         <LocationProbe />
         <Routes>

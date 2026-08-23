@@ -1,29 +1,26 @@
-import { newId } from '@/lib/id'
+import { parseLocalSession, type LocalSession, type LocalSessionStore } from '@itera/core'
 
-// The one and only storage seam for the local (non-Supabase) session. Nothing
-// else in the app reads or writes an auth key directly, so "am I signed in?"
-// has exactly one answer and one place to change when a real local account
-// system arrives.
+// The browser's implementation of @itera/core's LocalSessionStore, and the one
+// and only file in this app that may touch auth storage. Nothing else reads or
+// writes a session key, so "am I signed in?" has exactly one answer and one
+// place to change when a real local account system arrives.
+//
+// What a local/demo session *is* now lives in core (its shape, how a stored
+// record is read back, the demo identity, the mode rule that decides whether it
+// counts). What is left here is genuinely browser-specific: two stores, one key,
+// and the Remember me choice between them.
 //
 // This is a development/demo shell, not authentication: no password is stored,
 // verified, or transmitted. It exists so the product has a real session
 // boundary (sign in -> app -> sign out -> login) while the app remains
 // local-first with no backend.
 
-export type LocalSessionKind = 'local' | 'demo'
+export { createLocalSession, DEMO_EMAIL } from '@itera/core'
+export type { LocalSession, LocalSessionKind } from '@itera/core'
 
-export interface LocalSession {
-  id: string
-  email: string
-  kind: LocalSessionKind
-  createdAt: string
-}
-
+// Platform-owned on purpose: core never learns the key, and a native app is free
+// to name its own.
 const KEY = 'itera.session'
-
-/** The demo workspace's fixed identity. `.local` is reserved, so it can never
- *  collide with a real address someone signs in with. */
-export const DEMO_EMAIL = 'demo@itera.local'
 
 // Storage access throws outright in some privacy modes, so every entry point
 // is guarded rather than assumed to work.
@@ -35,37 +32,13 @@ function safeRead(store: Storage): string | null {
   }
 }
 
-function parse(raw: string | null): LocalSession | null {
-  if (!raw) return null
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      typeof (parsed as LocalSession).id === 'string' &&
-      typeof (parsed as LocalSession).email === 'string'
-    ) {
-      return parsed as LocalSession
-    }
-  } catch {
-    // Corrupt value: treat as signed out rather than crashing the app shell.
-  }
-  return null
-}
-
 /** localStorage (Remember me) wins over sessionStorage when both somehow exist. */
 export function readLocalSession(): LocalSession | null {
   if (typeof window === 'undefined') return null
   return (
-    parse(safeRead(window.localStorage)) ?? parse(safeRead(window.sessionStorage))
+    parseLocalSession(safeRead(window.localStorage)) ??
+    parseLocalSession(safeRead(window.sessionStorage))
   )
-}
-
-export function createLocalSession(
-  email: string,
-  kind: LocalSessionKind = 'local',
-): LocalSession {
-  return { id: newId(), email, kind, createdAt: new Date().toISOString() }
 }
 
 /** `remember: false` keeps the session to the tab, so closing it signs out. */
@@ -94,4 +67,11 @@ export function clearLocalSession(): void {
   } catch {
     // Ignore: already unreachable storage means nothing was persisted either.
   }
+}
+
+/** The same three operations, as the object core's auth layer is handed. */
+export const browserSessionStore: LocalSessionStore = {
+  read: readLocalSession,
+  write: writeLocalSession,
+  clear: clearLocalSession,
 }

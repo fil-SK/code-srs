@@ -216,3 +216,34 @@ focus enters the menu, arrows walk it, Tab closes it. That is a deliberate
 interaction change for those rows, not a bug fix, so it was left out of a pass
 scoped to six specific findings. Before this pass no dialog returned focus at
 all, so nothing regressed; this is the one path the improvement does not reach.
+
+## Magic-link send: raw error text, and a "Sending…" that can never end
+
+Noticed during the 2026-08-22 P2 pass and recorded here on 2026-08-23, during
+the Step 1.5 auth extraction, because it is still open and was not written down
+anywhere but a parenthetical in D263.
+
+`sendMagicLink` in `src/features/login/SignInPanel.tsx` has two gaps, and they
+are the two things D262/D263 closed on the *bootstrap* path but not on the
+*sign-in* path:
+
+1. It renders `error.message` verbatim, which is the raw GoTrue/transport
+   string. D263 deliberately refused that for the bootstrap message on the
+   grounds that "TypeError: Failed to fetch" tells a learner nothing they can
+   act on; the same argument applies here.
+2. There is no `try`/`catch`, and it is invoked as `void sendMagicLink(...)`.
+   `signInWithOtp` **returns** some failures and **throws** others (the same
+   split D262 had to handle). On a throw the rejection is swallowed, `magicLink`
+   stays `'sending'` forever, and the submit button stays disabled reading
+   "Sending…" with no way back but a reload.
+
+Deliberately not fixed in Step 1.5: that step was a structural extraction that
+moved no Login behaviour and changed no Login copy, and the shared boundary is
+correct without touching this - initiating a magic link is a web sign-in action
+with a web redirect URL (`window.location.origin`), which is exactly the kind of
+thing the auth split leaves platform-side. A future native client will call
+`signInWithOtp`/`verifyOtp` through its own flow without going near this code.
+
+Closing it means: wrap the call, treat a throw and a returned error identically,
+end in a decided state on every path, and show a written sentence rather than
+the transport's. That is Login polish and wants its own small pass.

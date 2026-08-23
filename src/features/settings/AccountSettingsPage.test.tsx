@@ -4,6 +4,8 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/auth/AuthProvider'
+import { createWebAuthConfig } from '@/auth/webAuthConfig'
+import { isSupabaseConfigured } from '@/data/supabase/client'
 import { DialogProvider } from '@/components/ui/dialogs'
 import { AccountSettingsPage } from './AccountSettingsPage'
 
@@ -11,7 +13,7 @@ function renderAt(path: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <AuthProvider>
+      <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
         <DialogProvider>
           <MemoryRouter initialEntries={[path]}>
             <Routes>

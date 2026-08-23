@@ -4,7 +4,7 @@ import { Eye, EyeOff, FlaskConical, Lock, Mail } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
-import { getSupabase, isSupabaseConfigured } from '@/data/supabase/client'
+import { getSupabase } from '@/data/supabase/client'
 import { cn } from '@/lib/cn'
 
 // The sign-in form. Two modes, one layout:
@@ -54,7 +54,10 @@ function LeadingIcon({ icon: Icon }: { icon: typeof Mail }) {
 
 export function SignInPanel({ redirectTo }: { redirectTo: string }) {
   const navigate = useNavigate()
-  const { signInLocal, signInDemo, sessionError } = useAuth()
+  const { mode, signInLocal, signInDemo, sessionError } = useAuth()
+  // Which sign-in this screen offers follows the active auth mode, which the
+  // composition root decided once. This screen does not read the environment.
+  const cloudAuth = mode === 'supabase'
 
   const emailId = useId()
   const passwordId = useId()
@@ -77,7 +80,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
     const next: typeof errors = {}
     if (!trimmed) next.email = 'Enter your email address.'
     else if (!EMAIL_PATTERN.test(trimmed)) next.email = 'Enter a valid email address.'
-    if (!isSupabaseConfigured && !password) next.password = 'Enter your password.'
+    if (!cloudAuth && !password) next.password = 'Enter your password.'
 
     setErrors(next)
     if (next.email) {
@@ -89,7 +92,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
       return
     }
 
-    if (isSupabaseConfigured) {
+    if (cloudAuth) {
       void sendMagicLink(trimmed)
       return
     }
@@ -157,7 +160,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             )}
           </div>
 
-          {!isSupabaseConfigured && (
+          {!cloudAuth && (
             <div className="mt-4">
               <Label htmlFor={passwordId}>Password</Label>
               <div className="relative">
@@ -197,7 +200,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             </div>
           )}
 
-          {!isSupabaseConfigured && (
+          {!cloudAuth && (
             <>
               <div className="mt-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
@@ -252,7 +255,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             disabled={magicLink === 'sending'}
             className="mt-5 h-11 w-full rounded-itera-control text-[14px]"
           >
-            {isSupabaseConfigured
+            {cloudAuth
               ? magicLink === 'sending'
                 ? 'Sending…'
                 : 'Send magic link'
@@ -261,7 +264,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
         </form>
       )}
 
-      {!isSupabaseConfigured && magicLink !== 'sent' && (
+      {!cloudAuth && magicLink !== 'sent' && (
         <>
           <div className="my-4 flex items-center gap-4">
             <span aria-hidden="true" className="h-px flex-1 bg-itera-border" />

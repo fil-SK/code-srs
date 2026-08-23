@@ -1,4 +1,4 @@
-import { isSupabaseConfigured } from '@/data/supabase/client'
+import { useAuth } from '@/auth/AuthProvider'
 import { PlaceholderSection } from './SectionShell'
 
 // The sections the reference mockup draws but this product does not have yet.
@@ -6,12 +6,14 @@ import { PlaceholderSection } from './SectionShell'
 // than a set of dead links.
 
 export function EmailPasswordSection() {
+  // The active auth mode, not the environment: one decision, made at boot.
+  const { mode } = useAuth()
   return (
     <PlaceholderSection
       title="Email & password"
       description="Change the address you sign in with, and manage your password."
       note={
-        isSupabaseConfigured
+        mode === 'supabase'
           ? 'Not available yet. Sign-in uses Supabase magic links, so there is no password to change; email changes are not wired up here.'
           : 'Not available yet. This install runs in local mode with no account, so there is nothing to sign in with.'
       }

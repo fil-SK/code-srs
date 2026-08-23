@@ -5,13 +5,16 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import { AuthProvider, useAuth } from './AuthProvider'
+import { createWebAuthConfig } from './webAuthConfig'
+import { isSupabaseConfigured } from '@/data/supabase/client'
 import { readLocalSession } from './localSession'
 import { RequireAuth } from './RequireAuth'
 
 // The suite blanks VITE_SUPABASE_* (vitest.config.ts), so the Supabase half of the
 // auth path is otherwise unreachable. Mocking the config seam is the only way to
 // exercise it, and `isSupabaseConfigured` is a getter so a single file can render
-// both modes: AuthProvider reads it during render, never at module scope.
+// both modes: renderApp builds the AuthConfig at render time, exactly as
+// src/main.tsx builds it at boot, so flipping the flag flips the mode.
 const sb = vi.hoisted(() => {
   const listeners: ((event: string, session: unknown) => void)[] = []
   return {
@@ -96,7 +99,7 @@ function LoginStub() {
 
 function renderApp(initial: string) {
   return render(
-    <AuthProvider>
+    <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
       <MemoryRouter initialEntries={[initial]}>
         <LocationProbe />
         <Routes>
