@@ -267,3 +267,7 @@ through it. The image rule travels with the parser already, because
 
 Not actionable until a native renderer exists. Recorded here so it is not
 rediscovered as a gap.
+
+## Verify Vercel deployment after workspace migration
+
+Before the next public deployment, confirm the Vercel dashboard still uses repository root as Root Directory and that apps/web/dist is the configured/recognized output. If Root Directory is apps/web, reconcile the repository/dashboard settings and use dist instead. Perform one production deployment and verify SPA routing/PWA assets.
