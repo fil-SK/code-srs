@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { isSafeImageSource } from '@itera/core'
+import { initialWalkthroughState, isSafeImageSource, walkthroughBehavior } from '@itera/core'
+import type { WalkthroughState } from '@itera/core'
 import { RichText } from '@/components/text/RichText'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { cn } from '@/lib/cn'
@@ -10,7 +11,6 @@ import { ExplanationPanel } from '../../components/ExplanationPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
 import { TipPanel } from '../../components/TipPanel'
 import type { InteractionViewProps } from '../types'
-import { initialWalkthroughState, type WalkthroughState } from './state'
 import { focusToHighlightLines } from './focusLines'
 import { StepResponse } from './StepResponse'
 
@@ -18,9 +18,10 @@ import { StepResponse } from './StepResponse'
 // step is answered inside this View while the shell's phase stays
 // 'presenting' - only the last step's Continue button (relabeled "Finish")
 // calls the shell's onPrimaryAction, which is what actually submits the
-// whole card and reveals the Explanation/rating. See index.ts's
-// isResponseReady, which mirrors "every step answered" exactly so an early
-// Enter press (shell-level) can't finish the card before that.
+// whole card and reveals the Explanation/rating. The "every step answered"
+// rule is walkthroughBehavior.isResponseReady in @itera/core, called by this
+// View and by the shell, so an early Enter press (shell-level) can't finish
+// the card before that.
 export function WalkthroughView({
   card,
   phase,
@@ -34,7 +35,9 @@ export function WalkthroughView({
   const step = interaction.steps[state.stepIndex]
   const stepAnswered = step ? step.id in state.answers : false
   const isLastStep = state.stepIndex === interaction.steps.length - 1
-  const allAnswered = interaction.steps.every((s) => s.id in state.answers)
+  // The shared readiness rule, called rather than mirrored: the last step's
+  // Finish button and the shell's own submit guard must agree by construction.
+  const allAnswered = walkthroughBehavior.isResponseReady(state, interaction)
   const stepPanelRef = useRef<HTMLDivElement>(null)
   const isFirstRender = useRef(true)
 

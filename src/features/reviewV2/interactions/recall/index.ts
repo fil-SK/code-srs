@@ -1,8 +1,8 @@
-import type { InteractionDefinition } from '../types'
+import { recallBehavior } from '@itera/core'
+import type { WebInteractionDefinition } from '../types'
 import { RecallView } from './RecallView'
 
-export const recallDefinition: InteractionDefinition<'recall'> = {
-  type: 'recall',
-  interactive: false, // self-graded: reveal via Space/click, no response to validate
+export const recallDefinition: WebInteractionDefinition<'recall'> = {
+  ...recallBehavior,
   View: RecallView,
 }

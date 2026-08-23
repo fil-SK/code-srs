@@ -1,13 +1,22 @@
 import type { ComponentType } from 'react'
-import type { CardInteraction, Card, InteractionType } from '@/types/card'
-import type { ObjectiveResult, ReviewPhase } from '../reviewPhase'
+import type {
+  Card,
+  CardInteraction,
+  InteractionBehavior,
+  InteractionResponse,
+  InteractionType,
+} from '@itera/core'
+import type { ReviewPhase } from '../reviewPhase'
 
-// The response shape is interaction-specific (string[] of option ids for
-// Multiple Choice, a code string for Write Code, nothing for Recall) — kept
-// as `unknown` at this boundary, same as v1's CardResponse, narrowed inside
-// each interaction's own View/grading functions.
-export type InteractionResponse = unknown
+// Re-exported so the existing `from './interactions/types'` imports still
+// resolve to core's one definition rather than a web copy.
+export type { InteractionResponse }
 
+// The web View's prop bag. Deliberately *not* in @itera/core: this is the
+// contract between the review shell and a React DOM component, including a
+// web-authoring affordance (`hideActions`), and a native View will want its
+// own event signatures over the same learning state. What is shared is the
+// behavior (@itera/core's InteractionBehavior), not the rendering contract.
 export interface InteractionViewProps<T extends InteractionType> {
   card: Card & { interaction: Extract<CardInteraction, { type: T }> }
   phase: ReviewPhase
@@ -29,29 +38,16 @@ export interface InteractionViewProps<T extends InteractionType> {
   hideActions?: boolean
 }
 
-// Everything needed to render and (if auto-graded) grade one interaction
-// type. One View
-// component (not separate Presenting/Feedback components) because a
+// The web binding: one shared behavior plus this platform's View. The
+// behavior half is spread in from @itera/core and never restated here, so
+// readiness, grading and semantic width exist exactly once for web and for
+// whatever binds the same objects next.
+//
+// One View component (not separate Presenting/Feedback components) because a
 // self-graded type like Recall needs one continuous element across the
 // reveal — swapping components at that boundary would break the flip
 // animation.
-export interface InteractionDefinition<T extends InteractionType> {
-  type: T
-  // false = self-graded (reveal via Space, rate yourself). true = the
-  // learner builds a response and submits it (Enter), then it's auto-graded.
-  interactive: boolean
-  isResponseReady?: (
-    response: InteractionResponse,
-    interaction: Extract<CardInteraction, { type: T }>,
-  ) => boolean
-  autoGrade?: (
-    interaction: Extract<CardInteraction, { type: T }>,
-    response: InteractionResponse,
-  ) => ObjectiveResult | null
-  // Which card column this interaction needs, decided per card rather than
-  // per type: 'default' (the shell's normal 42rem flashcard column) unless
-  // the content itself can't fit in it. Only Matching implements this, and
-  // only for a three-column board.
-  widthFor?: (interaction: Extract<CardInteraction, { type: T }>) => 'default' | 'wide'
+export interface WebInteractionDefinition<T extends InteractionType>
+  extends InteractionBehavior<T> {
   View: ComponentType<InteractionViewProps<T>>
 }

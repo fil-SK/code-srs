@@ -1,18 +1,8 @@
-import { matchesAcceptedAnswer } from '@/domain/grading/writeCode'
-import type { InteractionDefinition } from '../types'
+import { writeCodeBehavior } from '@itera/core'
+import type { WebInteractionDefinition } from '../types'
 import { WriteCodeView } from './WriteCodeView'
 
-export const writeCodeDefinition: InteractionDefinition<'write_code'> = {
-  type: 'write_code',
-  interactive: true,
-  isResponseReady: (response) =>
-    typeof response === 'string' && response.trim().length > 0,
-  autoGrade: (interaction, response) => ({
-    correct: matchesAcceptedAnswer(
-      (response as string | undefined) ?? '',
-      interaction.acceptedAnswers,
-      interaction.comparison,
-    ),
-  }),
+export const writeCodeDefinition: WebInteractionDefinition<'write_code'> = {
+  ...writeCodeBehavior,
   View: WriteCodeView,
 }

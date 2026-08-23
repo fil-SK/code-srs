@@ -10,7 +10,7 @@ import { ExplanationPanel } from './components/ExplanationPanel'
 import { RatingControls } from './components/RatingControls'
 import { ReviewPersistError } from './components/ReviewPersistError'
 import { initialReviewPhase, reviewPhaseReducer } from './reviewPhase'
-import type { InteractionDefinition, InteractionResponse } from './interactions/types'
+import type { InteractionResponse, WebInteractionDefinition } from './interactions/types'
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
   return (
@@ -54,7 +54,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
   persistErrorMessage = "We couldn't save this review. Try again.",
 }: {
   card: Card & { interaction: Extract<CardInteraction, { type: T }> }
-  definition: InteractionDefinition<T>
+  definition: WebInteractionDefinition<T>
   current: number
   total: number
   onExit: () => void

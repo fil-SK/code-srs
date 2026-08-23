@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import type { CardInteraction, Card, InteractionType } from '@/types/card'
-import type { InteractionDefinition, InteractionResponse } from '@/features/reviewV2/interactions/types'
+import type {
+  InteractionResponse,
+  WebInteractionDefinition,
+} from '@/features/reviewV2/interactions/types'
 import type { ReviewPhase } from '@/features/reviewV2/reviewPhase'
 import { TipPanel } from '@/features/reviewV2/components/TipPanel'
 import { ExplanationPanel } from '@/features/reviewV2/components/ExplanationPanel'
@@ -27,7 +30,7 @@ export function InteractionAnswerPreview<T extends InteractionType>({
   definition,
 }: {
   card: Card & { interaction: Extract<CardInteraction, { type: T }> }
-  definition: InteractionDefinition<T>
+  definition: WebInteractionDefinition<T>
 }) {
   const [revealed, setRevealed] = useState(false)
   const [response, setResponse] = useState<InteractionResponse>(undefined)

@@ -83,7 +83,12 @@ packages/core/
     │                  scheduling/ search/ stats/ - the 40 modules that used to
     │                  be src/domain/, moved verbatim
     ├── library/       collectionTree.ts (Collection derivation), deckMark.ts, sortDecks.ts
-    ├── interactions/  matchingBadgeGeometry.ts, promptLength.ts
+    ├── interactions/  the six InteractionBehavior descriptors (recall.ts,
+    │                  multipleChoice.ts, writeCode.ts, ordering.ts, matching.ts,
+    │                  walkthrough.ts) over types.ts's contract, plus
+    │                  walkthroughState.ts (the Walkthrough response object),
+    │                  matchingBadgeGeometry.ts and promptLength.ts. Behavior
+    │                  only - no View, no JSX, no registry.
     ├── charts/        retentionChartPath.ts
     ├── today/         greetings.ts
     ├── test/          timeZone.ts - the Europe/Belgrade DST pin; attackPayloads.ts -
@@ -347,13 +352,14 @@ Compiler-enforced touchpoints first; the build fails until each is handled.
 
 1. `packages/core/src/types/card.ts` — add the interface and a member to the `CardInteraction` union. It is exported automatically: `packages/core/src/index.ts` re-exports the whole module.
 2. `packages/core/src/domain/search/searchableText.ts` — add a `case`; its `never` guard fails the build until you do.
-3. `src/features/reviewV2/interactions/<type>/` — a `View` component plus an `index.ts` exporting an `InteractionDefinition`.
-4. `src/features/reviewV2/interactions/registry.ts` — register it. **The registry is `Partial<...>`, so a missing entry throws at runtime rather than failing the build** — this is the one step the compiler does not enforce.
-5. `packages/core/src/domain/grading/<type>.ts` — a grader, if the type auto-grades (Recall does not; it is self-graded).
-6. `packages/core/src/domain/cards/<type>Form.ts` — form state, `<type>FormToRecord`, `cardRecordTo<Type>Form`, `validate<Type>Form`, `empty<Type>Form`.
-7. `packages/core/src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `packages/core/src/hooks/useCards.ts`.
-8. `src/features/cards/` — `<Type>EditorShell`, `<Type>Fields`, `<Type>LivePreview`, a `CardTypeChooser` tile, and arms in `CardCreatePage` + `CardEditEntry`.
-9. `src/features/cards/shared/interactionTypeMeta.ts` — label, icon and tile colour (`features/library/shared/rowVisuals.ts` reads this for table rows).
+3. `packages/core/src/interactions/<type>.ts` — an `InteractionBehavior<'<type>'>`: `interactive`, and `isResponseReady`/`autoGrade`/`widthFor` where the type has them. Export it from `packages/core/src/index.ts`. **This is the shared half and it must exist exactly once** — no platform may re-derive readiness, grading or semantic width.
+4. `src/features/reviewV2/interactions/<type>/` — a `View` component plus an `index.ts` exporting `{ ...<type>Behavior, View }` as a `WebInteractionDefinition`. The binding spreads the shared behavior; it never restates a field.
+5. `src/features/reviewV2/interactions/registry.ts` — register it. **The registry is `Partial<...>`, so a missing entry throws at runtime rather than failing the build** — this is the one step the compiler does not enforce. When a native app exists it repeats steps 4-5 with its own View and its own registry over the *same* behavior object.
+6. `packages/core/src/domain/grading/<type>.ts` — a grader, if the type auto-grades (Recall does not; it is self-graded).
+7. `packages/core/src/domain/cards/<type>Form.ts` — form state, `<type>FormToRecord`, `cardRecordTo<Type>Form`, `validate<Type>Form`, `empty<Type>Form`.
+8. `packages/core/src/domain/cards/save<Type>Card.ts` — the save path, plus `useSave<Type>Card` in `packages/core/src/hooks/useCards.ts`.
+9. `src/features/cards/` — `<Type>EditorShell`, `<Type>Fields`, `<Type>LivePreview`, a `CardTypeChooser` tile, and arms in `CardCreatePage` + `CardEditEntry`.
+10. `src/features/cards/shared/interactionTypeMeta.ts` — label, icon and tile colour (`features/library/shared/rowVisuals.ts` reads this for table rows).
 
 ---
 
@@ -484,25 +490,44 @@ Because Dexie data is client-side, a migration cannot be run from CI or a script
 
 - `ReviewSessionScreen.tsx` — owns the phase state machine (`reviewPhase.ts`): `presenting -> submitting -> feedback -> rating -> transitioning`, with a `RESET` back to `presenting`. Self-graded types (Recall) skip `submitting`. `ObjectiveResult = {correct: boolean, score?: number}` — `score` supports partial credit (Matching/Ordering/Walkthrough), which v1's `autoGrade` has no equivalent for.
 - `components/` — `IteraSurface`/`ForceLightTheme`, an accessible `FlipCard` (the only one; it replaced an earlier shared FlipCard that lacked keyboard/ARIA support, since deleted), `FlashcardSurface`, `TipPanel`/`ExplanationPanel`, `RatingControls`, `ReviewTopBar` (exit, position counter, shortcut hint — no logo/nav/deck metadata, "tested and rejected because they distract from recall"), `InteractionLabel`.
-- `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting an `InteractionDefinition`. `matching/` renders through `MatchingBoard.tsx`: columns side by side, with each relationship drawn as measured SVG connectors (a chain of hops when the card has two value columns). A Matching card is capped at three columns — `MAX_MATCHING_VALUE_COLUMNS` in `domain/cards/matchingForm.ts`, enforced in `addMatchingColumn`, `validateMatchingForm`, and the editor's Add-column control. A **shared** (`fixed`) column is how one value serves several terms at once; an unshared column stays one-to-one, and assigning its value to another term moves it. See `itera-decisions.md` D118-D127. `ordering/` renders through `OrderingRow.tsx`: each unlocked row is the complete pointer and keyboard drag target, with a decorative 3×4 dot grip at right; see D164-D165. `walkthrough/` shows only the active step's optional tip before its first submission, then that step's optional explanation after submission; card-wide guidance remains owned by `ReviewSessionScreen`. Code-backed Walkthrough cards opt out of the shell's scale/rotation entrance transform so their always-visible CodeMirror content stays crisp. See D166.
+- `interactions/` — one subfolder per v2 type (`recall`, `multipleChoice`, `writeCode`, `ordering`, `matching`, `walkthrough`), each exporting a `WebInteractionDefinition`: the matching `InteractionBehavior` from `@itera/core` spread together with this platform's `View`. `matching/` renders through `MatchingBoard.tsx`: columns side by side, with each relationship drawn as measured SVG connectors (a chain of hops when the card has two value columns). A Matching card is capped at three columns — `MAX_MATCHING_VALUE_COLUMNS` in `domain/cards/matchingForm.ts`, enforced in `addMatchingColumn`, `validateMatchingForm`, and the editor's Add-column control. A **shared** (`fixed`) column is how one value serves several terms at once; an unshared column stays one-to-one, and assigning its value to another term moves it. See `itera-decisions.md` D118-D127. `ordering/` renders through `OrderingRow.tsx`: each unlocked row is the complete pointer and keyboard drag target, with a decorative 3×4 dot grip at right; see D164-D165. `walkthrough/` shows only the active step's optional tip before its first submission, then that step's optional explanation after submission; card-wide guidance remains owned by `ReviewSessionScreen`. Code-backed Walkthrough cards opt out of the shell's scale/rotation entrance transform so their always-visible CodeMirror content stays crisp. See D166.
 
-`interactions/types.ts`:
+### Interaction behavior vs. View
+
+An interaction is two things, and they live in two places. What it *means* is shared; how it *looks* is not.
+
+`packages/core/src/interactions/types.ts` owns the shared half:
 
 ```ts
-interface InteractionDefinition<T extends InteractionType> {
+interface InteractionBehavior<T extends InteractionType> {
   type: T
-  interactive: boolean
+  interactive: boolean                                  // false = self-graded
   isResponseReady?: (response, interaction) => boolean
   autoGrade?: (interaction, response) => ObjectiveResult | null
+  widthFor?: (interaction) => 'default' | 'wide'        // semantic, not CSS
+}
+```
+
+The six descriptors (`recallBehavior`, `multipleChoiceBehavior`, `writeCodeBehavior`, `orderingBehavior`, `matchingBehavior`, `walkthroughBehavior`) sit beside it and delegate to the graders in `domain/grading/`. `widthFor` names an **intent**, never a measurement: the web maps `'wide'` to `max-w-4xl` and `'default'` to `max-w-2xl` in `ReviewSessionScreen`, and another platform is free to map them differently. Only Matching implements it, and only for a three-column board.
+
+`src/features/reviewV2/interactions/types.ts` owns the web half:
+
+```ts
+interface WebInteractionDefinition<T extends InteractionType>
+  extends InteractionBehavior<T> {
   View: ComponentType<InteractionViewProps<T>>   // ONE component, not three
 }
 ```
 
-`interactions/registry.ts` registers all six as `Partial<{ [T in InteractionType]: InteractionDefinition<T> }>` (not a full `Record`), and `getInteractionDefinition()` **throws at runtime** if a type is missing.
+and each `interactions/<type>/index.ts` is one line of composition — `{ ...matchingBehavior, View: MatchingView }`. **No web module reimplements `interactive`, `isResponseReady`, `autoGrade` or `widthFor`**; `src/features/reviewV2/interactions/registry.test.ts` asserts each registered definition carries core's functions *by reference*, which is the only check that catches a copy.
+
+`InteractionViewProps` deliberately stays web-side: it is the contract between the review shell and a React DOM component (including `hideActions`, an authoring-preview affordance), and a native View will want its own event signatures over the same learning state. `ReviewPhase` stays web-side too — no behavior function takes a phase, so nothing forces the phase machine into core.
+
+`interactions/registry.ts` registers all six as `Partial<{ [T in InteractionType]: WebInteractionDefinition<T> }>` (not a full `Record`), and `getInteractionDefinition()` **throws at runtime** if a type is missing. There is one registry per platform and no registry in core: a lookup table has to name that platform's Views, while the behavior it looks up is shared.
 
 ### Registry shape
 
-`interactions/registry.ts` is a `Partial<{ [T in InteractionType]: InteractionDefinition<T> }>`, not a full `Record`, and `getInteractionDefinition()` **throws at runtime** for a missing type — deliberately, so a future seventh interaction fails loudly instead of silently rendering nothing. It is the one step in "Adding an interaction" the compiler does not catch.
+`interactions/registry.ts` is a `Partial<{ [T in InteractionType]: WebInteractionDefinition<T> }>`, not a full `Record`, and `getInteractionDefinition()` **throws at runtime** for a missing type — deliberately, so a future seventh interaction fails loudly instead of silently rendering nothing. It is the one step in "Adding an interaction" the compiler does not catch, on every platform: a native registry must keep the same runtime failure rather than falling back to a default View.
 
 Each type contributes **one** `View` component (not separate Question/Answer components) because a self-graded flip needs one continuous element across the reveal; swapping components at that boundary would break the flip animation. Auto-grading returns `ObjectiveResult = {correct, score?}`, where `score` carries partial credit for Matching/Ordering/Walkthrough.
 

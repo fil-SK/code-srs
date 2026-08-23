@@ -139,6 +139,22 @@ export * from './library/sortDecks'
 export * from './interactions/matchingBadgeGeometry'
 export * from './interactions/promptLength'
 
+// ---- interaction behavior: what each interaction means, minus how it looks --
+// The contract plus the six behavior descriptors. `isResponseReady`,
+// `autoGrade` and the semantic `widthFor` decide when a card can be submitted,
+// what it scores and how much room its content needs - none of which may be
+// re-derived per platform, because a second implementation changes what the
+// learner is taught without failing a test. The Views stay platform-specific
+// and each platform binds them to these objects in its own registry.
+export * from './interactions/types'
+export * from './interactions/walkthroughState'
+export * from './interactions/recall'
+export * from './interactions/multipleChoice'
+export * from './interactions/writeCode'
+export * from './interactions/ordering'
+export * from './interactions/matching'
+export * from './interactions/walkthrough'
+
 export * from './charts/retentionChartPath'
 
 export * from './today/greetings'

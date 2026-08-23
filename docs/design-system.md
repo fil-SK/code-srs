@@ -79,9 +79,9 @@ This re-pointing is the whole trick: every pre-redesign component already used `
 
 **What is deliberately not in that module:** the type/spacing scale (below — it is a design rule, not a token), page widths, breakpoints, nav heights and sidebar widths. Those are layout mechanics, and web and native are meant to differ in layout while sharing identity.
 
-Radii: `--radius-itera-code: 8px`, `--radius-itera-control: 9px`, `--radius-itera-card: 14px`, `--radius-itera-dialog: 16px`, `--radius-itera-pill: 999px` (pills/tags/small labels only — don't round everything equally).
+Radii: `--radius-itera-control: 9px`, `--radius-itera-card: 14px`, `--radius-itera-dialog: 16px`, `--radius-itera-pill: 999px` (pills/tags/small labels only — don't round everything equally). There is no longer a `--radius-itera-code`: its `rounded-itera-code` utility lost its last consumer and both were deleted, so code surfaces take their corners from the container they sit in.
 
-Fonts: `font-itera-sans` (Inter) and `font-itera-mono` (JetBrains Mono). The legacy `font-itera-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
+Fonts: `font-itera-sans` (Inter) for everything non-code, and `font-mono` (JetBrains Mono) on code surfaces — the `font-itera-mono` alias was deleted once it had no consumers, so there is one utility per family rather than two names for the same stack. The legacy `font-itera-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
 
 ### Typography rules — DESIGN RULE (locked)
 
@@ -210,7 +210,7 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 `CodeView.tsx` — a read-only CodeMirror 6 view: line numbers, non-editable, line wrapping, transparent background (so the wrapping container's `--code-bg` shows through), JetBrains Mono at 13px. Syntax palette is chosen from live `useTheme()` (`oneDarkHighlightStyle` vs `defaultHighlightStyle`) — this is exactly why `ForceLightTheme` (§2) has to exist wherever `.itera-scope` is used.
 
-`highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. `src/components/code/lineRanges.ts`'s `parseLineRanges` turns a human-friendly string (`"26-34, 40, 42-45"`) into a sorted, deduped line-number array.
+`highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. The array comes from `src/features/reviewV2/interactions/walkthrough/focusLines.ts`'s `focusToHighlightLines`, which expands a step's authored `focus` ranges (`Array<{startLine, endLine}>`). The old `src/components/code/lineRanges.ts` (`parseLineRanges`, which parsed a typed string like `"26-34, 40, 42-45"`) was deleted with the v1 surface and has no successor: focus ranges are structured card data now, not a string a person types.
 
 `LazyCodeView`/`LazyCodeEditor` are `React.lazy()` wrappers (via `src/lib/lazyWithRetry.ts`'s `importWithReload`) around `CodeView`/`CodeEditor` — CodeMirror plus language grammars are heavy, kept out of the initial bundle, loaded on first actual use. `importWithReload` also recovers from a stale/missing chunk after a deploy (reloads once). Both CodeMirror surfaces use the self-hosted `JetBrains Mono Variable` family first and request a fresh geometry measurement after `document.fonts.ready`, preventing fallback-font wrapping from persisting until a scroll or edit.
 
@@ -220,7 +220,7 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 The shape language is **structured softness**.
 
-- **Don't round every object equally.** Radius is a signal that something is an interactive or semantic object. Code surfaces stay more rectangular (`--radius-itera-code: 8px`); pills are reserved for true pills, tags and small labels.
+- **Don't round every object equally.** Radius is a signal that something is an interactive or semantic object. Code surfaces stay more rectangular than cards; pills are reserved for true pills, tags and small labels.
 - **Don't nest decorative containers.** A code block inside a flashcard is fine. A metric card inside a stat card inside a dashboard panel is not. If you are on your third border, delete two of them.
 - **Tables and lists use open rows + separators**, not one bordered container per row.
 - **Shadows are sparing.** A main Review card may carry `--itera-shadow-card`; most Library rows carry none. `--itera-shadow-float` is for genuinely floating elements (popovers, sheets, dialogs).
