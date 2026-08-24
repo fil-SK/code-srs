@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '@/src/components/PlaceholderScreen'
+import { ProfileSettingsScreen } from '@/src/components/profile/ProfileSettingsScreen'
 
 export default function ProfileRoute() {
-  return <PlaceholderScreen title="Profile" />
+  return <ProfileSettingsScreen />
 }

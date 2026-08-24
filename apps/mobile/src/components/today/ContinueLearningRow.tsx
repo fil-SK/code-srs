@@ -25,12 +25,9 @@ export function ContinueLearningRow({ deck, onPress }: ContinueLearningRowProps)
       </View>
 
       <View style={styles.content}>
-        <View style={styles.headingRow}>
-          <Text numberOfLines={1} style={styles.name}>
-            {deck.name}
-          </Text>
-          <Text style={styles.due}>{deck.dueCount} due</Text>
-        </View>
+        <Text numberOfLines={1} style={styles.name}>
+          {deck.name}
+        </Text>
         <Text numberOfLines={1} style={styles.description}>
           {deck.description}
         </Text>
@@ -47,7 +44,10 @@ export function ContinueLearningRow({ deck, onPress }: ContinueLearningRowProps)
         </View>
       </View>
 
-      <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={21} />
+      <View style={styles.trailing}>
+        <Text style={styles.due}>{deck.dueCount} due</Text>
+        <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={21} />
+      </View>
     </Pressable>
   )
 }
@@ -119,25 +119,28 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flex: 1,
     marginLeft: 12,
-    marginRight: 6,
-  },
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
+    marginRight: 12,
   },
   name: {
     minWidth: 0,
-    flex: 1,
     color: iteraColors.inkBrand,
     fontSize: 14,
     fontWeight: '700',
   },
   due: {
-    flexShrink: 0,
+    flex: 1,
     color: iteraColors.accent,
     fontSize: 12,
+    fontVariant: ['tabular-nums'],
     fontWeight: '700',
+    textAlign: 'right',
+  },
+  trailing: {
+    width: 72,
+    flexShrink: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   description: {
     marginTop: 3,
@@ -164,8 +167,10 @@ const styles = StyleSheet.create({
   },
   progressText: {
     width: 31,
-    color: iteraColors.muted,
+    color: '#475569',
     fontSize: 11,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '500',
     textAlign: 'right',
   },
 })
