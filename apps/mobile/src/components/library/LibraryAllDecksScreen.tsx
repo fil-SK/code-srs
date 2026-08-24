@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { iteraColors, iteraRadii } from '@itera/core'
+import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
 import {
@@ -47,8 +48,15 @@ function DisabledAction({
   )
 }
 
-function CollectionPill({ collection }: { collection: MobileLibraryCollectionViewModel }) {
+function CollectionPill({
+  collection,
+  onPress,
+}: {
+  collection: MobileLibraryCollectionViewModel
+  onPress?: () => void
+}) {
   const selected = collection.kind === 'all'
+  const disabled = selected || !onPress
   const icon: IconName =
     collection.kind === 'all'
       ? 'layers-outline'
@@ -59,9 +67,14 @@ function CollectionPill({ collection }: { collection: MobileLibraryCollectionVie
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: !selected, selected }}
-      disabled={!selected}
-      style={[styles.collectionPill, selected && styles.collectionPillSelected]}
+      accessibilityState={{ disabled, selected }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.collectionPill,
+        selected && styles.collectionPillSelected,
+        pressed && styles.pressed,
+      ]}
     >
       <MaterialCommunityIcons
         color={selected ? iteraColors.inkBrand : iteraColors.muted}
@@ -103,6 +116,7 @@ function DisabledControl({
 }
 
 export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryViewModel }) {
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [dueOnly, setDueOnly] = useState(false)
 
@@ -150,7 +164,19 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           style={styles.collectionRail}
         >
           {viewModel.collections.map((collection) => (
-            <CollectionPill key={collection.id} collection={collection} />
+            <CollectionPill
+              key={collection.id}
+              collection={collection}
+              onPress={
+                collection.id === 'fixture-interview-core'
+                  ? () =>
+                      router.push({
+                        pathname: '/library/[collectionId]',
+                        params: { collectionId: collection.id },
+                      })
+                  : undefined
+              }
+            />
           ))}
           <Pressable
             accessibilityLabel="All collections unavailable"

@@ -20,3 +20,13 @@ export interface MobileLibraryViewModel {
   collections: MobileLibraryCollectionViewModel[]
   decks: MobileLibraryDeckViewModel[]
 }
+
+export interface MobileCollectionViewModel {
+  id: LibraryCollection['id']
+  name: LibraryCollection['name']
+  description: string
+  deckCount: number
+  cardCount: number
+  dueToday: number
+  decks: MobileLibraryDeckViewModel[]
+}
