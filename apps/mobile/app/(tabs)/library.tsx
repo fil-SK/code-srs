@@ -1,5 +1,6 @@
-import { PlaceholderScreen } from '@/src/components/PlaceholderScreen'
+import { LibraryAllDecksScreen } from '@/src/components/library/LibraryAllDecksScreen'
+import { createMobileLibraryFixture } from '@/src/fixtures/library'
 
 export default function LibraryRoute() {
-  return <PlaceholderScreen title="Library" />
+  return <LibraryAllDecksScreen viewModel={createMobileLibraryFixture()} />
 }

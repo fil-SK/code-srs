@@ -1,0 +1,22 @@
+import type { Deck, LibraryCollection } from '@itera/core'
+
+export interface MobileLibraryCollectionViewModel {
+  id: 'all' | 'unfiled' | LibraryCollection['id']
+  name: string
+  kind: 'all' | 'collection' | 'unfiled'
+}
+
+export interface MobileLibraryDeckViewModel {
+  id: Deck['id']
+  name: Deck['name']
+  description: NonNullable<Deck['description']>
+  cardCount: number
+  dueCount: number
+  progressPercent: number
+  lastStudiedLabel: string
+}
+
+export interface MobileLibraryViewModel {
+  collections: MobileLibraryCollectionViewModel[]
+  decks: MobileLibraryDeckViewModel[]
+}
