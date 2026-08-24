@@ -1,6 +1,6 @@
-import { MultipleChoicePreviewScreen } from '@/src/components/review/MultipleChoicePreviewScreen'
-import { mobileMultipleChoicePreviewFixture } from '@/src/fixtures/reviewMultipleChoice'
+import { WriteCodePreviewScreen } from '@/src/components/review/WriteCodePreviewScreen'
+import { mobileWriteCodePreviewFixture } from '@/src/fixtures/reviewWriteCode'
 
-export default function MultipleChoicePreviewRoute() {
-  return <MultipleChoicePreviewScreen viewModel={mobileMultipleChoicePreviewFixture} />
+export default function WriteCodePreviewRoute() {
+  return <WriteCodePreviewScreen viewModel={mobileWriteCodePreviewFixture} />
 }

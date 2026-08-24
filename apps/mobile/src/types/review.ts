@@ -5,6 +5,7 @@ import type {
   MultipleChoiceInteraction,
   OrderingInteraction,
   Rating,
+  WriteCodeInteraction,
 } from '@itera/core'
 
 export interface MobileRecallCodeLine {
@@ -85,5 +86,31 @@ export interface MobileMultipleChoicePreviewViewModel {
   interaction: MultipleChoiceInteraction
   presentedOptionIds: ID[]
   optionParts: Record<ID, MobileMultipleChoiceTextPart[]>
+  ratingIntervals: Record<Rating, string>
+}
+
+export interface MobileWriteCodeTextPart {
+  text: string
+  tone: 'plain' | 'code'
+}
+
+export interface MobileWriteCodeCodeLine {
+  number: number
+  parts: {
+    text: string
+    tone: 'plain' | 'type' | 'keyword' | 'number' | 'comment' | 'accent'
+  }[]
+}
+
+export interface MobileWriteCodePreviewViewModel {
+  cardId: Card['id']
+  interactionType: 'write_code'
+  current: number
+  total: number
+  promptParts: MobileWriteCodeTextPart[]
+  languageLabel: string
+  interaction: WriteCodeInteraction
+  expectedAnswerLines: MobileWriteCodeCodeLine[]
+  explanationParts: MobileWriteCodeTextPart[]
   ratingIntervals: Record<Rating, string>
 }
