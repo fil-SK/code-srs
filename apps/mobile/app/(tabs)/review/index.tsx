@@ -1,6 +1,6 @@
-import { OrderingPreviewScreen } from '@/src/components/review/OrderingPreviewScreen'
-import { mobileOrderingPreviewFixture } from '@/src/fixtures/reviewOrdering'
+import { MatchingPreviewScreen } from '@/src/components/review/MatchingPreviewScreen'
+import { mobileMatchingPreviewFixture } from '@/src/fixtures/reviewMatching'
 
-export default function OrderingPreviewRoute() {
-  return <OrderingPreviewScreen viewModel={mobileOrderingPreviewFixture} />
+export default function MatchingPreviewRoute() {
+  return <MatchingPreviewScreen viewModel={mobileMatchingPreviewFixture} />
 }
