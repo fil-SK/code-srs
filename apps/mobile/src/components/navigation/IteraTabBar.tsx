@@ -22,6 +22,10 @@ const iteraSymbol = require('../../../assets/itera-logo.png')
 export function IteraTabBar({ state, descriptors, navigation }: IteraTabBarProps) {
   const insets = useSafeAreaInsets()
 
+  // Review previews use the same immersive shell intended for a future live
+  // card session. The Review tab remains the entry point from other sections.
+  if (state.routes[state.index]?.name === 'review') return null
+
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       {state.routes.map((route, index) => {

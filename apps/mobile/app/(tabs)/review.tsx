@@ -1,5 +1,6 @@
-import { PlaceholderScreen } from '@/src/components/PlaceholderScreen'
+import { RecallPreviewScreen } from '@/src/components/review/RecallPreviewScreen'
+import { mobileRecallPreviewFixture } from '@/src/fixtures/reviewRecall'
 
 export default function ReviewRoute() {
-  return <PlaceholderScreen title="Review" />
+  return <RecallPreviewScreen viewModel={mobileRecallPreviewFixture} />
 }
