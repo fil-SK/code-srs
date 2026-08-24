@@ -1,6 +1,6 @@
-import { MatchingPreviewScreen } from '@/src/components/review/MatchingPreviewScreen'
-import { mobileMatchingPreviewFixture } from '@/src/fixtures/reviewMatching'
+import { MultipleChoicePreviewScreen } from '@/src/components/review/MultipleChoicePreviewScreen'
+import { mobileMultipleChoicePreviewFixture } from '@/src/fixtures/reviewMultipleChoice'
 
-export default function MatchingPreviewRoute() {
-  return <MatchingPreviewScreen viewModel={mobileMatchingPreviewFixture} />
+export default function MultipleChoicePreviewRoute() {
+  return <MultipleChoicePreviewScreen viewModel={mobileMultipleChoicePreviewFixture} />
 }

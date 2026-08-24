@@ -2,6 +2,7 @@ import type {
   Card,
   ID,
   MatchingInteraction,
+  MultipleChoiceInteraction,
   OrderingInteraction,
   Rating,
 } from '@itera/core'
@@ -67,5 +68,22 @@ export interface MobileMatchingPreviewViewModel {
   prompt: string
   interaction: MatchingInteraction
   presentedItemIds: Record<ID, ID[]>
+  ratingIntervals: Record<Rating, string>
+}
+
+export interface MobileMultipleChoiceTextPart {
+  text: string
+  tone: 'plain' | 'code'
+}
+
+export interface MobileMultipleChoicePreviewViewModel {
+  cardId: Card['id']
+  interactionType: 'multiple_choice'
+  current: number
+  total: number
+  promptParts: MobileMultipleChoiceTextPart[]
+  interaction: MultipleChoiceInteraction
+  presentedOptionIds: ID[]
+  optionParts: Record<ID, MobileMultipleChoiceTextPart[]>
   ratingIntervals: Record<Rating, string>
 }
