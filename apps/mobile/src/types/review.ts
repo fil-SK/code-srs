@@ -1,4 +1,4 @@
-import type { Card, Rating } from '@itera/core'
+import type { Card, ID, OrderingInteraction, Rating } from '@itera/core'
 
 export interface MobileRecallCodeLine {
   number: number
@@ -33,5 +33,22 @@ export interface MobileRecallPreviewViewModel {
     leadCode: string
     text: string
   }
+  ratingIntervals: Record<Rating, string>
+}
+
+export interface MobileOrderingPreviewViewModel {
+  cardId: Card['id']
+  interactionType: 'ordering'
+  current: number
+  total: number
+  prompt: {
+    lead: string
+    firstCode: string
+    middle: string
+    secondCode: string
+    tail: string
+  }
+  interaction: OrderingInteraction
+  initialOrder: ID[]
   ratingIntervals: Record<Rating, string>
 }

@@ -2,7 +2,6 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { iteraColors, iteraRadii } from '@itera/core'
 import type { Rating } from '@itera/core'
 import { useRouter } from 'expo-router'
-import type { ComponentProps } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import {
   AccessibilityInfo,
@@ -16,66 +15,18 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { PreviewRatingControls } from '@/src/components/review/PreviewRatingControls'
+import { ReviewPreviewHeader } from '@/src/components/review/ReviewPreviewHeader'
 import type {
   MobileRecallCodeLine,
   MobileRecallPreviewViewModel,
 } from '@/src/types/review'
-
-type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
-
-const ratingPresentation: {
-  rating: Rating
-  label: string
-  icon: IconName
-  accent: string
-}[] = [
-  { rating: 1, label: 'Again', icon: 'refresh', accent: '#ef4444' },
-  { rating: 2, label: 'Hard', icon: 'chart-bar', accent: '#f59e0b' },
-  { rating: 3, label: 'Good', icon: 'check-circle-outline', accent: '#65a30d' },
-  { rating: 4, label: 'Easy', icon: 'chevron-double-right', accent: '#2563eb' },
-]
 
 const codeTone = {
   plain: iteraColors.inkBrand,
   type: '#3a9c35',
   accent: iteraColors.accent,
 } as const
-
-function ReviewHeader({
-  current,
-  total,
-  onExit,
-}: {
-  current: number
-  total: number
-  onExit: () => void
-}) {
-  return (
-    <View style={styles.header}>
-      <Pressable
-        accessibilityLabel="Exit Recall preview"
-        accessibilityRole="button"
-        hitSlop={6}
-        onPress={onExit}
-        style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-      >
-        <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-left" size={29} />
-      </Pressable>
-
-      <View accessibilityLabel={`Card ${current} of ${total}`} style={styles.progressWrap}>
-        <Text style={styles.progressLabel}>{current} of {total}</Text>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${(current / total) * 100}%` }]} />
-        </View>
-      </View>
-
-      <View style={styles.tapHint}>
-        <MaterialCommunityIcons color={iteraColors.muted} name="gesture-tap" size={18} />
-        <Text style={styles.tapHintText}>Tap to flip</Text>
-      </View>
-    </View>
-  )
-}
 
 function RecallBadge({ answer = false }: { answer?: boolean }) {
   return (
@@ -185,51 +136,6 @@ function TipPanel({ tip }: { tip: MobileRecallPreviewViewModel['tip'] }) {
   )
 }
 
-function RatingPreview({
-  intervals,
-  selected,
-  onSelect,
-}: {
-  intervals: MobileRecallPreviewViewModel['ratingIntervals']
-  selected: Rating | null
-  onSelect: (rating: Rating) => void
-}) {
-  return (
-    <View>
-      <Text style={styles.ratingHeading}>How well did you recall it?</Text>
-      <View style={styles.ratingGrid}>
-        {ratingPresentation.map((item) => {
-          const isSelected = selected === item.rating
-          return (
-            <Pressable
-              key={item.rating}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`${item.label}, ${intervals[item.rating]}`}
-              onPress={() => onSelect(item.rating)}
-              style={({ pressed }) => [
-                styles.ratingButton,
-                isSelected && styles.ratingButtonSelected,
-                pressed && styles.pressed,
-              ]}
-            >
-              <MaterialCommunityIcons
-                color={isSelected ? iteraColors.accent : iteraColors.muted}
-                name={item.icon}
-                size={24}
-              />
-              <Text style={styles.ratingLabel}>{item.label}</Text>
-              <Text style={styles.ratingInterval}>{item.rating} • {intervals[item.rating]}</Text>
-              <View style={[styles.ratingAccent, { backgroundColor: item.accent }]} />
-            </Pressable>
-          )
-        })}
-      </View>
-      <Text style={styles.previewNote}>Preview only. Ratings are not saved.</Text>
-    </View>
-  )
-}
-
 export function RecallPreviewScreen({ viewModel }: { viewModel: MobileRecallPreviewViewModel }) {
   const router = useRouter()
   const rotation = useRef(new Animated.Value(0)).current
@@ -269,8 +175,11 @@ export function RecallPreviewScreen({ viewModel }: { viewModel: MobileRecallPrev
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <ReviewHeader
+      <ReviewPreviewHeader
         current={viewModel.current}
+        exitLabel="Exit Recall preview"
+        hint="Tap to flip"
+        hintIcon="gesture-tap"
         onExit={() => router.replace('/today')}
         total={viewModel.total}
       />
@@ -294,7 +203,7 @@ export function RecallPreviewScreen({ viewModel }: { viewModel: MobileRecallPrev
 
         {!flipped && <TipPanel tip={viewModel.tip} />}
         {flipped && (
-          <RatingPreview
+          <PreviewRatingControls
             intervals={viewModel.ratingIntervals}
             onSelect={setSelectedRating}
             selected={selectedRating}
@@ -307,14 +216,6 @@ export function RecallPreviewScreen({ viewModel }: { viewModel: MobileRecallPrev
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
-  header: { minHeight: 86, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  backButton: { width: 46, height: 46, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, alignItems: 'center', justifyContent: 'center' },
-  progressWrap: { position: 'absolute', left: '32%', right: '32%', alignItems: 'center', gap: 8 },
-  progressLabel: { color: iteraColors.inkBrand, fontSize: 18, fontWeight: '700' },
-  progressTrack: { width: '100%', height: 5, overflow: 'hidden', borderRadius: iteraRadii.pill, backgroundColor: iteraColors.border },
-  progressFill: { height: '100%', borderRadius: iteraRadii.pill, backgroundColor: iteraColors.accent },
-  tapHint: { minWidth: 84, alignItems: 'center', gap: 2 },
-  tapHintText: { color: iteraColors.muted, fontSize: 12, fontWeight: '600' },
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
   card: { minHeight: 520, borderRadius: 20, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, paddingHorizontal: 22, paddingVertical: 24, ...Platform.select({ ios: { shadowColor: iteraColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
   cardPressed: { opacity: 0.96 },
@@ -347,13 +248,5 @@ const styles = StyleSheet.create({
   tipCopy: { flex: 1, gap: 5 },
   tipTitle: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
   tipText: { color: iteraColors.muted, fontSize: 15, lineHeight: 23 },
-  ratingHeading: { marginBottom: 10, color: iteraColors.inkBrand, fontSize: 18, fontWeight: '700', textAlign: 'center' },
-  ratingGrid: { flexDirection: 'row', gap: 8 },
-  ratingButton: { flex: 1, minHeight: 118, overflow: 'hidden', borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  ratingButtonSelected: { borderColor: iteraColors.accent, backgroundColor: iteraColors.accentSofter },
-  ratingLabel: { color: iteraColors.inkBrand, fontSize: 14, fontWeight: '700' },
-  ratingInterval: { color: iteraColors.muted, fontSize: 11 },
-  ratingAccent: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 4 },
-  previewNote: { marginTop: 9, color: iteraColors.muted, fontSize: 12, textAlign: 'center' },
   pressed: { opacity: 0.68 },
 })
