@@ -1,5 +1,6 @@
-import { PlaceholderScreen } from '@/src/components/PlaceholderScreen'
+import { ProgressScreen } from '@/src/components/progress/ProgressScreen'
+import { mobileProgressFixture } from '@/src/fixtures/progress'
 
 export default function ProgressRoute() {
-  return <PlaceholderScreen title="Progress" />
+  return <ProgressScreen viewModel={mobileProgressFixture} />
 }

@@ -1,5 +1,6 @@
 import type {
   MobileCollectionViewModel,
+  MobileDeckViewModel,
   MobileLibraryCollectionViewModel,
   MobileLibraryDeckViewModel,
   MobileLibraryViewModel,
@@ -99,18 +100,80 @@ export function createMobileLibraryFixture(): MobileLibraryViewModel {
 }
 
 export function createMobileCollectionFixture(collectionId: string): MobileCollectionViewModel {
-  const collectionDeckIds = new Set(['fixture-algorithms', 'fixture-distributed-systems'])
+  const languages = collectionId === 'fixture-languages-cpp'
+  const collectionDeckIds = new Set(
+    languages
+      ? ['fixture-compilers', 'fixture-modern-cpp']
+      : ['fixture-algorithms', 'fixture-distributed-systems'],
+  )
   const collectionDecks = decks
     .filter((deck) => collectionDeckIds.has(deck.id))
     .map((deck) => ({ ...deck }))
 
   return {
     id: collectionId,
-    name: 'Interview Core',
-    description: 'Reusable reasoning patterns for coding and systems interviews.',
+    name: languages ? 'Languages & C++' : 'Interview Core',
+    description: languages
+      ? 'Durable knowledge across modern C++, compilers, and language implementation.'
+      : 'Reusable reasoning patterns for coding and systems interviews.',
     deckCount: collectionDecks.length,
     cardCount: collectionDecks.reduce((total, deck) => total + deck.cardCount, 0),
     dueToday: collectionDecks.reduce((total, deck) => total + deck.dueCount, 0),
     decks: collectionDecks,
+  }
+}
+
+export function createMobileDeckFixture(deckId: string): MobileDeckViewModel {
+  return {
+    id: deckId,
+    collectionName: 'Languages & C++',
+    name: 'Modern C++ & Memory',
+    description: 'Durable C++ reasoning about values, lifetime, ownership, and performance.',
+    cardCount: 10,
+    dueCount: 10,
+    masteryPercent: 0,
+    lastStudiedLabel: 'Never',
+    cards: [
+      {
+        id: 'fixture-card-value-categories',
+        prompt: 'An expression is classified as an lvalue, xvalue, or prvalue based on…',
+        interactionType: 'recall',
+        interactionLabel: 'Recall',
+        tag: 'value-categories',
+        status: 'New',
+      },
+      {
+        id: 'fixture-card-ownership-trace',
+        prompt: 'Trace the ownership and lifetime in this move sequence',
+        interactionType: 'walkthrough',
+        interactionLabel: 'Walkthrough',
+        tag: 'memory',
+        status: 'New',
+      },
+      {
+        id: 'fixture-card-raii',
+        prompt: 'Which statements are consequences of RAII?',
+        interactionType: 'multiple_choice',
+        interactionLabel: 'Multiple Choice',
+        tag: 'raii',
+        status: 'New',
+      },
+      {
+        id: 'fixture-card-smart-pointer-code',
+        prompt: 'Write a complete C++ function `make_owner` that…',
+        interactionType: 'write_code',
+        interactionLabel: 'Write Code',
+        tag: 'smart-pointers',
+        status: 'New',
+      },
+      {
+        id: 'fixture-card-destruction-order',
+        prompt: 'A most-derived object leaves scope. Order its destruction steps.',
+        interactionType: 'ordering',
+        interactionLabel: 'Ordering',
+        tag: 'object-lifetime',
+        status: 'New',
+      },
+    ],
   }
 }

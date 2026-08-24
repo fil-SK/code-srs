@@ -168,7 +168,8 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
               key={collection.id}
               collection={collection}
               onPress={
-                collection.id === 'fixture-interview-core'
+                collection.id === 'fixture-interview-core' ||
+                collection.id === 'fixture-languages-cpp'
                   ? () =>
                       router.push({
                         pathname: '/library/[collectionId]',

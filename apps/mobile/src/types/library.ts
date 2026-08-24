@@ -1,4 +1,4 @@
-import type { Deck, LibraryCollection } from '@itera/core'
+import type { Card, Deck, LibraryCollection } from '@itera/core'
 
 export interface MobileLibraryCollectionViewModel {
   id: 'all' | 'unfiled' | LibraryCollection['id']
@@ -29,4 +29,25 @@ export interface MobileCollectionViewModel {
   cardCount: number
   dueToday: number
   decks: MobileLibraryDeckViewModel[]
+}
+
+export interface MobileDeckCardViewModel {
+  id: Card['id']
+  prompt: string
+  interactionType: Card['interaction']['type']
+  interactionLabel: string
+  tag: string
+  status: 'New'
+}
+
+export interface MobileDeckViewModel {
+  id: Deck['id']
+  collectionName: string
+  name: Deck['name']
+  description: NonNullable<Deck['description']>
+  cardCount: number
+  dueCount: number
+  masteryPercent: number
+  lastStudiedLabel: string
+  cards: MobileDeckCardViewModel[]
 }

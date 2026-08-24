@@ -1,0 +1,714 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { iteraColors, iteraRadii, markLabelFor } from '@itera/core'
+import { useRouter } from 'expo-router'
+import type { ComponentProps } from 'react'
+import { useMemo, useState } from 'react'
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+
+import type { MobileDeckCardViewModel, MobileDeckViewModel } from '@/src/types/library'
+
+type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
+type DeckTab = 'cards' | 'insights'
+
+const interactionVisuals: Record<
+  MobileDeckCardViewModel['interactionType'],
+  { icon: IconName; backgroundColor: string }
+> = {
+  recall: { icon: 'code-braces', backgroundColor: iteraColors.navy },
+  walkthrough: { icon: 'source-branch', backgroundColor: '#0d9488' },
+  multiple_choice: { icon: 'format-list-checks', backgroundColor: '#f59e0b' },
+  write_code: { icon: 'code-tags', backgroundColor: '#2563eb' },
+  ordering: { icon: 'format-list-numbered', backgroundColor: '#059669' },
+  matching: { icon: 'vector-link', backgroundColor: '#7c3aed' },
+}
+
+function DeckMetric({
+  icon,
+  value,
+  label,
+}: {
+  icon: IconName
+  value: string
+  label: string
+}) {
+  return (
+    <View style={styles.metric}>
+      <View style={styles.metricTop}>
+        <MaterialCommunityIcons color={iteraColors.inkBrand} name={icon} size={21} />
+        <Text style={styles.metricValue}>{value}</Text>
+      </View>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </View>
+  )
+}
+
+function CardRow({ card }: { card: MobileDeckCardViewModel }) {
+  const visual = interactionVisuals[card.interactionType]
+  return (
+    <Pressable
+      accessibilityLabel={`${card.prompt}, ${card.interactionLabel}, ${card.status}`}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: true }}
+      disabled
+      style={styles.cardRow}
+    >
+      <View style={[styles.interactionMark, { backgroundColor: visual.backgroundColor }]}>
+        <MaterialCommunityIcons color={iteraColors.surface} name={visual.icon} size={25} />
+      </View>
+      <View style={styles.cardCopy}>
+        <Text numberOfLines={1} style={styles.cardPrompt}>
+          {card.prompt}
+        </Text>
+        <Text numberOfLines={1} style={styles.cardMeta}>
+          {card.interactionLabel} · {card.tag}
+        </Text>
+      </View>
+      <View style={styles.cardStatus}>
+        <View style={styles.statusDot} />
+        <Text style={styles.statusText}>{card.status}</Text>
+      </View>
+      <MaterialCommunityIcons color={iteraColors.inkBrand} name="dots-horizontal" size={21} />
+    </Pressable>
+  )
+}
+
+export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewModel }) {
+  const router = useRouter()
+  const [favorite, setFavorite] = useState(false)
+  const [activeTab, setActiveTab] = useState<DeckTab>('cards')
+  const [query, setQuery] = useState('')
+  const [newOnly, setNewOnly] = useState(true)
+
+  const visibleCards = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase()
+    return viewModel.cards.filter((card) => {
+      if (newOnly && card.status !== 'New') return false
+      if (!normalizedQuery) return true
+      return `${card.prompt} ${card.interactionLabel} ${card.tag}`
+        .toLocaleLowerCase()
+        .includes(normalizedQuery)
+    })
+  }, [newOnly, query, viewModel.cards])
+
+  return (
+    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+      <View style={styles.decorativeField}>
+        <View style={styles.decorativeShapeLarge} />
+        <View style={styles.decorativeShapeSmall} />
+      </View>
+
+      <ScrollView
+        alwaysBounceVertical={false}
+        contentContainerStyle={styles.scrollContent}
+        contentInsetAdjustmentBehavior="never"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        style={styles.scroll}
+      >
+        <Pressable
+          accessibilityLabel={`Back to ${viewModel.collectionName}`}
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+        >
+          <MaterialCommunityIcons color="#49658e" name="chevron-left" size={27} />
+          <Text style={styles.backText}>{viewModel.collectionName}</Text>
+        </Pressable>
+
+        <View style={styles.identityRow}>
+          <View style={styles.deckMark}>
+            <Text style={styles.deckMarkText}>{markLabelFor(viewModel.name, 2)}</Text>
+            <View style={styles.deckMarkRibbonMuted} />
+            <View style={styles.deckMarkRibbonAccent} />
+          </View>
+
+          <View style={styles.identityContent}>
+            <View style={styles.titleRow}>
+              <Text adjustsFontSizeToFit minimumFontScale={0.82} numberOfLines={2} style={styles.title}>
+                {viewModel.name}
+              </Text>
+              <Pressable
+                accessibilityLabel={favorite ? 'Remove from favorites' : 'Add to favorites'}
+                accessibilityRole="button"
+                accessibilityState={{ selected: favorite }}
+                hitSlop={7}
+                onPress={() => setFavorite((value) => !value)}
+                style={({ pressed }) => [styles.iconButtonPlain, pressed && styles.pressed]}
+              >
+                <MaterialCommunityIcons
+                  color={favorite ? iteraColors.accent : '#7890ad'}
+                  name={favorite ? 'star' : 'star-outline'}
+                  size={25}
+                />
+              </Pressable>
+              <Pressable
+                accessibilityLabel="Deck actions unavailable"
+                accessibilityRole="button"
+                accessibilityState={{ disabled: true }}
+                disabled
+                style={styles.moreButton}
+              >
+                <MaterialCommunityIcons
+                  color={iteraColors.inkBrand}
+                  name="dots-horizontal"
+                  size={22}
+                />
+              </Pressable>
+            </View>
+
+            <Text style={styles.description}>{viewModel.description}</Text>
+
+            <View style={styles.metricsRow}>
+              <DeckMetric icon="cards-outline" label="cards" value={String(viewModel.cardCount)} />
+              <DeckMetric
+                icon="calendar-blank-outline"
+                label="due"
+                value={String(viewModel.dueCount)}
+              />
+              <DeckMetric
+                icon="chart-donut"
+                label="mastery"
+                value={`${viewModel.masteryPercent}%`}
+              />
+            </View>
+
+            <View style={styles.lastStudiedRow}>
+              <MaterialCommunityIcons color={iteraColors.inkBrand} name="clock-outline" size={18} />
+              <Text style={styles.lastStudiedText}>
+                Last studied: {viewModel.lastStudiedLabel}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: true }}
+          disabled
+          style={styles.studyButton}
+        >
+          <MaterialCommunityIcons color={iteraColors.surface} name="play-outline" size={25} />
+          <Text style={styles.studyButtonText}>Study Now</Text>
+        </Pressable>
+
+        <View style={styles.tabsRow}>
+          <View accessibilityRole="tablist" style={styles.tabs}>
+            {(['cards', 'insights'] as const).map((tab) => {
+              const selected = activeTab === tab
+              return (
+                <Pressable
+                  key={tab}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected }}
+                  onPress={() => setActiveTab(tab)}
+                  style={({ pressed }) => [
+                    styles.tab,
+                    selected && styles.tabSelected,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Text style={[styles.tabText, selected && styles.tabTextSelected]}>
+                    {tab === 'cards' ? 'Cards' : 'Insights'}
+                  </Text>
+                </Pressable>
+              )
+            })}
+          </View>
+          <Pressable
+            accessibilityLabel="Add card unavailable"
+            accessibilityRole="button"
+            accessibilityState={{ disabled: true }}
+            disabled
+            style={styles.addCardButton}
+          >
+            <MaterialCommunityIcons color={iteraColors.inkBrand} name="plus" size={26} />
+          </Pressable>
+        </View>
+
+        {activeTab === 'cards' ? (
+          <>
+            <View style={styles.searchRow}>
+              <View style={styles.searchWrap}>
+                <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
+                <TextInput
+                  accessibilityLabel="Search cards"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  clearButtonMode="while-editing"
+                  onChangeText={setQuery}
+                  placeholder="Search cards..."
+                  placeholderTextColor={iteraColors.mutedLight}
+                  returnKeyType="search"
+                  style={styles.searchInput}
+                  value={query}
+                />
+              </View>
+              <Pressable
+                accessibilityLabel="Show new-card filter"
+                accessibilityRole="button"
+                onPress={() => setNewOnly(true)}
+                style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
+              >
+                <MaterialCommunityIcons color={iteraColors.inkBrand} name="tune-variant" size={23} />
+              </Pressable>
+            </View>
+
+            {newOnly ? (
+              <View style={styles.filterChip}>
+                <View style={styles.filterDot} />
+                <Text style={styles.filterChipText}>Status: New</Text>
+                <Pressable
+                  accessibilityLabel="Remove New status filter"
+                  accessibilityRole="button"
+                  hitSlop={7}
+                  onPress={() => setNewOnly(false)}
+                  style={({ pressed }) => pressed && styles.pressed}
+                >
+                  <MaterialCommunityIcons color={iteraColors.muted} name="close" size={18} />
+                </Pressable>
+              </View>
+            ) : null}
+
+            <View style={styles.cardList}>
+              {visibleCards.map((card) => (
+                <CardRow key={card.id} card={card} />
+              ))}
+            </View>
+
+            {visibleCards.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No matching cards</Text>
+                <Text style={styles.emptyText}>Try another search or clear the status filter.</Text>
+              </View>
+            ) : null}
+          </>
+        ) : (
+          <View style={styles.insightsCard}>
+            <MaterialCommunityIcons color={iteraColors.mutedLight} name="chart-box-outline" size={30} />
+            <Text style={styles.insightsTitle}>Insights are not connected yet</Text>
+            <Text style={styles.insightsText}>
+              This presentation will use shared review history and deck metrics once mobile data is
+              composed.
+            </Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  )
+}
+
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: iteraColors.navy,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+  },
+  android: { elevation: 2 },
+  web: { boxShadow: '0 4px 10px rgba(30,41,59,0.05)' },
+})
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: iteraColors.canvas,
+  },
+  scroll: {
+    zIndex: 1,
+    flex: 1,
+  },
+  scrollContent: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    paddingTop: 10,
+    paddingHorizontal: 18,
+    paddingBottom: 44,
+  },
+  decorativeField: {
+    position: 'absolute',
+    zIndex: 0,
+    top: 0,
+    right: 0,
+    left: 0,
+    height: 235,
+    overflow: 'hidden',
+    pointerEvents: 'none',
+  },
+  decorativeShapeLarge: {
+    position: 'absolute',
+    top: -22,
+    right: -98,
+    width: 280,
+    height: 155,
+    borderRadius: 84,
+    backgroundColor: iteraColors.accentSofter,
+    transform: [{ rotate: '-13deg' }],
+  },
+  decorativeShapeSmall: {
+    position: 'absolute',
+    top: 38,
+    right: -76,
+    width: 230,
+    height: 102,
+    borderRadius: 62,
+    backgroundColor: iteraColors.accentSoft,
+    opacity: 0.7,
+    transform: [{ rotate: '-8deg' }],
+  },
+  backButton: {
+    minHeight: 44,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    marginLeft: -8,
+    paddingRight: 12,
+  },
+  backText: {
+    color: '#445b7e',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  identityRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 15,
+    marginTop: 7,
+  },
+  deckMark: {
+    position: 'relative',
+    width: 84,
+    height: 102,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderRadius: iteraRadii.card,
+    backgroundColor: iteraColors.navy,
+  },
+  deckMarkText: {
+    zIndex: 2,
+    color: iteraColors.surface,
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  deckMarkRibbonMuted: {
+    position: 'absolute',
+    right: -22,
+    bottom: -2,
+    width: 92,
+    height: 17,
+    backgroundColor: 'rgba(148,163,184,0.45)',
+    transform: [{ rotate: '-34deg' }],
+  },
+  deckMarkRibbonAccent: {
+    position: 'absolute',
+    right: -20,
+    bottom: 7,
+    width: 86,
+    height: 7,
+    backgroundColor: iteraColors.accent,
+    transform: [{ rotate: '-34deg' }],
+  },
+  identityContent: {
+    minWidth: 0,
+    flex: 1,
+  },
+  titleRow: {
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 5,
+  },
+  title: {
+    minWidth: 0,
+    flex: 1,
+    color: iteraColors.inkBrand,
+    fontSize: 24,
+    fontWeight: '700',
+    letterSpacing: -0.7,
+    lineHeight: 29,
+  },
+  iconButtonPlain: {
+    width: 31,
+    height: 31,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moreButton: {
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -4,
+    borderColor: iteraColors.borderStrong,
+    borderRadius: iteraRadii.control,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    opacity: 0.72,
+  },
+  description: {
+    marginTop: 5,
+    color: iteraColors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    marginTop: 14,
+  },
+  metric: {
+    minWidth: 0,
+    flex: 1,
+    alignItems: 'center',
+  },
+  metricTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metricValue: {
+    color: iteraColors.inkBrand,
+    fontSize: 18,
+    fontVariant: ['tabular-nums'],
+    fontWeight: '700',
+  },
+  metricLabel: {
+    marginTop: 3,
+    color: iteraColors.muted,
+    fontSize: 11,
+  },
+  lastStudiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginTop: 12,
+  },
+  lastStudiedText: {
+    color: '#445b7e',
+    fontSize: 12,
+  },
+  studyButton: {
+    minHeight: 54,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    marginTop: 20,
+    borderRadius: iteraRadii.control,
+    backgroundColor: iteraColors.accent,
+    opacity: 0.82,
+  },
+  studyButtonText: {
+    color: iteraColors.surface,
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  tabsRow: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 13,
+    borderBottomColor: iteraColors.border,
+    borderBottomWidth: 1,
+  },
+  tabs: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    gap: 20,
+  },
+  tab: {
+    minWidth: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomColor: 'transparent',
+    borderBottomWidth: 2,
+    paddingHorizontal: 4,
+  },
+  tabSelected: {
+    borderBottomColor: iteraColors.accent,
+  },
+  tabText: {
+    color: iteraColors.muted,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  tabTextSelected: {
+    color: iteraColors.inkBrand,
+    fontWeight: '700',
+  },
+  addCardButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: iteraColors.borderStrong,
+    borderRadius: iteraRadii.control,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    opacity: 0.72,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    gap: 9,
+    marginTop: 14,
+  },
+  searchWrap: {
+    minHeight: 50,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderColor: iteraColors.borderStrong,
+    borderRadius: iteraRadii.control,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    paddingHorizontal: 13,
+  },
+  searchInput: {
+    minWidth: 0,
+    flex: 1,
+    color: iteraColors.inkBrand,
+    fontSize: 15,
+    paddingVertical: 0,
+  },
+  filterButton: {
+    width: 50,
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: iteraColors.borderStrong,
+    borderRadius: iteraRadii.control,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+  },
+  filterChip: {
+    minHeight: 36,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginTop: 9,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.pill,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    paddingLeft: 10,
+    paddingRight: 8,
+  },
+  filterDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: iteraColors.accent,
+  },
+  filterChipText: {
+    color: iteraColors.muted,
+    fontSize: 12,
+  },
+  cardList: {
+    gap: 9,
+    marginTop: 12,
+  },
+  cardRow: {
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.card,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    ...cardShadow,
+  },
+  interactionMark: {
+    width: 46,
+    height: 46,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: iteraRadii.control,
+  },
+  cardCopy: {
+    minWidth: 0,
+    flex: 1,
+  },
+  cardPrompt: {
+    color: iteraColors.inkBrand,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  cardMeta: {
+    marginTop: 4,
+    color: iteraColors.muted,
+    fontSize: 11,
+  },
+  cardStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#3b82f6',
+  },
+  statusText: {
+    color: iteraColors.muted,
+    fontSize: 11,
+  },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 14,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.card,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    padding: 24,
+  },
+  emptyTitle: {
+    color: iteraColors.inkBrand,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  emptyText: {
+    marginTop: 4,
+    color: iteraColors.muted,
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  insightsCard: {
+    alignItems: 'center',
+    marginTop: 16,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.card,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+    padding: 28,
+  },
+  insightsTitle: {
+    marginTop: 10,
+    color: iteraColors.inkBrand,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  insightsText: {
+    maxWidth: 320,
+    marginTop: 6,
+    color: iteraColors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+  },
+  pressed: {
+    opacity: 0.65,
+  },
+})

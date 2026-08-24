@@ -70,11 +70,21 @@ function DisabledAction({
   )
 }
 
-function CollectionDeckRow({ deck }: { deck: MobileLibraryDeckViewModel }) {
+function CollectionDeckRow({
+  deck,
+  onPress,
+}: {
+  deck: MobileLibraryDeckViewModel
+  onPress?: () => void
+}) {
   return (
-    <View
+    <Pressable
       accessibilityLabel={`${deck.name}, ${deck.cardCount} cards, ${deck.dueCount} due, ${deck.progressPercent}% progress`}
-      style={styles.deckRow}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !onPress }}
+      disabled={!onPress}
+      onPress={onPress}
+      style={({ pressed }) => [styles.deckRow, pressed && styles.pressed]}
     >
       <View style={styles.deckTopRow}>
         <View style={styles.deckMark}>
@@ -128,7 +138,7 @@ function CollectionDeckRow({ deck }: { deck: MobileLibraryDeckViewModel }) {
         </View>
         <Text style={styles.progressText}>{deck.progressPercent}%</Text>
       </View>
-    </View>
+    </Pressable>
   )
 }
 
@@ -252,7 +262,19 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
 
         <View style={styles.deckList}>
           {visibleDecks.map((deck) => (
-            <CollectionDeckRow key={deck.id} deck={deck} />
+            <CollectionDeckRow
+              key={deck.id}
+              deck={deck}
+              onPress={
+                deck.id === 'fixture-modern-cpp'
+                  ? () =>
+                      router.push({
+                        pathname: '/library/deck/[deckId]',
+                        params: { deckId: deck.id },
+                      })
+                  : undefined
+              }
+            />
           ))}
         </View>
 
