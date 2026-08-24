@@ -5,6 +5,7 @@ import type {
   MultipleChoiceInteraction,
   OrderingInteraction,
   Rating,
+  WalkthroughInteraction,
   WriteCodeInteraction,
 } from '@itera/core'
 
@@ -112,5 +113,42 @@ export interface MobileWriteCodePreviewViewModel {
   interaction: WriteCodeInteraction
   expectedAnswerLines: MobileWriteCodeCodeLine[]
   explanationParts: MobileWriteCodeTextPart[]
+  ratingIntervals: Record<Rating, string>
+}
+
+export interface MobileWalkthroughTextPart {
+  text: string
+  tone: 'plain' | 'code'
+}
+
+export interface MobileWalkthroughCodeLine {
+  number: number
+  parts: {
+    text: string
+    tone: 'plain' | 'type' | 'keyword' | 'number' | 'comment' | 'accent'
+  }[]
+}
+
+export interface MobileWalkthroughStepPresentation {
+  id: ID
+  promptParts: MobileWalkthroughTextPart[]
+  tipParts: MobileWalkthroughTextPart[]
+  explanationParts: MobileWalkthroughTextPart[]
+  optionParts?: Record<ID, MobileWalkthroughTextPart[]>
+  recallAnswerParts?: MobileWalkthroughTextPart[]
+}
+
+export interface MobileWalkthroughPreviewViewModel {
+  cardId: Card['id']
+  interactionType: 'walkthrough'
+  current: number
+  total: number
+  promptParts: MobileWalkthroughTextPart[]
+  scenarioParts: MobileWalkthroughTextPart[]
+  interaction: WalkthroughInteraction
+  codeLines: MobileWalkthroughCodeLine[]
+  stepPresentation: MobileWalkthroughStepPresentation[]
+  globalTipParts: MobileWalkthroughTextPart[]
+  globalExplanationParts: MobileWalkthroughTextPart[]
   ratingIntervals: Record<Rating, string>
 }

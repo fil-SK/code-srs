@@ -1,6 +1,6 @@
-import { WriteCodePreviewScreen } from '@/src/components/review/WriteCodePreviewScreen'
-import { mobileWriteCodePreviewFixture } from '@/src/fixtures/reviewWriteCode'
+import { WalkthroughPreviewScreen } from '@/src/components/review/WalkthroughPreviewScreen'
+import { mobileWalkthroughPreviewFixture } from '@/src/fixtures/reviewWalkthrough'
 
-export default function WriteCodePreviewRoute() {
-  return <WriteCodePreviewScreen viewModel={mobileWriteCodePreviewFixture} />
+export default function WalkthroughPreviewRoute() {
+  return <WalkthroughPreviewScreen viewModel={mobileWalkthroughPreviewFixture} />
 }
