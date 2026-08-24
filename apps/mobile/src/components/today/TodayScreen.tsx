@@ -59,7 +59,12 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
             <ContinueLearningRow
               key={deck.id}
               deck={deck}
-              onPress={() => router.push('/library')}
+              onPress={() =>
+                router.push({
+                  pathname: '/library/deck/[deckId]',
+                  params: { deckId: deck.id },
+                })
+              }
             />
           ))}
         </View>

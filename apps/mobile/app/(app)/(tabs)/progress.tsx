@@ -1,6 +1,8 @@
 import { ProgressScreen } from '@/src/components/progress/ProgressScreen'
-import { mobileProgressFixture } from '@/src/fixtures/progress'
+import { demoProgressViewModel } from '@/src/demo/demoSelectors'
+import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 
 export default function ProgressRoute() {
-  return <ProgressScreen viewModel={mobileProgressFixture} />
+  const { workspace } = useDemoWorkspace()
+  return <ProgressScreen viewModel={demoProgressViewModel(workspace)} />
 }

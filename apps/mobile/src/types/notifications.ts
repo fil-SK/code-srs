@@ -18,6 +18,8 @@ export interface MobileNotificationItem {
   timeLabel: string
   unread: boolean
   deckMark?: string
+  /** Present only when an existing demo deck is an honest destination. */
+  deckId?: string
 }
 
 export interface MobileNotificationsViewModel {

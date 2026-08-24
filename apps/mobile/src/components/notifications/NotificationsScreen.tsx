@@ -56,6 +56,17 @@ function NotificationMark({ item }: { item: MobileNotificationItem }) {
   )
 }
 
+function notificationHint(item: MobileNotificationItem): string {
+  // Two honest destinations, described differently. A notification that names a
+  // deck in the workspace opens it; one that refers to something the product
+  // does not have yet only marks itself read, and says so rather than implying
+  // a destination that does not exist.
+  if (item.deckId) {
+    return item.unread ? 'Marks this as read and opens the deck' : 'Opens the deck'
+  }
+  return item.unread ? 'Marks this notification as read' : 'No further action'
+}
+
 function NotificationRow({
   item,
   onPress,
@@ -65,7 +76,7 @@ function NotificationRow({
 }) {
   return (
     <Pressable
-      accessibilityHint={item.unread ? 'Marks this notification as read' : undefined}
+      accessibilityHint={notificationHint(item)}
       accessibilityLabel={`${item.unread ? 'Unread. ' : ''}${item.title}. ${item.body}. ${item.timeLabel}`}
       accessibilityRole="button"
       onPress={onPress}
@@ -116,6 +127,9 @@ function FilterControl({ filter, onChange }: { filter: Filter; onChange: (filter
         return (
           <Pressable
             key={option}
+            // "Unread" is also what every unread row's badge says, so the tab
+            // says what it does rather than repeating a word.
+            accessibilityLabel={option === 'all' ? 'Show all notifications' : 'Show unread only'}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             onPress={() => onChange(option)}
@@ -135,11 +149,18 @@ function FilterControl({ filter, onChange }: { filter: Filter; onChange: (filter
   )
 }
 
-export function NotificationsScreen({ viewModel }: { viewModel: MobileNotificationsViewModel }) {
+export function NotificationsScreen({
+  viewModel,
+  onMarkRead,
+  onMarkAllRead,
+}: {
+  viewModel: MobileNotificationsViewModel
+  onMarkRead: (id: string) => void
+  onMarkAllRead: () => void
+}) {
   const router = useRouter()
   const [filter, setFilter] = useState<Filter>('all')
-  const [items, setItems] = useState(viewModel.items)
-  const unreadCount = items.filter((item) => item.unread).length
+  const items = viewModel.items
   const visibleItems = useMemo(
     () => (filter === 'unread' ? items.filter((item) => item.unread) : items),
     [filter, items],
@@ -150,15 +171,24 @@ export function NotificationsScreen({ viewModel }: { viewModel: MobileNotificati
     items: visibleItems.filter((item) => item.group === group),
   }))
 
+  // "Mark all as read" used to live in the Today heading unconditionally, so it
+  // was unreachable whenever the only unread items were under Earlier. It now
+  // appears on the first visible group that has any, which is the same single
+  // affordance in the same place, just never missing.
+  const markAllGroup = groupedItems.find(
+    (entry) => entry.items.some((item) => item.unread),
+  )?.group
+
   function goBack() {
     if (router.canGoBack()) router.back()
     else router.replace('/today')
   }
 
-  function markRead(id: string) {
-    setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, unread: false } : item)),
-    )
+  function openNotification(item: MobileNotificationItem) {
+    if (item.unread) onMarkRead(item.id)
+    if (item.deckId) {
+      router.push({ pathname: '/library/deck/[deckId]', params: { deckId: item.deckId } })
+    }
   }
 
   return (
@@ -222,11 +252,11 @@ export function NotificationsScreen({ viewModel }: { viewModel: MobileNotificati
               <View key={group} style={styles.section}>
                 <View style={styles.sectionHeading}>
                   <Text style={styles.sectionTitle}>{group === 'today' ? 'Today' : 'Earlier'}</Text>
-                  {group === 'today' && unreadCount > 0 ? (
+                  {group === markAllGroup ? (
                     <Pressable
                       accessibilityRole="button"
                       hitSlop={8}
-                      onPress={() => setItems((current) => current.map((item) => ({ ...item, unread: false })))}
+                      onPress={onMarkAllRead}
                       style={({ pressed }) => pressed && styles.pressed}
                     >
                       <Text style={styles.markAllText}>Mark all as read</Text>
@@ -235,7 +265,11 @@ export function NotificationsScreen({ viewModel }: { viewModel: MobileNotificati
                 </View>
                 <View style={styles.notificationList}>
                   {groupItems.map((item) => (
-                    <NotificationRow key={item.id} item={item} onPress={() => markRead(item.id)} />
+                    <NotificationRow
+                      key={item.id}
+                      item={item}
+                      onPress={() => openNotification(item)}
+                    />
                   ))}
                 </View>
               </View>

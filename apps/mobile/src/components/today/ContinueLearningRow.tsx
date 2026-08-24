@@ -12,7 +12,7 @@ interface ContinueLearningRowProps {
 export function ContinueLearningRow({ deck, onPress }: ContinueLearningRowProps) {
   return (
     <Pressable
-      accessibilityHint="Opens the temporary Library destination"
+      accessibilityHint="Opens this deck"
       accessibilityLabel={`${deck.name}, ${deck.dueCount} due, ${deck.progressPercent}% progress`}
       accessibilityRole="button"
       onPress={onPress}

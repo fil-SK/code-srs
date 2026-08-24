@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { iteraColors, iteraRadii, type DeckSortKey } from '@itera/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
@@ -18,7 +18,9 @@ import type {
   MobileLibraryCollectionViewModel,
   MobileLibraryViewModel,
 } from '@/src/types/library'
+import { deckSortLabel, filterAndSortDeckViewModels } from './deckSorting'
 import { LibraryDeckRow } from './LibraryDeckRow'
+import { SortSheet } from './SortSheet'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
@@ -66,6 +68,11 @@ function CollectionPill({
 
   return (
     <Pressable
+      // The pill read as bare text to a screen reader, with nothing to say
+      // whether it was the scope already open or somewhere to go.
+      accessibilityLabel={
+        selected ? collection.name + ', current scope' : 'Open ' + collection.name
+      }
       accessibilityRole="button"
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
@@ -88,46 +95,22 @@ function CollectionPill({
   )
 }
 
-function DisabledControl({
-  icon,
-  label,
-  flex = 1,
-}: {
-  icon?: IconName
-  label: string
-  flex?: number
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: true }}
-      disabled
-      style={[styles.control, { flex }]}
-    >
-      {icon ? (
-        <MaterialCommunityIcons color={iteraColors.inkBrand} name={icon} size={20} />
-      ) : null}
-      <Text numberOfLines={1} style={styles.controlText}>
-        {label}
-      </Text>
-      <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-down" size={18} />
-    </Pressable>
-  )
-}
-
 export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryViewModel }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [dueOnly, setDueOnly] = useState(false)
+  // Web's All Decks default. A Collection defaults to 'name' instead.
+  const [sort, setSort] = useState<DeckSortKey>('lastStudied')
+  const [sortOpen, setSortOpen] = useState(false)
 
-  const visibleDecks = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
-    return viewModel.decks.filter((deck) => {
-      if (dueOnly && deck.dueCount === 0) return false
-      if (!normalizedQuery) return true
-      return `${deck.name} ${deck.description}`.toLocaleLowerCase().includes(normalizedQuery)
-    })
-  }, [dueOnly, query, viewModel.decks])
+  const visibleDecks = useMemo(
+    () => filterAndSortDeckViewModels(viewModel.decks, { query, dueOnly, sort }),
+    [dueOnly, query, sort, viewModel.decks],
+  )
+
+  function openDeck(deckId: string) {
+    router.push({ pathname: '/library/deck/[deckId]', params: { deckId } })
+  }
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -168,14 +151,13 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
               key={collection.id}
               collection={collection}
               onPress={
-                collection.id === 'fixture-interview-core' ||
-                collection.id === 'fixture-languages-cpp'
-                  ? () =>
+                collection.kind === 'all'
+                  ? undefined
+                  : () =>
                       router.push({
                         pathname: '/library/[collectionId]',
                         params: { collectionId: collection.id },
                       })
-                  : undefined
               }
             />
           ))}
@@ -207,8 +189,19 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
         </View>
 
         <View style={styles.controlsRow}>
-          <DisabledControl flex={0.85} icon="filter-outline" label="Filter" />
-          <DisabledControl flex={1.25} label="Sort: Last studied" />
+          <Pressable
+            accessibilityHint="Choose how decks are ordered"
+            accessibilityLabel={'Sort: ' + deckSortLabel(sort)}
+            accessibilityRole="button"
+            onPress={() => setSortOpen(true)}
+            style={({ pressed }) => [styles.control, pressed && styles.pressed]}
+          >
+            <MaterialCommunityIcons color={iteraColors.inkBrand} name="sort" size={20} />
+            <Text numberOfLines={1} style={styles.controlText}>
+              Sort: {deckSortLabel(sort)}
+            </Text>
+            <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-down" size={18} />
+          </Pressable>
           <Pressable
             accessibilityRole="checkbox"
             accessibilityState={{ checked: dueOnly }}
@@ -228,7 +221,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
 
         <View style={styles.deckList}>
           {visibleDecks.map((deck) => (
-            <LibraryDeckRow key={deck.id} deck={deck} />
+            <LibraryDeckRow key={deck.id} deck={deck} onPress={() => openDeck(deck.id)} />
           ))}
         </View>
 
@@ -240,6 +233,13 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           </View>
         ) : null}
       </ScrollView>
+
+      <SortSheet
+        onChange={setSort}
+        onClose={() => setSortOpen(false)}
+        sort={sort}
+        visible={sortOpen}
+      />
     </SafeAreaView>
   )
 }
@@ -417,6 +417,7 @@ const styles = StyleSheet.create({
   control: {
     minWidth: 0,
     minHeight: 48,
+    flex: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -425,13 +426,12 @@ const styles = StyleSheet.create({
     borderRadius: iteraRadii.control,
     borderWidth: 1,
     backgroundColor: iteraColors.surface,
-    opacity: 0.72,
     paddingHorizontal: 10,
   },
   dueControl: {
     minWidth: 0,
     minHeight: 48,
-    flex: 0.9,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

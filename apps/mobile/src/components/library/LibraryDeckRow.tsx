@@ -27,11 +27,20 @@ function DeckMetric({
   )
 }
 
-export function LibraryDeckRow({ deck }: { deck: MobileLibraryDeckViewModel }) {
+export function LibraryDeckRow({
+  deck,
+  onPress,
+}: {
+  deck: MobileLibraryDeckViewModel
+  onPress: () => void
+}) {
   return (
-    <View
+    <Pressable
+      accessibilityHint="Opens this deck"
       accessibilityLabel={`${deck.name}, ${deck.cardCount} cards, ${deck.dueCount} due, ${deck.progressPercent}% progress, last studied ${deck.lastStudiedLabel}`}
-      style={styles.row}
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
     >
       <View style={styles.deckMark}>
         <Text style={styles.deckMarkLabel}>{markLabelFor(deck.name, 3)}</Text>
@@ -58,7 +67,7 @@ export function LibraryDeckRow({ deck }: { deck: MobileLibraryDeckViewModel }) {
             style={styles.actions}
           >
             <MaterialCommunityIcons
-              color={iteraColors.inkBrand}
+              color={iteraColors.mutedLight}
               name="dots-vertical"
               size={21}
             />
@@ -86,7 +95,7 @@ export function LibraryDeckRow({ deck }: { deck: MobileLibraryDeckViewModel }) {
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   )
 }
 
@@ -112,6 +121,10 @@ const styles = StyleSheet.create({
       android: { elevation: 2 },
       web: { boxShadow: '0 4px 10px rgba(30,41,59,0.05)' },
     }),
+  },
+  rowPressed: {
+    opacity: 0.76,
+    transform: [{ scale: 0.995 }],
   },
   deckMark: {
     position: 'relative',

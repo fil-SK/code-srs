@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, markLabelFor } from '@itera/core'
+import { iteraColors, iteraRadii, markLabelFor, type DeckSortKey } from '@itera/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
@@ -7,6 +7,8 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import type { MobileCollectionViewModel, MobileLibraryDeckViewModel } from '@/src/types/library'
+import { deckSortLabel, filterAndSortDeckViewModels } from './deckSorting'
+import { SortSheet } from './SortSheet'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
@@ -75,14 +77,13 @@ function CollectionDeckRow({
   onPress,
 }: {
   deck: MobileLibraryDeckViewModel
-  onPress?: () => void
+  onPress: () => void
 }) {
   return (
     <Pressable
+      accessibilityHint="Opens this deck"
       accessibilityLabel={`${deck.name}, ${deck.cardCount} cards, ${deck.dueCount} due, ${deck.progressPercent}% progress`}
       accessibilityRole="button"
-      accessibilityState={{ disabled: !onPress }}
-      disabled={!onPress}
       onPress={onPress}
       style={({ pressed }) => [styles.deckRow, pressed && styles.pressed]}
     >
@@ -121,8 +122,13 @@ function CollectionDeckRow({
           </View>
         </View>
 
+        {/*
+          The overflow glyph that used to sit above this chevron was a bare icon
+          in a View - not a control at all, but indistinguishable from one now
+          that the row itself navigates. Deck actions are not implemented, so it
+          is removed rather than left to read as an enabled no-op.
+        */}
         <View style={styles.deckTrailing}>
-          <MaterialCommunityIcons color={iteraColors.inkBrand} name="dots-vertical" size={20} />
           <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={23} />
         </View>
       </View>
@@ -146,15 +152,14 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [dueOnly, setDueOnly] = useState(false)
+  // Web defaults a Collection to name order, and All Decks to last studied.
+  const [sort, setSort] = useState<DeckSortKey>('name')
+  const [sortOpen, setSortOpen] = useState(false)
 
-  const visibleDecks = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
-    return viewModel.decks.filter((deck) => {
-      if (dueOnly && deck.dueCount === 0) return false
-      if (!normalizedQuery) return true
-      return `${deck.name} ${deck.description}`.toLocaleLowerCase().includes(normalizedQuery)
-    })
-  }, [dueOnly, query, viewModel.decks])
+  const visibleDecks = useMemo(
+    () => filterAndSortDeckViewModels(viewModel.decks, { query, dueOnly, sort }),
+    [dueOnly, query, sort, viewModel.decks],
+  )
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -237,12 +242,15 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
 
         <View style={styles.controlsRow}>
           <Pressable
+            accessibilityHint="Choose how decks are ordered"
+            accessibilityLabel={'Sort: ' + deckSortLabel(sort)}
             accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={styles.sortControl}
+            onPress={() => setSortOpen(true)}
+            style={({ pressed }) => [styles.sortControl, pressed && styles.pressed]}
           >
-            <Text style={styles.controlText}>Sort: Name</Text>
+            <Text numberOfLines={1} style={styles.controlText}>
+              Sort: {deckSortLabel(sort)}
+            </Text>
             <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-down" size={19} />
           </Pressable>
           <Pressable
@@ -265,14 +273,11 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
             <CollectionDeckRow
               key={deck.id}
               deck={deck}
-              onPress={
-                deck.id === 'fixture-modern-cpp'
-                  ? () =>
-                      router.push({
-                        pathname: '/library/deck/[deckId]',
-                        params: { deckId: deck.id },
-                      })
-                  : undefined
+              onPress={() =>
+                router.push({
+                  pathname: '/library/deck/[deckId]',
+                  params: { deckId: deck.id },
+                })
               }
             />
           ))}
@@ -285,6 +290,13 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
           </View>
         ) : null}
       </ScrollView>
+
+      <SortSheet
+        onChange={setSort}
+        onClose={() => setSortOpen(false)}
+        sort={sort}
+        visible={sortOpen}
+      />
     </SafeAreaView>
   )
 }
@@ -541,7 +553,6 @@ const styles = StyleSheet.create({
     borderRadius: iteraRadii.control,
     borderWidth: 1,
     backgroundColor: iteraColors.surface,
-    opacity: 0.72,
     paddingHorizontal: 13,
   },
   dueControl: {
@@ -665,8 +676,7 @@ const styles = StyleSheet.create({
   deckTrailing: {
     width: 30,
     alignItems: 'center',
-    gap: 8,
-    marginTop: -3,
+    justifyContent: 'center',
     marginRight: -5,
   },
   deckProgressRow: {

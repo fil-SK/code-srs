@@ -1,6 +1,8 @@
 import { LibraryAllDecksScreen } from '@/src/components/library/LibraryAllDecksScreen'
-import { createMobileLibraryFixture } from '@/src/fixtures/library'
+import { demoLibraryViewModel } from '@/src/demo/demoSelectors'
+import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 
 export default function LibraryRoute() {
-  return <LibraryAllDecksScreen viewModel={createMobileLibraryFixture()} />
+  const { workspace } = useDemoWorkspace()
+  return <LibraryAllDecksScreen viewModel={demoLibraryViewModel(workspace)} />
 }

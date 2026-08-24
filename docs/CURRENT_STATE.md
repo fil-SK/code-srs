@@ -2,7 +2,9 @@
 
 **Last verified against the working tree: 2026-08-24** (branch `mvp_demo_cleaning`).
 
-> **Milestone M1A - native cloud/auth/data foundation - is implemented; live and device verification are pending.** `apps/mobile` now composes a native Supabase client, the shared auth engine, one QueryClient and the shared `Repository`. It has not yet been run against a live Supabase project, because none exists (see §15). Everything in §23 below marked *pending live verification* is code-complete and gate-clean but unproven against real Postgres.
+> **`apps/mobile` now defaults to an explicit, deterministic Demo mode (milestone M-DEMO-1, §24).** Market validation takes precedence over live cloud integration by product-owner decision: the app opens with no Supabase credentials, over one coherent demo workspace, so it can be shown to potential users. Demo data is **not production persistence** - it is deterministic demo data, never synced or cloud-backed, and it resets on a full app restart by design. Library navigation, search, filter and sort are functional over that workspace.
+>
+> **Milestone M1A - the native cloud/auth/data foundation (§23) - remains implemented and intact, and remains unverified.** It has never been run against a live Supabase project, because none exists (see §15), and Supabase integration is **intentionally postponed until after demand validation**. Cloud mode is still reachable with `EXPO_PUBLIC_ITERA_MODE=cloud` and valid configuration; everything in §23 marked *pending live verification* is code-complete and gate-clean but unproven against real Postgres.
 
 The most recent product-correctness milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress's headline row is exactly **Learned · Due · Reviews · Retention · Current streak**, and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`itera-decisions.md`](itera-decisions.md).
 
@@ -28,7 +30,7 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Structural: `@itera/core` owns the platform-neutral engine; Phase 2 owns the stable web workspace; Phase 3.0 established the device-confirmed native bootstrap; Today, Profile & Settings, Notifications, Progress, all three Library navigation depths, and all six interaction previews are now native presentations under iterative device review.** `apps/mobile` now has a real composition root, and its product screens remain fixture-backed: Today, Notifications, Progress, Library and interaction previews, plus a Profile & Settings screen that is presentation-only apart from real account identity and Sign out, behind a five-item Expo Router shell (`Library · Review · Today · Progress · Profile`) that now sits inside an authenticated route group. Ordinary sections retain the tab bar; Notifications and Review previews deliberately use immersive nested routes and hide it. These screens consume shared Itera tokens and existing `Card`/`Deck`/Collection/progress/interaction semantics without copying repository or domain behavior. Mobile authentication, repository composition and TanStack Query are now connected (§23). Real mobile product data, review persistence, sync, push registration, reminder scheduling and a live Review session are not. **No persisted shape or web product behavior changed.**
+**Structural: `@itera/core` owns the platform-neutral engine; Phase 2 owns the stable web workspace; Phase 3.0 established the device-confirmed native bootstrap; Today, Profile & Settings, Notifications, Progress, all three Library navigation depths, and all six interaction previews are now native presentations under iterative device review.** `apps/mobile` now has a real composition root, and its product screens remain fixture-backed: Today, Notifications, Progress, Library and interaction previews, plus a Profile & Settings screen that is presentation-only apart from real account identity and Sign out, behind a five-item Expo Router shell (`Library · Review · Today · Progress · Profile`) that now sits inside an authenticated route group. Ordinary sections retain the tab bar; Notifications and Review previews deliberately use immersive nested routes and hide it. These screens consume shared Itera tokens and existing `Card`/`Deck`/Collection/progress/interaction semantics without copying repository or domain behavior. Mobile authentication, repository composition and TanStack Query are connected (§23) but are the **cloud** path, which is deferred and unverified; the default build now runs in Demo mode over one deterministic demo workspace, where Library/Today/Progress/Notifications navigation, search, filter and sort are functional (§24). Real mobile product data, review persistence, sync, push registration, reminder scheduling and a live Review session are not. **No persisted shape or web product behavior changed.**
 
 ### Web + mobile convergence checkpoint
 
@@ -106,11 +108,11 @@ Real data, real behavior, production-routed:
 | Page | What is real | What is placeholder |
 |---|---|---|
 | **Today** (`/`, `apps/web/src/features/today/`) | **Everything.** Due count, contributing deck names and the duration estimate in the hero; current streak; corrected mature retention; due today; the derived Next milestone; Continue Learning rows; the seven-day pace series; the Adjust session dialog; and the new-user / caught-up / loading states. All computed in `packages/core/src/domain/stats/{todayMetrics,streak,learned,deckMetrics,progressMetrics}.ts` — `TodayPage` is the only fetcher and the four panels are presentational. | Nothing on the page is fabricated. **Deliberately deferred, not faked:** Weekly Goal (removed — no goal concept exists), a richer milestone/achievement system (the row is a derived deck continuation, not an entity), and advanced session controls (time-boxed, weak-cards, new-vs-review, difficulty/interaction/tag filters, custom FSRS). Continue Learning lists leaf decks only, so cards filed directly on a deck-with-children get no row (they are still counted in the hero and Due today). |
-| **Mobile Today** (`/today`, `apps/mobile/src/components/today/`) | Owner-approved native composition: Itera header, shared greeting behavior, stacked hero, Due today / Current streak / Retention / Est. session metrics, Start CTA, four Continue Learning rows, scrolling, safe-area handling, and the persistent five-item tab shell with a raised center Today control. | The typed values come from the one intentional fixture in `apps/mobile/src/fixtures/today.ts`; no real mobile repository, hooks, auth or sync are composed yet. |
-| **Mobile Profile & Settings** (`/profile`, `apps/mobile/src/components/profile/`) | Native composition adapted from the owner reference: Itera header, Profile & Settings hierarchy, honest demo-workspace summary, seven selectable settings rows, and section-specific detail panels matching the current web semantics. | There is no fabricated name/email, mobile auth/profile record, repository, persistence or sync. Import / Export controls are visibly unavailable and write nothing; the screen is presentation-only and awaits physical-device review. |
-| **Mobile Library — All Decks + Collection + Deck** (`/library`, `/library/:collectionId`, `/library/deck/:deckId`, `apps/mobile/src/components/library/`) | Three explicitly separate native depths in one nested Library stack. All Decks has the horizontal Collection rail and deck summaries; Interview Core/Languages & C++ use the focused Collection composition; Modern C++ & Memory has deck identity, local favorite state, metrics, Cards/Insights tabs, fixture search/New-status filtering and interaction-specific card rows. | Values come from `apps/mobile/src/fixtures/library.ts`. New Deck, Import, generic Filter/Sort, Collection settings, Study, Add Card, card actions and real Insights are visibly unavailable and write nothing. Real hooks/repository/review composition are not connected, and physical-device review is pending. |
-| **Mobile Progress** (`/progress`, `apps/mobile/src/components/progress/`) | Native overview adapted from the owner concept at phone-readable density: exactly **Learned · Due · Reviews · Retention · Current streak**, plus a 30-day activity heat map, retention trend, deck performance and recent milestones. The persistent tab shell stays visible with Progress selected. | All values come from `apps/mobile/src/fixtures/progress.ts`; no mobile review-history hooks, repository or duplicated statistics computation were added. The 3M/1Y ranges and data-driven drill-downs are visibly unavailable, and physical-device review is pending. |
-| **Mobile Notifications** (`/notifications`, `apps/mobile/src/components/notifications/`) | Mobile-only native inbox reached from the shared header bell: All/Unread filtering, grouped Today/Earlier updates, local read state, Mark all as read, an honest empty state, and a direct link to the existing Notifications settings placeholder. The nested route hides the persistent tab bar and supplies an explicit back affordance. | Values live in `apps/mobile/src/fixtures/notifications.ts`; filtering and read state are local and reset when the route remounts. There is no push registration, scheduler, notification repository, persistence or fabricated production event stream. Physical-device review is pending. |
+| **Mobile Today** (`/today`, `apps/mobile/src/components/today/`) | Owner-approved native composition: Itera header, shared greeting behavior, stacked hero, Due today / Current streak / Retention / Est. session metrics, Start CTA, Continue Learning rows, scrolling, safe-area handling, and the persistent five-item tab shell with a raised center Today control. **Each Continue Learning row opens its own deck** (they all routed to `/library`), and the header bell's unread dot reflects the real demo unread count. | Values come from the demo workspace (§24), not a repository: deck numbers are derived from the demo cards, while streak and retention are authored deterministic constants. No real mobile data, hooks or sync are composed. |
+| **Mobile Profile & Settings** (`/profile`, `apps/mobile/src/components/profile/`) | Native composition adapted from the owner reference: Itera header, Profile & Settings hierarchy, seven selectable settings rows, and section-specific detail panels matching the current web semantics. In cloud mode the real session email and Sign out are live. In demo mode it says "Demo workspace", that the data is deterministic and not a synced account, and that nothing is saved between launches - and the Sign-out row is absent, because there is no account to sign out of. | Nothing is fabricated in either mode. The six unbuilt settings sections and the Import / Export controls are visibly unavailable and write nothing; physical-device review of demo mode is pending. |
+| **Mobile Library — All Decks + Collection + Deck** (`/library`, `/library/:collectionId`, `/library/deck/:deckId`, `apps/mobile/src/components/library/`) | Three explicitly separate native depths in one nested Library stack, now **navigable end to end over the demo workspace** (§24). Every All Decks row opens its own deck (they were inert `View`s); every collection scope resolves, including Unfiled, Systems and Research; every Collection deck row opens its own deck; both routes resolve their route parameter, and an unknown id gets a not-found state. Search, the Due-only filter and a four-key Sort (core's `sortDecks`, with the label always showing the active sort) all work, as do the deck's card search and its real status filter. | Values come from the demo workspace, not a repository. New Deck, Import, Collection settings, Study Now, Add Card, deck and card actions and real Insights remain visibly unavailable and write nothing. The decorative Filter dropdown and the deck favorite were removed (D372, D373). Real hooks/repository/review composition are not connected, and physical-device review is pending. |
+| **Mobile Progress** (`/progress`, `apps/mobile/src/components/progress/`) | Native overview adapted from the owner concept at phone-readable density: exactly **Learned · Due · Reviews · Retention · Current streak**, plus a 30-day activity heat map, retention trend, deck performance and recent milestones. **Each Deck performance row opens its deck** (they were plain `View`s). The persistent tab shell stays visible with Progress selected. | Values come from the demo workspace (§24). Deck counts are derived from the demo cards; streak, retention, the heat map, the trend and milestones are authored deterministic constants - **Progress metrics were deliberately not made real** in M-DEMO-1. No review-history hooks, repository or duplicated statistics computation were added. The 3M/1Y ranges are visibly unavailable, and physical-device review is pending. |
+| **Mobile Notifications** (`/notifications`, `apps/mobile/src/components/notifications/`) | Mobile-only native inbox reached from the shared header bell: All/Unread filtering, grouped Today/Earlier updates, Mark all as read, an honest empty state, and a direct link to the existing Notifications settings placeholder. Read state now lives in the demo workspace, so **the bell's dot reflects the real unread count** rather than being painted unconditionally, and **Mark all as read is reachable when only Earlier has unread items**. A notification naming a demo deck marks itself read and opens that deck; one referring to a feature that does not exist marks itself read and says so. The nested route hides the persistent tab bar and supplies an explicit back affordance. | Values live in the demo workspace (§24), and read state resets on a full app restart by design. There is no push registration, scheduler, notification repository, persistence or fabricated production event stream. Physical-device review is pending. |
 | **Mobile Recall preview** (`/review/recall`, `apps/mobile/src/components/review/`) | First interaction-specific native View for owner UI validation: immersive header, position/progress, Recall label, structured prompt and code sample, local animated reveal, answer, optional tip and four preview rating controls. Shared `recallBehavior.type` supplies the interaction identity. | Values live in `apps/mobile/src/fixtures/reviewRecall.ts`. Ratings only select local visual state and explicitly are not saved; no queue, FSRS preview, grading, persistence or repository is connected. This is not a generic native RichText renderer, and physical-device review is pending. |
 | **Mobile Ordering preview** (`/review/ordering`, with Recall retained at `/review/recall`, `apps/mobile/src/components/review/`) | Second interaction-specific native View: shared immersive header/rating chrome, structured prompt, handle-based local drag ordering, accessible adjustable actions and announcements, animated submit reveal, per-position feedback and correct-order guidance. Shared `orderingBehavior.isResponseReady` and `gradeOrdering` own readiness and correctness. | Values live in `apps/mobile/src/fixtures/reviewOrdering.ts`. Reordering, submit and rating state are local preview interactions only; no queue, FSRS scheduling, persistence or repository is connected. Physical-device review is pending. |
 | **Mobile Matching preview** (`/review/matching`, with Ordering at `/review/ordering` and Recall at `/review/recall`, `apps/mobile/src/components/review/`) | Third interaction-specific native View: shared immersive header/rating chrome, source-first touch assignment, two-column fit, horizontally scrollable three-column boards, web-inspired curved relationship paths with circular status markers, fixed/unique option handling, progress, animated submit reveal and per-relationship result feedback. Shared `matchingBehavior.isResponseReady`, `matchingBehavior.widthFor` and `gradeMatching` own readiness, width intent and correctness. | Values live in `apps/mobile/src/fixtures/reviewMatching.ts`. Assignments, submit and rating state are local preview interactions only; no queue, FSRS scheduling, persistence or repository is connected. Physical-device review is pending. `react-native-svg` is the one added Expo-native primitive used to draw accurate curves on native and web. |
@@ -375,7 +377,9 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 ## 17. Exact recommended next milestone
 
-**Review the implemented native Walkthrough preview on the owner's physical iOS device.** Reload Expo Go, enter Review, and inspect prompt/scenario wrapping, code-line focus, exact-input keyboard avoidance, Multiple Choice density, Recall reveal, per-step tip/explanation transitions, Previous/Continue/Finish behavior, global tip/explanation distinction, aggregate result, rating-control density and exit-to-Today behavior. Stop after that review; all six interaction previews now exist, but live Review composition remains a separate future milestone.
+**M-DEMO-2 - a functional local demo Review session across the existing interaction UI.** M-DEMO-1 made the demo workspace browsable and its navigation coherent (§24); Review is the next demo vertical slice, and the one surface a viewer will reach for that still leads only to a preview. It is not started.
+
+Before it, the owner's physical-device pass on M-DEMO-1 is outstanding: launch with no Supabase credentials, confirm the app opens directly into Demo mode, then check Today's Continue Learning rows, each Library collection scope, several different All Decks rows, back navigation, search, the Due-only filter, sort ordering, the deck card search and filter, Progress Deck performance rows, the bell's unread dot after marking notifications read, and notification deck destinations.
 
 Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither should be folded into mobile work implicitly: Phase G is a real data-model migration and Roadmaps is deliberately outside the primary MVP navigation.
 
@@ -505,3 +509,90 @@ npm ls react / @tanstack/react-query / @supabase/supabase-js -> one deduped copy
 ```
 
 The iOS export is the strongest static evidence available without a device: it proves the whole graph — `@supabase/supabase-js`, `expo-secure-store`, `@itera/core` with `ts-fsrs`, the shared auth engine, the repository and the hooks — resolves and compiles under Metro/Hermes, and that no `import.meta` survives into a native bundle.
+
+---
+
+## 24. Mobile demo mode (milestone M-DEMO-1)
+
+**`apps/mobile` defaults to an explicit, deterministic Demo mode.** The project owner has made market validation the priority: the goal is a coherent, functional demo to show potential users and gather demand, and only then to decide whether to invest further in production cloud infrastructure. The cloud/Supabase path built in M1A (§23) is intact, unchanged and **still unverified**, and is deferred by that product-owner decision.
+
+**Demo data is not production persistence.** It is deterministic demo data for an interactive demo, reproducible screenshots and physical-device UI testing. It is never synced, cloud-backed, a persisted account or production data. It is held in memory and resets on a full app restart, deliberately (D369). Supabase integration is intentionally postponed until after demand validation; nothing about it was started here (D376).
+
+Device verification of demo mode is **pending the owner** and is not claimed.
+
+### Two runtime modes
+
+| | Demo (default) | Cloud (`EXPO_PUBLIC_ITERA_MODE=cloud`) |
+|---|---|---|
+| Supabase configuration | not required, not read | required; the M1A configuration notice is unchanged without it |
+| Sign-in | none; authenticated on the first frame | six-digit email OTP, unchanged |
+| Repository | **not registered** - an accidental `getRepository()` throws | `configureRepository(() => new SupabaseRepository(...))`, unchanged |
+| Data | the demo workspace | none wired into product screens yet (§23) |
+| Network | no cloud request is made | as M1A |
+| Diagnostics probe | refuses to render, and says why | `__DEV__` only, unchanged |
+| Profile | "Demo workspace", no Sign out (there is no account) | real session email, Sign out, unchanged |
+
+### What exists
+
+| Piece | Where | Notes |
+|---|---|---|
+| Runtime mode | `apps/mobile/src/config/mobileRuntimeMode.ts` | One value, resolved once from a static `process.env.EXPO_PUBLIC_ITERA_MODE` member expression so Expo can inline it. Only the exact string `cloud` selects cloud; anything else is demo, so a half-configured build is never mistaken for a cloud build. The composition root reads it for both the repository and auth, so the two cannot disagree. |
+| Demo session | `apps/mobile/src/auth/demoSessionStore.ts` | Core's own `LocalSessionStore`, pre-seeded with one `kind: 'demo'` record. Core leaves `loading` false in local mode and reads the store during construction, so the app is authenticated on its first rendered frame with no OTP and no bootstrap. `write`/`clear` are inert. **`RootNavigator`, `AuthProvider` and the `Stack.Protected` groups were not modified.** |
+| Demo workspace | `apps/mobile/src/demo/demoWorkspace.ts` | One dataset: 4 collections, 8 decks (one unfiled), 18 cards across 3 decks, 7 notifications. Mobile-only; nothing was added to `@itera/core`, and it is deliberately **not** a `Repository` implementation. |
+| Selectors | `apps/mobile/src/demo/demoSelectors.ts` | Pure derivation, no React and no navigation, so route files stay thin bindings and the rules are testable. Test files may not live under `app/` (D356), so logic worth proving lives in `src/`. |
+| Demo state | `apps/mobile/src/demo/demoWorkspaceContext.ts`, `DemoWorkspaceProvider.tsx` | The only mutable demo state is notification read/unread. `useDemoWorkspaceOptional` exists for the header, which also renders in cloud mode. A `__DEV__` reset helper; no product reset control. |
+| Sort and filter | `apps/mobile/src/components/library/deckSorting.ts` | Calls core's `sortDecks` verbatim, so all four keys mean what they mean on web. Filtering is web's order: due-only, then case-insensitive search over name and description, then sort. |
+| Native sheets | `SortSheet.tsx`, `CardStatusSheet.tsx`, `cardFiltering.ts` | React Native's own `Modal`, existing tokens, no new dependency and no desktop dropdown. |
+| Not-found state | `apps/mobile/src/components/library/LibraryNotFoundScreen.tsx` | What a Library route renders when its id names nothing, built from the existing back row and empty-state card. |
+
+### The derivation rule
+
+- **Derived from the demo card list**: card counts, due counts, mastery, last studied, collection totals, Today's due total, Today's estimated minutes. Two screens can no longer disagree about the same deck. `demoWorkspace.test.ts` fails if they do.
+- **Authored deterministic constants**: streak, retention, the activity map, the retention series, milestones, reviews-this-period. These need real review history, and **Progress metrics were deliberately not made real** in this milestone.
+
+Deck ids are now canonical. One deck previously had three (`fixture-distributed-systems` in Library, `fixture-systems` in Today - which was also a collection id - and `fixture-systems-distributed` in Progress) and four different card counts.
+
+### What became functional
+
+Library navigation, search, filter and sort are functional **over the demo workspace** - not over real data, which remains master plan Phase 6.
+
+- All Decks rows are `Pressable` and open their own deck. They were a plain `View` with no press handler at all, so the only route into a deck screen in the whole app was one hard-coded row on the Collection screen.
+- `/library/deck/[deckId]` and `/library/[collectionId]` resolve their parameter. Both previously ignored it: every deck link showed Modern C++, and every collection link that was not Languages & C++ showed Interview Core. An unknown id now gets a not-found state.
+- Every collection scope resolves, including Unfiled, Systems and Research, which were disabled. Every scope has demo content.
+- Every Collection deck row opens its own deck, not just the one hard-coded to `fixture-modern-cpp`.
+- Today's Continue Learning rows open the matching deck. They all routed to `/library`.
+- Progress's Deck performance rows open the matching deck. They were plain `View`s.
+- Sort works and reports the **active** sort; it read "Sort: Last studied" while nothing was sorted.
+- The deck card filter really filters by status and defaults to showing everything; it previously re-set `newOnly = true` and opened with a filter nobody had chosen.
+- Notification read state is coherent: the bell dot reflects the real unread count, and "Mark all as read" is reachable when only Earlier has unread items.
+- Notification rows open the deck they name, or mark read only and say so.
+
+### What is deliberately NOT here
+
+- **Any Supabase or live-cloud work.** No project, no `schema.sql`, no OTP, no RLS check, no shared-`Repository` data on Today/Library/Progress, no cloud metric. The `TODO.md` live-Supabase/M1A checkpoint and the three unverified-migration items are preserved.
+- **Real product data.** Every product screen still reads the demo workspace.
+- **Persistence for demo state.** No AsyncStorage, no SQLite, no dependency (D369). This is a decision, not debt.
+- **Review session work.** No queue, no native RichText, no FSRS intervals, no grade persistence, no Undo. The interaction previews are untouched.
+- **CRUD and authoring.** New Deck, Import, Export, Study Now, Add card, rename/delete/duplicate/move/suspend and Collection settings remain visibly disabled.
+- **Real Progress calculations.** Metrics remain deterministic demo values.
+- **A redesign.** Visual language, tab layout, Today hero, compositions, typography, colours and card geometry are unchanged apart from what representing interactive and disabled states honestly required.
+
+### Removed
+
+**Deck favorites.** Mobile-only, component-local, with no web equivalent - no `Deck` field, hook, mutation, filter or sort key exists in `apps/web/src` or `packages/core/src` - and no decision approving it. Removed rather than kept as an invented feature (D373). The Collection deck row's overflow glyph was also removed: a bare icon in a `View`, indistinguishable from a control once the row itself navigated.
+
+### Gates
+
+```
+apps/mobile: npx jest                       -> 14 suites, 140 tests, passing (was 5 / 50)
+apps/mobile: npx tsc --noEmit               -> clean
+apps/mobile: npx expo lint                  -> clean
+apps/mobile: npx expo-doctor                -> 18/18
+apps/mobile: npx expo export --platform ios -> bundles (4.18 MB hbc)
+root:        npx vitest run                 -> 111 files / 1064 tests (unchanged)
+root:        npx tsc -b --force             -> clean
+root:        npm run lint                   -> clean
+root:        npm run build                  -> successful, PWA precache 24 entries
+```
+
+No `apps/web` or `packages/core` file was modified.

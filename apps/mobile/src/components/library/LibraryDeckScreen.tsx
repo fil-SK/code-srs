@@ -6,10 +6,25 @@ import { useMemo, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import type { MobileDeckCardViewModel, MobileDeckViewModel } from '@/src/types/library'
+import type {
+  MobileCardStatus,
+  MobileDeckCardViewModel,
+  MobileDeckViewModel,
+} from '@/src/types/library'
+import { cardStatusMatches, type CardStatusFilter } from './cardFiltering'
+import { CardStatusSheet } from './CardStatusSheet'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 type DeckTab = 'cards' | 'insights'
+
+// A card's lifecycle state, as a colour. Uses the existing palette rather than
+// introducing one: New is neutral, Learning is the accent already used for
+// "due", and Review is the success green the progress bars use.
+const statusColors: Record<MobileCardStatus, string> = {
+  New: iteraColors.mutedLight,
+  Learning: iteraColors.accent,
+  Review: iteraColors.success,
+}
 
 const interactionVisuals: Record<
   MobileDeckCardViewModel['interactionType'],
@@ -65,31 +80,33 @@ function CardRow({ card }: { card: MobileDeckCardViewModel }) {
         </Text>
       </View>
       <View style={styles.cardStatus}>
-        <View style={styles.statusDot} />
+        <View style={[styles.statusDot, { backgroundColor: statusColors[card.status] }]} />
         <Text style={styles.statusText}>{card.status}</Text>
       </View>
-      <MaterialCommunityIcons color={iteraColors.inkBrand} name="dots-horizontal" size={21} />
+      <MaterialCommunityIcons color={iteraColors.mutedLight} name="dots-horizontal" size={21} />
     </Pressable>
   )
 }
 
 export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewModel }) {
   const router = useRouter()
-  const [favorite, setFavorite] = useState(false)
   const [activeTab, setActiveTab] = useState<DeckTab>('cards')
   const [query, setQuery] = useState('')
-  const [newOnly, setNewOnly] = useState(true)
+  // Defaults to showing everything. It used to default to New-only, which hid
+  // cards behind a filter nobody had chosen.
+  const [statusFilter, setStatusFilter] = useState<CardStatusFilter>('all')
+  const [filterOpen, setFilterOpen] = useState(false)
 
   const visibleCards = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase()
     return viewModel.cards.filter((card) => {
-      if (newOnly && card.status !== 'New') return false
+      if (!cardStatusMatches(card.status, statusFilter)) return false
       if (!normalizedQuery) return true
       return `${card.prompt} ${card.interactionLabel} ${card.tag}`
         .toLocaleLowerCase()
         .includes(normalizedQuery)
     })
-  }, [newOnly, query, viewModel.cards])
+  }, [query, statusFilter, viewModel.cards])
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -129,20 +146,13 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
               <Text adjustsFontSizeToFit minimumFontScale={0.82} numberOfLines={2} style={styles.title}>
                 {viewModel.name}
               </Text>
-              <Pressable
-                accessibilityLabel={favorite ? 'Remove from favorites' : 'Add to favorites'}
-                accessibilityRole="button"
-                accessibilityState={{ selected: favorite }}
-                hitSlop={7}
-                onPress={() => setFavorite((value) => !value)}
-                style={({ pressed }) => [styles.iconButtonPlain, pressed && styles.pressed]}
-              >
-                <MaterialCommunityIcons
-                  color={favorite ? iteraColors.accent : '#7890ad'}
-                  name={favorite ? 'star' : 'star-outline'}
-                  size={25}
-                />
-              </Pressable>
+              {/*
+                A favorite toggle used to sit here. It was mobile-only, held its
+                state in this component alone, and had no product equivalent on
+                web - no Deck field, hook, filter or sort key exists for it, and
+                no decision approved one. It was removed rather than kept as an
+                invented feature; see itera-decisions.md.
+              */}
               <Pressable
                 accessibilityLabel="Deck actions unavailable"
                 accessibilityRole="button"
@@ -246,24 +256,25 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
                 />
               </View>
               <Pressable
-                accessibilityLabel="Show new-card filter"
+                accessibilityHint="Filter cards by status"
+                accessibilityLabel="Filter cards"
                 accessibilityRole="button"
-                onPress={() => setNewOnly(true)}
+                onPress={() => setFilterOpen(true)}
                 style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
               >
                 <MaterialCommunityIcons color={iteraColors.inkBrand} name="tune-variant" size={23} />
               </Pressable>
             </View>
 
-            {newOnly ? (
+            {statusFilter !== 'all' ? (
               <View style={styles.filterChip}>
-                <View style={styles.filterDot} />
-                <Text style={styles.filterChipText}>Status: New</Text>
+                <View style={[styles.filterDot, { backgroundColor: statusColors[statusFilter] }]} />
+                <Text style={styles.filterChipText}>Status: {statusFilter}</Text>
                 <Pressable
-                  accessibilityLabel="Remove New status filter"
+                  accessibilityLabel="Remove status filter"
                   accessibilityRole="button"
                   hitSlop={7}
-                  onPress={() => setNewOnly(false)}
+                  onPress={() => setStatusFilter('all')}
                   style={({ pressed }) => pressed && styles.pressed}
                 >
                   <MaterialCommunityIcons color={iteraColors.muted} name="close" size={18} />
@@ -279,8 +290,14 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
 
             {visibleCards.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>No matching cards</Text>
-                <Text style={styles.emptyText}>Try another search or clear the status filter.</Text>
+                <Text style={styles.emptyTitle}>
+                  {viewModel.cards.length === 0 ? 'No cards yet' : 'No matching cards'}
+                </Text>
+                <Text style={styles.emptyText}>
+                  {viewModel.cards.length === 0
+                    ? 'This deck has no cards in the demo workspace.'
+                    : 'Try another search or clear the status filter.'}
+                </Text>
               </View>
             ) : null}
           </>
@@ -295,6 +312,13 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           </View>
         )}
       </ScrollView>
+
+      <CardStatusSheet
+        filter={statusFilter}
+        onChange={setStatusFilter}
+        onClose={() => setFilterOpen(false)}
+        visible={filterOpen}
+      />
     </SafeAreaView>
   )
 }
@@ -432,12 +456,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.7,
     lineHeight: 29,
-  },
-  iconButtonPlain: {
-    width: 31,
-    height: 31,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   moreButton: {
     width: 38,
@@ -605,7 +623,6 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: iteraColors.accent,
   },
   filterChipText: {
     color: iteraColors.muted,
@@ -659,7 +676,6 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#3b82f6',
   },
   statusText: {
     color: iteraColors.muted,

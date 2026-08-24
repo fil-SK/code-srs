@@ -17,6 +17,12 @@ export interface MobileProgressDeckViewModel {
   name: Deck['name']
   mark: string
   retentionLabel: string
+  /**
+   * Whether `retentionLabel` carries a real figure. The screen used to decide
+   * that by testing whether the label started with '89', which broke the moment
+   * any other deck reached that number.
+   */
+  retentionKnown: boolean
   dueLabel: string
 }
 

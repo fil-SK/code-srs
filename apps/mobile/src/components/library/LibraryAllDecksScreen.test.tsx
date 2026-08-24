@@ -1,0 +1,176 @@
+import { fireEvent, render, screen } from '@testing-library/react-native'
+
+import { demoLibraryViewModel } from '@/src/demo/demoSelectors'
+import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import {
+  pushedCollectionIds,
+  pushedDeckIds,
+  resetRouterCalls,
+  routerDouble,
+} from '@/src/test/routerDouble'
+import { LibraryAllDecksScreen } from './LibraryAllDecksScreen'
+
+jest.mock('expo-router', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  useRouter: () => require('@/src/test/routerDouble').routerDouble,
+}))
+
+// The audit's worst visible defect was here: All Decks rows were rendered as a
+// plain View with no press handler at all, so the only way to reach a deck
+// screen in the whole app was one hard-coded row on the Collection screen.
+
+const workspace = createDemoWorkspace()
+const viewModel = demoLibraryViewModel(workspace)
+
+beforeEach(() => {
+  resetRouterCalls()
+})
+
+function rowFor(name: string) {
+  return screen.getByLabelText(new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')},`))
+}
+
+/**
+ * The deck names in the order the screen actually rendered them.
+ *
+ * Read from the tree rather than inferred from the order rows are pressed in:
+ * pressing rows by name records the loop's order whatever the list did, which
+ * would make a sort assertion prove nothing.
+ */
+function renderedDeckNames(): string[] {
+  return screen
+    .getAllByHintText('Opens this deck')
+    .map((row) => String(row.props.accessibilityLabel).split(',')[0])
+}
+
+describe('All Decks rows', () => {
+  it('opens each deck at its own id', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    for (const deck of viewModel.decks) {
+      resetRouterCalls()
+      fireEvent.press(rowFor(deck.name))
+      expect(pushedDeckIds()).toEqual([deck.id])
+    }
+  })
+
+  it('sends different rows to different decks', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    fireEvent.press(rowFor('Modern C++ & Memory'))
+    fireEvent.press(rowFor('Security Engineering'))
+
+    const [first, second] = pushedDeckIds()
+    expect(first).toBe('fixture-modern-cpp')
+    expect(second).toBe('fixture-security-engineering')
+    expect(first).not.toBe(second)
+  })
+
+  it('reaches every deck in the workspace from this one screen', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+    for (const deck of viewModel.decks) fireEvent.press(rowFor(deck.name))
+
+    expect(new Set(pushedDeckIds())).toEqual(new Set(workspace.decks.map((deck) => deck.id)))
+  })
+})
+
+describe('collection scopes', () => {
+  it('opens every scope except the one already on screen', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    for (const collection of viewModel.collections) {
+      if (collection.kind === 'all') continue
+      fireEvent.press(screen.getByLabelText('Open ' + collection.name))
+    }
+
+    // "All Decks" is the current scope and navigates nowhere; everything else
+    // resolves, including the two that used to be disabled.
+    expect(pushedCollectionIds()).toEqual(
+      viewModel.collections.filter((c) => c.kind !== 'all').map((c) => c.id),
+    )
+  })
+})
+
+describe('sort', () => {
+  it('reports the sort that is actually applied', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+    expect(screen.getByText('Sort: Last studied')).toBeTruthy()
+
+    fireEvent.press(screen.getByLabelText('Sort: Last studied'))
+    fireEvent.press(screen.getByText('Name'))
+
+    expect(screen.getByLabelText('Sort: Name')).toBeTruthy()
+    expect(screen.getByText('Sort: Name')).toBeTruthy()
+    expect(screen.queryByText('Sort: Last studied')).toBeNull()
+  })
+
+  it('reorders the list to match the label', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    const byLastStudied = renderedDeckNames()
+
+    fireEvent.press(screen.getByLabelText('Sort: Last studied'))
+    fireEvent.press(screen.getByText('Name'))
+    const byName = renderedDeckNames()
+
+    expect(byName).toEqual([...byName].sort((a, b) => a.localeCompare(b)))
+    expect(byName).not.toEqual(byLastStudied)
+
+    fireEvent.press(screen.getByLabelText('Sort: Name'))
+    fireEvent.press(screen.getByText('Card count'))
+    expect(renderedDeckNames()).not.toEqual(byName)
+    expect(screen.getByText('Sort: Card count')).toBeTruthy()
+  })
+
+  it('starts on the same default web uses for All Decks', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    const studied = viewModel.decks
+      .filter((deck) => deck.lastStudiedAt !== undefined)
+      .sort((a, b) => (b.lastStudiedAt ?? 0) - (a.lastStudiedAt ?? 0))
+      .map((deck) => deck.name)
+
+    expect(renderedDeckNames().slice(0, studied.length)).toEqual(studied)
+  })
+})
+
+describe('filter and search', () => {
+  it('hides decks with nothing due when Due only is checked', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+    expect(screen.queryByText('Security Engineering')).toBeTruthy()
+
+    fireEvent.press(screen.getByText('Due only'))
+
+    expect(screen.queryByText('Security Engineering')).toBeNull()
+    expect(screen.queryByText('Modern C++ & Memory')).toBeTruthy()
+  })
+
+  it('searches over the workspace and shows an empty state when nothing matches', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    fireEvent.changeText(screen.getByLabelText('Search decks'), 'compilers')
+    expect(screen.queryByText('Compilers & MLIR')).toBeTruthy()
+    expect(screen.queryByText('Security Engineering')).toBeNull()
+
+    fireEvent.changeText(screen.getByLabelText('Search decks'), 'zzzz')
+    expect(screen.getByText('No matching decks')).toBeTruthy()
+  })
+})
+
+describe('unavailable controls', () => {
+  it('leaves the out-of-scope actions visibly disabled rather than silently inert', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    for (const label of ['New Deck', 'Import']) {
+      const control = screen.getByText(label).parent
+      expect(control).toBeTruthy()
+    }
+
+    // The decorative Filter control is gone: web's entire filter menu is the
+    // Due only checkbox, which this screen already has.
+    expect(screen.queryByText('Filter')).toBeNull()
+  })
+})
+
+// Referenced so the mock factory's module is loaded in this file's scope.
+expect(routerDouble).toBeTruthy()

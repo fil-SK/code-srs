@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { StatusScreen } from '@/src/components/system/StatusScreen'
+import { mobileRuntimeMode } from '@/src/config/mobileRuntimeMode'
 
 // A development-only proof that the whole seam is live, and deliberately not a
 // product screen.
@@ -24,19 +25,35 @@ import { StatusScreen } from '@/src/components/system/StatusScreen'
 
 const PROBE_PREFIX = 'M1A probe '
 
+// The gate is a separate component from the probe so the repository hooks are
+// never mounted at all outside cloud mode. Demo mode registers no backend on
+// purpose, so calling them there would fire a query with nothing behind it.
 export default function DiagnosticsRoute() {
+  // Compiled out of a production bundle by the bundler's constant folding, and
+  // refused at runtime regardless, so this cannot ship as a reachable screen.
+  if (!__DEV__) {
+    return <StatusScreen title="Not available" detail="Diagnostics are development-only." />
+  }
+
+  if (mobileRuntimeMode !== 'cloud') {
+    return (
+      <StatusScreen
+        detail="This probe exercises the shared Repository against Supabase. Demo mode registers no backend, so there is nothing for it to reach. Set EXPO_PUBLIC_ITERA_MODE=cloud with valid Supabase configuration to use it."
+        title="Diagnostics need cloud mode"
+      />
+    )
+  }
+
+  return <CloudDiagnostics />
+}
+
+function CloudDiagnostics() {
   const router = useRouter()
   const { identity, session } = useAuth()
   const decks = useDecks()
   const createDeck = useCreateDeck()
   const deleteDeck = useDeleteDeck()
   const [lastAction, setLastAction] = useState<string | null>(null)
-
-  // Compiled out of a production bundle by the bundler's constant folding, and
-  // refused at runtime regardless, so this cannot ship as a reachable screen.
-  if (!__DEV__) {
-    return <StatusScreen title="Not available" detail="Diagnostics are development-only." />
-  }
 
   const probeDecks = (decks.data ?? []).filter((deck) => deck.name.startsWith(PROBE_PREFIX))
 

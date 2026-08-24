@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { iteraColors, iteraRadii } from '@itera/core'
+import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useState } from 'react'
 import type { LayoutChangeEvent } from 'react-native'
@@ -119,7 +120,13 @@ function RetentionChart({ percent, series }: { percent: number; series: number[]
   )
 }
 
-function DeckPerformance({ decks }: { decks: MobileProgressViewModel['decks'] }) {
+function DeckPerformance({
+  decks,
+  onOpenDeck,
+}: {
+  decks: MobileProgressViewModel['decks']
+  onOpenDeck: (deckId: string) => void
+}) {
   return (
     <SectionCard>
       <View style={styles.sectionHeadingRow}>
@@ -128,17 +135,27 @@ function DeckPerformance({ decks }: { decks: MobileProgressViewModel['decks'] })
       </View>
       <View style={styles.list}>
         {decks.map((deck, index) => (
-          <View key={deck.id} style={[styles.deckRow, index > 0 && styles.rowBorder]}>
+          <Pressable
+            key={deck.id}
+            accessibilityHint="Opens this deck"
+            accessibilityRole="button"
+            onPress={() => onOpenDeck(deck.id)}
+            style={({ pressed }) => [
+              styles.deckRow,
+              index > 0 && styles.rowBorder,
+              pressed && styles.pressed,
+            ]}
+          >
             <View style={styles.deckMark}><Text style={styles.deckMarkText}>{deck.mark}</Text><View style={styles.deckMarkAccent} /></View>
             <View style={styles.deckCopy}>
               <Text numberOfLines={1} style={styles.rowTitle}>{deck.name}</Text>
               <View style={styles.deckMeta}>
-                <Text style={deck.retentionLabel.startsWith('89') ? styles.successText : styles.rowSubtitle}>{deck.retentionLabel}</Text>
+                <Text style={deck.retentionKnown ? styles.successText : styles.rowSubtitle}>{deck.retentionLabel}</Text>
                 <Text style={styles.metaSeparator}>•</Text>
                 <Text style={styles.dueText}>{deck.dueLabel}</Text>
               </View>
             </View>
-          </View>
+          </Pressable>
         ))}
       </View>
     </SectionCard>
@@ -171,6 +188,8 @@ function Milestones({ milestones }: { milestones: MobileProgressViewModel['miles
 }
 
 export function ProgressScreen({ viewModel }: { viewModel: MobileProgressViewModel }) {
+  const router = useRouter()
+
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -187,7 +206,7 @@ export function ProgressScreen({ viewModel }: { viewModel: MobileProgressViewMod
           <View accessibilityLabel="Progress range, 30 days selected" style={styles.rangeControl}>
             <View style={styles.rangeSelected}><Text style={styles.rangeSelectedText}>30D</Text></View>
             {['3M', '1Y'].map((range) => (
-              <Pressable key={range} accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={styles.rangeUnavailable}>
+              <Pressable key={range} accessibilityLabel={range + ' range unavailable'} accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={styles.rangeUnavailable}>
                 <Text style={styles.rangeUnavailableText}>{range}</Text>
               </Pressable>
             ))}
@@ -199,7 +218,12 @@ export function ProgressScreen({ viewModel }: { viewModel: MobileProgressViewMod
         </View>
         <Activity days={viewModel.activityDays} />
         <RetentionChart percent={viewModel.retentionPercent} series={viewModel.retentionSeries} />
-        <DeckPerformance decks={viewModel.decks} />
+        <DeckPerformance
+          decks={viewModel.decks}
+          onOpenDeck={(deckId) =>
+            router.push({ pathname: '/library/deck/[deckId]', params: { deckId } })
+          }
+        />
         <Milestones milestones={viewModel.milestones} />
       </ScrollView>
     </SafeAreaView>
@@ -260,5 +284,8 @@ const styles = StyleSheet.create({
   dueText: { color: iteraColors.accent, fontSize: 13, fontWeight: '600' },
   milestoneRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 12 },
   milestoneIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  pressed: {
+    opacity: 0.65,
+  },
   milestoneDate: { color: iteraColors.muted, fontSize: 12 },
 })

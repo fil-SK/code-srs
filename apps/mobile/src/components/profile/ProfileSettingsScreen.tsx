@@ -7,6 +7,7 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { MobileHeader } from '@/src/components/today/MobileHeader'
+import { mobileRuntimeMode } from '@/src/config/mobileRuntimeMode'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 export type ProfileSectionId =
@@ -218,6 +219,7 @@ function isProfileSectionId(value: string | undefined): value is ProfileSectionI
 export function ProfileSettingsScreen({ initialSection }: { initialSection?: string }) {
   const router = useRouter()
   const { identity, signOut } = useAuth()
+  const demo = mobileRuntimeMode === 'demo'
   const [selectedSection, setSelectedSection] = useState<ProfileSectionId>(
     isProfileSectionId(initialSection) ? initialSection : 'import-export',
   )
@@ -271,12 +273,18 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
             {/* Real identity only, exactly as the web account menu does it:
                 this product has no profile record and no display name, so the
                 session's email is the whole truth, over a line saying where the
-                data lives. Nothing here is fabricated. */}
+                data lives. Nothing here is fabricated - and in demo mode that
+                means saying plainly that there is no account and no sync,
+                rather than dressing demo content up as a synced one. */}
             <Text numberOfLines={1} style={styles.workspaceTitle}>
-              {identity?.email ?? 'Signed in'}
+              {demo ? 'Demo workspace' : (identity?.email ?? 'Signed in')}
             </Text>
-            <Text style={styles.workspaceSubtitle}>Synced with Supabase</Text>
-            <Text style={styles.workspaceMeta}>Product screens still use preview data</Text>
+            <Text style={styles.workspaceSubtitle}>
+              {demo ? 'Deterministic demo data. Not a synced account.' : 'Synced with Supabase'}
+            </Text>
+            <Text style={styles.workspaceMeta}>
+              {demo ? 'Nothing here is saved between app launches' : 'Product screens still use preview data'}
+            </Text>
           </View>
           <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={25} />
         </Pressable>
@@ -311,16 +319,20 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
           </Pressable>
         ) : null}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ busy: signingOut }}
-          disabled={signingOut}
-          onPress={() => void handleSignOut()}
-          style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
-        >
-          <MaterialCommunityIcons color={iteraColors.error} name="logout" size={21} />
-          <Text style={styles.signOutLabel}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
-        </Pressable>
+        {/* There is no account to sign out of in demo mode, so the control is
+            absent rather than present and inert. The cloud path is unchanged. */}
+        {demo ? null : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ busy: signingOut }}
+            disabled={signingOut}
+            onPress={() => void handleSignOut()}
+            style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
+          >
+            <MaterialCommunityIcons color={iteraColors.error} name="logout" size={21} />
+            <Text style={styles.signOutLabel}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
+          </Pressable>
+        )}
       </ScrollView>
     </SafeAreaView>
   )

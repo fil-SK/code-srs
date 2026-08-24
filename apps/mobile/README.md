@@ -2,27 +2,48 @@
 
 This workspace is Itera's Expo/React Native presentation and composition app.
 
-It now has a real composition root: a native Supabase client over a chunked
-SecureStore session, the shared `@itera/core` auth engine behind six-digit email
-OTP, `Stack.Protected` route groups, one `QueryClientProvider`, and the shared
-`Repository` registered through `configureRepository`. Profile shows the real
-account identity and can sign out.
+It runs in one of two modes.
 
-The product screens above that foundation are still **fixture-backed**: Today,
-Notifications, Progress, Profile & Settings, the three Library depths (All Decks,
-Collection, Deck), and immersive previews of all six interaction types. There is
-no native RichText renderer and no live Review session yet.
+**Demo (the default).** No configuration, no Supabase project, no sign-in code:
+the app opens straight into the product over one deterministic demo workspace,
+and Today, Library, Progress and Notifications navigate to each other coherently.
+This is the current default because the product is being shown to potential users
+before further cloud investment.
 
-See [`docs/CURRENT_STATE.md`](../../docs/CURRENT_STATE.md) §23 for exactly what
-is real, and [`docs/platform-parity.md`](../../docs/platform-parity.md) for the
-per-capability web/native table.
+Demo data is **deterministic demo data**. It is not synced, not cloud-backed, not
+a persisted account and not production data. It lives in memory and resets on a
+full app restart, deliberately.
+
+**Cloud (`EXPO_PUBLIC_ITERA_MODE=cloud`).** The real composition root: a native
+Supabase client over a chunked SecureStore session, the shared `@itera/core` auth
+engine behind six-digit email OTP, `Stack.Protected` route groups, one
+`QueryClientProvider`, and the shared `Repository` registered through
+`configureRepository`. Profile shows the real account identity and can sign out.
+This path is implemented but **has never been run against a live Supabase
+project**, and is deferred by product-owner decision until after demand
+validation.
+
+In both modes the product screens read demo data rather than a repository, and
+there is no native RichText renderer and no live Review session yet.
+
+See [`docs/CURRENT_STATE.md`](../../docs/CURRENT_STATE.md) §24 for demo mode and
+§23 for the cloud foundation, and
+[`docs/platform-parity.md`](../../docs/platform-parity.md) for the per-capability
+web/native table.
 
 ## Configuration
 
-Mobile is **cloud-only**. Copy `.env.local.example` to `.env.local` and fill in
-your Supabase project URL and publishable key. Without them the app renders a
+**None is needed to run the app.** With no `.env.local` the build is a demo build
+and opens the product immediately.
+
+For cloud mode, copy `.env.local.example` to `.env.local`, set
+`EXPO_PUBLIC_ITERA_MODE=cloud`, and fill in your Supabase project URL and
+publishable key. With the mode set and those unset the app renders a
 configuration notice instead of the product - there is no native local storage
 fallback, and a web workspace that only exists in a browser will not appear here.
+
+Only the exact value `cloud` selects cloud mode; anything else is demo, so a
+half-configured build is never mistaken for a cloud build.
 
 Expo inlines `EXPO_PUBLIC_*` at build time and caches the result, so restart
 Metro with `--clear` after changing them.
@@ -68,8 +89,12 @@ covers `apps/web` and `packages/core` only and never sees these files.
 - `src/composition/` holds the composition modules. **Do not rename it to
   `src/app/`**: Expo Router treats `src/app` as an alternative app directory and
   will build a second route root there, pulling test files into the bundle.
-- `src/data/supabaseClient.ts` is the only module that reads configuration. Core
-  never learns about Expo, SecureStore, `AppState` or React Native.
+- `src/config/mobileRuntimeMode.ts` and `src/data/supabaseClient.ts` are the only
+  modules that read configuration, and both read `process.env.EXPO_PUBLIC_*` as
+  static member expressions so Expo can inline them. Core never learns about
+  Expo, SecureStore, `AppState` or React Native.
+- `src/demo/` is the demo workspace: one dataset, pure selectors, one provider.
+  It is mobile-only and is deliberately **not** a `Repository` implementation.
 - Never import a backend from a screen, hook or component.
 
 SDK-specific implementation guidance lives in the exact Expo 54 documentation.
