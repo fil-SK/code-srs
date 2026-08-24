@@ -15,6 +15,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:mobile": "npm run test --workspace @itera/mobile",
     "playwright:install": "playwright install chromium"
   },
   "devDependencies": {

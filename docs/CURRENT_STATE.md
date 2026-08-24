@@ -2,6 +2,8 @@
 
 **Last verified against the working tree: 2026-08-24** (branch `mvp_demo_cleaning`).
 
+> **Milestone M1A - native cloud/auth/data foundation - is implemented; live and device verification are pending.** `apps/mobile` now composes a native Supabase client, the shared auth engine, one QueryClient and the shared `Repository`. It has not yet been run against a live Supabase project, because none exists (see §15). Everything in §23 below marked *pending live verification* is code-complete and gate-clean but unproven against real Postgres.
+
 The most recent product-correctness milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress's headline row is exactly **Learned · Due · Reviews · Retention · Current streak**, and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`itera-decisions.md`](itera-decisions.md).
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
@@ -26,7 +28,7 @@ It describes state, not history. It contains no prompts and no conversation tran
 
 ## 1. Current product milestone
 
-**Structural: `@itera/core` owns the platform-neutral engine; Phase 2 owns the stable web workspace; Phase 3.0 established the device-confirmed native bootstrap; Today, Profile & Settings, Notifications, Progress, all three Library navigation depths, and all six interaction previews are now native presentations under iterative device review.** `apps/mobile` has fixture-backed Today, Notifications, Progress, Library and interaction-preview screens, a presentation-only Profile & Settings screen, and a five-item Expo Router shell (`Library · Review · Today · Progress · Profile`). Ordinary sections retain the tab bar; Notifications and Review previews deliberately use immersive nested routes and hide it. These screens consume shared Itera tokens and existing `Card`/`Deck`/Collection/progress/interaction semantics without copying repository or domain behavior. Real mobile data, repository composition, auth, persistence, sync, push registration, reminder scheduling and a live Review session are not connected. **No persisted shape or web product behavior changed.**
+**Structural: `@itera/core` owns the platform-neutral engine; Phase 2 owns the stable web workspace; Phase 3.0 established the device-confirmed native bootstrap; Today, Profile & Settings, Notifications, Progress, all three Library navigation depths, and all six interaction previews are now native presentations under iterative device review.** `apps/mobile` now has a real composition root, and its product screens remain fixture-backed: Today, Notifications, Progress, Library and interaction previews, plus a Profile & Settings screen that is presentation-only apart from real account identity and Sign out, behind a five-item Expo Router shell (`Library · Review · Today · Progress · Profile`) that now sits inside an authenticated route group. Ordinary sections retain the tab bar; Notifications and Review previews deliberately use immersive nested routes and hide it. These screens consume shared Itera tokens and existing `Card`/`Deck`/Collection/progress/interaction semantics without copying repository or domain behavior. Mobile authentication, repository composition and TanStack Query are now connected (§23). Real mobile product data, review persistence, sync, push registration, reminder scheduling and a live Review session are not. **No persisted shape or web product behavior changed.**
 
 ### Web + mobile convergence checkpoint
 
@@ -435,3 +437,71 @@ Reference mockups are **not tracked in this repository** — there is deliberate
 - `supabase/migrations/0002_single_card_model.sql` needs running in the SQL editor. It's destructive by design and drops card_states before cards (that FK cascades).
 - `supabase/migrations/0003_review_log_state_before.sql` needs running after 0002. It deliberately deletes prototype ReviewLog history before enforcing required `stateBefore`; no live Supabase project has verified it yet.
 - `supabase/migrations/0004_review_commit_rpc.sql` needs running after 0003. It is additive (two functions plus their `execute` grants, nothing dropped or deleted), but cloud review persistence depends on it: without the functions, every grade and every undo fails loudly in cloud mode rather than writing partially. Not yet verified against a live project — [`TODO.md`](TODO.md) lists what to check.
+
+---
+
+## 23. Mobile composition, authentication and data (milestone M1A)
+
+**Implemented in code and gate-clean. Not yet verified against a live Supabase project or a physical device.** No live project exists (see §15), so every claim below is an assertion about the code and the automated suite, not about real Postgres.
+
+### What exists
+
+| Piece | Where | Notes |
+|---|---|---|
+| Composition root | `apps/mobile/app/_layout.tsx` | The counterpart of `apps/web/src/main.tsx`, and the only module that decides what the app is made of. Registers the repository, binds focus, then provides Query → Auth → Router. |
+| Native Supabase client | `apps/mobile/src/data/supabaseClient.ts` | The **only** mobile module that reads configuration (`EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY`, read as static member expressions so Expo can inline them). `detectSessionInUrl: false`; `AppState` drives `startAutoRefresh`/`stopAutoRefresh`. |
+| Session storage | `apps/mobile/src/data/secureSessionStorage.ts` + `chunkedValue.ts` | SecureStore with manifest-plus-chunks, per master plan D4. A Supabase session exceeds the historical ~2048-byte keychain ceiling, so one logical value spans N numbered keys. Chunks are written before the manifest and stale chunks are dropped after it, so an interrupted write is never half-readable and a shorter value cannot leave orphans. An incomplete set reads as signed out and self-cleans. |
+| Auth config | `apps/mobile/src/auth/mobileAuthConfig.ts` | Always Supabase mode — mobile is cloud-only, so backend and auth mode cannot disagree by construction. `localSessionStore` is deliberately **inert**: core never reads it in Supabase mode, and an inert store means there is no native local record that could become a second way to be authenticated (audit P1-3). |
+| Auth engine | `packages/core/src/auth/` (unchanged) | Mobile reimplements nothing. `resolveAuthState`, `createAuthEngine`, `AuthProvider` and `useAuth` are shared verbatim. |
+| Sign-in | `apps/mobile/src/components/auth/SignInScreen.tsx`, `app/(auth)/sign-in.tsx` | Six-digit email OTP: `signInWithOtp` then `verifyOtp`. **Functional infrastructure, not a designed surface** — existing tokens, one field, one action. Web's magic-link flow is untouched; the two platforms differ in sign-in interaction and share session semantics, exactly as §5 always intended. |
+| Error copy | `apps/mobile/src/auth/authErrorCopy.ts` | The one place a raw auth error is looked at. Classifies by status/code and returns one of six fixed sentences; GoTrue wording, URLs and transport text can never reach a learner. |
+| Route protection | `apps/mobile/src/composition/RootNavigator.tsx` | Two mechanisms: no navigator at all while the bootstrap runs (so there is no frame of the wrong screen), then `Stack.Protected` groups that **remove** the other group rather than redirecting away from it. Expo Router restores a requested route once its guard opens, so no redirect parameter is needed. |
+| Query client | `apps/mobile/src/composition/queryClient.ts`, `appStateFocus.ts` | One client. `retry: 1` and `refetchOnWindowFocus: true` differ from web because the platform does, not because the product does. `focusManager` is bound to `AppState`; `onlineManager` deliberately is not (see below). |
+| Repository composition | `apps/mobile/src/composition/composition.ts` | `configureRepository(() => new SupabaseRepository(getMobileSupabase()))`, called once at module scope in the composition root. Lazy: importing it opens no connection. |
+| Account identity + Sign out | `apps/mobile/src/components/profile/ProfileSettingsScreen.tsx` | Real session email over "Synced with Supabase". The fabricated "Demo workspace" line is gone. Sign out does not navigate — clearing the session closes the guard. |
+| Development probe | `apps/mobile/app/(app)/diagnostics.tsx` | `__DEV__`-only, off the tab bar, reachable only from a Profile row that renders only in development. Reads decks and creates/deletes one disposable deck through the ordinary shared hooks, and shows the session user id so RLS ownership can be checked in the Supabase table editor. Deliberately **not** wired into Today/Library/Progress: mixing real and fixture values on a reviewed surface is the dishonest half-state this milestone exists to avoid. |
+| Test suite | `apps/mobile/jest.config.js`, 5 files, 50 tests | `jest-expo` + React Native Testing Library, separate from the root Vitest suite with zero overlapping assertions (master plan D10). |
+
+### Route structure
+
+```
+app/_layout.tsx              composition root; Stack with two Protected groups
+app/index.tsx                entry redirect: /today or /sign-in
+app/(auth)/sign-in.tsx       six-digit OTP
+app/(app)/(tabs)/...         the five-item shell, unchanged
+app/(app)/notifications.tsx  unchanged, now with real stack presentation
+app/(app)/diagnostics.tsx    __DEV__ only
+```
+
+Group segments do not appear in a URL, so **every existing path is unchanged** (`/today`, `/library`, `/library/deck/[deckId]`, `/review`, `/progress`, `/profile`, `/notifications`) and no existing `router.push` was touched. The root layout is now a `Stack` rather than a `Slot`, which is what the Protected API requires and which also gives `/notifications` a real push transition and the iOS back-swipe it previously lacked.
+
+`apps/mobile/src/composition/` is **not** named `src/app/`: Expo Router treats `src/app` as an alternative app directory, and a second route root there silently pulled test files into the bundle graph.
+
+### What is deliberately NOT here
+
+- **A native RichText renderer.** The review screens still consume hand-tokenized presentation fixtures, so they cannot render arbitrary real `Card` content. This is milestone M1B, and the native content-security item in [`TODO.md`](TODO.md) stays open and un-actionable until it lands.
+- **Review persistence.** No queue, no `reviewService.submit`, no `commitReview`. Milestone M1C.
+- **Real product data** on Today, Library and Progress. Those screens are untouched and still fixture-backed.
+- **Import / Export**, card authoring, notifications backend, offline storage and sync.
+- **An `onlineManager` connectivity binding.** Without a connectivity module React Native reports permanently online, which for a cloud-only client with no offline layer is the honest behaviour: a request made with no signal fails and surfaces as an error rather than being queued against a cache that does not exist. Wiring real connectivity belongs with the offline milestone that would give a paused query somewhere to wait. No dependency was added for it.
+
+### Local-only web workspaces do not appear on mobile
+
+Mobile is cloud-only by decision (master plan D11). A learner using the web app in local Dexie mode has a workspace that exists only in that browser, and signing in on the phone will show an empty account rather than that data. The sign-in screen says so in one line. Migrating browser-local data into a cloud account remains the open product question already recorded in [`TODO.md`](TODO.md).
+
+### Gates
+
+```
+apps/mobile: npx jest                       -> 5 suites, 50 tests, passing
+apps/mobile: npx tsc --noEmit               -> clean
+apps/mobile: npx expo lint                  -> clean
+apps/mobile: npx expo-doctor                -> 18/18
+apps/mobile: npx expo export --platform ios -> bundles (4.16 MB hbc)
+root:        npx vitest run                 -> 111 files / 1064 tests (unchanged)
+root:        npx tsc -b --force             -> clean
+root:        npm run lint                   -> clean
+root:        npm run build                  -> successful, PWA precache 24 entries
+npm ls react / @tanstack/react-query / @supabase/supabase-js -> one deduped copy each
+```
+
+The iOS export is the strongest static evidence available without a device: it proves the whole graph — `@supabase/supabase-js`, `expo-secure-store`, `@itera/core` with `ts-fsrs`, the shared auth engine, the repository and the hooks — resolves and compiles under Metro/Hermes, and that no `import.meta` survives into a native bundle.

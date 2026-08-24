@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { iteraColors, iteraRadii, useAuth } from '@itera/core'
+import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -45,13 +46,14 @@ const unavailableSections: Record<Exclude<ProfileSectionId, 'import-export'>, Un
     title: 'Profile',
     description: 'Manage your personal information and how you appear in Itera.',
     notice:
-      'Not available yet. Mobile has no profile record or authenticated account composition.',
+      'Not available yet. Itera has no profile record: an account is identified by the email you sign in with.',
     planned: ['Full name and username', 'Profile photo', 'Learning bio'],
   },
   email: {
     title: 'Email & Password',
     description: 'Change the address you sign in with, and manage your password.',
-    notice: 'Not available yet. Authentication is not connected in the mobile app.',
+    notice:
+      'Not available yet. Sign-in uses a six-digit email code, so there is no password to change here.',
     planned: ['Change email address', 'Set or change a password', 'Active sessions'],
   },
   appearance: {
@@ -72,14 +74,14 @@ const unavailableSections: Record<Exclude<ProfileSectionId, 'import-export'>, Un
     title: 'Privacy',
     description: 'What Itera stores and who can see it.',
     notice:
-      'No mobile data store is connected yet. Itera has no analytics or telemetry to opt out of.',
+      'Not available yet. Itera has no analytics or telemetry to opt out of.',
     planned: ['Public profile visibility', 'Data collection controls', 'Download all data'],
   },
   devices: {
     title: 'Connected Devices',
     description: "Where you're signed in, and what has synced.",
     notice:
-      'Not available yet. There is no device registry, and mobile sync is not connected.',
+      'Not available yet. There is no device registry, though this device is signed in and reading your cloud workspace.',
     planned: ['Signed-in devices', 'Last sync per device', 'Revoke a device'],
   },
 }
@@ -214,9 +216,25 @@ function isProfileSectionId(value: string | undefined): value is ProfileSectionI
 }
 
 export function ProfileSettingsScreen({ initialSection }: { initialSection?: string }) {
+  const router = useRouter()
+  const { identity, signOut } = useAuth()
   const [selectedSection, setSelectedSection] = useState<ProfileSectionId>(
     isProfileSectionId(initialSection) ? initialSection : 'import-export',
   )
+  const [signingOut, setSigningOut] = useState(false)
+
+  // Signing out does not navigate. Clearing the Supabase session emits through
+  // the shared auth engine, RootNavigator's guard closes, and this screen
+  // unmounts with the rest of the authenticated group.
+  async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+    try {
+      await signOut()
+    } finally {
+      setSigningOut(false)
+    }
+  }
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -250,9 +268,15 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
             <MaterialCommunityIcons color={iteraColors.surface} name="account-outline" size={34} />
           </View>
           <View style={styles.workspaceCopy}>
-            <Text style={styles.workspaceTitle}>Demo workspace</Text>
-            <Text style={styles.workspaceSubtitle}>Mobile presentation preview</Text>
-            <Text style={styles.workspaceMeta}>Profile and sync are not connected</Text>
+            {/* Real identity only, exactly as the web account menu does it:
+                this product has no profile record and no display name, so the
+                session's email is the whole truth, over a line saying where the
+                data lives. Nothing here is fabricated. */}
+            <Text numberOfLines={1} style={styles.workspaceTitle}>
+              {identity?.email ?? 'Signed in'}
+            </Text>
+            <Text style={styles.workspaceSubtitle}>Synced with Supabase</Text>
+            <Text style={styles.workspaceMeta}>Product screens still use preview data</Text>
           </View>
           <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={25} />
         </Pressable>
@@ -274,6 +298,29 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
         ) : (
           <UnavailableDetail section={unavailableSections[selectedSection]} />
         )}
+
+        {__DEV__ ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/diagnostics')}
+            style={({ pressed }) => [styles.devRow, pressed && styles.pressed]}
+          >
+            <MaterialCommunityIcons color={iteraColors.muted} name="bug-outline" size={21} />
+            <Text style={styles.devRowLabel}>Repository diagnostics (dev)</Text>
+            <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={22} />
+          </Pressable>
+        ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ busy: signingOut }}
+          disabled={signingOut}
+          onPress={() => void handleSignOut()}
+          style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
+        >
+          <MaterialCommunityIcons color={iteraColors.error} name="logout" size={21} />
+          <Text style={styles.signOutLabel}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   )
@@ -554,6 +601,32 @@ const styles = StyleSheet.create({
     color: iteraColors.muted,
     fontSize: 14,
   },
+  devRow: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 14,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.card,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    paddingHorizontal: 14,
+  },
+  devRowLabel: { flex: 1, color: iteraColors.muted, fontSize: 15, fontWeight: '600' },
+  signOutButton: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    marginTop: 14,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.card,
+    borderWidth: 1,
+    backgroundColor: iteraColors.surface,
+  },
+  signOutLabel: { color: iteraColors.error, fontSize: 15, fontWeight: '700' },
   pressed: {
     opacity: 0.68,
   },

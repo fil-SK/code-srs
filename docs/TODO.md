@@ -85,6 +85,57 @@ explicit, user-initiated one-way upload built on the existing backup format and
 `importBackup` merge semantics. It is not an auth concern and should not be
 attached to `AuthProvider`.
 
+## Live Supabase project for mobile, and the M1A checkpoint (noted 2026-08-24)
+
+M1A implemented the whole native cloud/auth/data foundation but **stopped before
+touching any database**, because this repository has no Supabase project: the
+previous one was deleted mid-development (`CURRENT_STATE.md` §15) and there is no
+`.env.local` anywhere in the tree. Everything below needs a project to exist.
+
+**Create a fresh, dedicated Itera development project** rather than reusing one
+with data worth keeping. Two of the migrations are destructive by design.
+
+Bootstrap, in order:
+
+1. In the Supabase SQL editor, run **`supabase/schema.sql` on its own**. It is
+   already the post-0004 state - the single `cards` table, the required
+   `stateBefore` check inline in `review_logs`, and both `commit_review` /
+   `revert_review` functions with their revoke-then-grant - and it is
+   re-runnable. Do **not** run `0001`-`0004` on a fresh project: `0001` creates a
+   table `0002` drops, and `0002`/`0003` only delete rows that do not exist yet.
+   Those files are the upgrade path for a database that already exists (D362).
+2. Copy `apps/mobile/.env.local.example` to `apps/mobile/.env.local` and fill in
+   the project URL and the **publishable** key (`sb_publishable_…`). Never the
+   secret key: it bypasses RLS, and `EXPO_PUBLIC_*` values are inlined into the
+   app bundle. Restart Metro with `--clear`; Expo caches inlined env values.
+3. For the same account to be visible on both platforms, set the matching
+   `VITE_SUPABASE_*` values in the repository-root `.env.local` too. A web
+   install left in local Dexie mode shares nothing with the phone (D353).
+
+Then verify, on the project and on a physical device:
+
+- **Schema.** Tables `cards`, `decks`, `drafts`, `review_logs`, `roadmaps` exist;
+  RLS is enabled on each; each has an `own rows` policy; `authenticated` has
+  select/insert/update/delete on all five and `usage` on `public`; the generated
+  `deck_id` / `due` / `suspended` / `card_id` / `reviewed_at` columns and their
+  indexes exist. Confirm `commit_review` and `revert_review` exist, that
+  `authenticated` has `execute`, and that **`anon` does not**.
+- **Auth.** Email OTP is enabled in the project's auth settings and mail is
+  actually delivered.
+- **Device.** Sign in with a real six-digit code; the protected tabs appear;
+  Profile shows the real account email; the `__DEV__` diagnostics probe reads
+  decks and creates then deletes a disposable one; the created row carries the
+  session's `user_id` in the table editor; force-quit and reopen keeps the
+  session; background past a token expiry and resume stays authenticated; sign
+  out returns to the auth screen and protected routes are unreachable. Also try
+  a wrong code and airplane mode, and confirm the copy is friendly and the
+  button never stays spinning.
+
+This does **not** close the three live-verification items below. Those concern
+pagination, the review-commit RPC and `0003`'s constraint under real Postgres,
+and M1A exercises none of them: mobile does not review, does not persist a grade
+and does not page a large table. Close them when the work that uses them lands.
+
 ## Live verification of Supabase pagination (audit P1-4)
 
 Recorded 2026-08-22 alongside D255-D261. The repository no longer inherits

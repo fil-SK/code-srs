@@ -3,9 +3,19 @@
     "name": "Itera",
     "slug": "itera-mobile",
     "version": "1.0.0",
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "scheme": "itera",
+    "ios": {
+      "bundleIdentifier": "com.itera.mobile",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.itera.mobile"
     }
   }
 }

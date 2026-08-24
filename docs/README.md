@@ -18,6 +18,7 @@ Each owns one concern. If two of them say different things about the same thing,
 | [`features.md`](features.md) | What the product does route by route, cross-cutting behavior (interactions, grading, Tip vs Explanation, sessions, login), plus **planned** and **explicitly out of scope** | Why a call was made |
 | [`itera-decisions.md`](itera-decisions.md) | **Append-only** material decision log: decision, rationale, date, supersession. Read the newest relevant entries first | Implementation status |
 | [`itera-migration-plan.md`](itera-migration-plan.md) | The data-migration and data-safety contract, with every phase marked completed / partial / not started | Anything unrelated to persisted data |
+| [`platform-parity.md`](platform-parity.md) | The per-capability web/native status table, one row per learner-visible capability | *Why* a decision was made, implementation detail, roadmaps or phases |
 
 ## Other current material
 
