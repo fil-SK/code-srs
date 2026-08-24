@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { MobileHeader } from '@/src/components/today/MobileHeader'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
-type ProfileSectionId =
+export type ProfileSectionId =
   | 'profile'
   | 'email'
   | 'appearance'
@@ -209,8 +209,14 @@ function ImportExportDetail() {
   )
 }
 
-export function ProfileSettingsScreen() {
-  const [selectedSection, setSelectedSection] = useState<ProfileSectionId>('import-export')
+function isProfileSectionId(value: string | undefined): value is ProfileSectionId {
+  return sections.some((section) => section.id === value)
+}
+
+export function ProfileSettingsScreen({ initialSection }: { initialSection?: string }) {
+  const [selectedSection, setSelectedSection] = useState<ProfileSectionId>(
+    isProfileSectionId(initialSection) ? initialSection : 'import-export',
+  )
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>

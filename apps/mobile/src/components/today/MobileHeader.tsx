@@ -1,10 +1,13 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { iteraColors } from '@itera/core'
-import { Image, StyleSheet, Text, View } from 'react-native'
+import { useRouter } from 'expo-router'
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 
 const iteraSymbol = require('../../../assets/itera-logo.png')
 
 export function MobileHeader() {
+  const router = useRouter()
+
   return (
     <View style={styles.header}>
       <View style={styles.brand}>
@@ -12,14 +15,16 @@ export function MobileHeader() {
         <Text style={styles.wordmark}>Itera</Text>
       </View>
 
-      <View
-        accessible={false}
-        importantForAccessibility="no-hide-descendants"
-        style={styles.bellWrap}
+      <Pressable
+        accessibilityLabel="Open notifications"
+        accessibilityRole="button"
+        hitSlop={6}
+        onPress={() => router.push('/notifications')}
+        style={({ pressed }) => [styles.bellWrap, pressed && styles.pressed]}
       >
         <MaterialCommunityIcons color={iteraColors.inkBrand} name="bell-outline" size={28} />
         <View style={styles.notificationDot} />
-      </View>
+      </Pressable>
     </View>
   )
 }
@@ -51,7 +56,9 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    pointerEvents: 'none',
+  },
+  pressed: {
+    opacity: 0.62,
   },
   notificationDot: {
     position: 'absolute',
