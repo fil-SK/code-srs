@@ -49,6 +49,10 @@ name (`markLabelFor`), which is deterministic but not chosen.
 
 ## Onboarding demo in the app
 
+## Icons
+
+Currently icons are looking really ugly. I need clean looking icons, like when GPT generates me in the mockup, and then to have them "standardized" for my app, so that the same ones are used in the web app and in mobile app. No need to try to adapt to some existing ones if they are ugly.
+
 ## Notifications
 
 Notifications that some cards are pending to be done etc.
@@ -271,3 +275,36 @@ rediscovered as a gap.
 ## Verify Vercel deployment after workspace migration
 
 Before the next public deployment, confirm the Vercel dashboard still uses repository root as Root Directory and that apps/web/dist is the configured/recognized output. If Root Directory is apps/web, reconcile the repository/dashboard settings and use dist instead. Perform one production deployment and verify SPA routing/PWA assets.
+
+## Gamify
+
+How to improve Itera with better UX, using famification? For both web and mobile or just mobile?
+
+## LeetCode usage
+
+How to use Itera for SRS in regards to LeetCode? How to market it in that regards as well
+
+## Shareable results
+
+A button that, when clicked, generates something which could then be shared on e.g. Instagram story.
+
+## Revert the root Expo tsconfig edit and the root `.expo/` (noted 2026-08-24)
+
+Starting Expo from the repository root instead of through `npm run dev:mobile`
+(which runs inside `apps/mobile`) makes the Expo CLI adopt the root as its own
+project. It added `"extends": "expo/tsconfig.base"` and an empty
+`"compilerOptions"` to the root `tsconfig.json`, and created an untracked root
+`.expo/`. Neither belongs there: the root is workspace orchestration only, and
+mobile deliberately keeps Expo's generated non-composite config outside the root
+TypeScript solution (`architecture.md`, "Workspace layout").
+
+Harmless for now, and verified so: `npx tsc -b --force` still exits 0, because
+the root is a solution file with `"files": []`, which makes the injected options
+inert. It is left in place on purpose while a second agent's Expo workflow may
+depend on starting from the root.
+
+At the end of mobile development: restore `tsconfig.json` to the four bare
+`references`, delete the root `.expo/`, and add `.expo/` to the **root**
+`.gitignore` - only `apps/mobile/.gitignore` covers it today, so the root copy is
+currently committable. Re-verify with `npx tsc -b --force` and one
+`npm run dev:mobile` start.

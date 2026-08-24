@@ -55,7 +55,9 @@ apps/web/             @itera/web - the web application (map below)
   src/                  the web application
 
 apps/mobile/          @itera/mobile - Expo SDK 54 + React Native 0.81.5
-  app/                  Expo Router; currently one neutral bootstrap route only
+  app/                  Expo Router; the tab shell plus the nested Library,
+                        Review-preview and Notifications stacks
+  src/                  mobile presentation, typed view models and fixtures
   app.json              minimal pre-store configuration
   tsconfig.json         Expo's strict, non-composite TypeScript project
   package.json          Expo-supported runtime versions + core's peer suppliers
@@ -65,7 +67,7 @@ packages/core/        @itera/core - the shared engine, unchanged by the move
 
 **The root is not an application.** Before Phase 2 the root `package.json` was simultaneously the workspace root and the web package, which meant one hoisted dependency tree carrying both Vite's and React Native's requirements. Splitting it is what made the mobile app additive. Root scripts keep `npm run dev|build|preview` delegated to `@itera/web`; `npm run dev:mobile` delegates to `@itera/mobile`; `npm run lint` and `npx vitest run` stay repository-wide gates. `npx tsc -b --force` still builds the existing four web/core projects. Mobile keeps Expo's generated non-composite TypeScript config and is checked independently rather than being forced into that solution graph.
 
-**`apps/mobile` is presentation/composition only.** It was scaffolded with the official Expo SDK 54 default TypeScript/Expo Router template because Expo's SDK 57 transition guidance still directs physical-device Expo Go users to SDK 54. The generated example was reset and deleted. There is no product GUI, auth, Supabase composition root, native repository, design system, tab bar, or platform interaction registry yet. The one temporary route imports `parseRichText` from the public `@itera/core` barrel and runs it at module load as a device smoke check. Expo's automatic npm-workspace/monorepo support resolves the package; there is no `metro.config.js`, `watchFolders`, `resolver.nodeModulesPaths`, alias, or symlink workaround.
+**`apps/mobile` is presentation/composition only.** It was scaffolded with the official Expo SDK 54 default TypeScript/Expo Router template because Expo's SDK 57 transition guidance still directs physical-device Expo Go users to SDK 54. Phase 3.0's temporary runtime route has been replaced by owner-approved native presentations: typed, fixture-backed Today, Notifications, Progress, Profile & Settings, Library (All Decks -> Collection -> Deck, a nested stack) and previews of all six interaction types, behind a five-item tab shell. There is still no auth, Supabase composition root, native repository, persistence/sync, push registration or platform interaction registry, and Review is a preview rather than a live session. Ordinary sections keep the tab bar; the Review previews and Notifications are nested immersive routes that hide it. `react-native-svg` is the one added native rendering dependency - it draws Matching's connector curves, and `docs/mobile_app_conversion/master_plan.md` endorsed it in advance as the single new rendering dependency. Expo's automatic npm-workspace/monorepo support resolves `@itera/core`; there is no `metro.config.js`, `watchFolders`, `resolver.nodeModulesPaths`, alias, or symlink workaround.
 
 **React follows the active Expo SDK at the convergence boundary.** SDK 54 pins React 19.1.0 and React Native 0.81.5, so the web workspace also supplies React/ReactDOM 19.1.0. npm's deduplicated layout gives core and both apps one React runtime and one TanStack Query context. React Native remains mobile-only and is never forced to a web version.
 

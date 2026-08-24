@@ -233,7 +233,7 @@ The shape language is **structured softness**.
 
 ## 8. Navigation
 
-**DESIGN RULE (locked IA).** One calm horizontal top navigation. Logo left, primary destinations centered-left, account at far right. No permanent dark header, no global left sidebar, no bottom nav forced from desktop onto mobile. The active destination gets a **thin orange marker**, not a filled orange pill.
+**WEB DESIGN RULE (locked IA).** One calm horizontal top navigation. Logo left, primary destinations centered-left, account at far right. No permanent dark header, no global left sidebar, and no desktop navigation mechanically squeezed into mobile. The active web destination gets a **thin orange marker**, not a filled orange pill.
 
 **IMPLEMENTED** (`apps/web/src/components/layout/`):
 
@@ -244,7 +244,7 @@ The shape language is **structured softness**.
 - Settings is reached through the account menu, never as a top-level destination. That part of the locked IA holds.
 - **Local (page-level) sidebars are the convention for section navigation**, and they are what replaced the deleted global sidebar: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`.
 
-**FUTURE:** a mobile-specific navigation pattern (compact top bar plus a platform-appropriate primary-destination affordance) is specified but not built; the desktop `TopNav` currently just scrolls horizontally on narrow screens.
+**MOBILE IMPLEMENTED, DEVICE REVIEW PENDING:** `apps/mobile` has its separately-designed native shell, not a responsive copy of `TopNav`. Ordinary app sections use a persistent five-item bottom bar in the exact order **Library · Review · Today · Progress · Profile**. Today is the raised center control, carrying the Itera symbol on a light surface with a restrained orange selected treatment; every tab keeps a visible label and normal accessible tab semantics. Review in this bar is an entry point only: the interaction previews it opens are nested routes outside the tab group, so the bar disappears while recall is in progress, and Notifications behaves the same way. Every tab destination now has its own separately approved design, so none of them is a neutral placeholder any more.
 
 ### The Review-shell exception — DESIGN RULE (locked)
 

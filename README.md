@@ -107,7 +107,7 @@ The login is a compact, mockup-driven split surface using Inter Variable through
 
 ### Scripts
 
-All run from the repository root. Existing web commands continue to delegate to `@itera/web`; the mobile bootstrap has its own command.
+All run from the repository root. Existing web commands continue to delegate to `@itera/web`; the mobile app has its own command.
 
 | Command | Description |
 | --- | --- |
@@ -117,7 +117,7 @@ All run from the repository root. Existing web commands continue to delegate to 
 | `npm run lint` | Lint the whole tree with oxlint |
 | `npm run test` | Run the Vitest unit suite (web + core projects) |
 | `npm run dev --workspace @itera/web` | The same dev server, addressed directly |
-| `npm run dev:mobile` | Start Expo/Metro for the neutral physical-device smoke app |
+| `npm run dev:mobile` | Start Expo/Metro and serve the mobile app to a physical device via Expo Go |
 
 ---
 
@@ -191,7 +191,9 @@ apps/web/        @itera/web - the web application
                  roadmaps, settings, today
     domain/ hooks/ types/   thin re-export shims over @itera/core
 apps/mobile/     @itera/mobile - Expo SDK 54 + Expo Router presentation shell
-  app/           one temporary neutral bootstrap route; no product GUI yet
+  app/           tab shell (Today, Library, Review, Progress, Profile) plus the
+                 nested Library, Review-preview and Notifications stacks
+  src/           mobile presentation, typed view models and fixtures
 packages/core/   @itera/core - the shared engine: entity contracts, the
                  Repository seam, the pure domain engine (scheduling/FSRS,
                  grading, stats, search, io), the Supabase backend, the
