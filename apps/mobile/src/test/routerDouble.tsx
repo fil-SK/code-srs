@@ -48,6 +48,26 @@ export function pushedDeckIds(): string[] {
     .map((href) => href.params?.deckId ?? '')
 }
 
+/** The cardId a screen pushed at the card study route, for each navigation. */
+export function pushedCardIds(): string[] {
+  return routerCalls.push
+    .filter(
+      (href): href is RouterHref =>
+        typeof href !== 'string' && href.pathname === '/card/[cardId]/study',
+    )
+    .map((href) => href.params?.cardId ?? '')
+}
+
+/** The deckId a screen scoped a review session to, for each navigation. */
+export function pushedSessionDeckIds(): string[] {
+  return routerCalls.push
+    .filter(
+      (href): href is RouterHref =>
+        typeof href !== 'string' && href.pathname === '/review/session',
+    )
+    .map((href) => href.params?.deckId ?? '')
+}
+
 export function pushedCollectionIds(): string[] {
   return routerCalls.push
     .filter(

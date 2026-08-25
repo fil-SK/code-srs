@@ -57,8 +57,9 @@ Update it in the same commit as any change to a listed capability.
 | Collection tree | library/collectionTree | yes | demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
 | Deck list and metrics | domain/stats/deckMetrics | yes | demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
 | Open a deck | — | yes | demo workspace | deferred — master plan Phase 6; every deck row, Today row, Progress row and deck notification resolves its own deckId over demo data, and an unknown id gets a not-found state; D370, D374 |
-| Card list | hooks/useCards | yes | demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
-| Open a card | — | study preview | no | deferred — master plan Phase 6 |
+| Card list | hooks/useCards | yes | demo workspace | deferred — master plan Phase 6; the list and its rows are functional over the mobile demo workspace (D368, D404) |
+| Open a card | — | study preview | demo workspace | implemented (demo/local) — every card row opens the card it names by its canonical id, and an unknown id gets a not-found state; D404 |
+| Card study preview | interactions/* | cards/:id/study | card/[cardId]/study | implemented (demo/local) — one card inspected outside a session, through the same session shell and registry; records nothing by construction; D403, D405 |
 | Deck create / rename / delete | hooks/useDecks | yes | no | deferred — master plan Phase 6 |
 | Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | no | deferred — master plan Phase 6 |
 | Search | domain/search/searchableText | yes | over the demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
@@ -71,7 +72,9 @@ Update it in the same commit as any change to a listed capability.
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
 | Review entry surface | — | Today CTA / deck links | Review tab start screen | native-only (decision) — a tab needs a landing surface for the due count and the caught-up state |
-| Queue snapshot and scoping | — | useSessionQueue | demo/demoQueue | implemented (demo/local) — per-mount snapshot, due-only, deterministic order; deck scoping exists as a route parameter with no UI entry point yet |
+| Deck-scoped session entry | — | deck page Study link | deck Study Now | implemented (demo/local) — pushes the one session route with a deck scope; a deck with nothing due says so instead of opening an empty session; D406 |
+| Session origin on exit | — | returns to Today | returns to the surface that started it | implemented (demo/local) — every entry point pushes the session and both exits go back, so a deck-scoped session ends on its deck |
+| Queue snapshot and scoping | domain/decks/tree (subtreeIds) | useSessionQueue | demo/demoQueue | implemented (demo/local) — per-mount snapshot, due-only, deterministic order; deck scope means the deck and its subtree on both platforms, and an unknown scope is refused rather than widened; D402 |
 | Two-phase flow | — | yes | yes | implemented (demo/local) — native phase machine, four phases; ReviewPhase stays platform-side by decision |
 | Recall | interactions/recall | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
 | Multiple Choice | interactions/multipleChoice, domain/grading/multipleChoice | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |

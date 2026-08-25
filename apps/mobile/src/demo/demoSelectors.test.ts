@@ -5,6 +5,7 @@ import {
   demoLibraryViewModel,
   demoScopeRail,
   demoUnreadCount,
+  findDemoCard,
   findDemoDeck,
   resolveDemoScope,
 } from './demoSelectors'
@@ -54,6 +55,45 @@ describe('deck resolution', () => {
   it('names the deck s own collection on the way back out', () => {
     expect(demoDeckViewModel(workspace, 'fixture-modern-cpp', NOW)?.collectionName).toBe('Languages & C++')
     expect(demoDeckViewModel(workspace, 'fixture-security-engineering', NOW)?.collectionName).toBe('Unfiled')
+  })
+})
+
+describe('card resolution', () => {
+  it('resolves every populated demo card to itself', () => {
+    expect(workspace.cards.length).toBeGreaterThan(0)
+    for (const card of workspace.cards) {
+      const found = findDemoCard(workspace, card.id)
+      expect(found?.id).toBe(card.id)
+      expect(found?.deckId).toBe(card.deckId)
+      expect(found?.interaction.type).toBe(card.interaction.type)
+    }
+  })
+
+  it('resolves cards from different decks to different cards', () => {
+    const decks = ['fixture-modern-cpp', 'fixture-compilers', 'fixture-algorithms']
+    const first = decks.map(
+      (deckId) => workspace.cards.find((card) => card.deckId === deckId)!.id,
+    )
+
+    const resolved = first.map((id) => findDemoCard(workspace, id))
+
+    expect(new Set(resolved.map((card) => card?.id)).size).toBe(decks.length)
+    resolved.forEach((card, index) => expect(card?.deckId).toBe(decks[index]))
+  })
+
+  it('returns null for an unknown card id, so the route can say so', () => {
+    expect(findDemoCard(workspace, 'fixture-card-does-not-exist')).toBeNull()
+    expect(findDemoCard(workspace, undefined)).toBeNull()
+    expect(findDemoCard(workspace, '')).toBeNull()
+  })
+
+  it('reaches a card of every interaction type the registry binds', () => {
+    // Card study renders through the same registry a session does, so a demo
+    // card of each type is what makes that coverage real rather than claimed.
+    const types = new Set(workspace.cards.map((card) => card.interaction.type))
+    expect(types).toEqual(
+      new Set(['recall', 'multiple_choice', 'write_code', 'ordering', 'matching', 'walkthrough']),
+    )
   })
 })
 

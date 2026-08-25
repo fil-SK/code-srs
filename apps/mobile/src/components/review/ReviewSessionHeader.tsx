@@ -10,17 +10,23 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 // `current`/`total` were fabricated per fixture (every preview said "of 10").
 // They are now the live queue index and length, so the bar is the session's
 // actual progress.
+//
+// `progress` is optional because one surface honestly has none: studying a
+// single card outside a session is not position 1 of 1 in anything, and drawing
+// a full progress bar for it would assert a session that is not running. That
+// surface passes a `badge` instead, and the two are mutually exclusive by
+// construction rather than by convention.
 
 export function ReviewSessionHeader({
-  current,
-  total,
+  progress,
+  badge,
   exitLabel,
   hint,
   hintIcon,
   onExit,
 }: {
-  current: number
-  total: number
+  progress?: { current: number; total: number }
+  badge?: string
   exitLabel: string
   hint: string
   hintIcon: IconName
@@ -38,16 +44,30 @@ export function ReviewSessionHeader({
         <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-left" size={29} />
       </Pressable>
 
-      <View accessibilityLabel={`Card ${current} of ${total}`} style={styles.progressWrap}>
-        <Text style={styles.progressLabel}>
-          {current} of {total}
-        </Text>
-        <View style={styles.progressTrack}>
-          <View
-            style={[styles.progressFill, { width: `${total > 0 ? (current / total) * 100 : 0}%` }]}
-          />
+      {progress ? (
+        <View
+          accessibilityLabel={`Card ${progress.current} of ${progress.total}`}
+          style={styles.progressWrap}
+        >
+          <Text style={styles.progressLabel}>
+            {progress.current} of {progress.total}
+          </Text>
+          <View style={styles.progressTrack}>
+            <View
+              style={[
+                styles.progressFill,
+                { width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 0}%` },
+              ]}
+            />
+          </View>
         </View>
-      </View>
+      ) : badge ? (
+        <View style={styles.progressWrap}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.hint}>
         <MaterialCommunityIcons color={iteraColors.muted} name={hintIcon} size={18} />
@@ -87,6 +107,19 @@ const styles = StyleSheet.create({
     backgroundColor: iteraColors.border,
   },
   progressFill: { height: '100%', borderRadius: iteraRadii.pill, backgroundColor: iteraColors.accent },
+  badge: {
+    minHeight: 28,
+    justifyContent: 'center',
+    borderRadius: iteraRadii.pill,
+    backgroundColor: iteraColors.accentSofter,
+    paddingHorizontal: 14,
+  },
+  badgeText: {
+    color: iteraColors.inkBrand,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
   hint: { width: 84, alignItems: 'center', gap: 2 },
   hintText: {
     color: iteraColors.muted,

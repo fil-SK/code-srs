@@ -1,4 +1,9 @@
-import { createDemoQueue, demoQueueDeckNames, DEMO_SESSION_LIMIT } from './demoQueue'
+import {
+  createDemoQueue,
+  demoDeckScopeIds,
+  demoQueueDeckNames,
+  DEMO_SESSION_LIMIT,
+} from './demoQueue'
 import { isDemoCardDue } from './demoScheduling'
 import { createDemoWorkspace } from './demoWorkspace'
 
@@ -44,6 +49,47 @@ describe('createDemoQueue', () => {
 
     expect(queue.length).toBeGreaterThan(0)
     for (const card of queue) expect(card.deckId).toBe('fixture-compilers')
+  })
+
+  it('leaves out every card the scope does not cover', () => {
+    const scope = demoDeckScopeIds(workspace, 'fixture-compilers')
+    const queue = createDemoQueue(workspace, { now: NOW, deckId: 'fixture-compilers' })
+    const excluded = workspace.cards.filter((card) => !scope.has(card.deckId))
+
+    expect(excluded.length).toBeGreaterThan(0)
+    for (const card of excluded) expect(queue.some((entry) => entry.id === card.id)).toBe(false)
+  })
+
+  it('keeps a scoped queue due-only and deterministic', () => {
+    const build = () =>
+      createDemoQueue(createDemoWorkspace(NOW), { now: NOW, deckId: 'fixture-algorithms' }).map(
+        (card) => card.id,
+      )
+
+    const scoped = createDemoQueue(workspace, { now: NOW, deckId: 'fixture-algorithms' })
+    expect(scoped.length).toBeGreaterThan(0)
+    for (const card of scoped) expect(isDemoCardDue(card, NOW)).toBe(true)
+    expect(build()).toEqual(build())
+  })
+
+  it('matches nothing for a deck id that names no deck', () => {
+    // The queue stays pure and simply covers nothing. Refusing the navigation
+    // is the route's job - what must never happen here is the unknown scope
+    // widening back out to every card.
+    expect(demoDeckScopeIds(workspace, 'fixture-nonexistent')).toEqual(
+      new Set(['fixture-nonexistent']),
+    )
+    expect(createDemoQueue(workspace, { now: NOW, deckId: 'fixture-nonexistent' })).toEqual([])
+  })
+
+  it('is empty for a deck that has cards but nothing due', () => {
+    const deckCards = workspace.cards.filter((card) => card.deckId === 'fixture-modern-cpp')
+    const beforeAnythingIsDue = Math.min(...deckCards.map((card) => card.scheduling.due)) - 1
+
+    expect(deckCards.length).toBeGreaterThan(0)
+    expect(
+      createDemoQueue(workspace, { now: beforeAnythingIsDue, deckId: 'fixture-modern-cpp' }),
+    ).toEqual([])
   })
 
   it('bounds the session', () => {

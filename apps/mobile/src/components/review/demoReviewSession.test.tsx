@@ -4,7 +4,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react-nativ
 import { DemoReviewSession } from '@/src/components/review/DemoReviewSession'
 import { createDemoQueue } from '@/src/demo/demoQueue'
 import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
-import { demoLibraryViewModel, demoProgressViewModel, demoTodayViewModel } from '@/src/demo/demoSelectors'
+import {
+  demoDeckViewModel,
+  demoLibraryViewModel,
+  demoProgressViewModel,
+  demoTodayViewModel,
+} from '@/src/demo/demoSelectors'
 import { DemoWorkspaceProvider } from '@/src/demo/DemoWorkspaceProvider'
 import { useDemoWorkspace, type DemoWorkspaceValue } from '@/src/demo/demoWorkspaceContext'
 import { settle, mockReducedMotion } from '@/src/test/reviewHarness'
@@ -80,6 +85,19 @@ describe('a demo review session', () => {
     const queue = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK })
     expect(queue.length).toBeGreaterThan(1)
     expect(screen.getByLabelText(`Card 1 of ${queue.length}`)).toBeTruthy()
+  })
+
+  it('queues only cards the deck scope covers', async () => {
+    renderSession()
+    await settle()
+
+    const queue = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK })
+    const outside = demo.workspace.cards.filter((card) => card.deckId !== DECK)
+
+    expect(queue.length).toBeGreaterThan(0)
+    expect(outside.length).toBeGreaterThan(0)
+    for (const card of queue) expect(card.deckId).toBe(DECK)
+    for (const card of outside) expect(queue.some((entry) => entry.id === card.id)).toBe(false)
   })
 
   it('advances to the next card after a rating', async () => {
@@ -190,6 +208,27 @@ describe('a demo review session', () => {
 
     expect(demo.workspace.reviewLogs.at(-1)?.stateBefore).toBe(stateBefore)
     expect(demo.workspace.reviewLogs.at(-1)?.cardId).toBe(first.id)
+  })
+
+  it('moves the originating deck s own metrics, and Undo moves them back', async () => {
+    renderSession()
+    await settle()
+    const deckBefore = demoDeckViewModel(demo.workspace, DECK, demo.now)!
+    const first = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK })[0]
+
+    await answerAndRate(4)
+
+    const deckAfter = demoDeckViewModel(demo.workspace, DECK, demo.now)!
+    expect(deckAfter.dueCount).toBe(deckBefore.dueCount - 1)
+    expect(deckAfter.cardCount).toBe(deckBefore.cardCount)
+
+    const logId = demo.workspace.reviewLogs.at(-1)!.id
+    demo.undoDemoReview(first.id, first.scheduling, logId)
+    await settle()
+
+    // The deck screen recomputes from the workspace, so there is nothing to
+    // reverse on it - reversing the data is the whole of the fix.
+    expect(demoDeckViewModel(demo.workspace, DECK, demo.now)).toEqual(deckBefore)
   })
 
   it('reaches a completion screen once the queue is exhausted', async () => {

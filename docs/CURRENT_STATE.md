@@ -274,7 +274,7 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 ## 16. Tests / build status
 
-Measured 2026-08-25 after the M-DEMO-3 corrections (§26). The established web/core counts remain unchanged; only the mobile suite grew.
+Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
 ```
 npx vitest run       → 111 test files, 1064 tests, all passing (75.94s)
@@ -286,7 +286,7 @@ npm run build        → successful (existing chunk-size advisory only) -> apps/
 npm ls react         → one deduped React 19.1.0; one @tanstack/react-query 5.101.1
 ```
 
-Mobile is intentionally checked outside the root TypeScript solution: Expo's generated config is not converted into a composite project. `expo-doctor` passes 18/18 checks, Expo's TypeScript 5.9.3 check and `expo lint` are clean. **`npx jest` in `apps/mobile` is 29 suites / 356 tests**: M-DEMO-3 added seed-history integrity, shared-statistics wiring, range/heat-map/chart/deck/milestone assertions and cross-surface grade/Undo/reset propagation, and its corrections added the card-vs-history fixture invariant and the 30-day Today-retention regression. Those assertions cover **mobile wiring only** — core's algorithms are proven once under Vitest and are never re-asserted there (master plan D10). The iOS export bundles successfully at 4.2 MB hbc. Physical-device visual and interaction acceptance of M-DEMO-3 remains pending owner review.
+Mobile is intentionally checked outside the root TypeScript solution: Expo's generated config is not converted into a composite project. `expo-doctor` passes 18/18 checks, Expo's TypeScript 5.9.3 check and `expo lint` are clean. **`npx jest` in `apps/mobile` is 30 suites / 417 tests**: M-DEMO-3 added seed-history integrity, shared-statistics wiring, range/heat-map/chart/deck/milestone assertions and cross-surface grade/Undo/reset propagation, and its corrections added the card-vs-history fixture invariant and the 30-day Today-retention regression; M-DEMO-4 added card resolution, card-row navigation, deck-scope resolution, the six-type card-study suite with its non-persistence assertions, and scoped deck metrics with Undo (§27). Those assertions cover **mobile wiring only** — core's algorithms are proven once under Vitest and are never re-asserted there (master plan D10). The iOS export bundles successfully at 4.2 MB hbc. Physical-device visual and interaction acceptance of M-DEMO-3 and M-DEMO-4 remains pending owner review.
 
 **Bundle after the relocation.** JS is byte-for-byte the same size — main chunk `1,074.44 kB` / `305.94 kB` gzip, the three lazy chunks unchanged. Content hashes moved because module ids are path-derived. **CSS shrank `68.43 kB` → `66.79 kB`** (gzip `15.19` → `14.89`): Tailwind v4 auto-detects sources from the Vite root, which is now `apps/web` rather than the whole repository, so 20 bare utilities that existed only because Tailwind was reading class names out of `docs/*.md` and the agent instruction files are no longer emitted. Each was verified unused by the app, and every variant form the app does render was verified still present. PWA precache is unchanged at **24 entries** (2409.23 KiB vs 2410.83 KiB, the same 1.6 KiB of CSS).
 
@@ -377,9 +377,13 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 ## 17. Exact recommended next milestone
 
-**M-DEMO-3 is implemented in code and awaits the owner's physical-device confirmation.** Today and Progress now consume `workspace.cards` + `workspace.reviewLogs` through the existing shared statistics modules; a Review grade, completion Undo and Reset demo workspace propagate across Today, Progress and Library without a restart (§26). The implementation deliberately stops here: no Supabase, persistence, Library CRUD, authoring or notification backend was added.
+**M-DEMO-4 is implemented in code and awaits the owner's physical-device confirmation.** Card rows open the card they name, one card can be studied outside a session without recording anything, and Study Now runs a deck-scoped session that returns to its originating deck (§27). M-DEMO-3 (§26) is in the same state and shares the pending device pass. Neither added Supabase, persistence, CRUD, authoring or a notification backend.
 
-The owner should now run the §26 device checklist: reset, note Today/Progress values, complete several reviews, confirm Due/Reviews/current-day activity/deck performance change, Undo, and reset again. Do not mark the milestone device-confirmed until that pass is reported.
+The owner should now run the §27 and §26 device checklists in one pass. Do not mark either milestone device-confirmed until that pass is reported.
+
+**The recommended next milestone is M-DEMO-5: mobile card authoring in Demo mode** - create and edit, all six interaction types, written into the demo workspace. It is the largest learner-visible capability mobile still lacks and the one every viewer of a deck screen reaches for next ("can I add my own card?"), and it is unusually low-risk semantically because `packages/core/src/domain/cards/` already owns every form model and every save path: **no native save logic may be written**, only native fields bound to the shared modules, exactly as the six Review Views bind shared behaviors. Matching is the hardest editor on a phone (master plan, Phase 8) and should be sequenced last. It stays in Demo mode: the demo workspace gains card mutations beside `applyDemoReview`, and nothing is persisted.
+
+Deliberately **not** recommended ahead of it: mobile Review History and a Progress deck drill-down (real gaps, but the demo already tells its statistics story), Import/Export, the notifications backend, and anything cloud - which stays deferred until after market validation.
 
 Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither should be folded into mobile work implicitly: Phase G is a real data-model migration and Roadmaps is deliberately outside the primary MVP navigation.
 
@@ -473,6 +477,7 @@ app/_layout.tsx              composition root; Stack with two Protected groups
 app/index.tsx                entry redirect: /today or /sign-in
 app/(auth)/sign-in.tsx       six-digit OTP
 app/(app)/(tabs)/...         the five-item shell, unchanged
+app/(app)/card/[cardId]/study.tsx  card study preview (M-DEMO-4, §27)
 app/(app)/notifications.tsx  unchanged, now with real stack presentation
 app/(app)/diagnostics.tsx    __DEV__ only
 ```
@@ -749,3 +754,61 @@ The derived numbers moved because the old fixture was internally inconsistent, a
 Physical-device verification is **pending the owner** and is not claimed. Verify on iPhone: reset; inspect populated Today/Progress; note Due; review several cards; confirm Today, the relevant Continue Learning row, Progress Reviews/current-day activity/deck performance and Library due counts changed; Undo from completion and confirm the last change reverted; reset and confirm the starting state returned with no red screen.
 
 No `apps/web` or `packages/core` file was modified. The only change outside `apps/mobile` and `docs/` is the restoration of the repository-root `tsconfig.json` described above.
+
+---
+
+## 27. Mobile Deck/Card browsing and deck-scoped Review (milestone M-DEMO-4)
+
+**The Deck screen's two dead ends are gone.** Card rows open the card they name, and Study Now starts a session scoped to that deck. Both work over the same in-memory `DemoWorkspace` as everything else on mobile; nothing here is persisted, cloud-backed or an account.
+
+### Card study / preview
+
+`app/(app)/card/[cardId]/study.tsx` is the native equivalent of web's `/cards/:id/study` - a non-committing preview of one authored card, and (as on web, D69) the closest thing either platform has to a card detail view. It resolves its route parameter through `findDemoCard()`; an id that names no demo card gets the honest "Card not found" state rather than some other card.
+
+It sits at the `(app)` stack level rather than inside the tabs, which is what gives it a native push transition and the iOS back-swipe, keeps the tab bar off an immersive card surface, and leaves the deck mounted underneath - so **back returns to the same deck with its search text and status filter intact**.
+
+There is **no second card presentation**. `CardStudyScreen.tsx` binds the card to the existing `nativeInteractionFor()` registry and renders the existing `ReviewSessionScreen`, which now takes a discriminated `mode: 'review' | 'study'`. All six interaction types therefore work in study for the same reason they work in a session, through the same shared `InteractionBehavior`: `interactive`, `isResponseReady`, `autoGrade` and `widthFor` are used unchanged, so a Recall card reveals, Multiple Choice / Write Code / Ordering / Matching submit and show their objective feedback, and Walkthrough steps through and finishes.
+
+**Study records nothing, and cannot.** In study mode the props that would carry a grade do not exist: there is no `schedulingBefore`, no `onGraded`, no `RatingControls`, no interval preview and no `reviewService.submit`. No `ReviewLog` is appended, no `SchedulingState` changes, and no due date moves. The screen says so from the first frame - a "Preview" badge in the header and a **"Preview only - nothing recorded."** panel - rather than after the learner has answered.
+
+### Deck-scoped Review
+
+Study Now pushes the **existing** `/review/session` route with a `deckId` parameter; there is one session route, one session engine and one completion screen. Scope means what it means on web: **that deck and its whole subtree**, resolved by core's own `subtreeIds` rather than by an equality check on this platform. Demo decks are flat (they carry a `collectionId`, never a `parentId`), so the resolved set is the deck itself today.
+
+- **Unknown deck scope is refused.** `/review/session?deckId=` naming no deck renders "Deck not found". It never widens back out to every card, and it is never presented as a caught-up session for a deck that does not exist.
+- **A deck with nothing due does not launch a session at all.** The Deck screen states it in the Study Now slot - *"You're caught up in this deck."*, or *"No cards to study yet."* for a deck with no cards. **No due date was moved to make Study Now look interesting**; five demo decks are honestly empty, and the three populated decks reach this state live once a scoped session is finished.
+- The Review tab's own queue is unchanged: no `deckId`, every due card.
+
+Session origin needs no parameter. Today, the Review tab and Deck all *push* the session, and both exits - the header exit and the completion screen's **Done** - go back to whatever pushed it. Deck-scoped completion therefore returns to the originating deck, and one-level Undo works there exactly as it does elsewhere, restoring the recorded pre-grade state, removing exactly its log, and moving the deck's own due count back with it.
+
+### Deck metrics, card status and no-op controls
+
+Deck numbers and card status labels were already derived from canonical `Card.scheduling` in M-DEMO-3 and were not touched: there is no deck-local counter and no presentation-only status field. A scoped session's grades propagate to the deck's due count, Library rollups, Today and Progress from the one workspace value, and Undo reverses all of them by reversing the data.
+
+- The **card-row kebab is removed**, not disabled. Inside a dead row it was merely decorative; inside a live row it reads as an overflow menu and would open the card instead. No menu replaced it.
+- Deck **actions (⋯)** and **Add card (+)** stay visibly disabled and honestly labelled. No CRUD, authoring, duplicate, move or suspend action was made functional.
+- The **Insights** tab stays visibly unavailable. Only its copy was corrected: it claimed insights would arrive "once mobile data is composed", which M-DEMO-3 made untrue. It now says plainly that a per-deck breakdown is not built yet. No analytics surface was added inside Deck.
+
+### What is deliberately NOT here
+
+- **Card and deck CRUD, and authoring.** New Deck, Edit, Delete, New Card, Edit Card, Duplicate, Move and Suspend remain unavailable on mobile. A later milestone decides whether mobile authoring is needed for the market-validation build at all.
+- **Any cloud or persistence work.** No Supabase, no `Repository`, no SQLite, no AsyncStorage, no sync. M1A is untouched, and demo state still resets on a full app restart by decision.
+- **A visual redesign.** Library, Deck, card rows, Review, the six interaction Views and the tab bar are unchanged; the study route is drawn in the already-approved Review card language.
+
+### Gates
+
+```
+apps/mobile: npx jest                       -> 30 suites, 417 tests, passing (was 29 / 356)
+apps/mobile: npx tsc --noEmit               -> clean
+apps/mobile: npx expo lint                  -> clean
+apps/mobile: npx expo-doctor                -> 18/18
+apps/mobile: npx expo export --platform ios -> bundles (4.2 MB hbc)
+root:        npx vitest run                 -> 111 files / 1064 tests (unchanged)
+root:        npx tsc -b --force             -> clean
+root:        npm run lint                   -> clean
+root:        npm run build                  -> successful, PWA precache 24 entries
+```
+
+The root remains clean after every Expo command: no root `.expo/`, no root `eslint.config.js`, and the root `tsconfig.json` is untouched (the D398 trap). No `apps/web` or `packages/core` file was modified.
+
+Physical-device verification is **pending the owner** and is not claimed. Verify on iPhone: open a populated deck; tap several different cards and confirm each opens the correct one; study a Recall, Multiple Choice, Write Code (with the keyboard), Ordering (by touch), Matching (by touch) and Walkthrough card; confirm no Due or Review number anywhere changed; back to the correct deck; Study Now; confirm the session holds only that deck's cards; finish it; confirm the deck's Due count and Today/Progress moved; Done returns to the originating deck; Undo restores it; open a deck with nothing due and confirm the caught-up state; no red screens.

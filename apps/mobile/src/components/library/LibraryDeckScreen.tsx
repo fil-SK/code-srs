@@ -58,15 +58,22 @@ function DeckMetric({
   )
 }
 
-function CardRow({ card }: { card: MobileDeckCardViewModel }) {
+// The row opens the card it names, by its own canonical id.
+//
+// It used to be a disabled Pressable with a decorative kebab glyph at its right
+// edge. The glyph is gone rather than disabled: inside a dead row it was merely
+// inert, but inside a live row it reads as an overflow menu and would open the
+// card instead - a worse lie than the one it replaced. Card management actions
+// do not exist on this platform yet, so nothing takes its place.
+function CardRow({ card, onOpen }: { card: MobileDeckCardViewModel; onOpen: () => void }) {
   const visual = interactionVisuals[card.interactionType]
   return (
     <Pressable
+      accessibilityHint="Opens a preview of this card"
       accessibilityLabel={`${card.prompt}, ${card.interactionLabel}, ${card.status}`}
       accessibilityRole="button"
-      accessibilityState={{ disabled: true }}
-      disabled
-      style={styles.cardRow}
+      onPress={onOpen}
+      style={({ pressed }) => [styles.cardRow, pressed && styles.pressed]}
     >
       <View style={[styles.interactionMark, { backgroundColor: visual.backgroundColor }]}>
         <MaterialCommunityIcons color={iteraColors.surface} name={visual.icon} size={25} />
@@ -83,7 +90,7 @@ function CardRow({ card }: { card: MobileDeckCardViewModel }) {
         <View style={[styles.statusDot, { backgroundColor: statusColors[card.status] }]} />
         <Text style={styles.statusText}>{card.status}</Text>
       </View>
-      <MaterialCommunityIcons color={iteraColors.mutedLight} name="dots-horizontal" size={21} />
+      <MaterialCommunityIcons color={iteraColors.mutedLight} name="chevron-right" size={22} />
     </Pressable>
   )
 }
@@ -96,6 +103,9 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
   // cards behind a filter nobody had chosen.
   const [statusFilter, setStatusFilter] = useState<CardStatusFilter>('all')
   const [filterOpen, setFilterOpen] = useState(false)
+
+  const caughtUpText =
+    viewModel.cardCount === 0 ? 'No cards to study yet.' : "You're caught up in this deck."
 
   const visibleCards = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase()
@@ -193,15 +203,36 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           </View>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityState={{ disabled: true }}
-          disabled
-          style={styles.studyButton}
-        >
-          <MaterialCommunityIcons color={iteraColors.surface} name="play-outline" size={25} />
-          <Text style={styles.studyButtonText}>Study Now</Text>
-        </Pressable>
+        {viewModel.dueCount > 0 ? (
+          <Pressable
+            accessibilityLabel={`Study now, ${viewModel.dueCount} ${
+              viewModel.dueCount === 1 ? 'card' : 'cards'
+            } due`}
+            accessibilityRole="button"
+            onPress={() =>
+              router.push({ pathname: '/review/session', params: { deckId: viewModel.id } })
+            }
+            style={({ pressed }) => [styles.studyButton, pressed && styles.pressed]}
+          >
+            <MaterialCommunityIcons color={iteraColors.surface} name="play-outline" size={25} />
+            <Text style={styles.studyButtonText}>Study Now</Text>
+          </Pressable>
+        ) : (
+          /*
+            Nothing due is a real state of the product, so it is stated here
+            rather than by starting a session that immediately says it is over.
+            No due date is moved to keep this slot interesting - a deck that is
+            genuinely caught up should look caught up.
+          */
+          <View accessible accessibilityLabel={caughtUpText} style={styles.caughtUp}>
+            <MaterialCommunityIcons
+              color={iteraColors.accent}
+              name={viewModel.cardCount === 0 ? 'cards-outline' : 'coffee-outline'}
+              size={22}
+            />
+            <Text style={styles.caughtUpText}>{caughtUpText}</Text>
+          </View>
+        )}
 
         <View style={styles.tabsRow}>
           <View accessibilityRole="tablist" style={styles.tabs}>
@@ -284,7 +315,16 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
 
             <View style={styles.cardList}>
               {visibleCards.map((card) => (
-                <CardRow key={card.id} card={card} />
+                <CardRow
+                  key={card.id}
+                  card={card}
+                  onOpen={() =>
+                    router.push({
+                      pathname: '/card/[cardId]/study',
+                      params: { cardId: card.id },
+                    })
+                  }
+                />
               ))}
             </View>
 
@@ -304,10 +344,10 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         ) : (
           <View style={styles.insightsCard}>
             <MaterialCommunityIcons color={iteraColors.mutedLight} name="chart-box-outline" size={30} />
-            <Text style={styles.insightsTitle}>Insights are not connected yet</Text>
+            <Text style={styles.insightsTitle}>Deck insights are not built yet</Text>
             <Text style={styles.insightsText}>
-              This presentation will use shared review history and deck metrics once mobile data is
-              composed.
+              The numbers above this tab are real. A per-deck breakdown of them is a separate
+              surface that does not exist on either platform yet.
             </Text>
           </View>
         )}
@@ -519,12 +559,29 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderRadius: iteraRadii.control,
     backgroundColor: iteraColors.accent,
-    opacity: 0.82,
   },
   studyButtonText: {
     color: iteraColors.surface,
     fontSize: 17,
     fontWeight: '700',
+  },
+  caughtUp: {
+    minHeight: 54,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 9,
+    marginTop: 20,
+    borderColor: iteraColors.border,
+    borderRadius: iteraRadii.control,
+    borderWidth: 1,
+    backgroundColor: iteraColors.accentSofter,
+    paddingHorizontal: 16,
+  },
+  caughtUpText: {
+    color: iteraColors.inkBrand,
+    fontSize: 15,
+    fontWeight: '600',
   },
   tabsRow: {
     minHeight: 62,

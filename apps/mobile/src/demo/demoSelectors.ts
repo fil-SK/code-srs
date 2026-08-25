@@ -90,6 +90,19 @@ export function demoDeckCards(workspace: DemoWorkspace, deckId: ID): DemoCard[] 
   return workspace.cards.filter((card) => card.deckId === deckId)
 }
 
+/**
+ * One card, by its canonical id.
+ *
+ * The card study route resolves through this rather than branching on an id,
+ * for the same reason the deck route does: a lookup that cannot find its
+ * subject returns `null` and the route says so, where a factory that ignored
+ * its parameter would show some other card with no sign anything was wrong.
+ */
+export function findDemoCard(workspace: DemoWorkspace, cardId: string | undefined): DemoCard | null {
+  if (!cardId) return null
+  return workspace.cards.find((card) => card.id === cardId) ?? null
+}
+
 export interface DemoScope {
   id: DemoScopeId
   name: string

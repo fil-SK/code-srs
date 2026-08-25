@@ -1,6 +1,7 @@
 import {
   formatInterval,
   iteraColors,
+  iteraRadii,
   reviewService,
   type Card,
   type CardInteraction,
@@ -11,7 +12,7 @@ import {
   type SubmitReviewResult,
 } from '@itera/core'
 import { useMemo, useReducer, useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { RatingControls } from './RatingControls'
@@ -36,31 +37,54 @@ import { initialReviewPhase, reviewPhaseReducer } from './reviewPhase'
 // Per-card state resets by remounting: the session route keys this on card.id,
 // the same rule web follows, which is simpler and more robust than resetting
 // phase, response and timing field by field.
+//
+// Two modes, because the product has two ways of putting a card on screen and
+// only one of them is a review:
+//
+//   'review' - a card inside a session. It has a position in a queue, a real
+//              scheduling state to grade against, and a grade hand-off.
+//   'study'  - one card inspected outside a session, the native equivalent of
+//              web's cards/:id/study. Everything up to and including objective
+//              feedback is identical, because that is what makes it a faithful
+//              preview; there is no rating, no interval preview, no
+//              reviewService.submit and no grade hand-off, because nothing is
+//              recorded.
+//
+// The two are a discriminated union rather than a set of optional props on
+// purpose: a study surface cannot be handed a grade handler by accident, and a
+// session cannot forget one.
 
-export function ReviewSessionScreen<T extends InteractionType>({
-  card,
-  definition,
-  current,
-  total,
-  schedulingBefore,
-  onExit,
-  onGraded,
-}: {
+type ReviewSessionScreenProps<T extends InteractionType> = {
   card: Card & { interaction: Extract<CardInteraction, { type: T }> }
   definition: NativeInteractionDefinition<T>
-  current: number
-  total: number
-  // The card's real current scheduling. Passed in rather than read off the card
-  // so the caller decides what "before" means - the session snapshots it at
-  // mount, so a re-render after the workspace updates cannot regrade against
-  // the card's new state.
-  schedulingBefore: SchedulingState
   onExit: () => void
-  // Records the computed result and advances. Awaited so a future cloud session
-  // can reject here and add its own failure phase; a demo write is synchronous
-  // and cannot fail, which is why this screen has no retry state.
-  onGraded: (result: SubmitReviewResult) => Promise<void> | void
-}) {
+} & (
+  | {
+      mode?: 'review'
+      current: number
+      total: number
+      // The card's real current scheduling. Passed in rather than read off the
+      // card so the caller decides what "before" means - the session snapshots
+      // it at mount, so a re-render after the workspace updates cannot regrade
+      // against the card's new state.
+      schedulingBefore: SchedulingState
+      // Records the computed result and advances. Awaited so a future cloud
+      // session can reject here and add its own failure phase; a demo write is
+      // synchronous and cannot fail, which is why this screen has no retry
+      // state.
+      onGraded: (result: SubmitReviewResult) => Promise<void> | void
+    }
+  | { mode: 'study' }
+)
+
+export function ReviewSessionScreen<T extends InteractionType>(
+  props: ReviewSessionScreenProps<T>,
+) {
+  const { card, definition, onExit } = props
+  // Null in study mode. Everything a grade needs hangs off this one value, so
+  // there is exactly one place that decides whether this card can be recorded.
+  const review = props.mode === 'study' ? null : props
+
   const [phase, dispatch] = useReducer(reviewPhaseReducer, initialReviewPhase)
   const [response, setResponse] = useState<InteractionResponse>(undefined)
   const [presentedAt] = useState(() => Date.now())
@@ -71,7 +95,12 @@ export function ReviewSessionScreen<T extends InteractionType>({
 
   // Real next-due intervals per rating, from this card's own scheduling. Every
   // preview screen used to show the same four hard-coded strings.
+  //
+  // Not computed in study mode: there is no rating there, so previewing what
+  // each rating would schedule would describe an outcome that cannot happen.
+  const schedulingBefore = review?.schedulingBefore
   const ratingIntervals = useMemo(() => {
+    if (!schedulingBefore) return null
     const preview = reviewService.previewNextStates(schedulingBefore, presentedAt)
     return {
       1: formatInterval(presentedAt, preview[1].due),
@@ -115,6 +144,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
   }
 
   async function rate(rating: Rating) {
+    if (!review) return
     if (phase.kind !== 'feedback') return
     setSelectedRating(rating)
     // Dispatched synchronously before the await, so the reducer's source-state
@@ -124,33 +154,43 @@ export function ReviewSessionScreen<T extends InteractionType>({
     const autoGraded = phase.result != null && suggested === rating
     const result = await reviewService.submit({
       cardId: card.id,
-      before: schedulingBefore,
+      before: review.schedulingBefore,
       rating,
       autoGraded,
       durationMs: Date.now() - presentedAt,
     })
-    await onGraded(result)
+    await review.onGraded(result)
   }
 
   const revealed = phase.kind === 'feedback' || phase.kind === 'transitioning'
 
   const hint = revealed
-    ? 'Rate your answer'
+    ? review
+      ? 'Rate your answer'
+      : 'Nothing recorded'
     : definition.interactive
       ? responseReady
         ? 'Submit to check'
         : 'Answer to continue'
       : 'Tap to flip'
 
+  const hintIcon = revealed
+    ? review
+      ? 'check-decagram-outline'
+      : 'eye-outline'
+    : definition.interactive
+      ? 'gesture-tap-button'
+      : 'gesture-tap'
+
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
       <ReviewSessionHeader
-        current={current}
-        exitLabel="Exit review session"
+        badge={review ? undefined : 'Preview'}
+        exitLabel={review ? 'Exit review session' : 'Close card preview'}
         hint={hint}
-        hintIcon={revealed ? 'check-decagram-outline' : definition.interactive ? 'gesture-tap-button' : 'gesture-tap'}
+        hintIcon={hintIcon}
         onExit={onExit}
-        total={total}
+        progress={review ? { current: review.current, total: review.total } : undefined}
       />
 
       <KeyboardAvoidingView
@@ -177,7 +217,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
           {phase.kind === 'presenting' && <TipPanel tip={card.tip} />}
           {revealed && <ExplanationPanel explanation={card.explanation} />}
 
-          {revealed && (
+          {revealed && review && ratingIntervals && (
             <View>
               <RatingControls
                 disabled={phase.kind !== 'feedback'}
@@ -186,6 +226,20 @@ export function ReviewSessionScreen<T extends InteractionType>({
                 selected={selectedRating}
                 suggested={suggested}
               />
+            </View>
+          )}
+
+          {/*
+            Stated from the first frame rather than only after an answer: a
+            learner decides how honestly to answer based on whether it counts,
+            so saying so afterwards would be saying it too late.
+          */}
+          {!review && (
+            <View style={styles.previewNotice}>
+              <Text style={styles.previewNoticeText}>Preview only - nothing recorded.</Text>
+              <Text style={styles.previewNoticeDetail}>
+                Answering here changes no schedule and adds nothing to your review history.
+              </Text>
             </View>
           )}
         </ScrollView>
@@ -198,4 +252,19 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
   keyboardView: { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
+  previewNotice: {
+    borderRadius: iteraRadii.card,
+    borderWidth: 1,
+    borderColor: iteraColors.border,
+    backgroundColor: iteraColors.surfaceSubtle,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  previewNoticeText: { color: iteraColors.inkBrand, fontSize: 14, fontWeight: '700' },
+  previewNoticeDetail: {
+    marginTop: 4,
+    color: iteraColors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+  },
 })
