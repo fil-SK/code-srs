@@ -3,6 +3,6 @@ import { demoLibraryViewModel } from '@/src/demo/demoSelectors'
 import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 
 export default function LibraryRoute() {
-  const { workspace } = useDemoWorkspace()
-  return <LibraryAllDecksScreen viewModel={demoLibraryViewModel(workspace)} />
+  const { workspace, now } = useDemoWorkspace()
+  return <LibraryAllDecksScreen viewModel={demoLibraryViewModel(workspace, now)} />
 }

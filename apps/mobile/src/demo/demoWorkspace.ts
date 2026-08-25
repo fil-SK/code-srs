@@ -1,5 +1,7 @@
-import type { Card, Deck, ID } from '@itera/core'
+import { CARD_SCHEMA_VERSION, richText, type Card, type Deck, type ID, type Millis, type ReviewLog } from '@itera/core'
 
+import { DEMO_CARD_SEEDS } from './demoCardContent'
+import { isDemoCardDue, resolveDemoScheduling } from './demoScheduling'
 import type { MobileCardStatus } from '@/src/types/library'
 
 // The deterministic demo workspace: one dataset, mobile-only.
@@ -57,15 +59,17 @@ export interface DemoDeck extends Deck {
   retentionPercent: number | null
 }
 
-export interface DemoCard {
-  id: ID
-  deckId: ID
-  prompt: string
-  interactionType: DemoInteractionType
+/**
+ * A demo card is a real core `Card`, plus the one presentation field the deck
+ * list shows beside it.
+ *
+ * It used to be a presentation record carrying `status` and `due` as authored
+ * booleans. Those are gone: both are now derived from `scheduling` by
+ * demoScheduling.ts, because grading produces a new `SchedulingState` and two
+ * hand-maintained flags beside it would immediately contradict it.
+ */
+export interface DemoCard extends Card {
   tag: string
-  status: DemoCardStatus
-  /** Whether this card counts toward the deck's due total. */
-  due: boolean
 }
 
 export interface DemoNotification {
@@ -86,6 +90,15 @@ export interface DemoWorkspace {
   decks: DemoDeck[]
   cards: DemoCard[]
   notifications: DemoNotification[]
+  /**
+   * Reviews performed in this demo session, in core's canonical `ReviewLog`
+   * shape so a later milestone can feed Today and Progress from them without a
+   * second history model being invented. In memory only - never written to
+   * Dexie, SQLite or Supabase, and gone on a full app restart.
+   */
+  reviewLogs: ReviewLog[]
+  /** The instant this workspace was built, which every demo due date is relative to. */
+  startedAt: Millis
 }
 
 // Authored constants. Each is used everywhere the concept appears, so Today and
@@ -277,191 +290,42 @@ const decks: DemoDeck[] = [
 // Three decks carry cards. The other five are honestly empty and say so - a
 // deck with no cards is a real state of the product, and inventing content for
 // eight decks would expand the dataset well past what a demo needs.
-const cards: DemoCard[] = [
-  // Modern C++ & Memory - 6 cards, 3 due, 3 matured
-  {
-    id: 'fixture-card-value-categories',
-    deckId: 'fixture-modern-cpp',
-    prompt: 'An expression is classified as an lvalue, xvalue, or prvalue based on…',
-    interactionType: 'recall',
-    tag: 'value-categories',
-    status: 'Review',
-    due: true,
-  },
-  {
-    id: 'fixture-card-ownership-trace',
-    deckId: 'fixture-modern-cpp',
-    prompt: 'Trace the ownership and lifetime in this move sequence',
-    interactionType: 'walkthrough',
-    tag: 'memory',
-    status: 'Review',
-    due: false,
-  },
-  {
-    id: 'fixture-card-raii',
-    deckId: 'fixture-modern-cpp',
-    prompt: 'Which statements are consequences of RAII?',
-    interactionType: 'multiple_choice',
-    tag: 'raii',
-    status: 'Review',
-    due: true,
-  },
-  {
-    id: 'fixture-card-smart-pointer-code',
-    deckId: 'fixture-modern-cpp',
-    prompt: 'Write a complete C++ function `make_owner` that…',
-    interactionType: 'write_code',
-    tag: 'smart-pointers',
-    status: 'Learning',
-    due: true,
-  },
-  {
-    id: 'fixture-card-destruction-order',
-    deckId: 'fixture-modern-cpp',
-    prompt: 'A most-derived object leaves scope. Order its destruction steps.',
-    interactionType: 'ordering',
-    tag: 'object-lifetime',
-    status: 'Learning',
-    due: false,
-  },
-  {
-    id: 'fixture-card-iterator-invalidation',
-    deckId: 'fixture-modern-cpp',
-    prompt: 'Match each container operation to the iterators it invalidates',
-    interactionType: 'matching',
-    tag: 'containers',
-    status: 'New',
-    due: false,
-  },
-
-  // Compilers & MLIR - 6 cards, 4 due, 3 matured
-  {
-    id: 'fixture-card-ssa-definition',
-    deckId: 'fixture-compilers',
-    prompt: 'SSA form guarantees that every value is assigned…',
-    interactionType: 'recall',
-    tag: 'ssa',
-    status: 'Review',
-    due: true,
-  },
-  {
-    id: 'fixture-card-dialect-lowering',
-    deckId: 'fixture-compilers',
-    prompt: 'Trace this affine.for as it lowers to scf.for',
-    interactionType: 'walkthrough',
-    tag: 'mlir',
-    status: 'Review',
-    due: false,
-  },
-  {
-    id: 'fixture-card-pass-ordering',
-    deckId: 'fixture-compilers',
-    prompt: 'Which statements about pass ordering are true?',
-    interactionType: 'multiple_choice',
-    tag: 'passes',
-    status: 'Review',
-    due: true,
-  },
-  {
-    id: 'fixture-card-dominance-order',
-    deckId: 'fixture-compilers',
-    prompt: 'Order the steps of computing a dominance frontier',
-    interactionType: 'ordering',
-    tag: 'dominance',
-    status: 'Learning',
-    due: true,
-  },
-  {
-    id: 'fixture-card-peephole-code',
-    deckId: 'fixture-compilers',
-    prompt: 'Write a rewrite pattern that folds `addi %x, 0` to `%x`',
-    interactionType: 'write_code',
-    tag: 'rewriting',
-    status: 'Learning',
-    due: true,
-  },
-  {
-    id: 'fixture-card-ir-terminology',
-    deckId: 'fixture-compilers',
-    prompt: 'Match each MLIR concept to what it actually owns',
-    interactionType: 'matching',
-    tag: 'mlir',
-    status: 'New',
-    due: false,
-  },
-
-  // Algorithms & Problem Solving - 6 cards, 5 due, 1 matured
-  {
-    id: 'fixture-card-loop-invariant',
-    deckId: 'fixture-algorithms',
-    prompt: 'A loop invariant must hold at which three points?',
-    interactionType: 'recall',
-    tag: 'invariants',
-    status: 'Review',
-    due: true,
-  },
-  {
-    id: 'fixture-card-rotated-search',
-    deckId: 'fixture-algorithms',
-    prompt: 'Trace this binary search over a rotated sorted array',
-    interactionType: 'walkthrough',
-    tag: 'searching',
-    status: 'Learning',
-    due: true,
-  },
-  {
-    id: 'fixture-card-amortized',
-    deckId: 'fixture-algorithms',
-    prompt: 'Which statements about amortized analysis are true?',
-    interactionType: 'multiple_choice',
-    tag: 'complexity',
-    status: 'Learning',
-    due: true,
-  },
-  {
-    id: 'fixture-card-topological-order',
-    deckId: 'fixture-algorithms',
-    prompt: "Order the steps of Kahn's topological sort",
-    interactionType: 'ordering',
-    tag: 'graphs',
-    status: 'New',
-    due: true,
-  },
-  {
-    id: 'fixture-card-two-pointer-code',
-    deckId: 'fixture-algorithms',
-    prompt: 'Write a function returning the longest subarray with sum at most k',
-    interactionType: 'write_code',
-    tag: 'two-pointers',
-    status: 'New',
-    due: true,
-  },
-  {
-    id: 'fixture-card-structure-lookup',
-    deckId: 'fixture-algorithms',
-    prompt: 'Match each data structure to its worst-case lookup cost',
-    interactionType: 'matching',
-    tag: 'data-structures',
-    status: 'New',
-    due: false,
-  },
-]
-
-function dueCountFor(deckId: ID): number {
-  return cards.filter((card) => card.deckId === deckId && card.due).length
+//
+// The content itself lives in demoCardContent.ts; this turns each authored seed
+// into a real core Card against the workspace's own `now`.
+function createCards(now: Millis): DemoCard[] {
+  return DEMO_CARD_SEEDS.map((seed) => ({
+    id: seed.id,
+    schemaVersion: CARD_SCHEMA_VERSION,
+    deckId: seed.deckId,
+    prompt: richText(seed.prompt),
+    tip: seed.tip === undefined ? undefined : richText(seed.tip),
+    explanation: seed.explanation === undefined ? undefined : richText(seed.explanation),
+    interaction: seed.interaction,
+    tags: [seed.tag],
+    createdAt: DEMO_EPOCH - seed.createdDaysAgo * DAY_MS,
+    updatedAt: DEMO_EPOCH - seed.createdDaysAgo * DAY_MS,
+    suspended: false,
+    scheduling: resolveDemoScheduling(seed.scheduling, now),
+    tag: seed.tag,
+  }))
 }
 
-function cardCountFor(deckId: ID): number {
+function dueCountFor(cards: DemoCard[], deckId: ID, now: Millis): number {
+  return cards.filter((card) => card.deckId === deckId && isDemoCardDue(card, now)).length
+}
+
+function cardCountFor(cards: DemoCard[], deckId: ID): number {
   return cards.filter((card) => card.deckId === deckId).length
 }
 
 // Notification copy is built from the same counts the screens show, so an inbox
 // cannot claim a deck has five cards due while the deck itself says three.
-function createNotifications(): DemoNotification[] {
-  const dueTotal = cards.filter((card) => card.due).length
+function createNotifications(cards: DemoCard[], now: Millis): DemoNotification[] {
+  const dueTotal = cards.filter((card) => isDemoCardDue(card, now)).length
   const interviewCoreCards = decks
     .filter((deck) => deck.collectionId === 'fixture-interview-core')
-    .reduce((total, deck) => total + cardCountFor(deck.id), 0)
+    .reduce((total, deck) => total + cardCountFor(cards, deck.id), 0)
 
   return [
     {
@@ -477,7 +341,7 @@ function createNotifications(): DemoNotification[] {
       id: 'fixture-modern-cpp-due',
       group: 'today',
       kind: 'deck',
-      title: `Modern C++ & Memory has ${dueCountFor('fixture-modern-cpp')} cards due`,
+      title: `Modern C++ & Memory has ${dueCountFor(cards, 'fixture-modern-cpp', now)} cards due`,
       body: 'Review to strengthen your retention.',
       timeLabel: '25m ago',
       unread: true,
@@ -507,7 +371,7 @@ function createNotifications(): DemoNotification[] {
       group: 'today',
       kind: 'warning',
       title: 'Algorithms & Problem Solving is falling behind',
-      body: `You have ${dueCountFor('fixture-algorithms')} cards due. A quick review will keep you on track.`,
+      body: `You have ${dueCountFor(cards, 'fixture-algorithms', now)} cards due. A quick review will keep you on track.`,
       timeLabel: '4h ago',
       unread: true,
       deckId: 'fixture-algorithms',
@@ -537,12 +401,21 @@ function createNotifications(): DemoNotification[] {
 /**
  * A fresh copy of the demo workspace. Called once by the provider; the returned
  * value is the only mutable demo state in the app.
+ *
+ * `now` is a parameter rather than an implicit `Date.now()` at each use site so
+ * one instant anchors the whole dataset: every card's due date, the notification
+ * counts derived from them, and the queue a session builds all agree. Tests pass
+ * a fixed instant; the app passes the real clock once, at startup.
  */
-export function createDemoWorkspace(): DemoWorkspace {
+export function createDemoWorkspace(now: Millis = Date.now()): DemoWorkspace {
+  const cards = createCards(now)
+
   return {
     collections: collections.map((collection) => ({ ...collection })),
     decks: decks.map((deck) => ({ ...deck })),
-    cards: cards.map((card) => ({ ...card })),
-    notifications: createNotifications(),
+    cards,
+    notifications: createNotifications(cards, now),
+    reviewLogs: [],
+    startedAt: now,
   }
 }

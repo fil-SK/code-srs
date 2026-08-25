@@ -6,15 +6,19 @@ import { resetRouterCalls, routerDouble } from '@/src/test/routerDouble'
 import { LibraryDeckScreen } from './LibraryDeckScreen'
 import { LibraryNotFoundScreen } from './LibraryNotFoundScreen'
 
+// One fixed instant for the whole file: due-ness is a comparison against an
+// instant, so a wall-clock read here would make these assertions time-dependent.
+const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
+
 jest.mock('expo-router', () => ({
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   useRouter: () => require('@/src/test/routerDouble').routerDouble,
 }))
 
-const workspace = createDemoWorkspace()
+const workspace = createDemoWorkspace(NOW)
 
 function deck(id: string) {
-  const viewModel = demoDeckViewModel(workspace, id)
+  const viewModel = demoDeckViewModel(workspace, id, NOW)
   if (!viewModel) throw new Error(`missing demo deck ${id}`)
   return viewModel
 }

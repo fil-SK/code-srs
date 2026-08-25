@@ -22,9 +22,20 @@ const iteraSymbol = require('../../../assets/itera-logo.png')
 export function IteraTabBar({ state, descriptors, navigation }: IteraTabBarProps) {
   const insets = useSafeAreaInsets()
 
-  // Review previews use the same immersive shell intended for a future live
-  // card session. The Review tab remains the entry point from other sections.
-  if (state.routes[state.index]?.name === 'review') return null
+  // The card session is immersive: no persistent navigation while a card is on
+  // screen. The Review tab's own start screen keeps the bar, because it is an
+  // entry point like any other section - hiding the bar for the whole tab was
+  // what made the tab feel like a trapdoor.
+  //
+  // Before the nested navigator has mounted, `state` is undefined and the tab's
+  // initial route is showing, which is the start screen - so the bar stays.
+  const focusedRoute = state.routes[state.index]
+  if (focusedRoute?.name === 'review') {
+    const nested = focusedRoute.state
+    const nestedName =
+      nested && typeof nested.index === 'number' ? nested.routes[nested.index]?.name : undefined
+    if (nestedName === 'session') return null
+  }
 
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>

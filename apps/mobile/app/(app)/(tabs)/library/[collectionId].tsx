@@ -9,8 +9,8 @@ import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 // a not-found state rather than some other collection's contents.
 export default function LibraryCollectionRoute() {
   const { collectionId } = useLocalSearchParams<{ collectionId: string }>()
-  const { workspace } = useDemoWorkspace()
-  const viewModel = demoCollectionViewModel(workspace, collectionId)
+  const { workspace, now } = useDemoWorkspace()
+  const viewModel = demoCollectionViewModel(workspace, collectionId, now)
 
   if (!viewModel) {
     return (

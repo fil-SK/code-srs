@@ -303,26 +303,6 @@ Closing it means: wrap the call, treat a throw and a returned error identically,
 end in a decided state on every path, and show a written sentence rather than
 the transport's. That is Login polish and wants its own small pass.
 
-## Content security for a future native renderer
-
-Step 1.6's audit covers the **web** content boundary and found no stored-XSS
-defect there; that finding is enforced by
-`apps/web/src/components/text/renderingSinks.test.ts`, so this is deliberately **not** a
-standing "audit XSS someday" item and the web side needs no follow-up.
-
-What is genuinely open is only what does not exist yet. A native renderer will
-inherit the shared parser in `packages/core/src/content/` - which is the point
-of the split, since it cannot then invent a different interpretation of the
-syntax - but inheriting a safe *tree* is not the same as rendering it safely.
-Its own renderer needs the equivalent regression pass when it is written: no
-raw-markup API on that platform, code blocks literal, and the same
-malicious-content fixture (`packages/core/src/test/attackPayloads.ts`) driven
-through it. The image rule travels with the parser already, because
-`isSafeImageSource` is shared rather than living in the web renderer.
-
-Not actionable until a native renderer exists. Recorded here so it is not
-rediscovered as a gap.
-
 ## Verify Vercel deployment after workspace migration
 
 Before the next public deployment, confirm the Vercel dashboard still uses repository root as Root Directory and that apps/web/dist is the configured/recognized output. If Root Directory is apps/web, reconcile the repository/dashboard settings and use dist instead. Perform one production deployment and verify SPA routing/PWA assets.

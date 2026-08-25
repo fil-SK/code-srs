@@ -1,3 +1,4 @@
+import type { ID, Millis, SchedulingState, SubmitReviewResult } from '@itera/core'
 import { createContext, useContext } from 'react'
 
 import type { DemoWorkspace } from './demoWorkspace'
@@ -7,8 +8,18 @@ import type { DemoWorkspace } from './demoWorkspace'
 
 export interface DemoWorkspaceValue {
   workspace: DemoWorkspace
+  /**
+   * The instant the whole tree compares due dates against. Advances with the
+   * workspace, so every screen answers "is this due?" the same way - see the
+   * provider.
+   */
+  now: Millis
   markNotificationRead: (id: string) => void
   markAllNotificationsRead: () => void
+  /** Records one completed review: the new scheduling, and its ReviewLog. */
+  applyDemoReview: (result: SubmitReviewResult) => void
+  /** Reverses exactly one recorded review, from its own pre-grade state. */
+  undoDemoReview: (cardId: ID, before: SchedulingState, logId: ID) => void
   /** Development affordance only. There is no product "reset demo" control. */
   resetDemoWorkspace: () => void
 }

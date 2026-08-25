@@ -5,6 +5,10 @@ import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerCalls, routerDouble } from '@/src/test/routerDouble'
 import { TodayScreen } from './TodayScreen'
 
+// One fixed instant for the whole file: due-ness is a comparison against an
+// instant, so a wall-clock read here would make these assertions time-dependent.
+const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
+
 jest.mock('expo-router', () => ({
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   useRouter: () => require('@/src/test/routerDouble').routerDouble,
@@ -18,8 +22,8 @@ jest.mock('expo-router', () => ({
 // A fixed greeting, so these assertions do not depend on a random pick.
 const DEMO_GREETING = { mainText: 'Ready to learn?', subtext: 'A demo greeting.' }
 
-const workspace = createDemoWorkspace()
-const viewModel = demoTodayViewModel(workspace, DEMO_GREETING)
+const workspace = createDemoWorkspace(NOW)
+const viewModel = demoTodayViewModel(workspace, DEMO_GREETING, NOW)
 
 beforeEach(() => {
   resetRouterCalls()

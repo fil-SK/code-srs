@@ -5,6 +5,10 @@ import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerDouble } from '@/src/test/routerDouble'
 import { ProgressScreen } from './ProgressScreen'
 
+// One fixed instant for the whole file: due-ness is a comparison against an
+// instant, so a wall-clock read here would make these assertions time-dependent.
+const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
+
 jest.mock('expo-router', () => ({
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   useRouter: () => require('@/src/test/routerDouble').routerDouble,
@@ -12,8 +16,8 @@ jest.mock('expo-router', () => ({
 
 // Deck performance rows looked like a list of links and were plain Views.
 
-const workspace = createDemoWorkspace()
-const viewModel = demoProgressViewModel(workspace)
+const workspace = createDemoWorkspace(NOW)
+const viewModel = demoProgressViewModel(workspace, NOW)
 
 beforeEach(() => {
   resetRouterCalls()

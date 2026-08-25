@@ -1,5 +1,10 @@
 import { createDemoWorkspace, DEMO_SCOPE_RAIL } from './demoWorkspace'
+import { isDemoCardDue } from './demoScheduling'
 import { demoDeckMetrics, demoTodayViewModel, demoProgressViewModel } from './demoSelectors'
+
+// One fixed instant for the whole file: due-ness is a comparison against an
+// instant, so a wall-clock read here would make these assertions time-dependent.
+const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
 
 // Referential integrity for the demo workspace.
 //
@@ -15,7 +20,7 @@ import { demoDeckMetrics, demoTodayViewModel, demoProgressViewModel } from './de
 // A fixed greeting, so these assertions do not depend on a random pick.
 const DEMO_GREETING = { mainText: 'Ready to learn?', subtext: 'A demo greeting.' }
 
-const workspace = createDemoWorkspace()
+const workspace = createDemoWorkspace(NOW)
 const deckIds = new Set(workspace.decks.map((deck) => deck.id))
 const collectionIds = new Set(workspace.collections.map((collection) => collection.id))
 
@@ -66,35 +71,35 @@ describe('demo workspace referential integrity', () => {
   })
 
   it('references decks that exist from Today and from Progress', () => {
-    for (const deck of demoTodayViewModel(workspace, DEMO_GREETING).decks) {
+    for (const deck of demoTodayViewModel(workspace, DEMO_GREETING, NOW).decks) {
       expect(deckIds.has(deck.id)).toBe(true)
     }
-    for (const deck of demoProgressViewModel(workspace).decks) {
+    for (const deck of demoProgressViewModel(workspace, NOW).decks) {
       expect(deckIds.has(deck.id)).toBe(true)
     }
   })
 })
 
 describe('demo workspace derived numbers', () => {
-  const metrics = demoDeckMetrics(workspace)
+  const metrics = demoDeckMetrics(workspace, NOW)
 
   it('derives every deck count from that deck s cards', () => {
     for (const deck of workspace.decks) {
       const deckCards = workspace.cards.filter((card) => card.deckId === deck.id)
       expect(metrics.get(deck.id)?.cardCount).toBe(deckCards.length)
-      expect(metrics.get(deck.id)?.dueCount).toBe(deckCards.filter((card) => card.due).length)
+      expect(metrics.get(deck.id)?.dueCount).toBe(deckCards.filter((card) => isDemoCardDue(card, NOW)).length)
     }
   })
 
   it('agrees between Today s total and the per-deck totals', () => {
-    const today = demoTodayViewModel(workspace, DEMO_GREETING)
+    const today = demoTodayViewModel(workspace, DEMO_GREETING, NOW)
     const summed = today.decks.reduce((total, deck) => total + deck.dueCount, 0)
     expect(today.dueToday).toBe(summed)
   })
 
   it('reports the same due count on Today and on Progress for the same deck', () => {
-    const today = demoTodayViewModel(workspace, DEMO_GREETING)
-    const progress = demoProgressViewModel(workspace)
+    const today = demoTodayViewModel(workspace, DEMO_GREETING, NOW)
+    const progress = demoProgressViewModel(workspace, NOW)
 
     for (const todayDeck of today.decks) {
       const progressDeck = progress.decks.find((deck) => deck.id === todayDeck.id)
@@ -104,8 +109,8 @@ describe('demo workspace derived numbers', () => {
   })
 
   it('keeps one streak and one retention figure across screens', () => {
-    const today = demoTodayViewModel(workspace, DEMO_GREETING)
-    const progress = demoProgressViewModel(workspace)
+    const today = demoTodayViewModel(workspace, DEMO_GREETING, NOW)
+    const progress = demoProgressViewModel(workspace, NOW)
 
     const streak = progress.metrics.find((metric) => metric.id === 'streak')
     expect(streak?.value).toBe(`${today.streak} days`)
@@ -121,10 +126,10 @@ describe('demo workspace derived numbers', () => {
       notifications: workspace.notifications.map((item) => ({ ...item, unread: false })),
     }
 
-    expect(demoTodayViewModel(workspace, DEMO_GREETING)).toEqual(
-      demoTodayViewModel(workspace, DEMO_GREETING),
+    expect(demoTodayViewModel(workspace, DEMO_GREETING, NOW)).toEqual(
+      demoTodayViewModel(workspace, DEMO_GREETING, NOW),
     )
-    expect(demoTodayViewModel(read, DEMO_GREETING).greeting).toEqual(DEMO_GREETING)
+    expect(demoTodayViewModel(read, DEMO_GREETING, NOW).greeting).toEqual(DEMO_GREETING)
   })
 
   it('never claims mastery for a deck with no cards', () => {

@@ -2,8 +2,10 @@ import {
   type DashboardMessage,
   type DeckMetrics,
   type ID,
+  type Millis,
   markLabelFor,
   metricsFor,
+  stripInlineMarkers,
 } from '@itera/core'
 
 import type {
@@ -16,6 +18,7 @@ import type {
 import type { MobileNotificationsViewModel } from '@/src/types/notifications'
 import type { MobileProgressViewModel } from '@/src/types/progress'
 import type { MobileTodayViewModel } from '@/src/types/today'
+import { demoCardStatus, isDemoCardDue } from './demoScheduling'
 import {
   DEMO_ACTIVITY_LEVELS,
   DEMO_BEST_STREAK_DAYS,
@@ -57,15 +60,15 @@ export type DemoScopeId = ID | 'all' | 'unfiled'
  * reached the matured "review" state - rather than inventing a second notion of
  * progress for this platform.
  */
-export function demoDeckMetrics(workspace: DemoWorkspace): Map<ID, DeckMetrics> {
+export function demoDeckMetrics(workspace: DemoWorkspace, now: Millis): Map<ID, DeckMetrics> {
   const metrics = new Map<ID, DeckMetrics>()
 
   for (const deck of workspace.decks) {
     const deckCards = workspace.cards.filter((card) => card.deckId === deck.id)
-    const matured = deckCards.filter((card) => card.status === 'Review').length
+    const matured = deckCards.filter((card) => card.scheduling.state === 'review').length
     metrics.set(deck.id, {
       cardCount: deckCards.length,
-      dueCount: deckCards.filter((card) => card.due).length,
+      dueCount: deckCards.filter((card) => isDemoCardDue(card, now)).length,
       lastStudied: demoLastStudiedAt(deck.lastStudiedDaysAgo),
       masteryFraction: deckCards.length > 0 ? matured / deckCards.length : 0,
     })
@@ -173,8 +176,8 @@ export function demoScopeRail(workspace: DemoWorkspace): MobileLibraryCollection
   return rail
 }
 
-export function demoLibraryViewModel(workspace: DemoWorkspace): MobileLibraryViewModel {
-  const metrics = demoDeckMetrics(workspace)
+export function demoLibraryViewModel(workspace: DemoWorkspace, now: Millis): MobileLibraryViewModel {
+  const metrics = demoDeckMetrics(workspace, now)
   return {
     collections: demoScopeRail(workspace),
     decks: workspace.decks.map((deck) => toLibraryDeckViewModel(deck, metrics)),
@@ -184,11 +187,12 @@ export function demoLibraryViewModel(workspace: DemoWorkspace): MobileLibraryVie
 export function demoCollectionViewModel(
   workspace: DemoWorkspace,
   scopeId: string | undefined,
+  now: Millis,
 ): MobileCollectionViewModel | null {
   const scope = resolveDemoScope(workspace, scopeId)
   if (!scope) return null
 
-  const metrics = demoDeckMetrics(workspace)
+  const metrics = demoDeckMetrics(workspace, now)
   const decks = scope.decks.map((deck) => toLibraryDeckViewModel(deck, metrics))
 
   return {
@@ -205,11 +209,12 @@ export function demoCollectionViewModel(
 export function demoDeckViewModel(
   workspace: DemoWorkspace,
   deckId: string | undefined,
+  now: Millis,
 ): MobileDeckViewModel | null {
   const deck = findDemoDeck(workspace, deckId)
   if (!deck) return null
 
-  const deckMetrics = metricsFor(demoDeckMetrics(workspace), deck.id)
+  const deckMetrics = metricsFor(demoDeckMetrics(workspace, now), deck.id)
 
   return {
     id: deck.id,
@@ -222,11 +227,14 @@ export function demoDeckViewModel(
     lastStudiedLabel: demoLastStudiedLabel(deck.lastStudiedDaysAgo),
     cards: demoDeckCards(workspace, deck.id).map((card) => ({
       id: card.id,
-      prompt: card.prompt,
-      interactionType: card.interactionType,
-      interactionLabel: DEMO_INTERACTION_LABELS[card.interactionType],
+      // The card list is one line of plain text, so the shared flattening is
+      // what turns authored markers into a readable label. It is presentation,
+      // never sanitisation - see core's plainText.ts.
+      prompt: stripInlineMarkers(card.prompt.value),
+      interactionType: card.interaction.type,
+      interactionLabel: DEMO_INTERACTION_LABELS[card.interaction.type],
       tag: card.tag,
-      status: card.status,
+      status: demoCardStatus(card),
     })),
   }
 }
@@ -241,9 +249,10 @@ export function demoDeckViewModel(
 export function demoTodayViewModel(
   workspace: DemoWorkspace,
   greeting: DashboardMessage,
+  now: Millis,
 ): MobileTodayViewModel {
-  const metrics = demoDeckMetrics(workspace)
-  const dueToday = workspace.cards.filter((card) => card.due).length
+  const metrics = demoDeckMetrics(workspace, now)
+  const dueToday = workspace.cards.filter((card) => isDemoCardDue(card, now)).length
 
   // Continue learning shows the decks that actually have something due, most
   // pressing first. A deck with nothing due has nothing to continue.
@@ -271,11 +280,14 @@ export function demoTodayViewModel(
   }
 }
 
-export function demoProgressViewModel(workspace: DemoWorkspace): MobileProgressViewModel {
-  const metrics = demoDeckMetrics(workspace)
+export function demoProgressViewModel(
+  workspace: DemoWorkspace,
+  now: Millis,
+): MobileProgressViewModel {
+  const metrics = demoDeckMetrics(workspace, now)
   const totalCards = workspace.cards.length
-  const learned = workspace.cards.filter((card) => card.status === 'Review').length
-  const dueTotal = workspace.cards.filter((card) => card.due).length
+  const learned = workspace.cards.filter((card) => card.scheduling.state === 'review').length
+  const dueTotal = workspace.cards.filter((card) => isDemoCardDue(card, now)).length
 
   return {
     rangeLabel: DEMO_RANGE_LABEL,

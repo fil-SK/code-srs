@@ -1,0 +1,101 @@
+import type { Card, CardInteraction, ID, SchedulingState, SubmitReviewResult } from '@itera/core'
+import { useState } from 'react'
+
+import { createDemoQueue } from '@/src/demo/demoQueue'
+import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
+import { ReviewSessionScreen } from './ReviewSessionScreen'
+import { SessionCompleteScreen } from './SessionCompleteScreen'
+import { nativeInteractionFor } from './interactions/registry'
+
+// One local demo study session, start to finish.
+//
+// It owns the queue snapshot, the position in it, and enough per-card history
+// to undo the last grade. Everything that decides an outcome is shared: the
+// queue is built from the demo workspace's real scheduling, the grade comes
+// from reviewService, and the resulting SchedulingState and ReviewLog are
+// written into the demo workspace unchanged.
+//
+// The queue is snapshotted once, at mount. Grading a card changes its due date,
+// so a live query would drop the card out from under the learner mid-session -
+// the same reason web's useSessionQueue is a per-mount snapshot.
+//
+// Nothing here is persisted. There is no Repository, no Supabase and no local
+// database: demo review state lives in memory and resets on a full app restart,
+// which is this milestone's documented intent.
+
+export interface GradedCardRecord {
+  cardId: ID
+  /** The card's scheduling before the grade, kept so Undo restores rather than recomputes. */
+  before: SchedulingState
+  logId: ID
+  rating: number
+}
+
+export function DemoReviewSession({
+  deckId,
+  onExit,
+}: {
+  deckId?: ID
+  onExit: () => void
+}) {
+  const { workspace, now, applyDemoReview, undoDemoReview } = useDemoWorkspace()
+
+  // Built once. `now` and the workspace are read at mount and deliberately not
+  // tracked afterwards.
+  const [queue] = useState(() => createDemoQueue(workspace, { now, deckId }))
+  const [index, setIndex] = useState(0)
+  const [graded, setGraded] = useState<GradedCardRecord[]>([])
+
+  const card = queue[index]
+
+  if (!card) {
+    return (
+      <SessionCompleteScreen
+        graded={graded}
+        onExit={onExit}
+        onUndo={
+          graded.length === 0
+            ? undefined
+            : () => {
+                const last = graded[graded.length - 1]
+                undoDemoReview(last.cardId, last.before, last.logId)
+                setGraded((current) => current.slice(0, -1))
+                setIndex((current) => Math.max(0, current - 1))
+              }
+        }
+        total={queue.length}
+      />
+    )
+  }
+
+  const definition = nativeInteractionFor(card.interaction.type)
+
+  async function handleGraded(result: SubmitReviewResult) {
+    applyDemoReview(result)
+    setGraded((current) => [
+      ...current,
+      {
+        cardId: result.log.cardId,
+        before: card.scheduling,
+        logId: result.log.id,
+        rating: result.log.rating,
+      },
+    ])
+    setIndex((current) => current + 1)
+  }
+
+  return (
+    <ReviewSessionScreen
+      // Remounting per card is what resets phase, response and timing - the same
+      // rule web follows. Keyed on the card, never on the queue length.
+      key={card.id}
+      card={card as Card & { interaction: Extract<CardInteraction, { type: typeof card.interaction.type }> }}
+      current={index + 1}
+      definition={definition}
+      onExit={onExit}
+      onGraded={handleGraded}
+      schedulingBefore={card.scheduling}
+      total={queue.length}
+    />
+  )
+}

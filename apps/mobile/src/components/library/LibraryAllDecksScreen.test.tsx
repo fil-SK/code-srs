@@ -10,6 +10,10 @@ import {
 } from '@/src/test/routerDouble'
 import { LibraryAllDecksScreen } from './LibraryAllDecksScreen'
 
+// One fixed instant for the whole file: due-ness is a comparison against an
+// instant, so a wall-clock read here would make these assertions time-dependent.
+const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
+
 jest.mock('expo-router', () => ({
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   useRouter: () => require('@/src/test/routerDouble').routerDouble,
@@ -19,8 +23,8 @@ jest.mock('expo-router', () => ({
 // plain View with no press handler at all, so the only way to reach a deck
 // screen in the whole app was one hard-coded row on the Collection screen.
 
-const workspace = createDemoWorkspace()
-const viewModel = demoLibraryViewModel(workspace)
+const workspace = createDemoWorkspace(NOW)
+const viewModel = demoLibraryViewModel(workspace, NOW)
 
 beforeEach(() => {
   resetRouterCalls()

@@ -36,7 +36,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
         <TodayHero
           dueToday={viewModel.dueToday}
           estimatedMinutes={viewModel.estimatedMinutes}
-          onStartSession={() => router.push('/review')}
+          onStartSession={() => router.push('/review/session')}
           retention={viewModel.retention}
           streak={viewModel.streak}
         />

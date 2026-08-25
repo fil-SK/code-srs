@@ -10,6 +10,10 @@ import {
 } from './demoSelectors'
 import { createDemoWorkspace } from './demoWorkspace'
 
+// One fixed instant for the whole file: due-ness is a comparison against an
+// instant, so a wall-clock read here would make these assertions time-dependent.
+const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
+
 // Route-parameter resolution, and the ordering the Library controls claim.
 //
 // Both Library routes used to ignore their parameter: the deck route handed
@@ -17,25 +21,25 @@ import { createDemoWorkspace } from './demoWorkspace'
 // collection route collapsed every id to one boolean. So a deep link, a stale
 // history entry or a typo silently displayed the wrong entity.
 
-const workspace = createDemoWorkspace()
+const workspace = createDemoWorkspace(NOW)
 
 describe('deck resolution', () => {
   it('resolves each deck to itself, not to whichever deck the factory preferred', () => {
     for (const deck of workspace.decks) {
-      expect(demoDeckViewModel(workspace, deck.id)?.id).toBe(deck.id)
-      expect(demoDeckViewModel(workspace, deck.id)?.name).toBe(deck.name)
+      expect(demoDeckViewModel(workspace, deck.id, NOW)?.id).toBe(deck.id)
+      expect(demoDeckViewModel(workspace, deck.id, NOW)?.name).toBe(deck.name)
     }
   })
 
   it('returns null for an unknown deck id, so the route can say so', () => {
     expect(findDemoDeck(workspace, 'fixture-does-not-exist')).toBeNull()
-    expect(demoDeckViewModel(workspace, 'fixture-does-not-exist')).toBeNull()
-    expect(demoDeckViewModel(workspace, undefined)).toBeNull()
-    expect(demoDeckViewModel(workspace, '')).toBeNull()
+    expect(demoDeckViewModel(workspace, 'fixture-does-not-exist', NOW)).toBeNull()
+    expect(demoDeckViewModel(workspace, undefined, NOW)).toBeNull()
+    expect(demoDeckViewModel(workspace, '', NOW)).toBeNull()
   })
 
   it('shows a deck only its own cards', () => {
-    const deck = demoDeckViewModel(workspace, 'fixture-modern-cpp')
+    const deck = demoDeckViewModel(workspace, 'fixture-modern-cpp', NOW)
     expect(deck?.cards.length).toBeGreaterThan(0)
     expect(deck?.cardCount).toBe(deck?.cards.length)
 
@@ -48,8 +52,8 @@ describe('deck resolution', () => {
   })
 
   it('names the deck s own collection on the way back out', () => {
-    expect(demoDeckViewModel(workspace, 'fixture-modern-cpp')?.collectionName).toBe('Languages & C++')
-    expect(demoDeckViewModel(workspace, 'fixture-security-engineering')?.collectionName).toBe('Unfiled')
+    expect(demoDeckViewModel(workspace, 'fixture-modern-cpp', NOW)?.collectionName).toBe('Languages & C++')
+    expect(demoDeckViewModel(workspace, 'fixture-security-engineering', NOW)?.collectionName).toBe('Unfiled')
   })
 })
 
@@ -63,7 +67,7 @@ describe('scope resolution', () => {
   })
 
   it('scopes a collection to its own decks', () => {
-    const languages = demoCollectionViewModel(workspace, 'fixture-languages-cpp')
+    const languages = demoCollectionViewModel(workspace, 'fixture-languages-cpp', NOW)
     expect(languages?.name).toBe('Languages & C++')
     expect(languages?.decks.map((deck) => deck.id).sort()).toEqual([
       'fixture-compilers',
@@ -74,7 +78,7 @@ describe('scope resolution', () => {
   it('resolves a different collection to different decks', () => {
     // The old factory returned Interview Core for every id that was not
     // Languages & C++, so this is the case that used to be wrong.
-    const research = demoCollectionViewModel(workspace, 'fixture-research')
+    const research = demoCollectionViewModel(workspace, 'fixture-research', NOW)
     expect(research?.name).toBe('Research')
     expect(research?.decks.map((deck) => deck.id)).toEqual(['fixture-compiler-papers'])
   })
@@ -91,12 +95,12 @@ describe('scope resolution', () => {
 
   it('returns null for an unknown collection id', () => {
     expect(resolveDemoScope(workspace, 'fixture-not-a-collection')).toBeNull()
-    expect(demoCollectionViewModel(workspace, 'fixture-not-a-collection')).toBeNull()
-    expect(demoCollectionViewModel(workspace, undefined)).toBeNull()
+    expect(demoCollectionViewModel(workspace, 'fixture-not-a-collection', NOW)).toBeNull()
+    expect(demoCollectionViewModel(workspace, undefined, NOW)).toBeNull()
   })
 
   it('sums a collection s totals from its decks', () => {
-    const languages = demoCollectionViewModel(workspace, 'fixture-languages-cpp')
+    const languages = demoCollectionViewModel(workspace, 'fixture-languages-cpp', NOW)
     expect(languages?.cardCount).toBe(
       languages?.decks.reduce((total, deck) => total + deck.cardCount, 0),
     )
@@ -107,7 +111,7 @@ describe('scope resolution', () => {
 })
 
 describe('library filter and sort', () => {
-  const decks = demoLibraryViewModel(workspace).decks
+  const decks = demoLibraryViewModel(workspace, NOW).decks
 
   it('orders by name ascending', () => {
     const names = filterAndSortDeckViewModels(decks, { sort: 'name' }).map((deck) => deck.name)

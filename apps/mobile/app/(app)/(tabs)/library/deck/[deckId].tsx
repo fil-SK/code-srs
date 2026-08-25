@@ -9,8 +9,8 @@ import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 // to a factory that returned the same deck for every value.
 export default function LibraryDeckRoute() {
   const { deckId } = useLocalSearchParams<{ deckId: string }>()
-  const { workspace } = useDemoWorkspace()
-  const viewModel = demoDeckViewModel(workspace, deckId)
+  const { workspace, now } = useDemoWorkspace()
+  const viewModel = demoDeckViewModel(workspace, deckId, now)
 
   if (!viewModel) {
     return (

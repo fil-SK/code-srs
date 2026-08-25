@@ -4,13 +4,13 @@ import {
   iteraColors,
   iteraRadii,
   matchingBehavior,
+  stripInlineMarkers,
   type ID,
   type MatchingColumn,
   type MatchingGrade,
+  type MatchingInteraction,
   type MatchingResponse,
-  type Rating,
 } from '@itera/core'
-import { useRouter } from 'expo-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AccessibilityInfo,
@@ -23,12 +23,21 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Circle, Path } from 'react-native-svg'
 
-import { PreviewRatingControls } from '@/src/components/review/PreviewRatingControls'
-import { ReviewPreviewHeader } from '@/src/components/review/ReviewPreviewHeader'
-import type { MobileMatchingPreviewViewModel } from '@/src/types/review'
+import { RichInlineNative, RichTextNative } from '@/src/components/text/RichTextNative'
+import type { NativeInteractionViewProps } from '../types'
+
+// Matching. Readiness, partial credit and the semantic board width all come
+// from matchingBehavior and gradeMatching - including `widthFor`, which says
+// three columns need the wide surface and leaves it to this platform to decide
+// what wide means (here: horizontally scrollable fixed-width columns, master
+// plan D6).
+//
+// The board, the curved connectors and the source-first touch flow are the
+// owner-approved preview design, unchanged. What changed is the source: cells
+// render the card's own RichContent, and the presentation order is derived here
+// rather than authored per fixture.
 
 const BOARD_GAP = 76
 const WIDE_COLUMN_WIDTH = 148
@@ -55,6 +64,23 @@ function MatchingBadge({ results = false }: { results?: boolean }) {
 
 function itemText(column: MatchingColumn, id: ID): string {
   return column.items.find((item) => item.id === id)?.content.value ?? ''
+}
+
+/**
+ * The order each column is shown in. The source column keeps its authored
+ * order; the value columns are rotated so the board is not a diagonal giveaway.
+ *
+ * A deterministic rotation rather than a shuffle: the demo has to be
+ * reproducible for a recording, and a rotation always differs from the authored
+ * pairing for any column with more than one item.
+ */
+function presentedOrderFor(interaction: MatchingInteraction): Record<ID, ID[]> {
+  const order: Record<ID, ID[]> = {}
+  interaction.columns.forEach((column, index) => {
+    const ids = column.items.map((item) => item.id)
+    order[column.id] = index === 0 || ids.length < 2 ? ids : [...ids.slice(1), ids[0]]
+  })
+  return order
 }
 
 function columnItems(
@@ -87,7 +113,7 @@ function SourceCell({
   return (
     <Pressable
       accessibilityHint={locked ? 'Shows this container’s submitted matches' : 'Selects this container for matching'}
-      accessibilityLabel={`${label}${complete ? ', complete' : ', not complete'}`}
+      accessibilityLabel={`${stripInlineMarkers(label)}${complete ? ', complete' : ', not complete'}`}
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={() => onPress(id)}
@@ -100,7 +126,7 @@ function SourceCell({
         pressed && styles.pressed,
       ]}
     >
-      <Text numberOfLines={2} style={styles.sourceCode}>{label}</Text>
+      <RichInlineNative style={styles.sourceCode} text={label} />
       <View style={styles.cellStatus}>
         {correct !== null ? (
           <>
@@ -148,7 +174,7 @@ function OptionCell({
   const showingResult = correctChoice || selectedWrong
   return (
     <Pressable
-      accessibilityLabel={`${label}${selected ? ', selected' : ''}${used && !selected ? ', matched to another container' : ''}`}
+      accessibilityLabel={`${stripInlineMarkers(label)}${selected ? ', selected' : ''}${used && !selected ? ', matched to another container' : ''}`}
       accessibilityRole="button"
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
@@ -163,9 +189,10 @@ function OptionCell({
         pressed && styles.pressed,
       ]}
     >
-      <Text numberOfLines={3} style={[styles.optionText, disabled && !showingResult && styles.disabledText]}>
-        {label}
-      </Text>
+      <RichInlineNative
+        style={[styles.optionText, disabled && !showingResult && styles.disabledText]}
+        text={label}
+      />
       {showingResult ? (
         <View style={styles.resultMark}>
           <MaterialCommunityIcons
@@ -289,14 +316,16 @@ function ConnectionLayer({
 }
 
 function MatchBoard({
-  viewModel,
+  interaction,
+  presentedItemIds,
   response,
   activeSourceId,
   grade,
   onSourcePress,
   onCellPress,
 }: {
-  viewModel: MobileMatchingPreviewViewModel
+  interaction: MatchingInteraction
+  presentedItemIds: Record<ID, ID[]>
   response: MatchingResponse
   activeSourceId: ID
   grade: MatchingGrade | null
@@ -304,7 +333,6 @@ function MatchBoard({
   onCellPress: (column: MatchingColumn, itemId: ID) => void
 }) {
   const { width } = useWindowDimensions()
-  const { interaction, presentedItemIds } = viewModel
   const [sourceColumn, ...valueColumns] = interaction.columns
   const availableWidth = Math.max(220, width - 78)
   const isWideBoard = matchingBehavior.widthFor(interaction) === 'wide'
@@ -322,7 +350,7 @@ function MatchBoard({
       <View style={styles.activeContext}>
         <View style={styles.activeContextCopy}>
           <Text style={styles.activeContextLabel}>{grade ? 'INSPECTING' : 'MATCHING NOW'}</Text>
-          <Text numberOfLines={1} style={styles.activeContextValue}>{activeLabel}</Text>
+          <RichInlineNative style={styles.activeContextValue} text={activeLabel} />
         </View>
         <Text style={styles.activeContextHint}>
           {isWideBoard ? 'Swipe columns →' : 'Choose its pair'}
@@ -406,24 +434,43 @@ function MatchBoard({
   )
 }
 
-export function MatchingPreviewScreen({ viewModel }: { viewModel: MobileMatchingPreviewViewModel }) {
-  const router = useRouter()
+export function MatchingView({
+  card,
+  phase,
+  response: rawResponse,
+  setResponse,
+  onPrimaryAction,
+  responseReady,
+}: NativeInteractionViewProps<'matching'>) {
+  const interaction = card.interaction
   const rotation = useRef(new Animated.Value(0)).current
-  const [response, setResponse] = useState<MatchingResponse>({})
-  const [grade, setGrade] = useState<MatchingGrade | null>(null)
-  const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
   const [reduceMotion, setReduceMotion] = useState(false)
-  const sourceColumn = viewModel.interaction.columns[0]
-  const valueColumns = viewModel.interaction.columns.slice(1)
+  const sourceColumn = interaction.columns[0]
+  const valueColumns = useMemo(() => interaction.columns.slice(1), [interaction.columns])
   const [activeSourceId, setActiveSourceId] = useState<ID>(sourceColumn.items[0]?.id ?? '')
-  const totalCells = viewModel.interaction.relationships.reduce((total, relationship) => (
-    total + valueColumns.filter((column) => relationship[column.id] != null).length
-  ), 0)
+
+  // Derived once per mount, so a re-render after grading cannot re-rotate the
+  // board under the learner.
+  const [presentedItemIds] = useState(() => presentedOrderFor(interaction))
+
+  // Memoised so the empty-object fallback is not a new value on every render,
+  // which would defeat the completion count's own memo.
+  const response = useMemo(
+    () => (rawResponse as MatchingResponse | undefined) ?? {},
+    [rawResponse],
+  )
+  const submitted = phase.kind !== 'presenting' && phase.kind !== 'submitting'
+  const grade = submitted ? gradeMatching(interaction, response) : null
+
+  const totalCells = interaction.relationships.reduce(
+    (total, relationship) =>
+      total + valueColumns.filter((column) => relationship[column.id] != null).length,
+    0,
+  )
   const completedCells = useMemo(
     () => Object.values(response).reduce((total, cells) => total + Object.keys(cells).length, 0),
     [response],
   )
-  const responseReady = matchingBehavior.isResponseReady?.(response, viewModel.interaction) ?? false
 
   useEffect(() => {
     void AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion)
@@ -432,7 +479,7 @@ export function MatchingPreviewScreen({ viewModel }: { viewModel: MobileMatching
   }, [])
 
   function assign(column: MatchingColumn, itemId: ID) {
-    if (grade || !activeSourceId) return
+    if (submitted || !activeSourceId) return
     const next: MatchingResponse = {}
     for (const [sourceId, cells] of Object.entries(response)) {
       const steals = !column.fixed && sourceId !== activeSourceId && cells[column.id] === itemId
@@ -443,122 +490,132 @@ export function MatchingPreviewScreen({ viewModel }: { viewModel: MobileMatching
     next[activeSourceId] = { ...(next[activeSourceId] ?? {}), [column.id]: itemId }
     setResponse(next)
 
-    const activeComplete = valueColumns.every((valueColumn) => next[activeSourceId]?.[valueColumn.id] != null)
+    const activeComplete = valueColumns.every(
+      (valueColumn) => next[activeSourceId]?.[valueColumn.id] != null,
+    )
     if (!activeComplete) return
     const activeIndex = sourceColumn.items.findIndex((item) => item.id === activeSourceId)
     const candidates = [
       ...sourceColumn.items.slice(activeIndex + 1),
       ...sourceColumn.items.slice(0, activeIndex),
     ]
-    const nextIncomplete = candidates.find((source) => (
-      valueColumns.some((valueColumn) => next[source.id]?.[valueColumn.id] == null)
-    ))
+    const nextIncomplete = candidates.find((source) =>
+      valueColumns.some((valueColumn) => next[source.id]?.[valueColumn.id] == null),
+    )
     if (nextIncomplete) setActiveSourceId(nextIncomplete.id)
   }
 
   function submit() {
-    if (!responseReady || grade) return
-    const nextGrade = gradeMatching(viewModel.interaction, response)
-    const firstIncorrect = nextGrade.cells.find((cell) => !cell.correct)?.sourceItemId
+    if (!responseReady || submitted) return
+    // Focus the first relationship that needs looking at, so the results open
+    // on something worth inspecting rather than on whatever was last touched.
+    const firstIncorrect = gradeMatching(interaction, response).cells.find(
+      (cell) => !cell.correct,
+    )?.sourceItemId
     if (firstIncorrect) setActiveSourceId(firstIncorrect)
+
     if (reduceMotion) {
-      setGrade(nextGrade)
+      onPrimaryAction()
       return
     }
+    // The reveal turns the board over. onPrimaryAction fires at the midpoint,
+    // so the results are already the thing coming back into view.
     Animated.timing(rotation, { toValue: 90, duration: 130, useNativeDriver: true }).start(() => {
-      setGrade(nextGrade)
+      onPrimaryAction()
       rotation.setValue(-90)
       Animated.timing(rotation, { toValue: 0, duration: 170, useNativeDriver: true }).start()
     })
   }
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <ReviewPreviewHeader
-        current={viewModel.current}
-        exitLabel="Exit Matching preview"
-        hint={grade ? 'Inspect results' : 'Swipe to view more'}
-        hintIcon={grade ? 'check-decagram-outline' : 'gesture-swipe-horizontal'}
-        onExit={() => router.replace('/today')}
-        total={viewModel.total}
+    <Animated.View
+      style={[
+        styles.card,
+        {
+          transform: [
+            { perspective: 900 },
+            {
+              rotateY: rotation.interpolate({
+                inputRange: [-90, 90],
+                outputRange: ['-90deg', '90deg'],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <MatchingBadge results={submitted} />
+      <RichTextNative style={styles.prompt} text={card.prompt.value} />
+      {!submitted && (
+        <Text style={styles.instruction}>
+          Select a container, then choose one value in each column.
+        </Text>
+      )}
+
+      <View style={styles.completionRow}>
+        <Text style={styles.completionText}>
+          {submitted ? 'Submitted matches' : `${completedCells} of ${totalCells} matches`}
+        </Text>
+        <View style={styles.completionTrack}>
+          <View
+            style={[
+              styles.completionFill,
+              { width: `${totalCells === 0 ? 0 : (completedCells / totalCells) * 100}%` },
+            ]}
+          />
+        </View>
+      </View>
+
+      <MatchBoard
+        activeSourceId={activeSourceId}
+        grade={grade}
+        interaction={interaction}
+        onCellPress={assign}
+        onSourcePress={setActiveSourceId}
+        presentedItemIds={presentedItemIds}
+        response={response}
       />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Animated.View
-          style={[
-            styles.card,
-            { transform: [{ perspective: 900 }, { rotateY: rotation.interpolate({ inputRange: [-90, 90], outputRange: ['-90deg', '90deg'] }) }] },
+
+      {!submitted ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !responseReady }}
+          disabled={!responseReady}
+          onPress={submit}
+          style={({ pressed }) => [
+            styles.submit,
+            !responseReady && styles.submitDisabled,
+            pressed && styles.pressed,
           ]}
         >
-          <MatchingBadge results={Boolean(grade)} />
-          <Text style={styles.prompt}>{viewModel.prompt}</Text>
-          {!grade && (
-            <Text style={styles.instruction}>
-              Select a container, then choose one value in each column.
-            </Text>
-          )}
-
-          <View style={styles.completionRow}>
-            <Text style={styles.completionText}>
-              {grade ? 'Submitted matches' : `${completedCells} of ${totalCells} matches`}
-            </Text>
-            <View style={styles.completionTrack}>
-              <View
-                style={[
-                  styles.completionFill,
-                  { width: `${totalCells === 0 ? 0 : (completedCells / totalCells) * 100}%` },
-                ]}
-              />
-            </View>
-          </View>
-
-          <MatchBoard
-            activeSourceId={activeSourceId}
-            grade={grade}
-            onCellPress={assign}
-            onSourcePress={setActiveSourceId}
-            response={response}
-            viewModel={viewModel}
+          <Text style={styles.submitText}>Submit answer</Text>
+        </Pressable>
+      ) : (
+        <View
+          style={[styles.summary, grade?.correct ? styles.summaryCorrect : styles.summaryIncorrect]}
+        >
+          <MaterialCommunityIcons
+            color={grade?.correct ? iteraColors.success : iteraColors.error}
+            name={grade?.correct ? 'check-circle-outline' : 'alert-circle-outline'}
+            size={20}
           />
-
-          {!grade ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !responseReady }}
-              disabled={!responseReady}
-              onPress={submit}
-              style={({ pressed }) => [styles.submit, !responseReady && styles.submitDisabled, pressed && styles.pressed]}
-            >
-              <Text style={styles.submitText}>Submit answer</Text>
-            </Pressable>
-          ) : (
-            <View style={[styles.summary, grade.correct ? styles.summaryCorrect : styles.summaryIncorrect]}>
-              <MaterialCommunityIcons
-                color={grade.correct ? iteraColors.success : iteraColors.error}
-                name={grade.correct ? 'check-circle-outline' : 'alert-circle-outline'}
-                size={20}
-              />
-              <Text style={[styles.summaryText, grade.correct ? styles.correctText : styles.incorrectText]}>
-                {grade.correct ? 'Every relationship is correct' : `${Math.round(grade.score * 100)}% of relationships correct`}
-              </Text>
-            </View>
-          )}
-        </Animated.View>
-
-        {grade && (
-          <PreviewRatingControls
-            intervals={viewModel.ratingIntervals}
-            onSelect={setSelectedRating}
-            selected={selectedRating}
-          />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          <Text
+            style={[
+              styles.summaryText,
+              grade?.correct ? styles.correctText : styles.incorrectText,
+            ]}
+          >
+            {grade?.correct
+              ? 'Every relationship is correct'
+              : `${Math.round((grade?.score ?? 0) * 100)}% of relationships correct`}
+          </Text>
+        </View>
+      )}
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
-  content: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
   card: { overflow: 'hidden', borderRadius: 20, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, paddingVertical: 20, alignItems: 'center', ...Platform.select({ ios: { shadowColor: iteraColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
   badge: { minHeight: 42, paddingHorizontal: 16, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 8 },
   badgeResults: { backgroundColor: iteraColors.accentSofter },

@@ -2,8 +2,10 @@
 
 Status of every learner-visible capability on each platform.
 
-Status is one of: `implemented` · `web-only (decision)` · `native-only (decision)` · `deferred`.
+Status is one of: `implemented` · `implemented (demo/local)` · `web-only (decision)` · `native-only (decision)` · `deferred`.
 Every non-`implemented` status carries a reason; every `deferred` names the milestone that owns it.
+
+**`implemented (demo/local)` is not `implemented`.** It means the capability is genuinely functional on native, over the deterministic demo workspace, in memory — the shared semantics are real, the persistence is not. Read it as: this works on the phone, and nothing it produces survives a restart or reaches a backend. It exists because mobile deliberately runs Demo mode while cloud integration is deferred until after market validation (`CURRENT_STATE.md` §24, §25); a row must never be promoted to plain `implemented` on the strength of demo behaviour alone.
 
 The shared-logic column names a module in `packages/core` or is empty. A wrong entry is a broken link.
 
@@ -29,8 +31,10 @@ Update it in the same commit as any change to a listed capability.
 | Shared data hooks | hooks/* | yes | yes | implemented |
 | Query keys | hooks/queryKeys | yes | yes | implemented |
 | Design tokens | design/tokens | yes | yes | implemented |
-| Content parsing | content/parseRichText | yes | no | deferred — M1B native renderer |
-| Content rendering | — | RichText.tsx | no | deferred — M1B native renderer |
+| Content parsing | content/parseRichText | yes | yes | implemented — one parser, two renderers; native parses nothing |
+| Content rendering | — | RichText.tsx | RichTextNative.tsx | implemented — both map the same shared node tree |
+| Code display | — | CodeMirror 6 | literal monospace + line numbers | native-only (decision) — no shared tokenizer exists to colour a `code` node; master plan D5a, D380 |
+| Safe card image | content/imageSource (isSafeImageSource) | yes | yes | implemented — the one URL sink, gated by the one shared policy |
 | Interaction behavior | interactions/* | yes | yes | implemented |
 
 ## Today
@@ -40,7 +44,7 @@ Update it in the same commit as any change to a listed capability.
 | Greeting | today/greetings | yes | yes | implemented |
 | Due count, streak, retention | domain/stats/* | yes | demo workspace | deferred — master plan Phase 5; due totals are derived from demo cards, streak and retention are authored constants (D368) |
 | Continue Learning | domain/stats/deckMetrics | yes | demo workspace | deferred — master plan Phase 5; each row now opens its own deck (D374) |
-| Session start | — | yes | navigates to preview | deferred — M1C Review gate |
+| Session start | — | yes | starts a demo session | implemented (demo/local) — Today's CTA opens the real local session; cloud persistence deferred |
 | Adjust session | — | yes | no | deferred — master plan Phase 5 |
 | Pace chart | — | yes | no | web-only (decision) — native hierarchy omits it; not a functionality gap |
 | Next milestone row | domain/stats/progressMetrics | yes | no | web-only (decision) — native slot shows estimated session length instead |
@@ -66,18 +70,23 @@ Update it in the same commit as any change to a listed capability.
 
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
-| Queue snapshot and scoping | — | yes | no | deferred — M1C Review gate |
-| Two-phase flow | — | yes | preview only | deferred — M1C Review gate |
-| Recall | interactions/recall | yes | preview only | deferred — M1C Review gate |
-| Multiple Choice | interactions/multipleChoice, domain/grading/multipleChoice | yes | preview only | deferred — M1C Review gate |
-| Write Code | interactions/writeCode, domain/grading/writeCode | yes | preview only | deferred — M1C Review gate |
-| Ordering | interactions/ordering, domain/grading/ordering | yes | preview only | deferred — M1C Review gate |
-| Matching | interactions/matching, domain/grading/matching | yes | preview only | deferred — M1C Review gate |
-| Walkthrough | interactions/walkthrough, domain/grading/walkthrough | yes | preview only | deferred — M1C Review gate |
-| FSRS scheduling | domain/scheduling/* | yes | no | deferred — M1C Review gate |
-| Transactional review persistence | data/repository (commitReview) | yes | no | deferred — M1C Review gate |
-| Persist-failure retry | domain/review/reviewPersistFailure | yes | no | deferred — M1C Review gate |
-| Undo on completion | hooks/useReview (useUndoGrade) | yes | no | deferred — M1C Review gate |
+| Review entry surface | — | Today CTA / deck links | Review tab start screen | native-only (decision) — a tab needs a landing surface for the due count and the caught-up state |
+| Queue snapshot and scoping | — | useSessionQueue | demo/demoQueue | implemented (demo/local) — per-mount snapshot, due-only, deterministic order; deck scoping exists as a route parameter with no UI entry point yet |
+| Two-phase flow | — | yes | yes | implemented (demo/local) — native phase machine, four phases; ReviewPhase stays platform-side by decision |
+| Recall | interactions/recall | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
+| Multiple Choice | interactions/multipleChoice, domain/grading/multipleChoice | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
+| Write Code | interactions/writeCode, domain/grading/writeCode | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
+| Ordering | interactions/ordering, domain/grading/ordering | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
+| Matching | interactions/matching, domain/grading/matching | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
+| Walkthrough | interactions/walkthrough, domain/grading/walkthrough | yes | yes | implemented (demo/local) — shared readiness and grading; no cloud persistence |
+| FSRS scheduling | domain/scheduling/* | yes | yes | implemented (demo/local) — reviewService.submit computes it; real next-due intervals on the rating buttons |
+| Objective grading semantics | domain/grading/* | yes | yes | implemented — the same graders, called not copied; registry.test.ts asserts the binding by reference |
+| Learner-chosen final rating | — | yes | yes | implemented — recommendation highlights only, never preselects or auto-advances |
+| ReviewLog production | domain/scheduling/scheduler (buildReviewLog) | yes | yes (in memory) | implemented (demo/local) — canonical shape, held in the demo workspace, never written to a store |
+| Transactional review persistence | data/repository (commitReview) | yes | no | deferred — cloud persistence is deferred until after market validation; demo review state is in-memory by decision |
+| Persist-failure retry | domain/review/reviewPersistFailure | yes | no | deferred — a demo write is synchronous and cannot fail; the awaited onGraded seam is where cloud adds it |
+| Undo on completion | hooks/useReview (useUndoGrade) | yes | yes (in memory) | implemented (demo/local) — one level, restores the recorded pre-grade state and removes exactly that log |
+| Immersive session chrome | — | full-page route | tab bar hidden for the session only | native-only (decision) — the Review tab keeps the bar on its start screen |
 | Matching at three columns | interactions/matching (widthFor) | full board | horizontal scroll | native-only (decision) — three columns do not lay out at 390px; master plan D6 |
 | Code editing surface | — | CodeMirror 6 | native multiline input | native-only (decision) — master plan D5 |
 

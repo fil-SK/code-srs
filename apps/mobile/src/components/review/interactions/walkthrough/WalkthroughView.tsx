@@ -4,67 +4,47 @@ import {
   initialWalkthroughState,
   iteraColors,
   iteraRadii,
+  stripInlineMarkers,
   walkthroughBehavior,
   type ID,
   type ObjectiveResult,
-  type Rating,
+  type RichContent,
   type WalkthroughState,
   type WalkthroughStep,
   type WalkthroughStepAnswer,
 } from '@itera/core'
-import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import {
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  type TextStyle,
   View,
+  type TextStyle,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { PreviewRatingControls } from '@/src/components/review/PreviewRatingControls'
-import { ReviewPreviewHeader } from '@/src/components/review/ReviewPreviewHeader'
-import type {
-  MobileWalkthroughCodeLine,
-  MobileWalkthroughPreviewViewModel,
-  MobileWalkthroughStepPresentation,
-  MobileWalkthroughTextPart,
-} from '@/src/types/review'
+import { monoFamily } from '@/src/components/text/monoFamily'
+import { RichInlineNative, RichTextNative } from '@/src/components/text/RichTextNative'
+import { SafeCardImage } from '@/src/components/text/SafeCardImage'
+import type { NativeInteractionViewProps } from '../types'
 
-const mono = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' })
+// Walkthrough: one card, many steps, exactly one final rating.
+//
+// The per-step semantics are shared - gradeWalkthroughStep decides a step,
+// walkthroughBehavior.isResponseReady decides when every step is answered, and
+// walkthroughBehavior.autoGrade aggregates the card. The response threaded
+// through the session is core's own WalkthroughState, so no second notion of
+// "where the learner is" exists on this platform.
+//
+// One ReviewLog per card, never one per step: the host grades once, when the
+// learner rates the finished card.
+//
+// Card-level Tip and Explanation belong to the session shell, exactly as on
+// web. This View shows only the per-step ones.
 
-const codeTone = {
-  plain: iteraColors.inkBrand,
-  type: '#168b55',
-  keyword: '#9333a8',
-  number: '#168b55',
-  comment: iteraColors.muted,
-  accent: iteraColors.accent,
-} as const
-
-function StructuredText({
-  parts,
-  textStyle,
-}: {
-  parts: MobileWalkthroughTextPart[]
-  textStyle: TextStyle
-}) {
-  return (
-    <Text style={textStyle}>
-      {parts.map((part, index) => (
-        <Text key={`${part.text}:${index}`} style={part.tone === 'code' && styles.inlineCode}>
-          {part.text}
-        </Text>
-      ))}
-    </Text>
-  )
-}
+const mono = monoFamily
 
 function WalkthroughBadge({ finished }: { finished: boolean }) {
   return (
@@ -83,13 +63,14 @@ function WalkthroughBadge({ finished }: { finished: boolean }) {
 
 function InfoPanel({
   kind,
-  parts,
+  content,
   title,
 }: {
   kind: 'tip' | 'explanation'
-  parts: MobileWalkthroughTextPart[]
+  content: RichContent | undefined
   title: string
 }) {
+  if (!content) return null
   const explanation = kind === 'explanation'
   return (
     <View style={[styles.infoPanel, explanation ? styles.explanationPanel : styles.tipPanel]}>
@@ -102,7 +83,7 @@ function InfoPanel({
       </View>
       <View style={styles.infoCopy}>
         <Text style={styles.infoTitle}>{title}</Text>
-        <StructuredText parts={parts} textStyle={styles.infoText} />
+        <RichTextNative style={styles.infoText} text={content.value} />
       </View>
     </View>
   )
@@ -110,10 +91,12 @@ function InfoPanel({
 
 function FocusedCodeBlock({
   activeStep,
-  lines,
+  code,
+  language,
 }: {
   activeStep: WalkthroughStep
-  lines: MobileWalkthroughCodeLine[]
+  code: string
+  language: string
 }) {
   const focused = new Set<number>()
   for (const range of activeStep.focus ?? []) {
@@ -121,16 +104,15 @@ function FocusedCodeBlock({
   }
 
   return (
-    <View accessibilityLabel="C++ walkthrough code" style={styles.codeBlock}>
-      {lines.map((line) => (
-        <View key={line.number} style={[styles.codeLine, focused.has(line.number) && styles.codeLineFocused]}>
-          <Text style={styles.lineNumber}>{line.number}</Text>
+    <View accessibilityLabel={`${language} walkthrough code`} style={styles.codeBlock}>
+      {code.split('\n').map((line, index) => (
+        <View
+          key={index}
+          style={[styles.codeLine, focused.has(index + 1) && styles.codeLineFocused]}
+        >
+          <Text style={styles.lineNumber}>{index + 1}</Text>
           <Text selectable style={styles.codeText}>
-            {line.parts.map((part, index) => (
-              <Text key={`${line.number}:${index}`} style={{ color: codeTone[part.tone] }}>
-                {part.text}
-              </Text>
-            ))}
+            {line}
           </Text>
         </View>
       ))}
@@ -141,13 +123,20 @@ function FocusedCodeBlock({
 function ResultNote({ result }: { result: ObjectiveResult | null | undefined }) {
   if (!result) return null
   return (
-    <View style={[styles.stepResult, result.correct ? styles.stepResultCorrect : styles.stepResultIncorrect]}>
+    <View
+      style={[
+        styles.stepResult,
+        result.correct ? styles.stepResultCorrect : styles.stepResultIncorrect,
+      ]}
+    >
       <MaterialCommunityIcons
         color={result.correct ? iteraColors.success : iteraColors.error}
         name={result.correct ? 'check-circle-outline' : 'close-circle-outline'}
         size={18}
       />
-      <Text style={[styles.stepResultText, result.correct ? styles.correctText : styles.incorrectText]}>
+      <Text
+        style={[styles.stepResultText, result.correct ? styles.correctText : styles.incorrectText]}
+      >
         {result.correct ? 'Correct' : 'Incorrect'}
       </Text>
     </View>
@@ -156,15 +145,15 @@ function ResultNote({ result }: { result: ObjectiveResult | null | undefined }) 
 
 function MultipleChoiceStep({
   step,
-  presentation,
   answer,
   result,
   selected,
   onChange,
   onSubmit,
 }: {
-  step: WalkthroughStep & { response: Extract<WalkthroughStep['response'], { type: 'multiple_choice' }> }
-  presentation: MobileWalkthroughStepPresentation
+  step: WalkthroughStep & {
+    response: Extract<WalkthroughStep['response'], { type: 'multiple_choice' }>
+  }
   answer: WalkthroughStepAnswer | undefined
   result: ObjectiveResult | null | undefined
   selected: ID[]
@@ -193,7 +182,7 @@ function MultipleChoiceStep({
           return (
             <Pressable
               key={option.id}
-              accessibilityLabel={option.content.value}
+              accessibilityLabel={stripInlineMarkers(option.content.value)}
               accessibilityRole={multiple ? 'checkbox' : 'radio'}
               accessibilityState={{ checked: isSelected, disabled: readOnly }}
               disabled={readOnly}
@@ -206,24 +195,23 @@ function MultipleChoiceStep({
                 pressed && styles.pressed,
               ]}
             >
-              <View style={[
-                styles.choiceIndicator,
-                isSelected && styles.choiceIndicatorSelected,
-                correctChoice && styles.choiceIndicatorCorrect,
-                selectedWrong && styles.choiceIndicatorIncorrect,
-              ]}>
+              <View
+                style={[
+                  styles.choiceIndicator,
+                  isSelected && styles.choiceIndicatorSelected,
+                  correctChoice && styles.choiceIndicatorCorrect,
+                  selectedWrong && styles.choiceIndicatorIncorrect,
+                ]}
+              >
                 {(isSelected || correctChoice) && (
                   <MaterialCommunityIcons
-                    color={correctChoice || selectedWrong ? iteraColors.surface : iteraColors.surface}
+                    color={iteraColors.surface}
                     name={selectedWrong ? 'close' : 'check'}
                     size={17}
                   />
                 )}
               </View>
-              <StructuredText
-                parts={presentation.optionParts?.[option.id] ?? [{ text: option.content.value, tone: 'plain' }]}
-                textStyle={styles.choiceText}
-              />
+              <RichInlineNative style={styles.choiceText} text={option.content.value} />
             </Pressable>
           )
         })}
@@ -234,7 +222,11 @@ function MultipleChoiceStep({
           accessibilityState={{ disabled: selected.length === 0 }}
           disabled={selected.length === 0}
           onPress={() => onSubmit({ type: 'multiple_choice', selected })}
-          style={({ pressed }) => [styles.stepSubmit, selected.length === 0 && styles.disabled, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.stepSubmit,
+            selected.length === 0 && styles.disabled,
+            pressed && styles.pressed,
+          ]}
         >
           <Text style={styles.stepSubmitText}>Submit step</Text>
         </Pressable>
@@ -285,7 +277,11 @@ function ExactInputStep({
             Keyboard.dismiss()
             onSubmit({ type: 'exact_input', value: draft })
           }}
-          style={({ pressed }) => [styles.stepSubmit, !draft.trim() && styles.disabled, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.stepSubmit,
+            !draft.trim() && styles.disabled,
+            pressed && styles.pressed,
+          ]}
         >
           <Text style={styles.stepSubmitText}>Submit step</Text>
         </Pressable>
@@ -297,11 +293,11 @@ function ExactInputStep({
 
 function RecallStep({
   answer,
-  answerParts,
+  answerContent,
   onSubmit,
 }: {
   answer: WalkthroughStepAnswer | undefined
-  answerParts: MobileWalkthroughTextPart[]
+  answerContent: RichContent
   onSubmit: (answer: WalkthroughStepAnswer) => void
 }) {
   const revealed = answer?.type === 'recall'
@@ -310,7 +306,7 @@ function RecallStep({
       {revealed ? (
         <View style={styles.recallAnswer}>
           <MaterialCommunityIcons color={iteraColors.accent} name="lightbulb-on-outline" size={22} />
-          <StructuredText parts={answerParts} textStyle={styles.recallAnswerText} />
+          <RichTextNative style={styles.recallAnswerText} text={answerContent.value} />
         </View>
       ) : (
         <Pressable
@@ -326,45 +322,48 @@ function RecallStep({
   )
 }
 
-export function WalkthroughPreviewScreen({
-  viewModel,
-}: {
-  viewModel: MobileWalkthroughPreviewViewModel
-}) {
-  const router = useRouter()
-  const [state, setState] = useState<WalkthroughState>({
-    ...initialWalkthroughState,
-    answers: {},
-    results: {},
-  })
+export function WalkthroughView({
+  card,
+  phase,
+  response,
+  setResponse,
+  onPrimaryAction,
+}: NativeInteractionViewProps<'walkthrough'>) {
+  const interaction = card.interaction
   const [choiceDrafts, setChoiceDrafts] = useState<Record<ID, ID[]>>({})
   const [inputDrafts, setInputDrafts] = useState<Record<ID, string>>({})
-  const [finished, setFinished] = useState(false)
-  const [cardResult, setCardResult] = useState<ObjectiveResult | null>(null)
-  const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
-  const step = viewModel.interaction.steps[state.stepIndex]
-  const presentation = viewModel.stepPresentation.find((item) => item.id === step.id)
+
+  const state = (response as WalkthroughState | undefined) ?? initialWalkthroughState
+  const finished = phase.kind !== 'presenting' && phase.kind !== 'submitting'
+  const step = interaction.steps[state.stepIndex]
   const stepAnswer = state.answers[step.id]
   const stepResult = state.results[step.id]
   const stepAnswered = stepAnswer != null
   const isFirst = state.stepIndex === 0
-  const isLast = state.stepIndex === viewModel.interaction.steps.length - 1
-  const allAnswered = walkthroughBehavior.isResponseReady(state, viewModel.interaction)
+  const isLast = state.stepIndex === interaction.steps.length - 1
+  const allAnswered = walkthroughBehavior.isResponseReady(state, interaction)
+  // Recomputed rather than read off the phase, so the summary survives the
+  // move to `transitioning` after a rating is chosen. Same shared aggregate the
+  // host graded with, on the same inputs.
+  const cardResult = finished ? walkthroughBehavior.autoGrade(interaction, state) : null
 
   function submitStep(answer: WalkthroughStepAnswer) {
+    // Never overwrite an existing key: the first submitted objective result for
+    // a step is the one that counts, which is what makes stepping back through
+    // an answered walkthrough inspection rather than a second attempt.
     if (finished || step.id in state.answers) return
     const result = gradeWalkthroughStep(step, answer)
-    setState((current) => ({
-      ...current,
-      answers: { ...current.answers, [step.id]: answer },
-      results: { ...current.results, [step.id]: result },
-    }))
+    setResponse({
+      ...state,
+      answers: { ...state.answers, [step.id]: answer },
+      results: { ...state.results, [step.id]: result },
+    })
   }
 
   function goTo(index: number) {
-    if (index < 0 || index >= viewModel.interaction.steps.length) return
+    if (index < 0 || index >= interaction.steps.length) return
     Keyboard.dismiss()
-    setState((current) => ({ ...current, stepIndex: index }))
+    setResponse({ ...state, stepIndex: index })
   }
 
   function continueOrFinish() {
@@ -374,172 +373,163 @@ export function WalkthroughPreviewScreen({
       return
     }
     if (!allAnswered) return
-    setCardResult(walkthroughBehavior.autoGrade(viewModel.interaction, state))
-    setFinished(true)
+    onPrimaryAction()
   }
-
-  if (!presentation) return null
 
   const score = cardResult?.score == null ? null : Math.round(cardResult.score * 100)
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <ReviewPreviewHeader
-        current={viewModel.current}
-        exitLabel="Exit Walkthrough preview"
-        hint={finished ? 'Rate the card' : `Step ${state.stepIndex + 1} of ${viewModel.interaction.steps.length}`}
-        hintIcon={finished ? 'check-decagram-outline' : 'debug-step-over'}
-        onExit={() => router.replace('/today')}
-        total={viewModel.total}
-      />
+    <View style={styles.card}>
+      <WalkthroughBadge finished={finished} />
+      <RichTextNative style={styles.prompt} text={card.prompt.value} />
+      <RichTextNative style={styles.scenario} text={interaction.scenario.value} />
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={8}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+      <SafeCardImage label="Walkthrough diagram" source={interaction.image} />
+
+      {interaction.code && (
+        <FocusedCodeBlock
+          activeStep={step}
+          code={interaction.code.value}
+          language={interaction.code.language}
+        />
+      )}
+
+      <View style={styles.stepHeader}>
+        <Text style={styles.stepCount}>
+          Step {state.stepIndex + 1} of {interaction.steps.length}
+        </Text>
+        <View
+          accessibilityLabel={`${Object.keys(state.answers).length} of ${interaction.steps.length} steps answered`}
+          style={styles.stepDots}
         >
-          <View style={styles.card}>
-            <WalkthroughBadge finished={finished} />
-            <StructuredText parts={viewModel.promptParts} textStyle={styles.prompt} />
-            <StructuredText parts={viewModel.scenarioParts} textStyle={styles.scenario} />
-
-            {!finished && (
-              <InfoPanel kind="tip" parts={viewModel.globalTipParts} title="Tip for the walkthrough" />
-            )}
-
-            <FocusedCodeBlock activeStep={step} lines={viewModel.codeLines} />
-
-            <View style={styles.stepHeader}>
-              <Text style={styles.stepCount}>Step {state.stepIndex + 1} of {viewModel.interaction.steps.length}</Text>
-              <View accessibilityLabel={`${Object.keys(state.answers).length} of ${viewModel.interaction.steps.length} steps answered`} style={styles.stepDots}>
-                {viewModel.interaction.steps.map((item, index) => (
-                  <View
-                    key={item.id}
-                    style={[
-                      styles.stepDot,
-                      item.id in state.answers && styles.stepDotAnswered,
-                      index === state.stepIndex && styles.stepDotCurrent,
-                    ]}
-                  />
-                ))}
-              </View>
-            </View>
-
-            <View accessibilityLabel={`Walkthrough step ${state.stepIndex + 1}`} style={styles.stepPanel}>
-              <StructuredText parts={presentation.promptParts} textStyle={styles.stepPrompt} />
-
-              {step.response.type === 'multiple_choice' && (
-                <MultipleChoiceStep
-                  answer={stepAnswer}
-                  onChange={(ids) => setChoiceDrafts((current) => ({ ...current, [step.id]: ids }))}
-                  onSubmit={submitStep}
-                  presentation={presentation}
-                  result={stepResult}
-                  selected={choiceDrafts[step.id] ?? []}
-                  step={step as WalkthroughStep & { response: Extract<WalkthroughStep['response'], { type: 'multiple_choice' }> }}
-                />
-              )}
-
-              {step.response.type === 'exact_input' && (
-                <ExactInputStep
-                  answer={stepAnswer}
-                  draft={inputDrafts[step.id] ?? ''}
-                  onChange={(value) => setInputDrafts((current) => ({ ...current, [step.id]: value }))}
-                  onSubmit={submitStep}
-                  result={stepResult}
-                />
-              )}
-
-              {step.response.type === 'recall' && (
-                <RecallStep
-                  answer={stepAnswer}
-                  answerParts={presentation.recallAnswerParts ?? []}
-                  onSubmit={submitStep}
-                />
-              )}
-
-              {!stepAnswered && (
-                <InfoPanel kind="tip" parts={presentation.tipParts} title="Tip for this step" />
-              )}
-              {stepAnswered && (
-                <InfoPanel kind="explanation" parts={presentation.explanationParts} title="Explanation for this step" />
-              )}
-            </View>
-
-            <View style={styles.navigationRow}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ disabled: isFirst }}
-                disabled={isFirst}
-                onPress={() => goTo(state.stepIndex - 1)}
-                style={({ pressed }) => [styles.previousButton, isFirst && styles.disabled, pressed && styles.pressed]}
-              >
-                <MaterialCommunityIcons color={iteraColors.muted} name="chevron-left" size={20} />
-                <Text style={styles.previousText}>Previous</Text>
-              </Pressable>
-
-              {stepAnswered && !finished && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: isLast && !allAnswered }}
-                  disabled={isLast && !allAnswered}
-                  onPress={continueOrFinish}
-                  style={({ pressed }) => [styles.continueButton, isLast && !allAnswered && styles.disabled, pressed && styles.pressed]}
-                >
-                  <Text style={styles.continueText}>{isLast ? 'Finish' : 'Continue'}</Text>
-                  <MaterialCommunityIcons color={iteraColors.surface} name={isLast ? 'check' : 'chevron-right'} size={20} />
-                </Pressable>
-              )}
-            </View>
-
-            {finished && (
-              <View style={[styles.finalResult, cardResult?.correct === false ? styles.finalResultIncorrect : styles.finalResultCorrect]}>
-                <MaterialCommunityIcons
-                  color={cardResult?.correct === false ? iteraColors.error : iteraColors.success}
-                  name={cardResult?.correct === false ? 'alert-circle-outline' : 'check-circle-outline'}
-                  size={20}
-                />
-                <Text style={[styles.finalResultText, cardResult?.correct === false ? styles.incorrectText : styles.correctText]}>
-                  {cardResult == null
-                    ? 'Walkthrough complete'
-                    : cardResult.correct
-                      ? 'Every objective step is correct'
-                      : `${score}% of objective steps correct`}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {finished && (
-            <InfoPanel
-              kind="explanation"
-              parts={viewModel.globalExplanationParts}
-              title="Explanation for the walkthrough"
+          {interaction.steps.map((item, index) => (
+            <View
+              key={item.id}
+              style={[
+                styles.stepDot,
+                item.id in state.answers && styles.stepDotAnswered,
+                index === state.stepIndex && styles.stepDotCurrent,
+              ]}
             />
-          )}
+          ))}
+        </View>
+      </View>
 
-          {finished && (
-            <PreviewRatingControls
-              intervals={viewModel.ratingIntervals}
-              onSelect={setSelectedRating}
-              selected={selectedRating}
+      <View accessibilityLabel={`Walkthrough step ${state.stepIndex + 1}`} style={styles.stepPanel}>
+        <RichTextNative style={styles.stepPrompt} text={step.prompt.value} />
+
+        {step.response.type === 'multiple_choice' && (
+          <MultipleChoiceStep
+            answer={stepAnswer}
+            onChange={(ids) => setChoiceDrafts((current) => ({ ...current, [step.id]: ids }))}
+            onSubmit={submitStep}
+            result={stepResult}
+            selected={choiceDrafts[step.id] ?? []}
+            step={
+              step as WalkthroughStep & {
+                response: Extract<WalkthroughStep['response'], { type: 'multiple_choice' }>
+              }
+            }
+          />
+        )}
+
+        {step.response.type === 'exact_input' && (
+          <ExactInputStep
+            answer={stepAnswer}
+            draft={inputDrafts[step.id] ?? ''}
+            onChange={(value) => setInputDrafts((current) => ({ ...current, [step.id]: value }))}
+            onSubmit={submitStep}
+            result={stepResult}
+          />
+        )}
+
+        {step.response.type === 'recall' && (
+          <RecallStep
+            answer={stepAnswer}
+            answerContent={step.response.answer}
+            onSubmit={submitStep}
+          />
+        )}
+
+        {!stepAnswered && <InfoPanel content={step.tip} kind="tip" title="Tip for this step" />}
+        {stepAnswered && (
+          <InfoPanel
+            content={step.explanation}
+            kind="explanation"
+            title="Explanation for this step"
+          />
+        )}
+      </View>
+
+      <View style={styles.navigationRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: isFirst }}
+          disabled={isFirst}
+          onPress={() => goTo(state.stepIndex - 1)}
+          style={({ pressed }) => [
+            styles.previousButton,
+            isFirst && styles.disabled,
+            pressed && styles.pressed,
+          ]}
+        >
+          <MaterialCommunityIcons color={iteraColors.muted} name="chevron-left" size={20} />
+          <Text style={styles.previousText}>Previous</Text>
+        </Pressable>
+
+        {stepAnswered && !finished && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isLast && !allAnswered }}
+            disabled={isLast && !allAnswered}
+            onPress={continueOrFinish}
+            style={({ pressed }) => [
+              styles.continueButton,
+              isLast && !allAnswered && styles.disabled,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.continueText}>{isLast ? 'Finish' : 'Continue'}</Text>
+            <MaterialCommunityIcons
+              color={iteraColors.surface}
+              name={isLast ? 'check' : 'chevron-right'}
+              size={20}
             />
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </Pressable>
+        )}
+      </View>
+
+      {finished && (
+        <View
+          style={[
+            styles.finalResult,
+            cardResult?.correct === false ? styles.finalResultIncorrect : styles.finalResultCorrect,
+          ]}
+        >
+          <MaterialCommunityIcons
+            color={cardResult?.correct === false ? iteraColors.error : iteraColors.success}
+            name={cardResult?.correct === false ? 'alert-circle-outline' : 'check-circle-outline'}
+            size={20}
+          />
+          <Text
+            style={[
+              styles.finalResultText,
+              cardResult?.correct === false ? styles.incorrectText : styles.correctText,
+            ]}
+          >
+            {cardResult == null
+              ? 'Walkthrough complete'
+              : cardResult.correct
+                ? 'Every objective step is correct'
+                : `${score}% of objective steps correct`}
+          </Text>
+        </View>
+      )}
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
-  keyboardView: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
   card: { borderRadius: 20, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, paddingHorizontal: 18, paddingVertical: 20, alignItems: 'center', ...Platform.select({ ios: { shadowColor: iteraColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
   badge: { minHeight: 42, paddingHorizontal: 16, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 8 },
   badgeFinished: { backgroundColor: iteraColors.accentSofter },
@@ -547,7 +537,6 @@ const styles = StyleSheet.create({
   badgeTextFinished: { color: iteraColors.accentActive },
   prompt: { marginTop: 20, color: iteraColors.inkBrand, fontSize: 23, lineHeight: 31, fontWeight: '700', letterSpacing: -0.35, textAlign: 'center' },
   scenario: { marginTop: 10, color: iteraColors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
-  inlineCode: { color: iteraColors.accent, fontFamily: mono },
   infoPanel: { alignSelf: 'stretch', borderRadius: iteraRadii.card, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   tipPanel: { marginTop: 16, borderColor: '#f4dccb', backgroundColor: iteraColors.accentSofter },
   explanationPanel: { marginTop: 14, borderColor: '#cfe5d5', backgroundColor: iteraColors.successSoft },

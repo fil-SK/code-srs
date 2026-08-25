@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { MobileHeader } from '@/src/components/today/MobileHeader'
 import { mobileRuntimeMode } from '@/src/config/mobileRuntimeMode'
+import { useDemoWorkspaceOptional } from '@/src/demo/demoWorkspaceContext'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 export type ProfileSectionId =
@@ -220,6 +221,7 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
   const router = useRouter()
   const { identity, signOut } = useAuth()
   const demo = mobileRuntimeMode === 'demo'
+  const demoWorkspace = useDemoWorkspaceOptional()
   const [selectedSection, setSelectedSection] = useState<ProfileSectionId>(
     isProfileSectionId(initialSection) ? initialSection : 'import-export',
   )
@@ -316,6 +318,25 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
             <MaterialCommunityIcons color={iteraColors.muted} name="bug-outline" size={21} />
             <Text style={styles.devRowLabel}>Repository diagnostics (dev)</Text>
             <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={22} />
+          </Pressable>
+        ) : null}
+
+        {/* A development and marketing convenience, not a product feature.
+            Reviewing demo cards changes their scheduling in memory, so a second
+            run of a demo starts from wherever the first one left off; this puts
+            the deterministic workspace back. It is __DEV__-only here and
+            refused again inside resetDemoWorkspace, and it is deliberately NOT
+            offered on the caught-up Review screen, where it would read as a
+            learner feature. */}
+        {__DEV__ && demoWorkspace ? (
+          <Pressable
+            accessibilityHint="Restores the original demo cards, schedules and notifications"
+            accessibilityRole="button"
+            onPress={demoWorkspace.resetDemoWorkspace}
+            style={({ pressed }) => [styles.devRow, pressed && styles.pressed]}
+          >
+            <MaterialCommunityIcons color={iteraColors.muted} name="restore" size={21} />
+            <Text style={styles.devRowLabel}>Reset demo workspace (dev)</Text>
           </Pressable>
         ) : null}
 
