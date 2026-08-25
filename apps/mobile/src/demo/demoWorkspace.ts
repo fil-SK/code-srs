@@ -1,6 +1,16 @@
-import { CARD_SCHEMA_VERSION, richText, type Card, type Deck, type ID, type Millis, type ReviewLog } from '@itera/core'
+import {
+  CARD_SCHEMA_VERSION,
+  computeStreak,
+  richText,
+  type Card,
+  type Deck,
+  type ID,
+  type Millis,
+  type ReviewLog,
+} from '@itera/core'
 
 import { DEMO_CARD_SEEDS } from './demoCardContent'
+import { createDemoReviewHistory, demoTodayRetention } from './demoReviewHistory'
 import { isDemoCardDue, resolveDemoScheduling } from './demoScheduling'
 import type { MobileCardStatus } from '@/src/types/library'
 
@@ -20,16 +30,8 @@ import type { MobileCardStatus } from '@/src/types/library'
 // fixture-systems-distributed in Progress) and four different card counts. Here
 // an id refers to one entity and every screen reads the same record.
 //
-// The derivation rule, stated once:
-//
-//   - Anything that is a sum or roll-up of deck data (card counts, due counts,
-//     mastery, last studied, collection totals, Today's due total) is DERIVED
-//     from the card list below. Two screens can no longer disagree about the
-//     same deck.
-//   - Anything that would need real review history (streak, retention, the
-//     activity map, the retention series, milestones) stays an authored
-//     deterministic constant. Making those real is explicitly not this
-//     milestone's work.
+// Every learning metric is derived from canonical Cards + ReviewLogs through
+// @itera/core. Authored values in this file are seed inputs only.
 
 // One definition, shared with the presentation contract the deck list renders.
 export type DemoCardStatus = MobileCardStatus
@@ -49,14 +51,6 @@ export interface DemoDeck extends Deck {
   description: string
   /** `null` means unfiled - the deck belongs to no collection. */
   collectionId: ID | null
-  /** `null` means never studied. Kept as a day offset so the demo cannot drift. */
-  lastStudiedDaysAgo: number | null
-  /**
-   * Authored, not derived: a retention figure needs real review history, which
-   * this milestone deliberately does not invent. `null` means the demo deck has
-   * not been reviewed enough to show one.
-   */
-  retentionPercent: number | null
 }
 
 /**
@@ -91,40 +85,19 @@ export interface DemoWorkspace {
   cards: DemoCard[]
   notifications: DemoNotification[]
   /**
-   * Reviews performed in this demo session, in core's canonical `ReviewLog`
-   * shape so a later milestone can feed Today and Progress from them without a
-   * second history model being invented. In memory only - never written to
-   * Dexie, SQLite or Supabase, and gone on a full app restart.
+   * Seeded history plus reviews performed in the current run, all in core's
+   * canonical shape. In memory only - never written to Dexie, SQLite or
+   * Supabase, and gone on a full app restart.
    */
   reviewLogs: ReviewLog[]
   /** The instant this workspace was built, which every demo due date is relative to. */
   startedAt: Millis
 }
 
-// Authored constants. Each is used everywhere the concept appears, so Today and
-// Progress cannot report different streaks for the same workspace again.
-export const DEMO_STREAK_DAYS = 12
-export const DEMO_BEST_STREAK_DAYS = 14
-export const DEMO_RETENTION_PERCENT = 89
-export const DEMO_REVIEWS_THIS_PERIOD = 81
-export const DEMO_MINUTES_PER_CARD = 1.5
-export const DEMO_RANGE_LABEL = 'Jul 26 - Aug 24, 2026'
-
-// A fixed epoch, so "2 days ago" means the same thing in every screenshot and
-// the last-studied sort has a stable order regardless of when the demo runs.
+// Entity authoring dates are stable fixture metadata. Learning-history dates
+// are deliberately relative to the real local day in demoReviewHistory.ts.
 const DEMO_EPOCH = Date.UTC(2026, 7, 24)
 const DAY_MS = 86_400_000
-
-export function demoLastStudiedAt(daysAgo: number | null): number | undefined {
-  return daysAgo === null ? undefined : DEMO_EPOCH - daysAgo * DAY_MS
-}
-
-export function demoLastStudiedLabel(daysAgo: number | null): string {
-  if (daysAgo === null) return 'Never'
-  if (daysAgo === 0) return 'Today'
-  if (daysAgo === 1) return 'Yesterday'
-  return `${daysAgo} days ago`
-}
 
 // The same six labels the web card toolbar uses. Derived per card rather than
 // authored on each one, so a label cannot drift from its interaction type.
@@ -150,35 +123,6 @@ export const DEMO_SCOPE_RAIL: (ID | 'all' | 'unfiled')[] = [
   'unfiled',
   'fixture-systems',
   'fixture-research',
-]
-
-// Review history the demo does not simulate: an activity map, a retention
-// series and past milestones. Authored deterministic values, unchanged in shape
-// from the presentation fixture they replace.
-export const DEMO_ACTIVITY_LEVELS: (0 | 1 | 2 | 3 | 4)[] = [
-  0, 0, 1, 2, 0, 0, 0,
-  1, 3, 4, 3, 2, 0, 0,
-  2, 4, 4, 3, 2, 1, 0,
-  1, 3, 4, 4, 2, 1, 0,
-  0, 2,
-]
-
-export const DEMO_RETENTION_SERIES: number[] = [
-  82, 81, 84, 83, 80, 81, 86, 85, 80, 78, 77, 80, 75, 78, 77, 82, 81, 85,
-]
-
-export interface DemoMilestone {
-  id: string
-  type: 'streak' | 'retention'
-  title: string
-  subtitle: string
-  dateLabel: string
-}
-
-export const DEMO_MILESTONES: DemoMilestone[] = [
-  { id: 'streak-7', type: 'streak', title: '7-day streak', subtitle: 'Keep it going', dateLabel: 'Aug 12' },
-  { id: 'retention-80', type: 'retention', title: '80% retention', subtitle: 'Great recall', dateLabel: 'Aug 8' },
-  { id: 'retention-70', type: 'retention', title: '70% retention', subtitle: 'Building consistency', dateLabel: 'Jul 30' },
 ]
 
 const collections: DemoCollection[] = [
@@ -210,8 +154,6 @@ const decks: DemoDeck[] = [
     name: 'Algorithms & Problem Solving',
     description: 'Invariants, data structures, graph reasoning, and more',
     collectionId: 'fixture-interview-core',
-    retentionPercent: null,
-    lastStudiedDaysAgo: 4,
     createdAt: DEMO_EPOCH - 90 * DAY_MS,
     updatedAt: DEMO_EPOCH - 4 * DAY_MS,
   },
@@ -220,8 +162,6 @@ const decks: DemoDeck[] = [
     name: 'LeetCode Patterns',
     description: 'Common patterns and problem-solving techniques',
     collectionId: 'fixture-interview-core',
-    retentionPercent: null,
-    lastStudiedDaysAgo: null,
     createdAt: DEMO_EPOCH - 20 * DAY_MS,
     updatedAt: DEMO_EPOCH - 20 * DAY_MS,
   },
@@ -230,8 +170,6 @@ const decks: DemoDeck[] = [
     name: 'Compilers & MLIR',
     description: 'Transferable compiler concepts from theory to IR',
     collectionId: 'fixture-languages-cpp',
-    retentionPercent: 84,
-    lastStudiedDaysAgo: 1,
     createdAt: DEMO_EPOCH - 120 * DAY_MS,
     updatedAt: DEMO_EPOCH - 1 * DAY_MS,
   },
@@ -240,8 +178,6 @@ const decks: DemoDeck[] = [
     name: 'Modern C++ & Memory',
     description: 'Values, lifetime, ownership, and performance',
     collectionId: 'fixture-languages-cpp',
-    retentionPercent: 89,
-    lastStudiedDaysAgo: 2,
     createdAt: DEMO_EPOCH - 150 * DAY_MS,
     updatedAt: DEMO_EPOCH - 2 * DAY_MS,
   },
@@ -250,8 +186,6 @@ const decks: DemoDeck[] = [
     name: 'Systems & Distributed Systems',
     description: 'Concurrency, storage, networking, and scaling',
     collectionId: 'fixture-systems',
-    retentionPercent: null,
-    lastStudiedDaysAgo: null,
     createdAt: DEMO_EPOCH - 45 * DAY_MS,
     updatedAt: DEMO_EPOCH - 45 * DAY_MS,
   },
@@ -260,8 +194,6 @@ const decks: DemoDeck[] = [
     name: 'Computer Networks',
     description: 'Network layers, routing, TCP/IP, and protocols',
     collectionId: 'fixture-systems',
-    retentionPercent: null,
-    lastStudiedDaysAgo: null,
     createdAt: DEMO_EPOCH - 1 * DAY_MS,
     updatedAt: DEMO_EPOCH - 1 * DAY_MS,
   },
@@ -270,8 +202,6 @@ const decks: DemoDeck[] = [
     name: 'Compiler Research Papers',
     description: 'Key papers on compiler design and optimizations',
     collectionId: 'fixture-research',
-    retentionPercent: null,
-    lastStudiedDaysAgo: null,
     createdAt: DEMO_EPOCH - 30 * DAY_MS,
     updatedAt: DEMO_EPOCH - 30 * DAY_MS,
   },
@@ -280,8 +210,6 @@ const decks: DemoDeck[] = [
     name: 'Security Engineering',
     description: 'Security concepts, threat models, and best practices',
     collectionId: null,
-    retentionPercent: null,
-    lastStudiedDaysAgo: null,
     createdAt: DEMO_EPOCH - 60 * DAY_MS,
     updatedAt: DEMO_EPOCH - 60 * DAY_MS,
   },
@@ -321,8 +249,17 @@ function cardCountFor(cards: DemoCard[], deckId: ID): number {
 
 // Notification copy is built from the same counts the screens show, so an inbox
 // cannot claim a deck has five cards due while the deck itself says three.
-function createNotifications(cards: DemoCard[], now: Millis): DemoNotification[] {
+function createNotifications(
+  cards: DemoCard[],
+  reviewLogs: ReviewLog[],
+  now: Millis,
+): DemoNotification[] {
   const dueTotal = cards.filter((card) => isDemoCardDue(card, now)).length
+  const streak = computeStreak(reviewLogs, now).current
+  // The same trailing-30-day window Today shows, so the inbox cannot quote a
+  // retention figure the dashboard disagrees with.
+  const retention = demoTodayRetention(reviewLogs, now)
+  const retentionPercent = retention === null ? null : Math.round(retention * 100)
   const interviewCoreCards = decks
     .filter((deck) => deck.collectionId === 'fixture-interview-core')
     .reduce((total, deck) => total + cardCountFor(cards, deck.id), 0)
@@ -352,8 +289,8 @@ function createNotifications(cards: DemoCard[], now: Millis): DemoNotification[]
       id: 'fixture-streak',
       group: 'today',
       kind: 'streak',
-      title: `${DEMO_STREAK_DAYS}-day streak unlocked`,
-      body: `Amazing! You've kept your streak alive for ${DEMO_STREAK_DAYS} days.`,
+      title: `${streak}-day streak unlocked`,
+      body: `Amazing! You've kept your streak alive for ${streak} days.`,
       timeLabel: '1h ago',
       unread: true,
     },
@@ -361,8 +298,8 @@ function createNotifications(cards: DemoCard[], now: Millis): DemoNotification[]
       id: 'fixture-retention',
       group: 'today',
       kind: 'retention',
-      title: `Retention improved to ${DEMO_RETENTION_PERCENT}%`,
-      body: 'Great job! Your retention is up 5% from last week.',
+      title: retentionPercent === null ? 'Retention is taking shape' : `Retention is ${retentionPercent}%`,
+      body: 'Great job! Mature reviews are building a meaningful signal.',
       timeLabel: '2h ago',
       unread: false,
     },
@@ -408,14 +345,24 @@ function createNotifications(cards: DemoCard[], now: Millis): DemoNotification[]
  * a fixed instant; the app passes the real clock once, at startup.
  */
 export function createDemoWorkspace(now: Millis = Date.now()): DemoWorkspace {
-  const cards = createCards(now)
+  // Cards start in the authored "new" state, the history is replayed over them
+  // through the shared scheduler, and each reviewed card then *takes* the state
+  // that replay left it in. A card's current scheduling is therefore the result
+  // of its own last seeded review rather than a second, independently authored
+  // claim about it - see demoReviewHistory.ts.
+  const newCards = createCards(now)
+  const history = createDemoReviewHistory(now, newCards)
+  const cards = newCards.map((card) => {
+    const reviewed = history.scheduling.get(card.id)
+    return reviewed === undefined ? card : { ...card, scheduling: reviewed }
+  })
 
   return {
     collections: collections.map((collection) => ({ ...collection })),
     decks: decks.map((deck) => ({ ...deck })),
     cards,
-    notifications: createNotifications(cards, now),
-    reviewLogs: [],
+    notifications: createNotifications(cards, history.logs, now),
+    reviewLogs: history.logs,
     startedAt: now,
   }
 }

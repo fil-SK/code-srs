@@ -88,8 +88,9 @@ describe('the seeded demo workspace', () => {
     )
   })
 
-  it('starts with no review history', () => {
-    expect(workspace.reviewLogs).toEqual([])
+  it('starts with a modest seeded review history', () => {
+    expect(workspace.reviewLogs.length).toBeGreaterThan(20)
+    expect(workspace.reviewLogs.length).toBeLessThan(120)
   })
 
   it('leaves some cards not due, so the demo is not one undifferentiated pile', () => {

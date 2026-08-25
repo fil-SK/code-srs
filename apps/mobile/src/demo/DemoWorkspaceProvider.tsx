@@ -94,20 +94,26 @@ export function DemoWorkspaceProvider({ children }: { children: ReactNode }) {
   // least allowed to have one.
   const undoDemoReview = useCallback(
     (cardId: ID, before: SchedulingState, logId: ID) => {
-      update((workspace) => ({
-        ...workspace,
-        cards: workspace.cards.map((card) =>
-          card.id === cardId ? { ...card, scheduling: before } : card,
-        ),
-        reviewLogs: workspace.reviewLogs.filter((log) => log.id !== logId),
-      }))
+      update((workspace) => {
+        if (!workspace.reviewLogs.some((log) => log.id === logId)) return workspace
+        return {
+          ...workspace,
+          cards: workspace.cards.map((card) =>
+            card.id === cardId ? { ...card, scheduling: before } : card,
+          ),
+          reviewLogs: workspace.reviewLogs.filter((log) => log.id !== logId),
+        }
+      })
     },
     [update],
   )
 
   const resetDemoWorkspace = useCallback(() => {
     if (!__DEV__) return
-    setState(initialState())
+    setState((current) => ({
+      workspace: createDemoWorkspace(current.workspace.startedAt),
+      now: current.workspace.startedAt,
+    }))
   }, [])
 
   const value = useMemo(

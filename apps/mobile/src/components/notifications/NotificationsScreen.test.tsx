@@ -56,12 +56,13 @@ describe('unread state', () => {
 
   it('filters to unread only', () => {
     renderInbox(workspace)
-    expect(screen.queryByText('Retention improved to 89%')).toBeTruthy()
+    const retention = workspace.notifications.find((item) => item.id === 'fixture-retention')!
+    expect(screen.queryByText(retention.title)).toBeTruthy()
 
     fireEvent.press(screen.getByLabelText('Show unread only'))
 
     // The retention item starts read, so it drops out of the unread view.
-    expect(screen.queryByText('Retention improved to 89%')).toBeNull()
+    expect(screen.queryByText(retention.title)).toBeNull()
     expect(screen.queryByText("Today's session is ready")).toBeTruthy()
   })
 
@@ -139,8 +140,9 @@ describe('destinations', () => {
   it('only marks read when there is no deck to open', () => {
     const onMarkRead = jest.fn()
     renderInbox(workspace, { onMarkRead })
+    const streak = workspace.notifications.find((item) => item.id === 'fixture-streak')!
 
-    fireEvent.press(screen.getByText('12-day streak unlocked'))
+    fireEvent.press(screen.getByText(streak.title))
 
     expect(onMarkRead).toHaveBeenCalledWith('fixture-streak')
     expect(pushedDeckIds()).toEqual([])
@@ -148,12 +150,13 @@ describe('destinations', () => {
 
   it('describes which of the two a row will do', () => {
     renderInbox(workspace)
+    const streak = workspace.notifications.find((item) => item.id === 'fixture-streak')!
 
     expect(
       screen.getByLabelText(/Modern C\+\+ & Memory has 3 cards due/).props.accessibilityHint,
     ).toBe('Marks this as read and opens the deck')
     expect(
-      screen.getByLabelText(/12-day streak unlocked/).props.accessibilityHint,
+      screen.getByLabelText(new RegExp(streak.title)).props.accessibilityHint,
     ).toBe('Marks this notification as read')
   })
 })

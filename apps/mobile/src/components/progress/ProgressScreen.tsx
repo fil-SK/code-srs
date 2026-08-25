@@ -52,7 +52,11 @@ function Activity({ days }: { days: MobileProgressViewModel['activityDays'] }) {
       <Text style={styles.sectionSubtitle}>Daily cards reviewed</Text>
       <View accessibilityLabel="Review activity over the last 30 days" style={styles.heatmap}>
         {days.map((day) => (
-          <View key={day.id} style={[styles.heatCell, { backgroundColor: heatColors[day.level] }]} />
+          <View
+            key={day.id}
+            accessibilityLabel={`${day.count} reviews`}
+            style={[styles.heatCell, { backgroundColor: heatColors[day.level] }]}
+          />
         ))}
       </View>
       <View style={styles.legend}>
@@ -64,15 +68,31 @@ function Activity({ days }: { days: MobileProgressViewModel['activityDays'] }) {
   )
 }
 
-function RetentionChart({ percent, series }: { percent: number; series: number[] }) {
+function RetentionChart({
+  percent,
+  series,
+  labels,
+}: {
+  percent: number | null
+  series: (number | null)[]
+  labels: [string, string, string]
+}) {
   const [width, setWidth] = useState(0)
   const height = 116
   const padX = 8
   const usableHeight = 72
+  const observed = series.filter((value): value is number => value !== null)
+  let axisMin = observed.length > 0 ? Math.max(0, Math.floor((Math.min(...observed) - 0.05) * 10) / 10) : 0
+  let axisMax = observed.length > 0 ? Math.min(1, Math.ceil((Math.max(...observed) + 0.05) * 10) / 10) : 1
+  if (axisMax <= axisMin) {
+    axisMin = Math.max(0, axisMin - 0.1)
+    axisMax = Math.min(1, axisMax + 0.1)
+  }
   const points = width > 0
     ? series.map((value, index) => ({
         x: padX + (index / (series.length - 1)) * (width - padX * 2),
-        y: 14 + ((100 - value) / 50) * usableHeight,
+        y: value === null ? null : 14 + ((axisMax - value) / (axisMax - axisMin)) * usableHeight,
+        value,
       }))
     : []
 
@@ -87,12 +107,17 @@ function RetentionChart({ percent, series }: { percent: number; series: number[]
           <Text style={styles.sectionTitle}>Retention</Text>
           <Text style={styles.sectionSubtitle}>How well your knowledge is sticking</Text>
         </View>
-        <View style={styles.percentPill}><Text style={styles.percentPillText}>{percent}%</Text></View>
+        <View style={styles.percentPill}><Text style={styles.percentPillText}>{percent === null ? '—' : `${percent}%`}</Text></View>
       </View>
-      <View onLayout={handleLayout} style={[styles.chart, { height }]}>
+      <View
+        accessibilityLabel="Retention over time chart"
+        onLayout={handleLayout}
+        style={[styles.chart, { height }]}
+      >
         {[0, 1, 2].map((line) => <View key={line} style={[styles.chartGrid, { top: 18 + line * 32 }]} />)}
         {points.slice(0, -1).map((point, index) => {
           const next = points[index + 1]
+          if (point.y === null || next.y === null) return null
           const length = Math.hypot(next.x - point.x, next.y - point.y)
           const angle = Math.atan2(next.y - point.y, next.x - point.x)
           return (
@@ -110,11 +135,22 @@ function RetentionChart({ percent, series }: { percent: number; series: number[]
             />
           )
         })}
+        {points.map((point, index) => {
+          if (point.y === null) return null
+          const previousKnown = index > 0 && points[index - 1]?.y !== null
+          const nextKnown = index < points.length - 1 && points[index + 1]?.y !== null
+          if (previousKnown || nextKnown) return null
+          return (
+            <View
+              key={`point-${index}`}
+              accessibilityLabel={`Isolated retention observation, ${Math.round((point.value ?? 0) * 100)} percent`}
+              style={[styles.chartPoint, { left: point.x - 4, top: point.y - 4 }]}
+            />
+          )
+        })}
       </View>
       <View style={styles.chartLabels}>
-        <Text style={styles.chartLabel}>Aug 24</Text>
-        <Text style={styles.chartLabel}>Sep 7</Text>
-        <Text style={styles.chartLabel}>Sep 23</Text>
+        {labels.map((label, index) => <Text key={`${label}-${index}`} style={styles.chartLabel}>{label}</Text>)}
       </View>
     </SectionCard>
   )
@@ -167,6 +203,9 @@ function Milestones({ milestones }: { milestones: MobileProgressViewModel['miles
     <SectionCard>
       <Text style={styles.sectionTitle}>Recent milestones</Text>
       <View style={styles.list}>
+        {milestones.length === 0 && (
+          <Text style={styles.rowSubtitle}>Keep reviewing to reach your first milestone.</Text>
+        )}
         {milestones.map((milestone, index) => {
           const streak = milestone.type === 'streak'
           return (
@@ -217,7 +256,11 @@ export function ProgressScreen({ viewModel }: { viewModel: MobileProgressViewMod
           <View style={styles.metricGrid}>{viewModel.metrics.map((metric) => <MetricCard key={metric.id} metric={metric} />)}</View>
         </View>
         <Activity days={viewModel.activityDays} />
-        <RetentionChart percent={viewModel.retentionPercent} series={viewModel.retentionSeries} />
+        <RetentionChart
+          labels={viewModel.retentionLabels}
+          percent={viewModel.retentionPercent}
+          series={viewModel.retentionSeries}
+        />
         <DeckPerformance
           decks={viewModel.decks}
           onOpenDeck={(deckId) =>
@@ -266,6 +309,7 @@ const styles = StyleSheet.create({
   chart: { marginTop: 12, position: 'relative', overflow: 'hidden' },
   chartGrid: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: iteraColors.border },
   chartSegment: { position: 'absolute', height: 3, borderRadius: 2, backgroundColor: iteraColors.accent, transformOrigin: 'left center' },
+  chartPoint: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: iteraColors.accent },
   chartLabels: { flexDirection: 'row', justifyContent: 'space-between' },
   chartLabel: { color: iteraColors.muted, fontSize: 11 },
   unavailableLabel: { color: iteraColors.muted, fontSize: 12, fontWeight: '600' },

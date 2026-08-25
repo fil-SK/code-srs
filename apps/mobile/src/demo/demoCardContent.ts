@@ -34,38 +34,15 @@ export interface DemoCardSeed {
   createdDaysAgo: number
 }
 
-// Four scheduling shapes, so the seeds below stay readable and the demo's due
-// mix cannot drift by a typo in one number.
-const matureDue = (days: number): DemoSchedulingSeed => ({
-  state: 'review',
-  dueOffsetDays: -days,
-  reps: 6,
-  lapses: 1,
-  stability: 12.4,
-  difficulty: 5.1,
-  lastReviewDaysAgo: 12,
-})
-
-const matureLater = (days: number): DemoSchedulingSeed => ({
-  state: 'review',
-  dueOffsetDays: days,
-  reps: 8,
-  lapses: 0,
-  stability: 21.8,
-  difficulty: 4.3,
-  lastReviewDaysAgo: 3,
-})
-
-const learning = (offsetDays: number): DemoSchedulingSeed => ({
-  state: 'learning',
-  dueOffsetDays: offsetDays,
-  reps: 2,
-  lapses: 1,
-  stability: 1.6,
-  difficulty: 6.7,
-  lastReviewDaysAgo: 1,
-})
-
+// Every card is authored in the one state a card can honestly be authored in:
+// New. A card that has seeded history in demoReviewHistory.ts is then advanced
+// by replaying that history through the shared FSRS scheduler, and it *takes*
+// the state the replay leaves it in.
+//
+// There is deliberately no helper for authoring a mature or learning card. Two
+// of those used to exist, and they were the bug: a card could claim to be in
+// learning while its own most recent ReviewLog said it had graduated. A state
+// nobody can write down is a state that cannot contradict the history.
 const fresh = (offsetDays: number): DemoSchedulingSeed => ({
   state: 'new',
   dueOffsetDays: offsetDays,
@@ -75,6 +52,11 @@ const fresh = (offsetDays: number): DemoSchedulingSeed => ({
   difficulty: 0,
   lastReviewDaysAgo: null,
 })
+
+// The pre-history state of a card the demo has reviewed. Uniform on purpose:
+// the replay overwrites it, so nothing may depend on this number and it cannot
+// drift out of step with the history that follows it.
+const introducedBeforeHistory = (): DemoSchedulingSeed => fresh(-30)
 
 const CODE_COMPARISON = {
   trimOuterWhitespace: true,
@@ -92,7 +74,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
     tip: 'Two independent yes/no questions, not one sliding scale.',
     tag: 'value-categories',
     createdDaysAgo: 88,
-    scheduling: matureDue(2),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'recall',
       answer: richText(
@@ -115,7 +97,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'guarantees you may destroy it or assign to it; it does not guarantee what `size()` returns.',
     tag: 'memory',
     createdDaysAgo: 84,
-    scheduling: matureLater(4),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'walkthrough',
       scenario: richText(
@@ -183,7 +165,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'running deterministically at scope exit, including during stack unwinding.',
     tag: 'raii',
     createdDaysAgo: 80,
-    scheduling: matureDue(1),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'multiple_choice',
       selectionMode: 'multiple',
@@ -222,7 +204,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'expression, so there is no window in which a raw pointer is unowned.',
     tag: 'smart-pointers',
     createdDaysAgo: 40,
-    scheduling: learning(-0.5),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'write_code',
       language: 'cpp',
@@ -243,7 +225,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'declaration order, then bases in reverse declaration order.',
     tag: 'object-lifetime',
     createdDaysAgo: 36,
-    scheduling: learning(3),
+    scheduling: fresh(3),
     interaction: {
       type: 'ordering',
       randomize: true,
@@ -305,7 +287,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
     tip: 'The guarantee is about definitions, not about uses.',
     tag: 'ssa',
     createdDaysAgo: 118,
-    scheduling: matureDue(3),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'recall',
       answer: richText(
@@ -328,7 +310,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'is why affine passes run before the lowering, never after.',
     tag: 'mlir',
     createdDaysAgo: 110,
-    scheduling: matureLater(2),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'walkthrough',
       scenario: richText(
@@ -401,7 +383,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'which is why pipelines are tuned rather than derived.',
     tag: 'passes',
     createdDaysAgo: 100,
-    scheduling: matureDue(1),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'multiple_choice',
       selectionMode: 'multiple',
@@ -439,7 +421,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'dominates that it does not strictly dominate itself.',
     tag: 'dominance',
     createdDaysAgo: 74,
-    scheduling: learning(-1),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'ordering',
       randomize: true,
@@ -466,7 +448,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'Returning `{}` means the operation was not folded.',
     tag: 'rewriting',
     createdDaysAgo: 66,
-    scheduling: learning(-0.25),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'write_code',
       language: 'cpp',
@@ -531,7 +513,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
     tip: 'The same three points every correctness proof by induction uses.',
     tag: 'invariants',
     createdDaysAgo: 88,
-    scheduling: matureDue(5),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'recall',
       answer: richText(
@@ -552,7 +534,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'can always be excluded from one half in O(1).',
     tag: 'searching',
     createdDaysAgo: 60,
-    scheduling: learning(-2),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'walkthrough',
       scenario: richText('Search for `0` in `[4, 5, 6, 7, 0, 1, 2]`.'),
@@ -612,7 +594,7 @@ export const DEMO_CARD_SEEDS: DemoCardSeed[] = [
       'is exactly why it is the wrong tool for a latency budget.',
     tag: 'complexity',
     createdDaysAgo: 55,
-    scheduling: learning(-0.75),
+    scheduling: introducedBeforeHistory(),
     interaction: {
       type: 'multiple_choice',
       selectionMode: 'multiple',

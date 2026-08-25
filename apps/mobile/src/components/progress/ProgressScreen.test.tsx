@@ -49,7 +49,6 @@ describe('Deck performance', () => {
       expect(deck.retentionKnown).toBe(deck.retentionLabel !== 'Not enough data')
     }
     expect(viewModel.decks.some((deck) => deck.retentionKnown)).toBe(true)
-    expect(viewModel.decks.some((deck) => !deck.retentionKnown)).toBe(true)
   })
 
   it('keeps the unimplemented range options visibly unavailable', () => {
@@ -59,6 +58,17 @@ describe('Deck performance', () => {
       const control = screen.getByLabelText(range + ' range unavailable')
       expect(control.props.accessibilityState?.disabled).toBe(true)
     }
+  })
+
+  it('renders isolated retention buckets as points without bridging gaps', () => {
+    render(<ProgressScreen viewModel={viewModel} />)
+    fireEvent(
+      screen.getByLabelText('Retention over time chart'),
+      'layout',
+      { nativeEvent: { layout: { width: 320, height: 116, x: 0, y: 0 } } },
+    )
+
+    expect(screen.getAllByLabelText(/Isolated retention observation/).length).toBeGreaterThan(0)
   })
 })
 

@@ -42,8 +42,8 @@ Update it in the same commit as any change to a listed capability.
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
 | Greeting | today/greetings | yes | yes | implemented |
-| Due count, streak, retention | domain/stats/* | yes | demo workspace | deferred — master plan Phase 5; due totals are derived from demo cards, streak and retention are authored constants (D368) |
-| Continue Learning | domain/stats/deckMetrics | yes | demo workspace | deferred — master plan Phase 5; each row now opens its own deck (D374) |
+| Due count, streak, retention | domain/stats/* | yes | demo workspace | implemented (demo/local) — all three derive from canonical Cards + ReviewLogs through shared semantics; current activity reacts in memory |
+| Continue Learning | domain/stats/deckMetrics, todayMetrics | yes | demo workspace | implemented (demo/local) — shared ordering and metrics over current cards; each row opens its own deck |
 | Session start | — | yes | starts a demo session | implemented (demo/local) — Today's CTA opens the real local session; cloud persistence deferred |
 | Adjust session | — | yes | no | deferred — master plan Phase 5 |
 | Pace chart | — | yes | no | web-only (decision) — native hierarchy omits it; not a functionality gap |
@@ -94,12 +94,12 @@ Update it in the same commit as any change to a listed capability.
 
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
-| Five headline KPIs | domain/stats/progressMetrics, learned, streak | yes | demo workspace | deferred — master plan Phase 8 |
-| Activity heat map | domain/stats/calendarDay | yes | demo workspace | deferred — master plan Phase 8 |
-| Retention chart | charts/retentionChartPath | yes | demo workspace | deferred — master plan Phase 8 |
-| Deck performance | domain/stats/deckMetrics | yes | demo workspace | deferred — master plan Phase 8; each row now opens its deck, metrics stay demo values (D368, D374) |
-| Recent milestones | domain/stats/progressMetrics | yes | demo workspace | deferred — master plan Phase 8 |
-| Date range selection | domain/stats/dateRange | yes | 30D only | deferred — master plan Phase 8 |
+| Five headline KPIs | domain/stats/progressMetrics, learned, streak | yes | demo workspace | implemented (demo/local) — Learned, Due, Reviews, Retention and Current streak use shared definitions over demo Cards + ReviewLogs |
+| Activity heat map | domain/stats/calendarDay, progressMetrics | yes | demo workspace | implemented (demo/local) — 30 local calendar days, including current-session reviews and zero days |
+| Retention chart | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — mature-only buckets preserve gaps and isolated observations |
+| Deck performance | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — real Learned/Due/Retention inputs; each row opens its deck |
+| Recent milestones | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — derived from seeded and current ReviewLogs; no milestone entity |
+| Date range selection | domain/stats/dateRange | yes | 30D only | implemented (demo/local) — the owner-approved hierarchy exposes one real 30D range; 3M/1Y remain visibly unavailable |
 | Review history | domain/stats/reviewHistory | yes | no | deferred — master plan Phase 8 |
 | Progress sub-pages | — | "Soon" placeholders | no | deferred — unbuilt on both; features.md "Planned" |
 

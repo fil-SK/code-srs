@@ -1,5 +1,6 @@
 import { createDemoWorkspace, DEMO_SCOPE_RAIL } from './demoWorkspace'
 import { isDemoCardDue } from './demoScheduling'
+import { metricsFor } from '@itera/core'
 import { demoDeckMetrics, demoTodayViewModel, demoProgressViewModel } from './demoSelectors'
 
 // One fixed instant for the whole file: due-ness is a comparison against an
@@ -86,8 +87,8 @@ describe('demo workspace derived numbers', () => {
   it('derives every deck count from that deck s cards', () => {
     for (const deck of workspace.decks) {
       const deckCards = workspace.cards.filter((card) => card.deckId === deck.id)
-      expect(metrics.get(deck.id)?.cardCount).toBe(deckCards.length)
-      expect(metrics.get(deck.id)?.dueCount).toBe(deckCards.filter((card) => isDemoCardDue(card, NOW)).length)
+      expect(metricsFor(metrics, deck.id).cardCount).toBe(deckCards.length)
+      expect(metricsFor(metrics, deck.id).dueCount).toBe(deckCards.filter((card) => isDemoCardDue(card, NOW)).length)
     }
   })
 

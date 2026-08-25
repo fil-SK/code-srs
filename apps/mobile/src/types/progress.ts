@@ -10,6 +10,7 @@ export interface MobileProgressMetricViewModel {
 export interface MobileProgressActivityDay {
   id: string
   level: 0 | 1 | 2 | 3 | 4
+  count: number
 }
 
 export interface MobileProgressDeckViewModel {
@@ -38,8 +39,10 @@ export interface MobileProgressViewModel {
   rangeLabel: string
   metrics: MobileProgressMetricViewModel[]
   activityDays: MobileProgressActivityDay[]
-  retentionPercent: number
-  retentionSeries: number[]
+  retentionPercent: number | null
+  /** Null buckets are real gaps and must never be joined by a line. */
+  retentionSeries: (number | null)[]
+  retentionLabels: [string, string, string]
   decks: MobileProgressDeckViewModel[]
   milestones: MobileProgressMilestoneViewModel[]
 }

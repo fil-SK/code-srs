@@ -1,5 +1,21 @@
 import {
+  buildCardDeckMap,
+  buildContinueLearning,
+  buildRange,
+  calendarDaysBetween,
+  computeDeckMetrics,
+  computeDeckPerformance,
+  computeHeatmap,
+  computeKpis,
+  computeRetentionSeries,
+  computeStreak,
+  deriveMilestones,
+  estimateSessionMinutes,
+  formatDayCount,
+  formatEventDate,
+  formatRangeLabel,
   type DashboardMessage,
+  type DateRangePreset,
   type DeckMetrics,
   type ID,
   type Millis,
@@ -18,24 +34,14 @@ import type {
 import type { MobileNotificationsViewModel } from '@/src/types/notifications'
 import type { MobileProgressViewModel } from '@/src/types/progress'
 import type { MobileTodayViewModel } from '@/src/types/today'
+import { demoTodayRetention } from './demoReviewHistory'
 import { demoCardStatus, isDemoCardDue } from './demoScheduling'
 import {
-  DEMO_ACTIVITY_LEVELS,
-  DEMO_BEST_STREAK_DAYS,
   DEMO_INTERACTION_LABELS,
-  DEMO_MILESTONES,
-  DEMO_MINUTES_PER_CARD,
-  DEMO_RANGE_LABEL,
-  DEMO_RETENTION_PERCENT,
-  DEMO_RETENTION_SERIES,
-  DEMO_REVIEWS_THIS_PERIOD,
   DEMO_SCOPE_RAIL,
-  DEMO_STREAK_DAYS,
   type DemoCard,
   type DemoDeck,
   type DemoWorkspace,
-  demoLastStudiedAt,
-  demoLastStudiedLabel,
 } from './demoWorkspace'
 
 // Everything the demo screens read, derived from one workspace.
@@ -61,20 +67,18 @@ export type DemoScopeId = ID | 'all' | 'unfiled'
  * progress for this platform.
  */
 export function demoDeckMetrics(workspace: DemoWorkspace, now: Millis): Map<ID, DeckMetrics> {
-  const metrics = new Map<ID, DeckMetrics>()
+  return computeDeckMetrics(
+    workspace.cards,
+    workspace.cards.filter((card) => isDemoCardDue(card, now)),
+  )
+}
 
-  for (const deck of workspace.decks) {
-    const deckCards = workspace.cards.filter((card) => card.deckId === deck.id)
-    const matured = deckCards.filter((card) => card.scheduling.state === 'review').length
-    metrics.set(deck.id, {
-      cardCount: deckCards.length,
-      dueCount: deckCards.filter((card) => isDemoCardDue(card, now)).length,
-      lastStudied: demoLastStudiedAt(deck.lastStudiedDaysAgo),
-      masteryFraction: deckCards.length > 0 ? matured / deckCards.length : 0,
-    })
-  }
-
-  return metrics
+function demoLastStudiedLabel(lastStudied: Millis | undefined, now: Millis): string {
+  if (lastStudied === undefined) return 'Never'
+  const days = calendarDaysBetween(lastStudied, now)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  return `${days} days ago`
 }
 
 export function findDemoDeck(workspace: DemoWorkspace, deckId: string | undefined): DemoDeck | null {
@@ -142,6 +146,7 @@ export function demoCollectionNameFor(workspace: DemoWorkspace, deck: DemoDeck):
 export function toLibraryDeckViewModel(
   deck: DemoDeck,
   metrics: Map<ID, DeckMetrics>,
+  now: Millis,
 ): MobileLibraryDeckViewModel {
   const deckMetrics = metricsFor(metrics, deck.id)
   return {
@@ -151,7 +156,7 @@ export function toLibraryDeckViewModel(
     cardCount: deckMetrics.cardCount,
     dueCount: deckMetrics.dueCount,
     progressPercent: Math.round(deckMetrics.masteryFraction * 100),
-    lastStudiedLabel: demoLastStudiedLabel(deck.lastStudiedDaysAgo),
+    lastStudiedLabel: demoLastStudiedLabel(deckMetrics.lastStudied, now),
     lastStudiedAt: deckMetrics.lastStudied,
   }
 }
@@ -180,7 +185,7 @@ export function demoLibraryViewModel(workspace: DemoWorkspace, now: Millis): Mob
   const metrics = demoDeckMetrics(workspace, now)
   return {
     collections: demoScopeRail(workspace),
-    decks: workspace.decks.map((deck) => toLibraryDeckViewModel(deck, metrics)),
+    decks: workspace.decks.map((deck) => toLibraryDeckViewModel(deck, metrics, now)),
   }
 }
 
@@ -193,7 +198,7 @@ export function demoCollectionViewModel(
   if (!scope) return null
 
   const metrics = demoDeckMetrics(workspace, now)
-  const decks = scope.decks.map((deck) => toLibraryDeckViewModel(deck, metrics))
+  const decks = scope.decks.map((deck) => toLibraryDeckViewModel(deck, metrics, now))
 
   return {
     id: scope.id,
@@ -224,7 +229,7 @@ export function demoDeckViewModel(
     cardCount: deckMetrics.cardCount,
     dueCount: deckMetrics.dueCount,
     masteryPercent: Math.round(deckMetrics.masteryFraction * 100),
-    lastStudiedLabel: demoLastStudiedLabel(deck.lastStudiedDaysAgo),
+    lastStudiedLabel: demoLastStudiedLabel(deckMetrics.lastStudied, now),
     cards: demoDeckCards(workspace, deck.id).map((card) => ({
       id: card.id,
       // The card list is one line of plain text, so the shared flattening is
@@ -252,30 +257,30 @@ export function demoTodayViewModel(
   now: Millis,
 ): MobileTodayViewModel {
   const metrics = demoDeckMetrics(workspace, now)
-  const dueToday = workspace.cards.filter((card) => isDemoCardDue(card, now)).length
+  const dueCards = workspace.cards.filter((card) => isDemoCardDue(card, now))
+  const dueToday = dueCards.length
+  const streak = computeStreak(workspace.reviewLogs, now)
+  const retention = demoTodayRetention(workspace.reviewLogs, now)
 
-  // Continue learning shows the decks that actually have something due, most
-  // pressing first. A deck with nothing due has nothing to continue.
-  const decks = workspace.decks
-    .filter((deck) => metricsFor(metrics, deck.id).dueCount > 0)
-    .sort((a, b) => metricsFor(metrics, b.id).dueCount - metricsFor(metrics, a.id).dueCount)
-    .map((deck) => {
-      const deckMetrics = metricsFor(metrics, deck.id)
+  const decks = buildContinueLearning(workspace.decks, metrics, workspace.decks.length)
+    .filter((row) => metricsFor(metrics, row.deckId).cardCount > 0)
+    .slice(0, 4)
+    .map((row) => {
       return {
-        id: deck.id,
-        name: deck.name,
-        description: deck.description,
-        dueCount: deckMetrics.dueCount,
-        progressPercent: Math.round(deckMetrics.masteryFraction * 100),
+        id: row.deckId,
+        name: row.name,
+        description: row.description ?? '',
+        dueCount: row.dueCount,
+        progressPercent: Math.round(row.masteryFraction * 100),
       }
     })
 
   return {
     greeting,
     dueToday,
-    streak: DEMO_STREAK_DAYS,
-    retention: DEMO_RETENTION_PERCENT,
-    estimatedMinutes: Math.round(dueToday * DEMO_MINUTES_PER_CARD),
+    streak: streak.current,
+    retention: retention === null ? null : Math.round(retention * 100),
+    estimatedMinutes: estimateSessionMinutes(workspace.reviewLogs, dueToday),
     decks,
   }
 }
@@ -283,60 +288,87 @@ export function demoTodayViewModel(
 export function demoProgressViewModel(
   workspace: DemoWorkspace,
   now: Millis,
+  preset: DateRangePreset = '30d',
 ): MobileProgressViewModel {
-  const metrics = demoDeckMetrics(workspace, now)
-  const totalCards = workspace.cards.length
-  const learned = workspace.cards.filter((card) => card.scheduling.state === 'review').length
-  const dueTotal = workspace.cards.filter((card) => isDemoCardDue(card, now)).length
+  const dueCards = workspace.cards.filter((card) => isDemoCardDue(card, now))
+  const range = buildRange(preset, now)
+  const kpis = computeKpis(workspace.cards, dueCards, workspace.reviewLogs, range, now)
+  const heatmap = computeHeatmap(workspace.reviewLogs, range.days, now)
+  const retentionPoints = computeRetentionSeries(
+    workspace.reviewLogs,
+    range,
+    buildCardDeckMap(workspace.cards),
+    undefined,
+    range.days,
+  )
+  const performance = computeDeckPerformance(
+    workspace.reviewLogs,
+    workspace.cards,
+    dueCards,
+    workspace.decks,
+    range,
+  )
+  const deckById = new Map(workspace.decks.map((deck) => [deck.id, deck]))
 
   return {
-    rangeLabel: DEMO_RANGE_LABEL,
+    rangeLabel: formatRangeLabel(range),
     metrics: [
       {
         id: 'learned',
         label: 'Learned',
-        value: String(learned),
-        supportingText: `${learned} of ${totalCards} active`,
+        value: String(kpis.learned.value),
+        supportingText: `${kpis.learned.value} of ${kpis.learned.total} active`,
       },
-      { id: 'due', label: 'Due', value: String(dueTotal), supportingText: 'Ready today' },
+      { id: 'due', label: 'Due', value: String(kpis.due), supportingText: 'Ready today' },
       {
         id: 'reviews',
         label: 'Reviews',
-        value: String(DEMO_REVIEWS_THIS_PERIOD),
+        value: String(kpis.reviews.value),
         supportingText: 'This period',
       },
       {
         id: 'retention',
         label: 'Retention',
-        value: `${DEMO_RETENTION_PERCENT}%`,
+        value: kpis.retention.value === null ? '—' : `${Math.round(kpis.retention.value * 100)}%`,
         supportingText: 'Mature reviews',
       },
       {
         id: 'streak',
         label: 'Current streak',
-        value: `${DEMO_STREAK_DAYS} days`,
-        supportingText: `Best: ${DEMO_BEST_STREAK_DAYS} days`,
+        value: formatDayCount(kpis.streak),
+        supportingText: `Best: ${formatDayCount(kpis.bestStreak)}`,
       },
     ],
-    activityDays: DEMO_ACTIVITY_LEVELS.map((level, index) => ({ id: `day-${index + 1}`, level })),
-    retentionPercent: DEMO_RETENTION_PERCENT,
-    retentionSeries: [...DEMO_RETENTION_SERIES],
-    // Deck performance covers the decks that have been studied at all. Listing a
-    // deck with no cards under a performance heading would be noise.
-    decks: workspace.decks
-      .filter((deck) => metricsFor(metrics, deck.id).cardCount > 0)
-      .map((deck) => ({
+    activityDays: heatmap.map((day) => ({ id: String(day.date), level: day.level, count: day.count })),
+    retentionPercent: kpis.retention.value === null ? null : Math.round(kpis.retention.value * 100),
+    retentionSeries: retentionPoints.map((point) => point.retention),
+    retentionLabels: [
+      formatEventDate(retentionPoints[0]?.bucketStart ?? range.from, now),
+      formatEventDate(retentionPoints[Math.floor(retentionPoints.length / 2)]?.bucketStart ?? range.from, now),
+      formatEventDate(retentionPoints.at(-1)?.bucketStart ?? range.from, now),
+    ],
+    decks: performance.map((row) => {
+      const deck = deckById.get(row.deckId)
+      if (!deck) throw new Error(`Demo deck performance references missing deck ${row.deckId}`)
+      return {
         id: deck.id,
         name: deck.name,
         mark: markLabelFor(deck.name, 2),
         retentionLabel:
-          deck.retentionPercent === null
+          row.retention === null
             ? 'Not enough data'
-            : `${deck.retentionPercent}% retention`,
-        retentionKnown: deck.retentionPercent !== null,
-        dueLabel: `${metricsFor(metrics, deck.id).dueCount} due`,
-      })),
-    milestones: DEMO_MILESTONES.map((milestone) => ({ ...milestone })),
+            : `${Math.round(row.retention * 100)}% retention`,
+        retentionKnown: row.retention !== null,
+        dueLabel: `${row.due} due`,
+      }
+    }),
+    milestones: deriveMilestones(workspace.reviewLogs).map((milestone) => ({
+      id: `${milestone.type}-${milestone.threshold}-${milestone.date}`,
+      type: milestone.type,
+      title: milestone.title,
+      subtitle: milestone.subtitle,
+      dateLabel: formatEventDate(milestone.date, now),
+    })),
   }
 }
 

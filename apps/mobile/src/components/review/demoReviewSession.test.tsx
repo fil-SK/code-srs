@@ -3,6 +3,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react-nativ
 
 import { DemoReviewSession } from '@/src/components/review/DemoReviewSession'
 import { createDemoQueue } from '@/src/demo/demoQueue'
+import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import { demoLibraryViewModel, demoProgressViewModel, demoTodayViewModel } from '@/src/demo/demoSelectors'
 import { DemoWorkspaceProvider } from '@/src/demo/DemoWorkspaceProvider'
 import { useDemoWorkspace, type DemoWorkspaceValue } from '@/src/demo/demoWorkspaceContext'
 import { settle, mockReducedMotion } from '@/src/test/reviewHarness'
@@ -93,13 +95,13 @@ describe('a demo review session', () => {
   it('appends exactly one ReviewLog per graded card', async () => {
     renderSession()
     await settle()
-    expect(demo.workspace.reviewLogs).toHaveLength(0)
+    const seeded = demo.workspace.reviewLogs.length
 
     await answerAndRate()
-    expect(demo.workspace.reviewLogs).toHaveLength(1)
+    expect(demo.workspace.reviewLogs).toHaveLength(seeded + 1)
 
     await answerAndRate()
-    expect(demo.workspace.reviewLogs).toHaveLength(2)
+    expect(demo.workspace.reviewLogs).toHaveLength(seeded + 2)
   })
 
   it('writes the shared scheduler s result onto the demo card', async () => {
@@ -117,8 +119,8 @@ describe('a demo review session', () => {
     expect(after.due).toBeGreaterThan(before.due)
     // The log and the card agree, because both come from the one computed
     // result rather than being derived twice.
-    expect(demo.workspace.reviewLogs[0].dueAfter).toBe(after.due)
-    expect(demo.workspace.reviewLogs[0].stabilityAfter).toBe(after.stability)
+    expect(demo.workspace.reviewLogs.at(-1)?.dueAfter).toBe(after.due)
+    expect(demo.workspace.reviewLogs.at(-1)?.stabilityAfter).toBe(after.stability)
   })
 
   it('stops the graded card being due', async () => {
@@ -132,6 +134,52 @@ describe('a demo review session', () => {
     expect(remaining.some((entry) => entry.id === first.id)).toBe(false)
   })
 
+  it('reacts across Today, Progress, and Library after a grade', async () => {
+    renderSession()
+    await settle()
+    const greeting = { mainText: 'Ready?', subtext: 'Keep going.' }
+    const beforeToday = demoTodayViewModel(demo.workspace, greeting, demo.now)
+    const beforeProgress = demoProgressViewModel(demo.workspace, demo.now)
+    const beforeLibrary = demoLibraryViewModel(demo.workspace, demo.now)
+
+    await answerAndRate(4)
+
+    const afterToday = demoTodayViewModel(demo.workspace, greeting, demo.now)
+    const afterProgress = demoProgressViewModel(demo.workspace, demo.now)
+    const afterLibrary = demoLibraryViewModel(demo.workspace, demo.now)
+    const reviews = (model: typeof beforeProgress) =>
+      Number(model.metrics.find((metric) => metric.id === 'reviews')?.value)
+
+    expect(afterToday.dueToday).toBe(beforeToday.dueToday - 1)
+    expect(reviews(afterProgress)).toBe(reviews(beforeProgress) + 1)
+    expect(afterProgress.activityDays.at(-1)?.count).toBe(
+      (beforeProgress.activityDays.at(-1)?.count ?? 0) + 1,
+    )
+    expect(afterProgress.metrics.find((metric) => metric.id === 'due')?.value).toBe(
+      String(afterToday.dueToday),
+    )
+    expect(
+      afterLibrary.decks.find((deck) => deck.id === DECK)?.dueCount,
+    ).toBe((beforeLibrary.decks.find((deck) => deck.id === DECK)?.dueCount ?? 0) - 1)
+  })
+
+  it('ignores a duplicate Undo instead of restoring over newer state', async () => {
+    renderSession()
+    await settle()
+    const first = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK })[0]
+    const before = first.scheduling
+
+    await answerAndRate(4)
+    const logId = demo.workspace.reviewLogs.at(-1)!.id
+    demo.undoDemoReview(first.id, before, logId)
+    await settle()
+    const once = demo.workspace
+
+    demo.undoDemoReview(first.id, before, logId)
+    await settle()
+    expect(demo.workspace).toBe(once)
+  })
+
   it('records the pre-grade state on the log, not the post-grade one', async () => {
     renderSession()
     await settle()
@@ -140,8 +188,8 @@ describe('a demo review session', () => {
 
     await answerAndRate()
 
-    expect(demo.workspace.reviewLogs[0].stateBefore).toBe(stateBefore)
-    expect(demo.workspace.reviewLogs[0].cardId).toBe(first.id)
+    expect(demo.workspace.reviewLogs.at(-1)?.stateBefore).toBe(stateBefore)
+    expect(demo.workspace.reviewLogs.at(-1)?.cardId).toBe(first.id)
   })
 
   it('reaches a completion screen once the queue is exhausted', async () => {
@@ -172,19 +220,28 @@ describe('a demo review session', () => {
     const queue = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK })
     const last = queue[queue.length - 1]
     const lastBefore = last.scheduling
+    const seeded = demo.workspace.reviewLogs.length
 
-    for (let i = 0; i < queue.length; i++) await answerAndRate()
-    expect(demo.workspace.reviewLogs).toHaveLength(queue.length)
+    for (let i = 0; i < queue.length - 1; i++) await answerAndRate()
+    const greeting = { mainText: 'Ready?', subtext: 'Keep going.' }
+    const metricsBeforeLast = demoProgressViewModel(demo.workspace, demo.now)
+    const todayBeforeLast = demoTodayViewModel(demo.workspace, greeting, demo.now)
+    await answerAndRate()
+    expect(demo.workspace.reviewLogs).toHaveLength(seeded + queue.length)
 
     fireEvent.press(screen.getByLabelText('Undo last card'))
     await settle()
 
-    expect(demo.workspace.reviewLogs).toHaveLength(queue.length - 1)
+    expect(demo.workspace.reviewLogs).toHaveLength(seeded + queue.length - 1)
     expect(demo.workspace.cards.find((entry) => entry.id === last.id)!.scheduling).toEqual(
       lastBefore,
     )
+    expect(demoProgressViewModel(demo.workspace, demo.now)).toEqual(metricsBeforeLast)
+    expect(demoTodayViewModel(demo.workspace, greeting, demo.now)).toEqual(todayBeforeLast)
     // The other cards keep their new schedules; undo is one level, not a reset.
-    expect(demo.workspace.reviewLogs.some((log) => log.cardId === last.id)).toBe(false)
+    expect(demo.workspace.reviewLogs.filter((log) => log.cardId === last.id)).toHaveLength(
+      demo.workspace.reviewLogs.slice(0, seeded).filter((log) => log.cardId === last.id).length,
+    )
   })
 
   it('offers no Undo before anything has been graded', async () => {
@@ -198,11 +255,12 @@ describe('a demo review session', () => {
   it('exits mid-session without recording anything', async () => {
     const { exits } = renderSession()
     await settle()
+    const seeded = demo.workspace.reviewLogs.length
 
     fireEvent.press(screen.getByLabelText('Exit review session'))
 
     expect(exits.count).toBe(1)
-    expect(demo.workspace.reviewLogs).toHaveLength(0)
+    expect(demo.workspace.reviewLogs).toHaveLength(seeded)
   })
 
   it('shows an honest caught-up state when the deck has nothing due', async () => {
@@ -215,8 +273,12 @@ describe('a demo review session', () => {
     await settle()
 
     expect(screen.getByText('All caught up')).toBeTruthy()
-    // Nothing is repopulated to keep the demo interesting.
-    expect(demo.workspace.reviewLogs).toHaveLength(0)
+    // Nothing is repopulated to keep the demo interesting: the seeded history
+    // is still exactly the seeded history. Compared against a fresh workspace
+    // rather than a literal, so the fixture can grow without editing this.
+    expect(demo.workspace.reviewLogs).toEqual(
+      createDemoWorkspace(demo.workspace.startedAt).reviewLogs,
+    )
   })
 
   it('restores the original workspace on a demo reset', async () => {
@@ -224,17 +286,23 @@ describe('a demo review session', () => {
     await settle()
     const first = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK })[0]
     const originalScheduling = first.scheduling
+    const originalLogs = demo.workspace.reviewLogs
+    const greeting = { mainText: 'Ready?', subtext: 'Keep going.' }
+    const originalToday = demoTodayViewModel(demo.workspace, greeting, demo.now)
+    const originalProgress = demoProgressViewModel(demo.workspace, demo.now)
 
     await answerAndRate()
-    expect(demo.workspace.reviewLogs).toHaveLength(1)
+    expect(demo.workspace.reviewLogs).toHaveLength(originalLogs.length + 1)
 
     await settle()
     demo.resetDemoWorkspace()
     await settle()
 
-    expect(demo.workspace.reviewLogs).toHaveLength(0)
+    expect(demo.workspace.reviewLogs).toEqual(originalLogs)
     const restored = demo.workspace.cards.find((entry) => entry.id === first.id)!.scheduling
     expect(restored.reps).toBe(originalScheduling.reps)
     expect(restored.state).toBe(originalScheduling.state)
+    expect(demoTodayViewModel(demo.workspace, greeting, demo.now)).toEqual(originalToday)
+    expect(demoProgressViewModel(demo.workspace, demo.now)).toEqual(originalProgress)
   })
 })
