@@ -24,32 +24,6 @@ import { SortSheet } from './SortSheet'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
-function DisabledAction({
-  icon,
-  label,
-  primary = false,
-}: {
-  icon: IconName
-  label: string
-  primary?: boolean
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: true }}
-      disabled
-      style={[styles.actionButton, primary ? styles.actionPrimary : styles.actionSecondary]}
-    >
-      <MaterialCommunityIcons
-        color={primary ? iteraColors.surface : iteraColors.inkBrand}
-        name={icon}
-        size={22}
-      />
-      <Text style={[styles.actionLabel, primary && styles.actionLabelPrimary]}>{label}</Text>
-    </Pressable>
-  )
-}
-
 function CollectionPill({
   collection,
   onPress,
@@ -134,11 +108,6 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           <Text style={styles.subtitle}>View and manage all your decks.</Text>
         </View>
 
-        <View style={styles.actionsRow}>
-          <DisabledAction icon="plus" label="New Deck" primary />
-          <DisabledAction icon="upload-outline" label="Import" />
-        </View>
-
         <Text style={styles.sectionLabel}>Collections</Text>
         <ScrollView
           contentContainerStyle={styles.collectionRailContent}
@@ -161,15 +130,6 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
               }
             />
           ))}
-          <Pressable
-            accessibilityLabel="All collections unavailable"
-            accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={styles.allCollectionsButton}
-          >
-            <MaterialCommunityIcons color={iteraColors.muted} name="view-grid-outline" size={20} />
-          </Pressable>
         </ScrollView>
 
         <View style={styles.searchWrap}>
@@ -308,41 +268,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 20,
-  },
-  actionButton: {
-    minHeight: 50,
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-  },
-  actionPrimary: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accent,
-    opacity: 0.82,
-  },
-  actionSecondary: {
-    borderColor: iteraColors.borderStrong,
-    backgroundColor: iteraColors.surface,
-    opacity: 0.7,
-  },
-  actionLabel: {
-    color: iteraColors.inkBrand,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  actionLabelPrimary: {
-    color: iteraColors.surface,
-  },
   sectionLabel: {
-    marginTop: 20,
+    marginTop: 24,
     color: iteraColors.inkBrand,
     fontSize: 16,
     fontWeight: '700',
@@ -379,16 +306,6 @@ const styles = StyleSheet.create({
   collectionPillTextSelected: {
     color: iteraColors.inkBrand,
     fontWeight: '700',
-  },
-  allCollectionsButton: {
-    width: 42,
-    height: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderColor: iteraColors.borderStrong,
-    borderRadius: 21,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
   },
   searchWrap: {
     minHeight: 52,

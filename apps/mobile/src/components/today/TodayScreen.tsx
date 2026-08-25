@@ -36,6 +36,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
         <TodayHero
           dueToday={viewModel.dueToday}
           estimatedMinutes={viewModel.estimatedMinutes}
+          onBrowseLibrary={() => router.push('/library')}
           onStartSession={() => router.push('/review/session')}
           retention={viewModel.retention}
           streak={viewModel.streak}
@@ -68,6 +69,13 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
             />
           ))}
         </View>
+
+        {/* A heading over an empty list reads as a screen that failed to load. */}
+        {viewModel.decks.length === 0 ? (
+          <Text style={styles.emptyDecks}>
+            Nothing in progress right now. Open your library to pick a deck.
+          </Text>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   )
@@ -167,6 +175,12 @@ const styles = StyleSheet.create({
   },
   deckList: {
     gap: 10,
+  },
+  emptyDecks: {
+    color: iteraColors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    paddingHorizontal: 2,
   },
   pressed: {
     opacity: 0.62,

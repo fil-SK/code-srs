@@ -1,7 +1,9 @@
 import {
   CARD_SCHEMA_VERSION,
   computeStreak,
+  formatEventDate,
   richText,
+  startOfDay,
   type Card,
   type Deck,
   type ID,
@@ -66,6 +68,21 @@ export interface DemoCard extends Card {
   tag: string
 }
 
+/**
+ * Where a notification row goes when it is opened.
+ *
+ * Authored per notification rather than inferred from `kind`, because the two
+ * are not the same question: two rows can share a kind and belong in different
+ * places, and a row is allowed to have no destination at all. Every destination
+ * names a surface that exists on this platform, so a row can never promise
+ * navigation the app cannot perform.
+ */
+export type DemoNotificationDestination =
+  | { kind: 'deck'; deckId: ID }
+  | { kind: 'collection'; collectionId: ID }
+  | { kind: 'review' }
+  | { kind: 'progress' }
+
 export interface DemoNotification {
   id: ID
   group: 'today' | 'earlier'
@@ -75,8 +92,11 @@ export interface DemoNotification {
   timeLabel: string
   unread: boolean
   deckMark?: string
-  /** Present only when an existing demo deck is an honest destination. */
-  deckId?: ID
+  /**
+   * Omitted only when nothing in the app answers the notification. Such a row
+   * marks itself read and says so; it never implies a destination.
+   */
+  destination?: DemoNotificationDestination
 }
 
 export interface DemoWorkspace {
@@ -239,12 +259,22 @@ function createCards(now: Millis): DemoCard[] {
   }))
 }
 
-function dueCountFor(cards: DemoCard[], deckId: ID, now: Millis): number {
-  return cards.filter((card) => card.deckId === deckId && isDemoCardDue(card, now)).length
+/**
+ * A fixture instant, read on the learner's timeline.
+ *
+ * Entity dates are authored against the fixed DEMO_EPOCH, while everything the
+ * learner actually did is replayed relative to the current local day. Anything
+ * shown to the learner has to be read the second way, or a demo recorded three
+ * months from now would show an inbox dated last August. This converts an
+ * authored instant into the same age measured back from the workspace's own
+ * anchor, then formats it with core's one event formatter.
+ */
+function fixtureDateLabel(authored: Millis, now: Millis): string {
+  return formatEventDate(now - (DEMO_EPOCH - authored), now)
 }
 
-function cardCountFor(cards: DemoCard[], deckId: ID): number {
-  return cards.filter((card) => card.deckId === deckId).length
+function dueCountFor(cards: DemoCard[], deckId: ID, now: Millis): number {
+  return cards.filter((card) => card.deckId === deckId && isDemoCardDue(card, now)).length
 }
 
 // Notification copy is built from the same counts the screens show, so an inbox
@@ -260,9 +290,20 @@ function createNotifications(
   // retention figure the dashboard disagrees with.
   const retention = demoTodayRetention(reviewLogs, now)
   const retentionPercent = retention === null ? null : Math.round(retention * 100)
-  const interviewCoreCards = decks
-    .filter((deck) => deck.collectionId === 'fixture-interview-core')
-    .reduce((total, deck) => total + cardCountFor(cards, deck.id), 0)
+  // "New cards added" used to count every card in the collection and call all
+  // of them new, which contradicted the cards themselves: the six Interview
+  // Core cards were authored between 8 and 88 days before the anchor, and none
+  // of them was added on the day the row claimed. Both the count and the date
+  // now come from the cards that were actually added most recently, so the row
+  // can only ever describe something that happened.
+  const interviewCoreDeckIds = new Set(
+    decks.filter((deck) => deck.collectionId === 'fixture-interview-core').map((deck) => deck.id),
+  )
+  const interviewCoreCards = cards.filter((card) => interviewCoreDeckIds.has(card.deckId))
+  const latestAddedAt = Math.max(...interviewCoreCards.map((card) => card.createdAt))
+  const latestAdded = interviewCoreCards.filter(
+    (card) => startOfDay(card.createdAt) === startOfDay(latestAddedAt),
+  ).length
 
   return [
     {
@@ -273,6 +314,7 @@ function createNotifications(
       body: `You have ${dueTotal} cards due for review. Keep up your momentum!`,
       timeLabel: '10m ago',
       unread: true,
+      destination: { kind: 'review' },
     },
     {
       id: 'fixture-modern-cpp-due',
@@ -283,7 +325,7 @@ function createNotifications(
       timeLabel: '25m ago',
       unread: true,
       deckMark: 'MC',
-      deckId: 'fixture-modern-cpp',
+      destination: { kind: 'deck', deckId: 'fixture-modern-cpp' },
     },
     {
       id: 'fixture-streak',
@@ -293,6 +335,7 @@ function createNotifications(
       body: `Amazing! You've kept your streak alive for ${streak} days.`,
       timeLabel: '1h ago',
       unread: true,
+      destination: { kind: 'progress' },
     },
     {
       id: 'fixture-retention',
@@ -302,6 +345,7 @@ function createNotifications(
       body: 'Great job! Mature reviews are building a meaningful signal.',
       timeLabel: '2h ago',
       unread: false,
+      destination: { kind: 'progress' },
     },
     {
       id: 'fixture-algorithms-due',
@@ -311,7 +355,7 @@ function createNotifications(
       body: `You have ${dueCountFor(cards, 'fixture-algorithms', now)} cards due. A quick review will keep you on track.`,
       timeLabel: '4h ago',
       unread: true,
-      deckId: 'fixture-algorithms',
+      destination: { kind: 'deck', deckId: 'fixture-algorithms' },
     },
     {
       id: 'fixture-import',
@@ -319,18 +363,24 @@ function createNotifications(
       kind: 'import',
       title: 'Deck import completed',
       body: '"Computer Networks" was imported into Systems. It has no cards yet.',
-      timeLabel: 'Yesterday, 6:30 PM',
+      // Taken from the deck's own createdAt rather than authored, so the row
+      // cannot drift into claiming an import that predates the deck.
+      timeLabel: fixtureDateLabel(
+        decks.find((deck) => deck.id === 'fixture-computer-networks')?.createdAt ?? DEMO_EPOCH,
+        now,
+      ),
       unread: false,
-      deckId: 'fixture-computer-networks',
+      destination: { kind: 'deck', deckId: 'fixture-computer-networks' },
     },
     {
       id: 'fixture-new-cards',
       group: 'earlier',
       kind: 'cards',
-      title: 'New cards added',
-      body: `${interviewCoreCards} new cards were added to "Interview Core".`,
-      timeLabel: 'Yesterday, 2:15 PM',
+      title: latestAdded === 1 ? 'New card added' : 'New cards added',
+      body: `${latestAdded} new ${latestAdded === 1 ? 'card was' : 'cards were'} added to "Interview Core".`,
+      timeLabel: fixtureDateLabel(latestAddedAt, now),
       unread: true,
+      destination: { kind: 'collection', collectionId: 'fixture-interview-core' },
     },
   ]
 }

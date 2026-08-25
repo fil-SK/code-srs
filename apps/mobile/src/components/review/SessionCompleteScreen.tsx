@@ -99,10 +99,6 @@ export function SessionCompleteScreen({
             </Pressable>
           )}
         </View>
-
-        <Text style={styles.note}>
-          Demo mode. This session is held in memory and resets when the app restarts.
-        </Text>
       </ScrollView>
     </SafeAreaView>
   )
@@ -194,6 +190,5 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   secondaryText: { color: iteraColors.inkBrand, fontSize: 15, fontWeight: '700' },
-  note: { color: iteraColors.mutedLight, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   pressed: { opacity: 0.72 },
 })

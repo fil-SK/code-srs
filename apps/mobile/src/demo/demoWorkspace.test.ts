@@ -48,10 +48,23 @@ describe('demo workspace referential integrity', () => {
     }
   })
 
-  it('points every notification destination at a deck that exists', () => {
+  it('points every notification destination at an entity that exists', () => {
     for (const item of workspace.notifications) {
-      if (!item.deckId) continue
-      expect(deckIds.has(item.deckId)).toBe(true)
+      const destination = item.destination
+      if (!destination) continue
+      if (destination.kind === 'deck') expect(deckIds.has(destination.deckId)).toBe(true)
+      if (destination.kind === 'collection') {
+        expect(collectionIds.has(destination.collectionId)).toBe(true)
+      }
+    }
+  })
+
+  // A notification that only marks itself read is a supported shape, but a demo
+  // inbox full of them is a row of dead ends in the first surface a prospective
+  // user taps. Every seeded notification answers with a real destination.
+  it('gives every seeded notification a destination', () => {
+    for (const item of workspace.notifications) {
+      expect(item.destination).toBeDefined()
     }
   })
 

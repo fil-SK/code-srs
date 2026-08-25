@@ -213,6 +213,54 @@ function ImportExportDetail() {
   )
 }
 
+function WorkspaceCard({
+  demo,
+  email,
+  onPress,
+}: {
+  demo: boolean
+  email: string | undefined
+  onPress?: () => void
+}) {
+  const body = (
+    <>
+      <View style={styles.avatar}>
+        <MaterialCommunityIcons color={iteraColors.surface} name="account-outline" size={34} />
+      </View>
+      <View style={styles.workspaceCopy}>
+        <Text numberOfLines={1} style={styles.workspaceTitle}>
+          {demo ? 'Demo workspace' : (email ?? 'Signed in')}
+        </Text>
+        <Text style={styles.workspaceSubtitle}>
+          {demo ? 'Deterministic demo data. Not a synced account.' : 'Synced with Supabase'}
+        </Text>
+        <Text style={styles.workspaceMeta}>
+          {demo
+            ? 'Nothing here is saved between app launches'
+            : 'Signed in on this device'}
+        </Text>
+      </View>
+      {onPress ? (
+        <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={25} />
+      ) : null}
+    </>
+  )
+
+  if (!onPress) {
+    return <View style={styles.workspaceCard}>{body}</View>
+  }
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.workspaceCard, pressed && styles.pressed]}
+    >
+      {body}
+    </Pressable>
+  )
+}
+
 function isProfileSectionId(value: string | undefined): value is ProfileSectionId {
   return sections.some((section) => section.id === value)
 }
@@ -259,54 +307,53 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
         <View style={styles.intro}>
           <Text style={styles.title}>Profile & Settings</Text>
           <Text style={styles.subtitle}>
-            Manage your account, preferences, devices, and backups.
+            {demo
+              ? 'The workspace this device is reading.'
+              : 'Manage your account, preferences, devices, and backups.'}
           </Text>
         </View>
 
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => setSelectedSection('profile')}
-          style={({ pressed }) => [styles.workspaceCard, pressed && styles.pressed]}
-        >
-          <View style={styles.avatar}>
-            <MaterialCommunityIcons color={iteraColors.surface} name="account-outline" size={34} />
-          </View>
-          <View style={styles.workspaceCopy}>
-            {/* Real identity only, exactly as the web account menu does it:
-                this product has no profile record and no display name, so the
-                session's email is the whole truth, over a line saying where the
-                data lives. Nothing here is fabricated - and in demo mode that
-                means saying plainly that there is no account and no sync,
-                rather than dressing demo content up as a synced one. */}
-            <Text numberOfLines={1} style={styles.workspaceTitle}>
-              {demo ? 'Demo workspace' : (identity?.email ?? 'Signed in')}
-            </Text>
-            <Text style={styles.workspaceSubtitle}>
-              {demo ? 'Deterministic demo data. Not a synced account.' : 'Synced with Supabase'}
-            </Text>
-            <Text style={styles.workspaceMeta}>
-              {demo ? 'Nothing here is saved between app launches' : 'Product screens still use preview data'}
-            </Text>
-          </View>
-          <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={25} />
-        </Pressable>
+        {/* Real identity only, exactly as the web account menu does it: this
+            product has no profile record and no display name, so the session's
+            email is the whole truth, over a line saying where the data lives.
+            Nothing here is fabricated - and in demo mode that means saying
+            plainly that there is no account and no sync, rather than dressing
+            demo content up as a synced one.
 
-        <View style={styles.settingsCard}>
-          {sections.map((section, index) => (
-            <SettingsRow
-              key={section.id}
-              last={index === sections.length - 1}
-              onPress={() => setSelectedSection(section.id)}
-              section={section}
-              selected={selectedSection === section.id}
-            />
-          ))}
-        </View>
+            In demo mode the card is not pressable: its only action was
+            selecting a settings section, and those do not render here. */}
+        <WorkspaceCard
+          demo={demo}
+          email={identity?.email}
+          onPress={demo ? undefined : () => setSelectedSection('profile')}
+        />
 
-        {selectedSection === 'import-export' ? (
-          <ImportExportDetail />
-        ) : (
-          <UnavailableDetail section={unavailableSections[selectedSection]} />
+        {/* The seven settings rows and their detail panels are a cloud-mode
+            surface. Six of them can only say "not available yet", and the
+            seventh offers a backup this platform cannot perform - which on a
+            market-validation build reads as an unfinished product rather than
+            as deferred scope. Demo mode therefore does not advertise them at
+            all, while the cloud path keeps the structure unchanged. */}
+        {demo ? null : (
+          <>
+            <View style={styles.settingsCard}>
+              {sections.map((section, index) => (
+                <SettingsRow
+                  key={section.id}
+                  last={index === sections.length - 1}
+                  onPress={() => setSelectedSection(section.id)}
+                  section={section}
+                  selected={selectedSection === section.id}
+                />
+              ))}
+            </View>
+
+            {selectedSection === 'import-export' ? (
+              <ImportExportDetail />
+            ) : (
+              <UnavailableDetail section={unavailableSections[selectedSection]} />
+            )}
+          </>
         )}
 
         {__DEV__ ? (

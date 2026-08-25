@@ -1,5 +1,5 @@
 import type { Rating } from '@itera/core'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react-native'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 
 import { DemoReviewSession } from '@/src/components/review/DemoReviewSession'
 import { createDemoQueue } from '@/src/demo/demoQueue'
@@ -189,11 +189,11 @@ describe('a demo review session', () => {
 
     await answerAndRate(4)
     const logId = demo.workspace.reviewLogs.at(-1)!.id
-    demo.undoDemoReview(first.id, before, logId)
+    act(() => demo.undoDemoReview(first.id, before, logId))
     await settle()
     const once = demo.workspace
 
-    demo.undoDemoReview(first.id, before, logId)
+    act(() => demo.undoDemoReview(first.id, before, logId))
     await settle()
     expect(demo.workspace).toBe(once)
   })
@@ -223,7 +223,7 @@ describe('a demo review session', () => {
     expect(deckAfter.cardCount).toBe(deckBefore.cardCount)
 
     const logId = demo.workspace.reviewLogs.at(-1)!.id
-    demo.undoDemoReview(first.id, first.scheduling, logId)
+    act(() => demo.undoDemoReview(first.id, first.scheduling, logId))
     await settle()
 
     // The deck screen recomputes from the workspace, so there is nothing to
@@ -334,7 +334,7 @@ describe('a demo review session', () => {
     expect(demo.workspace.reviewLogs).toHaveLength(originalLogs.length + 1)
 
     await settle()
-    demo.resetDemoWorkspace()
+    act(() => demo.resetDemoWorkspace())
     await settle()
 
     expect(demo.workspace.reviewLogs).toEqual(originalLogs)
@@ -343,5 +343,48 @@ describe('a demo review session', () => {
     expect(restored.state).toBe(originalScheduling.state)
     expect(demoTodayViewModel(demo.workspace, greeting, demo.now)).toEqual(originalToday)
     expect(demoProgressViewModel(demo.workspace, demo.now)).toEqual(originalProgress)
+  })
+
+  // The reset is what makes repeated recordings possible: a demo is run, cards
+  // are graded, notifications are opened, and the next take has to start from
+  // the same frame as the first. This drives a whole session to completion and
+  // marks the inbox read before resetting, then compares the entire workspace
+  // against a fresh one rather than spot-checking the fields that were touched.
+  it('restores the exact starting state after a full session and a read inbox', async () => {
+    renderSession()
+    await settle()
+    const greeting = { mainText: 'Ready?', subtext: 'Keep going.' }
+    const pristine = createDemoWorkspace(demo.workspace.startedAt)
+
+    const queueLength = createDemoQueue(demo.workspace, { now: demo.now, deckId: DECK }).length
+    expect(queueLength).toBeGreaterThan(1)
+    for (let index = 0; index < queueLength; index += 1) await answerAndRate()
+    await settle()
+
+    expect(screen.getByText('Session complete')).toBeTruthy()
+    act(() => demo.markAllNotificationsRead())
+    await settle()
+
+    // Everything moved: scheduling, history, the inbox and every derived screen.
+    expect(demo.workspace.reviewLogs.length).toBe(pristine.reviewLogs.length + queueLength)
+    expect(demo.workspace.notifications.every((item) => !item.unread)).toBe(true)
+    expect(demo.workspace.cards).not.toEqual(pristine.cards)
+
+    act(() => demo.resetDemoWorkspace())
+    await settle()
+
+    expect(demo.workspace).toEqual(pristine)
+    expect(demoTodayViewModel(demo.workspace, greeting, demo.now)).toEqual(
+      demoTodayViewModel(pristine, greeting, demo.now),
+    )
+    expect(demoProgressViewModel(demo.workspace, demo.now)).toEqual(
+      demoProgressViewModel(pristine, demo.now),
+    )
+    expect(demoLibraryViewModel(demo.workspace, demo.now)).toEqual(
+      demoLibraryViewModel(pristine, demo.now),
+    )
+    expect(demoDeckViewModel(demo.workspace, DECK, demo.now)).toEqual(
+      demoDeckViewModel(pristine, DECK, demo.now),
+    )
   })
 })

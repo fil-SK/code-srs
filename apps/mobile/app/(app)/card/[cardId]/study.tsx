@@ -24,7 +24,7 @@ export default function CardStudyRoute() {
   if (!card) {
     return (
       <LibraryNotFoundScreen
-        detail="This link points at a card that is not part of the demo workspace."
+        detail="This link points at a card that no longer exists."
         title="Card not found"
       />
     )

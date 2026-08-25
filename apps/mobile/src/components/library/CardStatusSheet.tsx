@@ -26,6 +26,7 @@ export function CardStatusSheet({
     <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
       <Pressable
         accessibilityLabel="Close filter options"
+        accessibilityRole="button"
         onPress={onClose}
         style={styles.backdrop}
       />

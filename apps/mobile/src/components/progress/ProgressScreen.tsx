@@ -50,7 +50,10 @@ function Activity({ days }: { days: MobileProgressViewModel['activityDays'] }) {
     <SectionCard>
       <Text style={styles.sectionTitle}>Activity</Text>
       <Text style={styles.sectionSubtitle}>Daily cards reviewed</Text>
-      <View accessibilityLabel="Review activity over the last 30 days" style={styles.heatmap}>
+      <View
+        accessibilityLabel={`Review activity over the last ${days.length} days`}
+        style={styles.heatmap}
+      >
         {days.map((day) => (
           <View
             key={day.id}
@@ -242,14 +245,6 @@ export function ProgressScreen({ viewModel }: { viewModel: MobileProgressViewMod
             <MaterialCommunityIcons color={iteraColors.muted} name="calendar-blank-outline" size={19} />
             <Text numberOfLines={1} style={styles.dateText}>{viewModel.rangeLabel}</Text>
           </View>
-          <View accessibilityLabel="Progress range, 30 days selected" style={styles.rangeControl}>
-            <View style={styles.rangeSelected}><Text style={styles.rangeSelectedText}>30D</Text></View>
-            {['3M', '1Y'].map((range) => (
-              <Pressable key={range} accessibilityLabel={range + ' range unavailable'} accessibilityRole="button" accessibilityState={{ disabled: true }} disabled style={styles.rangeUnavailable}>
-                <Text style={styles.rangeUnavailableText}>{range}</Text>
-              </Pressable>
-            ))}
-          </View>
         </View>
         <View style={styles.metricsSection}>
           <Text style={styles.sectionTitle}>This month</Text>
@@ -282,11 +277,6 @@ const styles = StyleSheet.create({
   rangeRow: { flexDirection: 'row', gap: 10 },
   dateControl: { flex: 1, minHeight: 48, paddingHorizontal: 12, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.borderStrong, backgroundColor: iteraColors.surface, flexDirection: 'row', alignItems: 'center', gap: 8 },
   dateText: { flex: 1, color: iteraColors.inkBrand, fontSize: 14, fontWeight: '600' },
-  rangeControl: { flexDirection: 'row', borderWidth: 1, borderColor: iteraColors.borderStrong, borderRadius: iteraRadii.control, backgroundColor: iteraColors.surface, padding: 3 },
-  rangeSelected: { minWidth: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 7, borderWidth: 1, borderColor: iteraColors.accent, backgroundColor: iteraColors.accentSofter },
-  rangeSelectedText: { color: iteraColors.accent, fontWeight: '700' },
-  rangeUnavailable: { minWidth: 42, alignItems: 'center', justifyContent: 'center' },
-  rangeUnavailableText: { color: iteraColors.mutedLight, fontWeight: '600' },
   metricsSection: { borderRadius: iteraRadii.card, backgroundColor: iteraColors.surface, borderWidth: 1, borderColor: iteraColors.border, padding: 16, gap: 13, shadowColor: iteraColors.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   metricCard: { width: '48%', minHeight: 104, flexGrow: 1, borderRadius: iteraRadii.control, backgroundColor: iteraColors.surfaceSubtle, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },

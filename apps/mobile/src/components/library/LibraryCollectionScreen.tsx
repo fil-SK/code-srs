@@ -37,41 +37,6 @@ function CollectionMetric({
   )
 }
 
-function DisabledAction({
-  icon,
-  label,
-  primary = false,
-  compact = false,
-}: {
-  icon: IconName
-  label?: string
-  primary?: boolean
-  compact?: boolean
-}) {
-  return (
-    <Pressable
-      accessibilityLabel={`${label ?? 'More'} unavailable`}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: true }}
-      disabled
-      style={[
-        styles.actionButton,
-        compact ? styles.actionCompact : styles.actionFlexible,
-        primary ? styles.actionPrimary : styles.actionSecondary,
-      ]}
-    >
-      <MaterialCommunityIcons
-        color={primary ? iteraColors.surface : iteraColors.inkBrand}
-        name={icon}
-        size={compact ? 22 : 21}
-      />
-      {label ? (
-        <Text style={[styles.actionText, primary && styles.actionTextPrimary]}>{label}</Text>
-      ) : null}
-    </Pressable>
-  )
-}
-
 function CollectionDeckRow({
   deck,
   onPress,
@@ -214,12 +179,6 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
             label="due today"
             value={viewModel.dueToday}
           />
-        </View>
-
-        <View style={styles.actionsRow}>
-          <DisabledAction icon="plus" label="New Deck" primary />
-          <DisabledAction icon="cog-outline" label="Collection settings" />
-          <DisabledAction compact icon="dots-horizontal" />
         </View>
 
         <Text style={styles.sectionTitle}>Decks</Text>
@@ -473,47 +432,8 @@ const styles = StyleSheet.create({
   accentText: {
     color: iteraColors.accent,
   },
-  actionsRow: {
-    flexDirection: 'row',
-    gap: 9,
-    marginTop: 17,
-  },
-  actionButton: {
-    minHeight: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-  },
-  actionFlexible: {
-    flex: 1,
-    paddingHorizontal: 9,
-  },
-  actionCompact: {
-    width: 48,
-  },
-  actionPrimary: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accent,
-    opacity: 0.82,
-  },
-  actionSecondary: {
-    borderColor: iteraColors.borderStrong,
-    backgroundColor: iteraColors.surface,
-    opacity: 0.72,
-  },
-  actionText: {
-    color: iteraColors.inkBrand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  actionTextPrimary: {
-    color: iteraColors.surface,
-  },
   sectionTitle: {
-    marginTop: 22,
+    marginTop: 26,
     color: iteraColors.inkBrand,
     fontSize: 20,
     fontWeight: '700',

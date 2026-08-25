@@ -34,7 +34,12 @@ export function SortSheet({
       transparent
       visible={visible}
     >
-      <Pressable accessibilityLabel="Close sort options" onPress={onClose} style={styles.backdrop} />
+      <Pressable
+        accessibilityLabel="Close sort options"
+        accessibilityRole="button"
+        onPress={onClose}
+        style={styles.backdrop}
+      />
       <View style={styles.sheet}>
         <View style={styles.grabber} />
         <Text style={styles.title}>Sort decks</Text>

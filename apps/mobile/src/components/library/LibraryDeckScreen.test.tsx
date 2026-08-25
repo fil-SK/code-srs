@@ -51,9 +51,15 @@ describe('deck identity', () => {
     expect(viewModel.cardCount).toBe(viewModel.cards.length)
   })
 
-  it('names the deck s own collection on the back control', () => {
+  it('does not promise a destination the back control will not reach', () => {
+    // The row returns to whatever pushed the deck - All Decks, a collection,
+    // Today, Progress or a notification - so it cannot name one of them. The
+    // collection is still stated, as context in the identity block.
     render(<LibraryDeckScreen viewModel={deck('fixture-security-engineering')} />)
-    expect(screen.getByLabelText('Back to Unfiled')).toBeTruthy()
+
+    expect(screen.getByLabelText('Back')).toBeTruthy()
+    expect(screen.queryByLabelText('Back to Unfiled')).toBeNull()
+    expect(screen.getByText('Unfiled')).toBeTruthy()
   })
 
   it('says so when a demo deck has no cards, rather than looking broken', () => {
@@ -66,7 +72,7 @@ describe('not found', () => {
   it('offers an honest state for an id that names nothing', () => {
     render(
       <LibraryNotFoundScreen
-        detail="This link points at a deck that is not part of the demo workspace."
+        detail="This link points at a deck that no longer exists."
         title="Deck not found"
       />,
     )
@@ -232,8 +238,6 @@ describe('removed and unavailable controls', () => {
     const viewModel = deck('fixture-modern-cpp')
     render(<LibraryDeckScreen viewModel={viewModel} />)
 
-    // Scoped to the rows: the deck-level actions control still draws one, and it
-    // is still honestly disabled.
     expect(viewModel.cards.length).toBeGreaterThan(1)
     for (const card of viewModel.cards) {
       const row = within(screen.getByLabelText(new RegExp(`^${escapeForLabel(card.prompt)},`)))
@@ -242,19 +246,23 @@ describe('removed and unavailable controls', () => {
     }
   })
 
-  it('keeps Insights visibly unavailable rather than inventing an analytics surface', () => {
+  it('no longer offers an Insights tab', () => {
+    // It was a placeholder that said so. The deck's own metrics above the card
+    // list are the real per-deck numbers, and a second per-deck analytics
+    // surface exists on neither platform.
     render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
 
-    fireEvent.press(screen.getByText('Insights'))
-
-    expect(screen.getByText('Deck insights are not built yet')).toBeTruthy()
+    expect(screen.queryByText('Insights')).toBeNull()
+    expect(screen.queryByText('Deck insights are not built yet')).toBeNull()
+    expect(screen.getByText('Cards')).toBeTruthy()
   })
 
-  it('keeps out-of-scope deck actions visibly unavailable', () => {
+  it('offers no deck actions or add-card control, disabled or otherwise', () => {
     render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
 
-    const actions = screen.getByLabelText('Deck actions unavailable')
-    expect(actions.props.accessibilityState?.disabled).toBe(true)
+    expect(screen.queryByLabelText('Deck actions unavailable')).toBeNull()
+    expect(screen.queryByLabelText('Add card unavailable')).toBeNull()
+    expect(screen.UNSAFE_queryAllByProps({ disabled: true })).toHaveLength(0)
   })
 })
 

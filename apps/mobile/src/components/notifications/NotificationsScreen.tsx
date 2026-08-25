@@ -6,7 +6,9 @@ import { useMemo, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { mobileRuntimeMode } from '@/src/config/mobileRuntimeMode'
 import type {
+  MobileNotificationDestination,
   MobileNotificationItem,
   MobileNotificationsViewModel,
 } from '@/src/types/notifications'
@@ -56,15 +58,25 @@ function NotificationMark({ item }: { item: MobileNotificationItem }) {
   )
 }
 
+// What opening the row will actually do, named for the surface it lands on.
+//
+// A row without a destination marks itself read and says only that, rather than
+// implying navigation the app cannot perform. Every notification in the demo
+// workspace has one, but the case is kept because the field is optional and a
+// silent, dead-end row would be exactly the defect this copy exists to prevent.
+const DESTINATION_NAMES: Record<MobileNotificationDestination['kind'], string> = {
+  deck: 'the deck',
+  collection: 'the collection',
+  review: 'your review session',
+  progress: 'your progress',
+}
+
 function notificationHint(item: MobileNotificationItem): string {
-  // Two honest destinations, described differently. A notification that names a
-  // deck in the workspace opens it; one that refers to something the product
-  // does not have yet only marks itself read, and says so rather than implying
-  // a destination that does not exist.
-  if (item.deckId) {
-    return item.unread ? 'Marks this as read and opens the deck' : 'Opens the deck'
+  if (!item.destination) {
+    return item.unread ? 'Marks this notification as read' : 'No further action'
   }
-  return item.unread ? 'Marks this notification as read' : 'No further action'
+  const name = DESTINATION_NAMES[item.destination.kind]
+  return item.unread ? `Marks this as read and opens ${name}` : `Opens ${name}`
 }
 
 function NotificationRow({
@@ -186,8 +198,26 @@ export function NotificationsScreen({
 
   function openNotification(item: MobileNotificationItem) {
     if (item.unread) onMarkRead(item.id)
-    if (item.deckId) {
-      router.push({ pathname: '/library/deck/[deckId]', params: { deckId: item.deckId } })
+    const destination = item.destination
+    if (!destination) return
+    switch (destination.kind) {
+      case 'deck':
+        router.push({
+          pathname: '/library/deck/[deckId]',
+          params: { deckId: destination.deckId },
+        })
+        return
+      case 'collection':
+        router.push({
+          pathname: '/library/[collectionId]',
+          params: { collectionId: destination.collectionId },
+        })
+        return
+      case 'review':
+        router.push('/review')
+        return
+      case 'progress':
+        router.push('/progress')
     }
   }
 
@@ -227,15 +257,20 @@ export function NotificationsScreen({
 
         <View style={styles.controls}>
           <FilterControl filter={filter} onChange={setFilter} />
-          <Pressable
-            accessibilityLabel="Open notification settings"
-            accessibilityRole="button"
-            onPress={() => router.push('/profile?section=notifications')}
-            style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}
-          >
-            <MaterialCommunityIcons color={iteraColors.inkBrand} name="cog-outline" size={21} />
-            <Text style={styles.settingsText}>Settings</Text>
-          </Pressable>
+          {/* The notification settings section is a cloud-mode surface; demo
+              mode does not render it, so the shortcut to it would land on a
+              Profile screen with nothing to show. */}
+          {mobileRuntimeMode === 'demo' ? null : (
+            <Pressable
+              accessibilityLabel="Open notification settings"
+              accessibilityRole="button"
+              onPress={() => router.push('/profile?section=notifications')}
+              style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}
+            >
+              <MaterialCommunityIcons color={iteraColors.inkBrand} name="cog-outline" size={21} />
+              <Text style={styles.settingsText}>Settings</Text>
+            </Pressable>
+          )}
         </View>
 
         {visibleItems.length === 0 ? (
@@ -257,7 +292,7 @@ export function NotificationsScreen({
                       accessibilityRole="button"
                       hitSlop={8}
                       onPress={onMarkAllRead}
-                      style={({ pressed }) => pressed && styles.pressed}
+                      style={({ pressed }) => [styles.markAll, pressed && styles.pressed]}
                     >
                       <Text style={styles.markAllText}>Mark all as read</Text>
                     </Pressable>
@@ -316,6 +351,7 @@ const styles = StyleSheet.create({
   section: { marginTop: 25 },
   sectionHeading: { minHeight: 34, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionTitle: { color: iteraColors.inkBrand, fontSize: 18, fontWeight: '700' },
+  markAll: { minHeight: 44, justifyContent: 'center', paddingLeft: 12 },
   markAllText: { color: iteraColors.accent, fontSize: 14, fontWeight: '600' },
   notificationList: { gap: 11, marginTop: 6 },
   notificationCard: { minHeight: 114, flexDirection: 'row', alignItems: 'center', overflow: 'hidden', borderColor: iteraColors.border, borderRadius: iteraRadii.card, borderWidth: 1, backgroundColor: iteraColors.surface, padding: 13, ...cardShadow },

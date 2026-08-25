@@ -45,7 +45,7 @@ Update it in the same commit as any change to a listed capability.
 | Due count, streak, retention | domain/stats/* | yes | demo workspace | implemented (demo/local) — all three derive from canonical Cards + ReviewLogs through shared semantics; current activity reacts in memory |
 | Continue Learning | domain/stats/deckMetrics, todayMetrics | yes | demo workspace | implemented (demo/local) — shared ordering and metrics over current cards; each row opens its own deck |
 | Session start | — | yes | starts a demo session | implemented (demo/local) — Today's CTA opens the real local session; cloud persistence deferred |
-| Adjust session | — | yes | no | deferred — master plan Phase 5 |
+| Adjust session | — | yes | no | web-only (decision) — never exposed in the native hierarchy, and advanced session controls stay deferred; TODO.md "Adjust session"; D409 |
 | Pace chart | — | yes | no | web-only (decision) — native hierarchy omits it; not a functionality gap |
 | Next milestone row | domain/stats/progressMetrics | yes | no | web-only (decision) — native slot shows estimated session length instead |
 | Weekly goal | — | no | no | deferred — no goal concept exists; features.md "Planned" |
@@ -60,8 +60,8 @@ Update it in the same commit as any change to a listed capability.
 | Card list | hooks/useCards | yes | demo workspace | deferred — master plan Phase 6; the list and its rows are functional over the mobile demo workspace (D368, D404) |
 | Open a card | — | study preview | demo workspace | implemented (demo/local) — every card row opens the card it names by its canonical id, and an unknown id gets a not-found state; D404 |
 | Card study preview | interactions/* | cards/:id/study | card/[cardId]/study | implemented (demo/local) — one card inspected outside a session, through the same session shell and registry; records nothing by construction; D403, D405 |
-| Deck create / rename / delete | hooks/useDecks | yes | no | deferred — master plan Phase 6 |
-| Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | no | deferred — master plan Phase 6 |
+| Deck create / rename / delete | hooks/useDecks | yes | no | web-only (decision) — deferred for market validation with the rest of mobile authoring; the mobile controls were removed rather than shown disabled; D416 |
+| Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | no | web-only (decision) — deferred for market validation with the rest of mobile authoring; the mobile controls were removed rather than shown disabled; D416 |
 | Search | domain/search/searchableText | yes | over the demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
 | Filter and sort | library/sortDecks | yes | over the demo workspace | deferred — master plan Phase 6; the control is functional and calls core's sortDecks verbatim, so the four keys match web, but it orders demo data; D371, D372 |
 | List paging | — | pagination | infinite scroll intended | native-only (decision) — pagination is a desktop affordance; master plan Phase 6 |
@@ -102,7 +102,7 @@ Update it in the same commit as any change to a listed capability.
 | Retention chart | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — mature-only buckets preserve gaps and isolated observations |
 | Deck performance | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — real Learned/Due/Retention inputs; each row opens its deck |
 | Recent milestones | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — derived from seeded and current ReviewLogs; no milestone entity |
-| Date range selection | domain/stats/dateRange | yes | 30D only | implemented (demo/local) — the owner-approved hierarchy exposes one real 30D range; 3M/1Y remain visibly unavailable |
+| Date range selection | domain/stats/dateRange | yes | 30D only, no control | implemented (demo/local) — mobile reports one real 30D window and its date label names it; the 3M/1Y buttons were removed rather than left inert, and demoProgressViewModel keeps its DateRangePreset parameter as the seam; D411 |
 | Review history | domain/stats/reviewHistory | yes | no | deferred — master plan Phase 8 |
 | Progress sub-pages | — | "Soon" placeholders | no | deferred — unbuilt on both; features.md "Planned" |
 
@@ -111,16 +111,16 @@ Update it in the same commit as any change to a listed capability.
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
 | Account identity | auth/resolveAuthState | yes | yes | implemented |
-| Import / Export backup | data/backup, hooks/useBackup | yes | no | deferred — master plan Phase 10 |
+| Import / Export backup | data/backup, hooks/useBackup | yes | no | deferred — master plan Phase 10; the mobile panel is hidden in demo mode rather than shown with controls that cannot run, and remains in cloud mode; D410 |
 | Replace-mode import | data/backup (canReplaceImport) | local only | no | web-only (decision) — refused on the cloud backend; no cross-request transaction |
-| Settings sections (Profile, Email, Appearance, Notifications, Privacy, Devices) | — | inert placeholders | honest placeholders | deferred — unbuilt on both; features.md "Planned" |
-| Card authoring, all six types | domain/cards/save*Card | yes | no | deferred — master plan Phase 9; ship decision D13 not yet taken |
+| Settings sections (Profile, Email, Appearance, Notifications, Privacy, Devices) | — | inert placeholders | cloud mode only | deferred — unbuilt on both; features.md "Planned". Demo mode renders none of them: six could only say "not available yet", which reads as an unfinished product on a build shown to prospective users; D410 |
+| Card authoring, all six types | domain/cards/save*Card | yes | no | web-only (decision) — mobile authoring is deferred for market validation: web is the intended authoring surface and the early story is desktop authoring plus mobile review. Not a technical TODO; D416 |
 
 ## Platform-specific
 
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
-| Notifications inbox | — | no | demo workspace | native-only (decision) — read state and deck destinations work over demo data; still no notification entity; TODO.md "Notifications"; D375 |
+| Notifications inbox | — | no | demo workspace | native-only (decision) — read state works and every row opens an honest destination (deck, collection, Review entry or Progress), carried as explicit data on the notification; still no notification entity; TODO.md "Notifications"; D375, D412 |
 | Push notifications / reminders | — | no | no | deferred — product decision open; TODO.md "Notifications" |
 | Offline review and sync | — | Dexie local mode | no | deferred — master plan Phase 11 |
 | Roadmaps | — | yes | no | web-only (decision) — features.md "out of scope"; D17, master plan D15 |

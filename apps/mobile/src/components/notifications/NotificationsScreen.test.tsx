@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoNotificationsViewModel, demoUnreadCount } from '@/src/demo/demoSelectors'
 import { createDemoWorkspace, type DemoWorkspace } from '@/src/demo/demoWorkspace'
-import { pushedDeckIds, resetRouterCalls, routerDouble } from '@/src/test/routerDouble'
+import { pushedDeckIds, resetRouterCalls, routerCalls, routerDouble } from '@/src/test/routerDouble'
 import { NotificationsScreen } from './NotificationsScreen'
 
 jest.mock('expo-router', () => ({
@@ -137,27 +137,60 @@ describe('destinations', () => {
     expect(pushedDeckIds()).toEqual(['fixture-modern-cpp'])
   })
 
-  it('only marks read when there is no deck to open', () => {
+  // Every seeded notification answers with a surface that exists, so no row in
+  // the inbox is a dead end. The mapping is data on the notification rather than
+  // an inference from its kind, and this asserts each row lands where its own
+  // destination says.
+  it.each([
+    ['fixture-session-ready', '/review'],
+    ['fixture-streak', '/progress'],
+    ['fixture-retention', '/progress'],
+  ])('opens %s at %s, and marks it read', (id, pathname) => {
     const onMarkRead = jest.fn()
-    renderInbox(workspace, { onMarkRead })
-    const streak = workspace.notifications.find((item) => item.id === 'fixture-streak')!
+    const item = workspace.notifications.find((entry) => entry.id === id)!
+    renderInbox(withReadState({ [id]: true }), { onMarkRead })
 
-    fireEvent.press(screen.getByText(streak.title))
+    fireEvent.press(screen.getByText(item.title))
 
-    expect(onMarkRead).toHaveBeenCalledWith('fixture-streak')
-    expect(pushedDeckIds()).toEqual([])
+    expect(onMarkRead).toHaveBeenCalledWith(id)
+    expect(routerCalls.push).toEqual([pathname])
   })
 
-  it('describes which of the two a row will do', () => {
+  it('opens the collection a notification is about', () => {
+    const onMarkRead = jest.fn()
+    const item = workspace.notifications.find((entry) => entry.id === 'fixture-new-cards')!
+    renderInbox(workspace, { onMarkRead })
+
+    fireEvent.press(screen.getByText(item.title))
+
+    expect(onMarkRead).toHaveBeenCalledWith('fixture-new-cards')
+    expect(routerCalls.push).toEqual([
+      { pathname: '/library/[collectionId]', params: { collectionId: 'fixture-interview-core' } },
+    ])
+  })
+
+  it('names the destination in the hint rather than implying one', () => {
     renderInbox(workspace)
     const streak = workspace.notifications.find((item) => item.id === 'fixture-streak')!
+    const session = workspace.notifications.find((item) => item.id === 'fixture-session-ready')!
 
     expect(
       screen.getByLabelText(/Modern C\+\+ & Memory has 3 cards due/).props.accessibilityHint,
     ).toBe('Marks this as read and opens the deck')
     expect(
       screen.getByLabelText(new RegExp(streak.title)).props.accessibilityHint,
-    ).toBe('Marks this notification as read')
+    ).toBe('Marks this as read and opens your progress')
+    expect(
+      screen.getByLabelText(new RegExp(session.title)).props.accessibilityHint,
+    ).toBe('Marks this as read and opens your review session')
+  })
+
+  it('offers no notification-settings shortcut in demo mode', () => {
+    // In demo mode Profile does not render its settings sections, so the
+    // shortcut would land on a screen with nothing to show.
+    renderInbox(workspace)
+
+    expect(screen.queryByLabelText('Open notification settings')).toBeNull()
   })
 })
 

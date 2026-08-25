@@ -56,6 +56,7 @@ interface TodayHeroProps {
   retention: MobileTodayViewModel['retention']
   estimatedMinutes: MobileTodayViewModel['estimatedMinutes']
   onStartSession: () => void
+  onBrowseLibrary: () => void
 }
 
 export function TodayHero({
@@ -64,7 +65,13 @@ export function TodayHero({
   retention,
   estimatedMinutes,
   onStartSession,
+  onBrowseLibrary,
 }: TodayHeroProps) {
+  // Nothing due is a real state, and no session can create work. The hero keeps
+  // its one action in its one slot; only the label and the destination change,
+  // which is the same call web's SuggestedSessionHero makes when the queue is
+  // empty. Composition, metrics and geometry are untouched.
+  const caughtUp = dueToday === 0
   const backPlacement = useRef(new Animated.Value(0)).current
   const nearPlacement = useRef(new Animated.Value(0)).current
   const frontPlacement = useRef(new Animated.Value(0)).current
@@ -225,12 +232,18 @@ export function TodayHero({
           <View style={styles.divider} />
 
           <Pressable
-            accessibilityHint="Opens the temporary Review destination"
+            accessibilityHint={
+              caughtUp
+                ? 'Opens your decks'
+                : 'Starts a review session over the cards due today'
+            }
             accessibilityRole="button"
-            onPress={onStartSession}
+            onPress={caughtUp ? onBrowseLibrary : onStartSession}
             style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
           >
-            <Text style={styles.ctaText}>Start your next session</Text>
+            <Text style={styles.ctaText}>
+              {caughtUp ? 'Browse your library' : 'Start your next session'}
+            </Text>
             <MaterialCommunityIcons color={iteraColors.accent} name="arrow-right" size={22} />
           </Pressable>
         </View>

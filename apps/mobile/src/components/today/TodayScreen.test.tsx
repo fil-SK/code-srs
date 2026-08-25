@@ -62,6 +62,34 @@ describe('Continue learning', () => {
     fireEvent.press(screen.getByText('See all'))
     expect(routerCalls.push).toContain('/library')
   })
+
+  it('says so when nothing is in progress instead of heading an empty list', () => {
+    render(<TodayScreen viewModel={{ ...viewModel, decks: [] }} />)
+
+    expect(screen.getByText(/Nothing in progress right now/)).toBeTruthy()
+  })
+})
+
+describe('the hero action', () => {
+  it('starts a session while cards are due', () => {
+    expect(viewModel.dueToday).toBeGreaterThan(0)
+    render(<TodayScreen viewModel={viewModel} />)
+
+    fireEvent.press(screen.getByText('Start your next session'))
+
+    expect(routerCalls.push).toContain('/review/session')
+  })
+
+  it('offers the library instead when nothing is due', () => {
+    // No session can create due work, so the one action in the one slot changes
+    // where it goes rather than opening a session that is over on arrival.
+    render(<TodayScreen viewModel={{ ...viewModel, dueToday: 0 }} />)
+
+    expect(screen.queryByText('Start your next session')).toBeNull()
+    fireEvent.press(screen.getByText('Browse your library'))
+
+    expect(routerCalls.push).toEqual(['/library'])
+  })
 })
 
 // Referenced so the mock factory's module is loaded in this file's scope.

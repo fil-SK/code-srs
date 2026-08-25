@@ -95,5 +95,19 @@ describe('collection sort', () => {
   })
 })
 
+describe('controls that are not offered', () => {
+  it('renders nothing for deck creation, collection settings or an overflow menu', () => {
+    // Deck and collection management are deferred product scope on this
+    // platform. Three permanently greyed controls under the metrics card made a
+    // working screen look half-finished, so they are removed, not disabled.
+    render(<LibraryCollectionScreen viewModel={scope('fixture-languages-cpp')} />)
+
+    expect(screen.queryByText('New Deck')).toBeNull()
+    expect(screen.queryByText('Collection settings')).toBeNull()
+    expect(screen.queryByLabelText('More unavailable')).toBeNull()
+    expect(screen.UNSAFE_queryAllByProps({ disabled: true })).toHaveLength(0)
+  })
+})
+
 // Referenced so the mock factory's module is loaded in this file's scope.
 expect(routerDouble).toBeTruthy()

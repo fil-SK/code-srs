@@ -201,7 +201,7 @@ function OrderingRow({
               accessibilityRole="button"
               accessibilityState={{ disabled: index === 0 }}
               disabled={index === 0}
-              hitSlop={4}
+              hitSlop={{ bottom: 0, left: 6, right: 6, top: 6 }}
               onPress={() => onMove(id, index - 1)}
               style={({ pressed }) => [
                 styles.arrowButton,
@@ -220,7 +220,7 @@ function OrderingRow({
               accessibilityRole="button"
               accessibilityState={{ disabled: index === total - 1 }}
               disabled={index === total - 1}
-              hitSlop={4}
+              hitSlop={{ bottom: 6, left: 6, right: 6, top: 0 }}
               onPress={() => onMove(id, index + 1)}
               style={({ pressed }) => [
                 styles.arrowButton,

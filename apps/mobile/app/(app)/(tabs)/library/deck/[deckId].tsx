@@ -15,7 +15,7 @@ export default function LibraryDeckRoute() {
   if (!viewModel) {
     return (
       <LibraryNotFoundScreen
-        detail="This link points at a deck that is not part of the demo workspace."
+        detail="This link points at a deck that no longer exists."
         title="Deck not found"
       />
     )

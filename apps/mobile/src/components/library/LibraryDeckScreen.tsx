@@ -15,7 +15,6 @@ import { cardStatusMatches, type CardStatusFilter } from './cardFiltering'
 import { CardStatusSheet } from './CardStatusSheet'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
-type DeckTab = 'cards' | 'insights'
 
 // A card's lifecycle state, as a colour. Uses the existing palette rather than
 // introducing one: New is neutral, Learning is the accent already used for
@@ -97,7 +96,6 @@ function CardRow({ card, onOpen }: { card: MobileDeckCardViewModel; onOpen: () =
 
 export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewModel }) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<DeckTab>('cards')
   const [query, setQuery] = useState('')
   // Defaults to showing everything. It used to default to New-only, which hid
   // cards behind a filter nobody had chosen.
@@ -134,14 +132,14 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         style={styles.scroll}
       >
         <Pressable
-          accessibilityLabel={`Back to ${viewModel.collectionName}`}
+          accessibilityLabel="Back"
           accessibilityRole="button"
           hitSlop={8}
           onPress={() => router.back()}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
           <MaterialCommunityIcons color="#49658e" name="chevron-left" size={27} />
-          <Text style={styles.backText}>{viewModel.collectionName}</Text>
+          <Text style={styles.backText}>Back</Text>
         </Pressable>
 
         <View style={styles.identityRow}>
@@ -152,6 +150,9 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           </View>
 
           <View style={styles.identityContent}>
+            <Text numberOfLines={1} style={styles.collectionCaption}>
+              {viewModel.collectionName}
+            </Text>
             <View style={styles.titleRow}>
               <Text adjustsFontSizeToFit minimumFontScale={0.82} numberOfLines={2} style={styles.title}>
                 {viewModel.name}
@@ -163,19 +164,6 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
                 no decision approved one. It was removed rather than kept as an
                 invented feature; see itera-decisions.md.
               */}
-              <Pressable
-                accessibilityLabel="Deck actions unavailable"
-                accessibilityRole="button"
-                accessibilityState={{ disabled: true }}
-                disabled
-                style={styles.moreButton}
-              >
-                <MaterialCommunityIcons
-                  color={iteraColors.inkBrand}
-                  name="dots-horizontal"
-                  size={22}
-                />
-              </Pressable>
             </View>
 
             <Text style={styles.description}>{viewModel.description}</Text>
@@ -234,123 +222,80 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           </View>
         )}
 
-        <View style={styles.tabsRow}>
-          <View accessibilityRole="tablist" style={styles.tabs}>
-            {(['cards', 'insights'] as const).map((tab) => {
-              const selected = activeTab === tab
-              return (
-                <Pressable
-                  key={tab}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected }}
-                  onPress={() => setActiveTab(tab)}
-                  style={({ pressed }) => [
-                    styles.tab,
-                    selected && styles.tabSelected,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Text style={[styles.tabText, selected && styles.tabTextSelected]}>
-                    {tab === 'cards' ? 'Cards' : 'Insights'}
-                  </Text>
-                </Pressable>
-              )
-            })}
-          </View>
-          <Pressable
-            accessibilityLabel="Add card unavailable"
-            accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            style={styles.addCardButton}
-          >
-            <MaterialCommunityIcons color={iteraColors.inkBrand} name="plus" size={26} />
-          </Pressable>
-        </View>
+        <View style={styles.cardsSection}>
+          <Text style={styles.cardsHeading}>Cards</Text>
 
-        {activeTab === 'cards' ? (
-          <>
-            <View style={styles.searchRow}>
-              <View style={styles.searchWrap}>
-                <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
-                <TextInput
-                  accessibilityLabel="Search cards"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  clearButtonMode="while-editing"
-                  onChangeText={setQuery}
-                  placeholder="Search cards..."
-                  placeholderTextColor={iteraColors.mutedLight}
-                  returnKeyType="search"
-                  style={styles.searchInput}
-                  value={query}
-                />
-              </View>
+          <View style={styles.searchRow}>
+            <View style={styles.searchWrap}>
+              <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
+              <TextInput
+                accessibilityLabel="Search cards"
+                autoCapitalize="none"
+                autoCorrect={false}
+                clearButtonMode="while-editing"
+                onChangeText={setQuery}
+                placeholder="Search cards..."
+                placeholderTextColor={iteraColors.mutedLight}
+                returnKeyType="search"
+                style={styles.searchInput}
+                value={query}
+              />
+            </View>
+            <Pressable
+              accessibilityHint="Filter cards by status"
+              accessibilityLabel="Filter cards"
+              accessibilityRole="button"
+              onPress={() => setFilterOpen(true)}
+              style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
+            >
+              <MaterialCommunityIcons color={iteraColors.inkBrand} name="tune-variant" size={23} />
+            </Pressable>
+          </View>
+
+          {statusFilter !== 'all' ? (
+            <View style={styles.filterChip}>
+              <View style={[styles.filterDot, { backgroundColor: statusColors[statusFilter] }]} />
+              <Text style={styles.filterChipText}>Status: {statusFilter}</Text>
               <Pressable
-                accessibilityHint="Filter cards by status"
-                accessibilityLabel="Filter cards"
+                accessibilityLabel="Remove status filter"
                 accessibilityRole="button"
-                onPress={() => setFilterOpen(true)}
-                style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
+                hitSlop={13}
+                onPress={() => setStatusFilter('all')}
+                style={({ pressed }) => pressed && styles.pressed}
               >
-                <MaterialCommunityIcons color={iteraColors.inkBrand} name="tune-variant" size={23} />
+                <MaterialCommunityIcons color={iteraColors.muted} name="close" size={18} />
               </Pressable>
             </View>
+          ) : null}
 
-            {statusFilter !== 'all' ? (
-              <View style={styles.filterChip}>
-                <View style={[styles.filterDot, { backgroundColor: statusColors[statusFilter] }]} />
-                <Text style={styles.filterChipText}>Status: {statusFilter}</Text>
-                <Pressable
-                  accessibilityLabel="Remove status filter"
-                  accessibilityRole="button"
-                  hitSlop={7}
-                  onPress={() => setStatusFilter('all')}
-                  style={({ pressed }) => pressed && styles.pressed}
-                >
-                  <MaterialCommunityIcons color={iteraColors.muted} name="close" size={18} />
-                </Pressable>
-              </View>
-            ) : null}
-
-            <View style={styles.cardList}>
-              {visibleCards.map((card) => (
-                <CardRow
-                  key={card.id}
-                  card={card}
-                  onOpen={() =>
-                    router.push({
-                      pathname: '/card/[cardId]/study',
-                      params: { cardId: card.id },
-                    })
-                  }
-                />
-              ))}
-            </View>
-
-            {visibleCards.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>
-                  {viewModel.cards.length === 0 ? 'No cards yet' : 'No matching cards'}
-                </Text>
-                <Text style={styles.emptyText}>
-                  {viewModel.cards.length === 0
-                    ? 'This deck has no cards in the demo workspace.'
-                    : 'Try another search or clear the status filter.'}
-                </Text>
-              </View>
-            ) : null}
-          </>
-        ) : (
-          <View style={styles.insightsCard}>
-            <MaterialCommunityIcons color={iteraColors.mutedLight} name="chart-box-outline" size={30} />
-            <Text style={styles.insightsTitle}>Deck insights are not built yet</Text>
-            <Text style={styles.insightsText}>
-              The numbers above this tab are real. A per-deck breakdown of them is a separate
-              surface that does not exist on either platform yet.
-            </Text>
+          <View style={styles.cardList}>
+            {visibleCards.map((card) => (
+              <CardRow
+                key={card.id}
+                card={card}
+                onOpen={() =>
+                  router.push({
+                    pathname: '/card/[cardId]/study',
+                    params: { cardId: card.id },
+                  })
+                }
+              />
+            ))}
           </View>
-        )}
+
+          {visibleCards.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>
+                {viewModel.cards.length === 0 ? 'No cards yet' : 'No matching cards'}
+              </Text>
+              <Text style={styles.emptyText}>
+                {viewModel.cards.length === 0
+                  ? "This deck doesn't have any cards yet."
+                  : 'Try another search or clear the status filter.'}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </ScrollView>
 
       <CardStatusSheet
@@ -482,6 +427,13 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flex: 1,
   },
+  collectionCaption: {
+    marginBottom: 3,
+    color: iteraColors.muted,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
   titleRow: {
     minWidth: 0,
     flexDirection: 'row',
@@ -496,18 +448,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: -0.7,
     lineHeight: 29,
-  },
-  moreButton: {
-    width: 38,
-    height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -4,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    opacity: 0.72,
   },
   description: {
     marginTop: 5,
@@ -583,50 +523,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  tabsRow: {
-    minHeight: 62,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 13,
-    borderBottomColor: iteraColors.border,
-    borderBottomWidth: 1,
+  cardsSection: {
+    marginTop: 22,
+    borderTopColor: iteraColors.border,
+    borderTopWidth: 1,
+    paddingTop: 18,
   },
-  tabs: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    gap: 20,
-  },
-  tab: {
-    minWidth: 64,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomColor: 'transparent',
-    borderBottomWidth: 2,
-    paddingHorizontal: 4,
-  },
-  tabSelected: {
-    borderBottomColor: iteraColors.accent,
-  },
-  tabText: {
-    color: iteraColors.muted,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  tabTextSelected: {
+  cardsHeading: {
     color: iteraColors.inkBrand,
+    fontSize: 18,
     fontWeight: '700',
-  },
-  addCardButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    opacity: 0.72,
+    letterSpacing: -0.3,
   },
   searchRow: {
     flexDirection: 'row',
@@ -756,29 +663,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: iteraColors.muted,
     fontSize: 13,
-    textAlign: 'center',
-  },
-  insightsCard: {
-    alignItems: 'center',
-    marginTop: 16,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    padding: 28,
-  },
-  insightsTitle: {
-    marginTop: 10,
-    color: iteraColors.inkBrand,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  insightsText: {
-    maxWidth: 320,
-    marginTop: 6,
-    color: iteraColors.muted,
-    fontSize: 13,
-    lineHeight: 19,
     textAlign: 'center',
   },
   pressed: {

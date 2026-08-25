@@ -51,13 +51,17 @@ describe('Deck performance', () => {
     expect(viewModel.decks.some((deck) => deck.retentionKnown)).toBe(true)
   })
 
-  it('keeps the unimplemented range options visibly unavailable', () => {
+  it('offers no range control, and states the range it actually reports', () => {
+    // Progress reports one real window. The three-button group implied a choice
+    // that two thirds of it could not honour, so it is gone; the date pill
+    // already names the window every figure on the page is computed over.
     render(<ProgressScreen viewModel={viewModel} />)
 
-    for (const range of ['3M', '1Y']) {
-      const control = screen.getByLabelText(range + ' range unavailable')
-      expect(control.props.accessibilityState?.disabled).toBe(true)
-    }
+    expect(screen.queryByText('30D')).toBeNull()
+    expect(screen.queryByText('3M')).toBeNull()
+    expect(screen.queryByText('1Y')).toBeNull()
+    expect(screen.getByText(viewModel.rangeLabel)).toBeTruthy()
+    expect(screen.UNSAFE_queryAllByProps({ disabled: true })).toHaveLength(0)
   })
 
   it('renders isolated retention buckets as points without bridging gaps', () => {

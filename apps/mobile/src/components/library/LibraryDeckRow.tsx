@@ -49,29 +49,13 @@ export function LibraryDeckRow({
       </View>
 
       <View style={styles.content}>
-        <View style={styles.headingRow}>
-          <View style={styles.identity}>
-            <Text numberOfLines={1} style={styles.name}>
-              {deck.name}
-            </Text>
-            <Text numberOfLines={1} style={styles.description}>
-              {deck.description}
-            </Text>
-          </View>
-          <Pressable
-            accessibilityLabel={`${deck.name} actions unavailable`}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            hitSlop={8}
-            style={styles.actions}
-          >
-            <MaterialCommunityIcons
-              color={iteraColors.mutedLight}
-              name="dots-vertical"
-              size={21}
-            />
-          </Pressable>
+        <View style={styles.identity}>
+          <Text numberOfLines={1} style={styles.name}>
+            {deck.name}
+          </Text>
+          <Text numberOfLines={1} style={styles.description}>
+            {deck.description}
+          </Text>
         </View>
 
         <View style={styles.summaryRow}>
@@ -167,10 +151,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-  headingRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
   identity: {
     minWidth: 0,
     flex: 1,
@@ -184,14 +164,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
     color: iteraColors.muted,
     fontSize: 11,
-  },
-  actions: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -5,
-    marginRight: -5,
   },
   summaryRow: {
     minWidth: 0,

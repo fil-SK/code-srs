@@ -161,18 +161,33 @@ describe('filter and search', () => {
   })
 })
 
-describe('unavailable controls', () => {
-  it('leaves the out-of-scope actions visibly disabled rather than silently inert', () => {
+describe('controls that are not offered', () => {
+  it('renders nothing for deck creation, import or an all-collections view', () => {
+    // Deck authoring and backup are deferred product scope on this platform,
+    // not pending work, so the screen does not carry permanently greyed
+    // controls for them - a disabled primary action makes a finished screen
+    // look broken. Nothing replaced them.
     render(<LibraryAllDecksScreen viewModel={viewModel} />)
 
-    for (const label of ['New Deck', 'Import']) {
-      const control = screen.getByText(label).parent
-      expect(control).toBeTruthy()
-    }
+    expect(screen.queryByText('New Deck')).toBeNull()
+    expect(screen.queryByText('Import')).toBeNull()
+    expect(screen.queryByLabelText('All collections unavailable')).toBeNull()
 
     // The decorative Filter control is gone: web's entire filter menu is the
     // Due only checkbox, which this screen already has.
     expect(screen.queryByText('Filter')).toBeNull()
+  })
+
+  it('leaves no disabled control anywhere on the screen', () => {
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
+    // The one legitimate disabled state on this screen is the collection pill
+    // for the scope already open, which is a selected tab rather than an
+    // unavailable action.
+    const disabled = screen
+      .UNSAFE_queryAllByProps({ disabled: true })
+      .filter((node) => node.props.accessibilityState?.selected !== true)
+    expect(disabled).toHaveLength(0)
   })
 })
 

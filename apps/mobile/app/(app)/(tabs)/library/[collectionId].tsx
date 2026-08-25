@@ -15,7 +15,7 @@ export default function LibraryCollectionRoute() {
   if (!viewModel) {
     return (
       <LibraryNotFoundScreen
-        detail="This link points at a collection that is not part of the demo workspace."
+        detail="This link points at a collection that no longer exists."
         title="Collection not found"
       />
     )

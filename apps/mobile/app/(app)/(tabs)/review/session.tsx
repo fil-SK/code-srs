@@ -21,7 +21,7 @@ export default function ReviewSessionRoute() {
   if (deckId !== undefined && !findDemoDeck(workspace, deckId)) {
     return (
       <LibraryNotFoundScreen
-        detail="This session was scoped to a deck that is not part of the demo workspace."
+        detail="This session was scoped to a deck that no longer exists."
         title="Deck not found"
       />
     )

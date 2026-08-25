@@ -9,6 +9,12 @@ export type MobileNotificationKind =
   | 'import'
   | 'cards'
 
+export type MobileNotificationDestination =
+  | { kind: 'deck'; deckId: string }
+  | { kind: 'collection'; collectionId: string }
+  | { kind: 'review' }
+  | { kind: 'progress' }
+
 export interface MobileNotificationItem {
   id: string
   group: MobileNotificationGroup
@@ -18,8 +24,8 @@ export interface MobileNotificationItem {
   timeLabel: string
   unread: boolean
   deckMark?: string
-  /** Present only when an existing demo deck is an honest destination. */
-  deckId?: string
+  /** Omitted only when nothing in the app answers the notification. */
+  destination?: MobileNotificationDestination
 }
 
 export interface MobileNotificationsViewModel {
