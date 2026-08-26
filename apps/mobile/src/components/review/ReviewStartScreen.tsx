@@ -40,9 +40,11 @@ export function ReviewStartScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <MobileHeader />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.heading}>Review</Text>
+        <MobileHeader />
+        <View style={styles.intro}>
+          <Text style={styles.heading}>Review</Text>
+        </View>
 
         <View style={styles.card}>
           {caughtUp ? (
@@ -88,12 +90,13 @@ export function ReviewStartScreen({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
-  content: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 44, gap: 18 },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 142, gap: 16 },
+  intro: { marginTop: 10 },
   heading: {
     color: iteraColors.inkBrand,
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: '700',
-    letterSpacing: -0.6,
+    letterSpacing: -1,
   },
   card: {
     borderRadius: 20,

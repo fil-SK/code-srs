@@ -246,6 +246,11 @@ The shape language is **structured softness**.
 
 **MOBILE IMPLEMENTED, DEVICE REVIEW PENDING:** `apps/mobile` has its separately-designed native shell, not a responsive copy of `TopNav`. Ordinary app sections use a persistent five-item bottom bar in the exact order **Library · Review · Today · Progress · Profile**. Today is the raised center control, carrying the Itera symbol on a light surface with a restrained orange selected treatment; every tab keeps a visible label and normal accessible tab semantics. Review in this bar is an entry point only: the interaction previews it opens are nested routes outside the tab group, so the bar disappears while recall is in progress, and Notifications behaves the same way. Every tab destination now has its own separately approved design, so none of them is a neutral placeholder any more.
 
+Primary mobile tab pages place `MobileHeader` inside the same horizontally padded
+scrolling frame as their page content. Their page titles use the prominent tab
+title treatment (34px on Review and Progress); a header mounted outside that
+frame visibly misaligns the brand and bell against the page below it.
+
 Mobile notification rows separate navigation from state. The main row opens its
 destination; a trailing status control with a minimum 44-point target marks the
 item Read or Unread without navigating. A read row is a light neutral surface

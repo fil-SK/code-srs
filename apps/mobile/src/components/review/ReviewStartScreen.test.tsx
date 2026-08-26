@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native'
+import { StyleSheet } from 'react-native'
 
 import { ReviewStartScreen } from './ReviewStartScreen'
 
@@ -14,6 +15,15 @@ afterEach(cleanup)
 // chart or a filter, the screen has grown past what it is for.
 
 describe('the Review start screen', () => {
+  it('uses the same prominent page-title scale as the other primary tabs', () => {
+    render(<ReviewStartScreen deckNames={[]} dueCount={0} onStart={() => {}} />)
+
+    expect(StyleSheet.flatten(screen.getByText('Review').props.style)).toMatchObject({
+      fontSize: 34,
+      fontWeight: '700',
+    })
+  })
+
   it('states how much is due', () => {
     render(<ReviewStartScreen deckNames={['Modern C++ & Memory']} dueCount={7} onStart={() => {}} />)
 
