@@ -1,6 +1,20 @@
 # Itera — current repository state
 
-**Last verified against the working tree: 2026-08-25** (branch `mvp_demo_cleaning`).
+**Last verified against the working tree: 2026-08-26** (branch `mvp_demo_cleaning`).
+
+> **Mobile notification-state refinement (§30).** Read notifications now use a
+> light neutral treatment instead of a compounded gray card plus gray overlay.
+> Every row exposes a separate 44-point Read/Unread status action, so either
+> state can be set without opening or navigating away from the notification.
+> Opening an unread row still marks it read and follows its honest destination.
+
+> **Expo Go startup hotfix (§29).** Physical-device testing found that Expo Go
+> does not expose Web Crypto on `globalThis`, so the demo crashed while its seed
+> ReviewLogs called core's `newId()`. The mobile app now installs SDK 54's
+> `expo-crypto` through a custom entry point before Expo Router evaluates any
+> route. The missing-global regression, full suites, typechecks, lint and the
+> iOS/Hermes export are clean. Re-verification in Expo Go after clearing Metro's
+> cache is pending the owner and is not claimed.
 
 > **Market-validation checkpoint (milestone M-DEMO-5, §28).** `apps/mobile` is now being prepared as a **bounded, deterministic market-demo**: something to record, demonstrate and put in front of prospective users. The rule applied across every learner-facing surface is that a visible affordance must be functional, intentionally and clearly unavailable, or removed - there is no state where a control looks enabled and does nothing. Eleven prototype controls left over from the mockup phase were **removed rather than disabled**, because none was pending work.
 >
@@ -120,7 +134,7 @@ Real data, real behavior, production-routed:
 | **Mobile Profile & Settings** (`/profile`, `apps/mobile/src/components/profile/`) | **In demo mode the screen is the Itera header, the workspace identity card and the `__DEV__` rows, and nothing else (§28).** It says "Demo workspace", that the data is deterministic and not a synced account, and that nothing is saved between launches; the Sign-out row is absent, because there is no account to sign out of. **In cloud mode the owner-approved structure is unchanged**: the seven selectable settings rows, the six section detail panels, the Import / Export panel, the real session email and a live Sign out. | Nothing is fabricated in either mode. Demo mode no longer advertises the six unbuilt settings sections or a backup this platform cannot perform - six could only say "not available yet", and Import / Export's Merge/Replace radio responded to every press while the buttons above it could not run. Physical-device review of demo mode is pending. |
 | **Mobile Library — All Decks + Collection + Deck** (`/library`, `/library/:collectionId`, `/library/deck/:deckId`, `apps/mobile/src/components/library/`) | Three explicitly separate native depths in one nested Library stack, now **navigable end to end over the demo workspace** (§24). Every All Decks row opens its own deck (they were inert `View`s); every collection scope resolves, including Unfiled, Systems and Research; every Collection deck row opens its own deck; both routes resolve their route parameter, and an unknown id gets a not-found state. Search, the Due-only filter and a four-key Sort (core's `sortDecks`, with the label always showing the active sort) all work, as do the deck's card search and its real status filter. | Values come from the demo workspace, not a repository. **New Deck, Import, Collection settings, deck actions, card actions, Add Card and the Insights tab are now removed rather than shown disabled (§28)** - mobile authoring and CRUD are deferred by product decision, so none of them was pending work. The deck's card list sits under a plain Cards heading; the deck's back control says "Back" and the collection name is a caption in the identity block. The decorative Filter dropdown and the deck favorite were removed earlier (D372, D373). Real hooks and repository composition are not connected; per-deck due counts now follow real demo scheduling, because a reviewed card's due date moves (§25). Physical-device review is pending. |
 | **Mobile Progress** (`/progress`, `apps/mobile/src/components/progress/`) | Native overview adapted from the owner concept at phone-readable density: exactly **Learned · Due · Reviews · Retention · Current streak**, plus a 30-day activity heat map, gap-aware retention trend, deck performance and recent milestones. **Each Deck performance row opens its deck**. The persistent tab shell stays visible with Progress selected. | Demo/local (§26): every value is computed from canonical Cards + ReviewLogs through shared core statistics. **The 30D/3M/1Y range group is removed (§28)** - the page reports one real window and its date pill names it; `demoProgressViewModel` keeps its `DateRangePreset` parameter, so a future range is a wiring change. Review activity, Undo and reset propagate immediately. No repository or persistence; physical-device review is pending. |
-| **Mobile Notifications** (`/notifications`, `apps/mobile/src/components/notifications/`) | Mobile-only native inbox reached from the shared header bell: All/Unread filtering, grouped Today/Earlier updates, Mark all as read, an honest empty state, and a direct link to the existing Notifications settings placeholder. Read state now lives in the demo workspace, so **the bell's dot reflects the real unread count** rather than being painted unconditionally, and **Mark all as read is reachable when only Earlier has unread items**. **Every notification now marks itself read and opens an honest destination (§28)**: a deck, a collection, the Review entry or Progress, carried as an explicit destination on the notification rather than inferred from its kind, and named in the row's hint. The settings shortcut is hidden in demo mode, where the Profile section it opened no longer renders. The nested route hides the persistent tab bar and supplies an explicit back affordance. | Values live in the demo workspace (§24), and read state resets on a full app restart by design. There is no push registration, scheduler, notification repository, persistence or fabricated production event stream. Physical-device review is pending. |
+| **Mobile Notifications** (`/notifications`, `apps/mobile/src/components/notifications/`) | Mobile-only native inbox reached from the shared header bell: All/Unread filtering, grouped Today/Earlier updates, Mark all as read, an honest empty state, and a direct link to the existing Notifications settings placeholder. Read state lives in the demo workspace, so **the bell's dot reflects the real unread count** and **Mark all as read is reachable when only Earlier has unread items**. Every notification marks itself read and opens its explicit honest destination (§28), while its separate 44-point status action can mark it Read or Unread without opening it (§30). Read rows use a light neutral surface rather than a gray overlay. The settings shortcut is hidden in demo mode, where the Profile section it opened no longer renders. The nested route hides the persistent tab bar and supplies an explicit back affordance. | Values live in the demo workspace (§24), and read state resets on a full app restart by design. There is no push registration, scheduler, notification repository, persistence or fabricated production event stream. Physical-device review is pending. |
 | **Mobile Review session** (`/review`, `/review/session`, `apps/mobile/src/components/review/`) | A real local demo study session (§25). One immersive shell (`ReviewSessionScreen.tsx`) owns the phase machine, the response, timing, the FSRS interval preview and the objective-result-to-suggested-rating mapping; the six native Views under `interactions/<type>/` render card content only, bound to the shared behaviors by one native registry. The queue is a per-mount snapshot of due demo cards; `reviewService.submit` computes the grade; the resulting `SchedulingState` and canonical `ReviewLog` land in the demo workspace. Real next-due intervals on every rating button, a recommendation the learner may override, session progress, completion, one-level Undo, an honest caught-up state, and exit back to the origin. The tab bar hides for the session only. | Demo/local, in memory: nothing is persisted, no `Repository` is called and the session resets on a full app restart, by decision. Deck-scoped entry exists as a route parameter but has no UI entry point yet (Study Now is still disabled). There is no persist-failure state, because a demo write cannot fail - the `onGraded` seam is where cloud adds one. Physical-device review is pending. |
 | **Mobile Review entry** (`/review`, `ReviewStartScreen.tsx`) | The Review tab's landing surface: heading, due count, contributing deck names, one primary Start action, and an honest caught-up state. Deliberately minimal - no charts, filters, streak tiles or session customisation - and built from Today's existing tokens, card surface and header. Keeps the persistent tab bar. | Reads the demo workspace, not a repository. Physical-device review is pending. |
 | **Progress** (`/progress`, `/progress/history`) | Headline KPIs are exactly **Learned · Due · Reviews · Retention · Current streak**. Learned/Due/Streak are current-state values with no invented period delta; Reviews/Retention follow the selected period, with retention comparison in percentage points. The heat map, gap-aware deck-scopable retention chart, leaf-deck actionable performance table and milestones are all computed from real `ReviewLog`/`Card`/`Deck` data. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | 7 of 9 sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are `aria-disabled` "Soon" rows. Overview and Review history are live. |
@@ -916,3 +930,64 @@ root:        npm run build                  -> successful, PWA precache 24 entri
 The root remains clean after every Expo command: no root `.expo/`, no root `eslint.config.js`, and the root `tsconfig.json` is untouched (the D398 trap). No `apps/web` or `packages/core` file was modified.
 
 Physical-device verification is **pending the owner** and is not claimed. Verify on iPhone: that Today opens looking intentional and every visible action works; that Library search, filter, sort, collections, decks, card study, Study Now and the caught-up and empty states behave; that all six interaction types, the Write Code keyboard, Ordering and Matching by touch, Walkthrough, completion and Undo work; that Progress metrics, heat map, retention chart and deck navigation work and that no range control is missing anything; that Profile shows no misleading account or cloud action and `__DEV__` Reset Demo restores the opening state; that every notification opens its stated destination; that back, swipe-back and tab visibility are coherent with no dead ends; and that no screen shows an enabled-looking no-op control or internal terminology.
+
+---
+
+## 29. Expo Go crypto startup hotfix
+
+The first physical-device run after M-DEMO-5 exposed a startup crash that Jest,
+TypeScript and the earlier bundle gate could not detect: Expo Go's React Native
+runtime had no `globalThis.crypto`. `DemoWorkspaceProvider` constructs seeded
+history during its initial state creation, `buildReviewLog()` calls core's
+`newId()`, and `newId()` tried to read `randomUUID` from that absent object.
+
+Core remains platform-neutral and still consumes only the structural Web Crypto
+shape. Mobile now owns the platform bridge: `apps/mobile/index.ts` is a custom
+Expo Router entry, installs `expo-crypto` first, and imports
+`expo-router/entry` last. Existing browser crypto is preserved; an insecure web
+origin that has `getRandomValues` but not `randomUUID` still uses core's existing
+UUID v4 fallback.
+
+Verification after the fix:
+
+```
+apps/mobile: npx jest                       -> 33 suites, 439 tests, passing
+apps/mobile: npx tsc --noEmit               -> clean
+apps/mobile: npx expo lint                  -> clean
+apps/mobile: npx expo-doctor                -> 18/18
+apps/mobile: npx expo export --platform ios -> bundles from index.ts (4.21 MB hbc)
+root:        npx vitest run                 -> 111 files / 1064 tests
+root:        npx tsc -b --force             -> clean
+root:        npm run lint                   -> clean
+```
+
+The focused regression begins with no global crypto, installs the mobile bridge,
+and successfully calls the same shared `newId()` reached by demo history. A
+fresh Expo Go run with Metro's cache cleared remains the final device check.
+
+---
+
+## 30. Mobile notification read-state refinement
+
+Read notification rows no longer combine a medium gray card with a 38% gray
+overlay. They use the existing `navySoft` neutral surface, standard border,
+muted copy and a restrained shadow, keeping them visibly read without washing
+out the content or category mark.
+
+The row now has two explicit touch paths:
+
+- the main content opens the notification's destination and, when needed,
+  marks it read;
+- the trailing Read/Unread badge is a separate 44-point button that toggles the
+  state without opening the destination.
+
+The state still lives only in `DemoWorkspaceProvider`, so the badge, All/Unread
+filter, Mark all as read action and header unread dot react to the same value.
+The new reverse operation is `markNotificationUnread`; no screen-local state or
+notification backend was added.
+
+Verification: 33 mobile suites / 442 tests, 111 root files / 1064 tests, both
+typechecks, both lints and the 4.21 MB iOS/Hermes export are clean. Chromium at
+390x844 changed a read item to unread without leaving `/notifications`, with no
+console or page errors. Physical-device touch and appearance review remains
+pending and is not claimed.

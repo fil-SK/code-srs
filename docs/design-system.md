@@ -246,6 +246,13 @@ The shape language is **structured softness**.
 
 **MOBILE IMPLEMENTED, DEVICE REVIEW PENDING:** `apps/mobile` has its separately-designed native shell, not a responsive copy of `TopNav`. Ordinary app sections use a persistent five-item bottom bar in the exact order **Library · Review · Today · Progress · Profile**. Today is the raised center control, carrying the Itera symbol on a light surface with a restrained orange selected treatment; every tab keeps a visible label and normal accessible tab semantics. Review in this bar is an entry point only: the interaction previews it opens are nested routes outside the tab group, so the bar disappears while recall is in progress, and Notifications behaves the same way. Every tab destination now has its own separately approved design, so none of them is a neutral placeholder any more.
 
+Mobile notification rows separate navigation from state. The main row opens its
+destination; a trailing status control with a minimum 44-point target marks the
+item Read or Unread without navigating. A read row is a light neutral surface
+using the locked palette, never a translucent gray wash over the whole card;
+status is communicated by the surface, muted copy, icon treatment and explicit
+Read badge together rather than by making the content look disabled.
+
 ### The Review-shell exception — DESIGN RULE (locked)
 
 **Review renders none of the above.** It is immersive by construction: a full-width white top strip carrying only a literal **< Exit session** control (not an arrow icon), a bold position ("7 of 23") and a right-aligned shortcut whose key is drawn as a bordered `<kbd>`, then the narrow card column, tip, explanation and rating controls on open space. The same strip renders on the real study-preview routes; those routes receive a full-width, zero-top-padding `AppShell` main so the strip stays full-bleed and sits flush beneath `TopNav`. Deck flip-through is the one additive variant: Prev and Next flank the position in the strip and advertise `ArrowLeft`/`ArrowRight` through `aria-keyshortcuts`; the page listener ignores held keys and events originating in interactive card controls/editors. The strip's inner controls share the nav's centered 1280px frame. Session-backed surfaces use a symmetric 56px vertical frame: 56px from the strip to the card and 56px from the final rendered content (normally rating controls) to the surface bottom. Editor live previews deliberately keep their Question/Answer toggle instead because they have no deck/session position. Revealed preview-only cards say **Answer revealed**; when ratings are present, the hint becomes **Rate your answer** without repeating the numeric shortcuts already visible on the buttons.

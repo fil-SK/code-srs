@@ -120,7 +120,7 @@ Update it in the same commit as any change to a listed capability.
 
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
-| Notifications inbox | — | no | demo workspace | native-only (decision) — read state works and every row opens an honest destination (deck, collection, Review entry or Progress), carried as explicit data on the notification; still no notification entity; TODO.md "Notifications"; D375, D412 |
+| Notifications inbox | — | no | demo workspace | native-only (decision) — every row opens an honest explicit destination, while a separate status action marks it Read or Unread without navigating; read state drives the filter and header dot; still no notification entity; TODO.md "Notifications"; D375, D412, D420 |
 | Push notifications / reminders | — | no | no | deferred — product decision open; TODO.md "Notifications" |
 | Offline review and sync | — | Dexie local mode | no | deferred — master plan Phase 11 |
 | Roadmaps | — | yes | no | web-only (decision) — features.md "out of scope"; D17, master plan D15 |

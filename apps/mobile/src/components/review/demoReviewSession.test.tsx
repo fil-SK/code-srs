@@ -350,6 +350,24 @@ describe('a demo review session', () => {
   // the same frame as the first. This drives a whole session to completion and
   // marks the inbox read before resetting, then compares the entire workspace
   // against a fresh one rather than spot-checking the fields that were touched.
+  it('can move one notification in both directions without screen-local state', async () => {
+    renderSession()
+    await settle()
+    const notification = demo.workspace.notifications.find((item) => !item.unread)!
+
+    act(() => demo.markNotificationUnread(notification.id))
+    await settle()
+    expect(demo.workspace.notifications.find((item) => item.id === notification.id)?.unread).toBe(
+      true,
+    )
+
+    act(() => demo.markNotificationRead(notification.id))
+    await settle()
+    expect(demo.workspace.notifications.find((item) => item.id === notification.id)?.unread).toBe(
+      false,
+    )
+  })
+
   it('restores the exact starting state after a full session and a read inbox', async () => {
     renderSession()
     await settle()

@@ -5,12 +5,18 @@ import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 // Read state lives in the demo workspace rather than in the screen, so the
 // header bell and this inbox cannot disagree about how much is unread.
 export default function NotificationsRoute() {
-  const { workspace, markNotificationRead, markAllNotificationsRead } = useDemoWorkspace()
+  const {
+    workspace,
+    markNotificationRead,
+    markNotificationUnread,
+    markAllNotificationsRead,
+  } = useDemoWorkspace()
 
   return (
     <NotificationsScreen
       onMarkAllRead={markAllNotificationsRead}
       onMarkRead={markNotificationRead}
+      onMarkUnread={markNotificationUnread}
       viewModel={demoNotificationsViewModel(workspace)}
     />
   )

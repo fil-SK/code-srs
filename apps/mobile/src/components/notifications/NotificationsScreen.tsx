@@ -46,11 +46,11 @@ function NotificationMark({ item }: { item: MobileNotificationItem }) {
     <View
       style={[
         styles.iconMark,
-        { backgroundColor: item.unread ? visual.background : iteraColors.navySoft },
+        { backgroundColor: item.unread ? visual.background : iteraColors.surface },
       ]}
     >
       <MaterialCommunityIcons
-        color={item.unread ? visual.color : iteraColors.mutedLight}
+        color={item.unread ? visual.color : iteraColors.muted}
         name={visual.icon}
         size={28}
       />
@@ -82,31 +82,38 @@ function notificationHint(item: MobileNotificationItem): string {
 function NotificationRow({
   item,
   onPress,
+  onMarkRead,
+  onMarkUnread,
 }: {
   item: MobileNotificationItem
   onPress: () => void
+  onMarkRead: () => void
+  onMarkUnread: () => void
 }) {
   return (
-    <Pressable
-      accessibilityHint={notificationHint(item)}
-      accessibilityLabel={`${item.unread ? 'Unread. ' : ''}${item.title}. ${item.body}. ${item.timeLabel}`}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [
+    <View
+      style={[
         styles.notificationCard,
         !item.unread && styles.notificationCardRead,
-        pressed && styles.pressed,
       ]}
     >
-      <NotificationMark item={item} />
-      <View style={styles.notificationCopy}>
-        <Text style={[styles.notificationTitle, !item.unread && styles.notificationTitleRead]}>
-          {item.title}
-        </Text>
-        <Text style={[styles.notificationBody, !item.unread && styles.notificationBodyRead]}>
-          {item.body}
-        </Text>
-      </View>
+      <Pressable
+        accessibilityHint={notificationHint(item)}
+        accessibilityLabel={`${item.unread ? 'Unread. ' : ''}${item.title}. ${item.body}. ${item.timeLabel}`}
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => [styles.notificationOpen, pressed && styles.pressed]}
+      >
+        <NotificationMark item={item} />
+        <View style={styles.notificationCopy}>
+          <Text style={[styles.notificationTitle, !item.unread && styles.notificationTitleRead]}>
+            {item.title}
+          </Text>
+          <Text style={[styles.notificationBody, !item.unread && styles.notificationBodyRead]}>
+            {item.body}
+          </Text>
+        </View>
+      </Pressable>
       <View style={styles.notificationMeta}>
         <Text
           numberOfLines={2}
@@ -114,20 +121,27 @@ function NotificationRow({
         >
           {item.timeLabel}
         </Text>
-        {item.unread ? (
-          <View style={styles.unreadLabel}>
-            <View style={styles.unreadDot} />
-            <Text style={styles.unreadText}>Unread</Text>
-          </View>
-        ) : (
-          <View style={styles.readLabel}>
-            <MaterialCommunityIcons color="#596273" name="check" size={12} />
-            <Text style={styles.readText}>Read</Text>
-          </View>
-        )}
+        <Pressable
+          accessibilityHint="Changes the status without opening the notification"
+          accessibilityLabel={`Mark ${item.title} as ${item.unread ? 'read' : 'unread'}`}
+          accessibilityRole="button"
+          onPress={item.unread ? onMarkRead : onMarkUnread}
+          style={({ pressed }) => [styles.statusToggle, pressed && styles.pressed]}
+        >
+          {item.unread ? (
+            <View style={styles.unreadLabel}>
+              <View style={styles.unreadDot} />
+              <Text style={styles.unreadText}>Unread</Text>
+            </View>
+          ) : (
+            <View style={styles.readLabel}>
+              <MaterialCommunityIcons color={iteraColors.muted} name="check" size={12} />
+              <Text style={styles.readText}>Read</Text>
+            </View>
+          )}
+        </Pressable>
       </View>
-      {!item.unread ? <View style={styles.readOverlay} /> : null}
-    </Pressable>
+    </View>
   )
 }
 
@@ -164,10 +178,12 @@ function FilterControl({ filter, onChange }: { filter: Filter; onChange: (filter
 export function NotificationsScreen({
   viewModel,
   onMarkRead,
+  onMarkUnread,
   onMarkAllRead,
 }: {
   viewModel: MobileNotificationsViewModel
   onMarkRead: (id: string) => void
+  onMarkUnread: (id: string) => void
   onMarkAllRead: () => void
 }) {
   const router = useRouter()
@@ -303,6 +319,8 @@ export function NotificationsScreen({
                     <NotificationRow
                       key={item.id}
                       item={item}
+                      onMarkRead={() => onMarkRead(item.id)}
+                      onMarkUnread={() => onMarkUnread(item.id)}
                       onPress={() => openNotification(item)}
                     />
                   ))}
@@ -354,33 +372,34 @@ const styles = StyleSheet.create({
   markAll: { minHeight: 44, justifyContent: 'center', paddingLeft: 12 },
   markAllText: { color: iteraColors.accent, fontSize: 14, fontWeight: '600' },
   notificationList: { gap: 11, marginTop: 6 },
-  notificationCard: { minHeight: 114, flexDirection: 'row', alignItems: 'center', overflow: 'hidden', borderColor: iteraColors.border, borderRadius: iteraRadii.card, borderWidth: 1, backgroundColor: iteraColors.surface, padding: 13, ...cardShadow },
+  notificationCard: { minHeight: 114, flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden', borderColor: iteraColors.border, borderRadius: iteraRadii.card, borderWidth: 1, backgroundColor: iteraColors.surface, padding: 13, ...cardShadow },
   notificationCardRead: {
-    borderColor: '#cbd0d8',
-    backgroundColor: '#e2e5e9',
-    shadowOpacity: 0,
+    borderColor: iteraColors.border,
+    backgroundColor: iteraColors.navySoft,
+    shadowOpacity: 0.025,
   },
+  notificationOpen: { minWidth: 0, flex: 1, flexDirection: 'row', alignItems: 'center' },
   iconMark: { width: 52, height: 52, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: 26 },
   deckMark: { width: 52, height: 52, flexShrink: 0, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 13, backgroundColor: iteraColors.navy },
   deckMarkText: { zIndex: 2, color: iteraColors.surface, fontSize: 18, fontWeight: '700' },
-  readMark: { backgroundColor: '#667085', opacity: 0.72 },
-  readMarkText: { color: '#eef0f4' },
+  readMark: { backgroundColor: iteraColors.muted, opacity: 0.82 },
+  readMarkText: { color: iteraColors.surface },
   deckStripeDark: { position: 'absolute', right: -9, bottom: 0, width: 38, height: 8, backgroundColor: '#344967', transform: [{ rotate: '-34deg' }] },
   deckStripeAccent: { position: 'absolute', right: -7, bottom: -2, width: 32, height: 7, backgroundColor: iteraColors.accent, transform: [{ rotate: '-34deg' }] },
-  notificationCopy: { minWidth: 0, flex: 1, marginHorizontal: 13 },
+  notificationCopy: { minWidth: 0, flex: 1, marginLeft: 13, marginRight: 8 },
   notificationTitle: { color: iteraColors.inkBrand, fontSize: 15, fontWeight: '700', lineHeight: 20 },
-  notificationTitleRead: { color: '#697386' },
+  notificationTitleRead: { color: iteraColors.muted },
   notificationBody: { marginTop: 4, color: iteraColors.muted, fontSize: 13, lineHeight: 18 },
-  notificationBodyRead: { color: iteraColors.mutedLight },
-  notificationMeta: { zIndex: 2, width: 72, alignSelf: 'stretch', alignItems: 'flex-end', justifyContent: 'space-between' },
+  notificationBodyRead: { color: iteraColors.muted },
+  notificationMeta: { width: 82, alignItems: 'flex-end', justifyContent: 'space-between' },
   notificationTime: { color: iteraColors.muted, fontSize: 11, lineHeight: 15, textAlign: 'right' },
-  notificationTimeRead: { color: iteraColors.mutedLight },
+  notificationTimeRead: { color: iteraColors.muted },
+  statusToggle: { minWidth: 72, minHeight: 44, alignItems: 'flex-end', justifyContent: 'flex-end' },
   unreadLabel: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   unreadDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: iteraColors.accent },
   unreadText: { color: iteraColors.accent, fontSize: 10, fontWeight: '700' },
-  readLabel: { zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: iteraRadii.pill, backgroundColor: '#d4d8df', paddingHorizontal: 6, paddingVertical: 3 },
-  readText: { color: '#4f596a', fontSize: 10, fontWeight: '700' },
-  readOverlay: { ...StyleSheet.absoluteFillObject, zIndex: 1, borderRadius: iteraRadii.card, backgroundColor: 'rgba(148, 156, 170, 0.38)', pointerEvents: 'none' },
+  readLabel: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.border, paddingHorizontal: 6, paddingVertical: 3 },
+  readText: { color: iteraColors.muted, fontSize: 10, fontWeight: '700' },
   emptyState: { alignItems: 'center', marginTop: 32, borderColor: iteraColors.border, borderRadius: iteraRadii.dialog, borderWidth: 1, backgroundColor: iteraColors.surface, paddingHorizontal: 20, paddingVertical: 40, ...cardShadow },
   emptyIcon: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: iteraColors.successSoft },
   emptyTitle: { marginTop: 14, color: iteraColors.inkBrand, fontSize: 19, fontWeight: '700' },

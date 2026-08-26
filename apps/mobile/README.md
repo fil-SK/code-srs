@@ -23,8 +23,16 @@ This path is implemented but **has never been run against a live Supabase
 project**, and is deferred by product-owner decision until after demand
 validation.
 
-In both modes the product screens read demo data rather than a repository, and
-there is no native RichText renderer and no live Review session yet.
+Demo mode has a native RichText renderer and a functional local Review session
+across all six interaction types. Its grades and canonical ReviewLogs update the
+in-memory demo workspace; cloud persistence remains deferred. The Notifications
+inbox keeps read state in that same workspace, with separate row navigation and
+Read/Unread status actions.
+
+The app uses a custom `index.ts` entry point to install SDK 54's `expo-crypto`
+before Expo Router evaluates routes. Keep `expo-router/entry` as the final import
+in that file: demo history creates UUIDs during the first render, and Expo Go
+does not provide `globalThis.crypto` itself.
 
 See [`docs/CURRENT_STATE.md`](../../docs/CURRENT_STATE.md) §24 for demo mode and
 §23 for the cloud foundation, and

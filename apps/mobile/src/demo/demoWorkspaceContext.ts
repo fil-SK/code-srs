@@ -15,6 +15,7 @@ export interface DemoWorkspaceValue {
    */
   now: Millis
   markNotificationRead: (id: string) => void
+  markNotificationUnread: (id: string) => void
   markAllNotificationsRead: () => void
   /** Records one completed review: the new scheduling, and its ReviewLog. */
   applyDemoReview: (result: SubmitReviewResult) => void

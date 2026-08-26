@@ -15,8 +15,8 @@
 // global nor its `Crypto` type exists here. The smallest structural description
 // of what this function actually uses is enough, and it is also the honest one:
 // the algorithm depends on those two members and on nothing else a platform
-// provides. Native supplies react-native-get-random-values at its own entry
-// point; core imports no polyfill and branches on no platform.
+// provides. Native supplies Expo Crypto at its own entry point; core imports no
+// platform package and branches on no platform.
 interface CryptoLike {
   randomUUID?: () => string
   getRandomValues<T extends ArrayBufferView>(array: T): T

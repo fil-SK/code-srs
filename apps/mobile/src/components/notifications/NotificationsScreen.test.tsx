@@ -23,12 +23,14 @@ function withReadState(overrides: Record<string, boolean>): DemoWorkspace {
 
 function renderInbox(ws: DemoWorkspace, handlers: Partial<{
   onMarkRead: (id: string) => void
+  onMarkUnread: (id: string) => void
   onMarkAllRead: () => void
 }> = {}) {
   return render(
     <NotificationsScreen
       onMarkAllRead={handlers.onMarkAllRead ?? jest.fn()}
       onMarkRead={handlers.onMarkRead ?? jest.fn()}
+      onMarkUnread={handlers.onMarkUnread ?? jest.fn()}
       viewModel={demoNotificationsViewModel(ws)}
     />,
   )
@@ -52,6 +54,27 @@ describe('unread state', () => {
     fireEvent.press(screen.getByText("Today's session is ready"))
 
     expect(onMarkRead).toHaveBeenCalledWith('fixture-session-ready')
+  })
+
+  it('marks an item read from its status control without opening it', () => {
+    const onMarkRead = jest.fn()
+    renderInbox(workspace, { onMarkRead })
+
+    fireEvent.press(screen.getByLabelText("Mark Today's session is ready as read"))
+
+    expect(onMarkRead).toHaveBeenCalledWith('fixture-session-ready')
+    expect(routerCalls.push).toEqual([])
+  })
+
+  it('marks a read item unread from the same status control', () => {
+    const onMarkUnread = jest.fn()
+    const retention = workspace.notifications.find((item) => item.id === 'fixture-retention')!
+    renderInbox(workspace, { onMarkUnread })
+
+    fireEvent.press(screen.getByLabelText(`Mark ${retention.title} as unread`))
+
+    expect(onMarkUnread).toHaveBeenCalledWith(retention.id)
+    expect(routerCalls.push).toEqual([])
   })
 
   it('filters to unread only', () => {
@@ -173,16 +196,21 @@ describe('destinations', () => {
     renderInbox(workspace)
     const streak = workspace.notifications.find((item) => item.id === 'fixture-streak')!
     const session = workspace.notifications.find((item) => item.id === 'fixture-session-ready')!
+    const openingHint = (label: RegExp) =>
+      screen
+        .getAllByLabelText(label)
+        .find((element) => element.props.accessibilityHint?.includes('opens'))?.props
+        .accessibilityHint
 
-    expect(
-      screen.getByLabelText(/Modern C\+\+ & Memory has 3 cards due/).props.accessibilityHint,
-    ).toBe('Marks this as read and opens the deck')
-    expect(
-      screen.getByLabelText(new RegExp(streak.title)).props.accessibilityHint,
-    ).toBe('Marks this as read and opens your progress')
-    expect(
-      screen.getByLabelText(new RegExp(session.title)).props.accessibilityHint,
-    ).toBe('Marks this as read and opens your review session')
+    expect(openingHint(/Modern C\+\+ & Memory has 3 cards due/)).toBe(
+      'Marks this as read and opens the deck',
+    )
+    expect(openingHint(new RegExp(streak.title))).toBe(
+      'Marks this as read and opens your progress',
+    )
+    expect(openingHint(new RegExp(session.title))).toBe(
+      'Marks this as read and opens your review session',
+    )
   })
 
   it('offers no notification-settings shortcut in demo mode', () => {

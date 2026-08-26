@@ -57,6 +57,18 @@ export function DemoWorkspaceProvider({ children }: { children: ReactNode }) {
     [update],
   )
 
+  const markNotificationUnread = useCallback(
+    (id: string) => {
+      update((workspace) => ({
+        ...workspace,
+        notifications: workspace.notifications.map((item) =>
+          item.id === id ? { ...item, unread: true } : item,
+        ),
+      }))
+    },
+    [update],
+  )
+
   const markAllNotificationsRead = useCallback(() => {
     update((workspace) => ({
       ...workspace,
@@ -121,6 +133,7 @@ export function DemoWorkspaceProvider({ children }: { children: ReactNode }) {
       workspace: state.workspace,
       now: state.now,
       markNotificationRead,
+      markNotificationUnread,
       markAllNotificationsRead,
       applyDemoReview,
       undoDemoReview,
@@ -129,6 +142,7 @@ export function DemoWorkspaceProvider({ children }: { children: ReactNode }) {
     [
       state,
       markNotificationRead,
+      markNotificationUnread,
       markAllNotificationsRead,
       applyDemoReview,
       undoDemoReview,
