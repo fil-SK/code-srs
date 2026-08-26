@@ -10,6 +10,7 @@ export {
   emptyRecallForm,
   recallFormToPreviewCard,
   recallFormToRecord,
+  validateRecallForm,
 } from '@itera/core'
 
-export type { RecallEnvelope, RecallFormState } from '@itera/core'
+export type { RecallEnvelope, RecallFormState, RecallValidation } from '@itera/core'

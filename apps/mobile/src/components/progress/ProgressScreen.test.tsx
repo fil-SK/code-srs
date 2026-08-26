@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoProgressViewModel } from '@/src/demo/demoSelectors'
-import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerDouble } from '@/src/test/routerDouble'
 import { ProgressScreen } from './ProgressScreen'
 
@@ -16,8 +16,8 @@ jest.mock('expo-router', () => ({
 
 // Deck performance rows looked like a list of links and were plain Views.
 
-const workspace = createDemoWorkspace(NOW)
-const viewModel = demoProgressViewModel(workspace, NOW)
+const entities = createDemoSeed(NOW)
+const viewModel = demoProgressViewModel(entities, NOW)
 
 beforeEach(() => {
   resetRouterCalls()
@@ -35,7 +35,7 @@ describe('Deck performance', () => {
   })
 
   it('lists only decks that exist in the workspace', () => {
-    const deckIds = new Set(workspace.decks.map((deck) => deck.id))
+    const deckIds = new Set(entities.decks.map((deck) => deck.id))
     expect(viewModel.decks.length).toBeGreaterThan(0)
     for (const deck of viewModel.decks) {
       expect(deckIds.has(deck.id)).toBe(true)

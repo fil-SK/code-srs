@@ -1,8 +1,8 @@
 import { ProgressScreen } from '@/src/components/progress/ProgressScreen'
 import { demoProgressViewModel } from '@/src/demo/demoSelectors'
-import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
+import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
 export default function ProgressRoute() {
-  const { workspace, now } = useDemoWorkspace()
-  return <ProgressScreen viewModel={demoProgressViewModel(workspace, now)} />
+  const { entities, now } = useDemoScreen()
+  return <ProgressScreen viewModel={demoProgressViewModel(entities, now)} />
 }

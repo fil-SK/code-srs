@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoCollectionViewModel } from '@/src/demo/demoSelectors'
-import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerDouble } from '@/src/test/routerDouble'
 import { LibraryCollectionScreen } from './LibraryCollectionScreen'
 
@@ -18,10 +18,10 @@ jest.mock('expo-router', () => ({
 // hard-coded to fixture-modern-cpp. Every other deck was rendered as a disabled
 // row that looked identical.
 
-const workspace = createDemoWorkspace(NOW)
+const entities = createDemoSeed(NOW)
 
 function scope(id: string) {
-  const viewModel = demoCollectionViewModel(workspace, id, NOW)
+  const viewModel = demoCollectionViewModel(entities, id, NOW)
   if (!viewModel) throw new Error(`missing demo scope ${id}`)
   return viewModel
 }

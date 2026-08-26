@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react-native'
 
 import { demoDeckViewModel } from '@/src/demo/demoSelectors'
-import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import {
   pushedCardIds,
   pushedSessionDeckIds,
@@ -21,10 +21,10 @@ jest.mock('expo-router', () => ({
   useRouter: () => require('@/src/test/routerDouble').routerDouble,
 }))
 
-const workspace = createDemoWorkspace(NOW)
+const entities = createDemoSeed(NOW)
 
 function deck(id: string) {
-  const viewModel = demoDeckViewModel(workspace, id, NOW)
+  const viewModel = demoDeckViewModel(entities, id, NOW)
   if (!viewModel) throw new Error(`missing demo deck ${id}`)
   return viewModel
 }

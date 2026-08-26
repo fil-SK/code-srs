@@ -1,10 +1,10 @@
 import { demoCardStatus, isDemoCardDue, resolveDemoScheduling } from './demoScheduling'
-import { createDemoWorkspace } from './demoWorkspace'
+import { createDemoSeed } from './demoWorkspace'
 
 const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
 const DAY_MS = 86_400_000
 
-const workspace = createDemoWorkspace(NOW)
+const entities = createDemoSeed(NOW)
 
 describe('resolveDemoScheduling', () => {
   const seed = {
@@ -39,7 +39,7 @@ describe('resolveDemoScheduling', () => {
 
 describe('demoCardStatus', () => {
   it('derives the label from scheduling rather than an authored flag', () => {
-    const card = workspace.cards[0]
+    const card = entities.cards[0]
 
     expect(demoCardStatus({ ...card, scheduling: { ...card.scheduling, state: 'new' } })).toBe('New')
     expect(demoCardStatus({ ...card, scheduling: { ...card.scheduling, state: 'review' } })).toBe(
@@ -57,7 +57,7 @@ describe('demoCardStatus', () => {
 })
 
 describe('isDemoCardDue', () => {
-  const card = workspace.cards[0]
+  const card = entities.cards[0]
 
   it('is due at its due instant and after it', () => {
     expect(isDemoCardDue(card, card.scheduling.due)).toBe(true)
@@ -75,7 +75,7 @@ describe('isDemoCardDue', () => {
 
 describe('the seeded demo workspace', () => {
   it('gives every card a real interaction payload and real scheduling', () => {
-    for (const card of workspace.cards) {
+    for (const card of entities.cards) {
       expect(card.interaction.type).toBeTruthy()
       expect(typeof card.scheduling.due).toBe('number')
       expect(card.prompt.format).toBe('markdown')
@@ -83,19 +83,19 @@ describe('the seeded demo workspace', () => {
   })
 
   it('covers all six interaction types, so a demo session can show each', () => {
-    expect(new Set(workspace.cards.map((card) => card.interaction.type))).toEqual(
+    expect(new Set(entities.cards.map((card) => card.interaction.type))).toEqual(
       new Set(['recall', 'multiple_choice', 'write_code', 'ordering', 'matching', 'walkthrough']),
     )
   })
 
   it('starts with a modest seeded review history', () => {
-    expect(workspace.reviewLogs.length).toBeGreaterThan(20)
-    expect(workspace.reviewLogs.length).toBeLessThan(120)
+    expect(entities.reviewLogs.length).toBeGreaterThan(20)
+    expect(entities.reviewLogs.length).toBeLessThan(120)
   })
 
   it('leaves some cards not due, so the demo is not one undifferentiated pile', () => {
-    const due = workspace.cards.filter((card) => isDemoCardDue(card, NOW))
+    const due = entities.cards.filter((card) => isDemoCardDue(card, NOW))
     expect(due.length).toBeGreaterThan(0)
-    expect(due.length).toBeLessThan(workspace.cards.length)
+    expect(due.length).toBeLessThan(entities.cards.length)
   })
 })

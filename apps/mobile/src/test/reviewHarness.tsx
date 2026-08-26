@@ -4,7 +4,7 @@ import { AccessibilityInfo } from 'react-native'
 
 import { ReviewSessionScreen } from '@/src/components/review/ReviewSessionScreen'
 import { nativeInteractionFor } from '@/src/components/review/interactions/registry'
-import { createDemoWorkspace, type DemoCard } from '@/src/demo/demoWorkspace'
+import { createDemoSeed } from '@/src/demo/demoWorkspace'
 
 /**
  * Test support for the native Review session. Not a `*.test.tsx` file, so the
@@ -15,10 +15,11 @@ import { createDemoWorkspace, type DemoCard } from '@/src/demo/demoWorkspace'
 /** One fixed instant, so seeded due dates and FSRS previews are reproducible. */
 export const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
 
-export const demoWorkspace = createDemoWorkspace(NOW)
+/** The seeded dataset, as a plain entity value. */
+export const demoEntities = createDemoSeed(NOW)
 
-export function demoCardOfType(type: InteractionType): DemoCard {
-  const card = demoWorkspace.cards.find((entry) => entry.interaction.type === type)
+export function demoCardOfType(type: InteractionType): Card {
+  const card = demoEntities.cards.find((entry) => entry.interaction.type === type)
   if (!card) throw new Error(`The demo workspace has no ${type} card.`)
   return card
 }
@@ -60,7 +61,7 @@ export interface RenderedCard {
  * Renders one card through the real session shell, with the real registry
  * binding, and records what it grades.
  */
-export async function renderCard(card: DemoCard, { total = 3, current = 1 } = {}) {
+export async function renderCard(card: Card, { total = 3, current = 1 } = {}) {
   const recorded: RenderedCard = { graded: [], exits: 0 }
   const definition = nativeInteractionFor(card.interaction.type)
 

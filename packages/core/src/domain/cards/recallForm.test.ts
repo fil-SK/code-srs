@@ -4,6 +4,7 @@ import {
   emptyRecallForm,
   recallFormToPreviewCard,
   recallFormToRecord,
+  validateRecallForm,
 } from './recallForm'
 import type { Card } from '../../types/card'
 
@@ -106,5 +107,63 @@ describe('cardRecordToForm round-trips', () => {
       authoringPreset: 'find_the_bug',
       tags: 'x, y',
     })
+  })
+})
+
+describe('validateRecallForm', () => {
+  it('accepts a form with both a prompt and an answer', () => {
+    const form = { ...emptyRecallForm('deck-1'), prompt: 'Q', answer: 'A' }
+    expect(validateRecallForm(form)).toEqual({ canSave: true, errors: [] })
+  })
+
+  it('requires a prompt', () => {
+    const form = { ...emptyRecallForm('deck-1'), prompt: '   ', answer: 'A' }
+    expect(validateRecallForm(form)).toEqual({
+      canSave: false,
+      errors: ['Prompt is required.'],
+    })
+  })
+
+  it('requires an answer', () => {
+    const form = { ...emptyRecallForm('deck-1'), prompt: 'Q', answer: '   ' }
+    expect(validateRecallForm(form)).toEqual({
+      canSave: false,
+      errors: ['Answer is required.'],
+    })
+  })
+
+  it('reports both failures on an empty form', () => {
+    expect(validateRecallForm(emptyRecallForm())).toEqual({
+      canSave: false,
+      errors: ['Prompt is required.', 'Answer is required.'],
+    })
+  })
+
+  // The three optional fields are optional on purpose: a Recall card with no
+  // tip, explanation or tags is an ordinary card, not an incomplete one.
+  it('does not require tip, explanation, tags or a deck', () => {
+    const form = { ...emptyRecallForm(), prompt: 'Q', answer: 'A' }
+    expect(form.tip).toBe('')
+    expect(form.explanation).toBe('')
+    expect(form.tags).toBe('')
+    expect(form.deckId).toBe('')
+    expect(validateRecallForm(form).canSave).toBe(true)
+  })
+
+  it('agrees with the rule the web editor gated Save on before extraction', () => {
+    const inlineRule = (f: { prompt: string; answer: string }) =>
+      f.prompt.trim().length > 0 && f.answer.trim().length > 0
+    const cases = [
+      ['', ''],
+      ['Q', ''],
+      ['', 'A'],
+      ['Q', 'A'],
+      [' ', ' '],
+      ['  Q  ', '  A  '],
+    ] as const
+    for (const [prompt, answer] of cases) {
+      const form = { ...emptyRecallForm('deck-1'), prompt, answer }
+      expect(validateRecallForm(form).canSave).toBe(inlineRule(form))
+    }
   })
 })

@@ -1,6 +1,6 @@
-import { subtreeIds, type ID, type Millis } from '@itera/core'
+import { subtreeIds, type Card, type ID, type Millis } from '@itera/core'
 
-import type { DemoCard, DemoWorkspace } from './demoWorkspace'
+import type { DemoEntities } from './demoEntities'
 import { isDemoCardDue } from './demoScheduling'
 
 // The demo session queue.
@@ -44,16 +44,16 @@ export interface DemoQueueOptions {
  * the route - a queue helper cannot navigate, and quietly widening an unknown
  * scope to every card is the one outcome that must not happen.
  */
-export function demoDeckScopeIds(workspace: DemoWorkspace, deckId: ID): Set<ID> {
-  return new Set(subtreeIds(workspace.decks, deckId))
+export function demoDeckScopeIds(entities: DemoEntities, deckId: ID): Set<ID> {
+  return new Set(subtreeIds(entities.decks, deckId))
 }
 
 export function createDemoQueue(
-  workspace: DemoWorkspace,
+  entities: DemoEntities,
   { now, deckId, limit = DEMO_SESSION_LIMIT }: DemoQueueOptions,
-): DemoCard[] {
-  const scope = deckId === undefined ? null : demoDeckScopeIds(workspace, deckId)
-  return workspace.cards
+): Card[] {
+  const scope = deckId === undefined ? null : demoDeckScopeIds(entities, deckId)
+  return entities.cards
     .filter((card) => isDemoCardDue(card, now))
     .filter((card) => scope === null || scope.has(card.deckId))
     .sort((a, b) => a.scheduling.due - b.scheduling.due || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
@@ -61,10 +61,10 @@ export function createDemoQueue(
 }
 
 /** The deck names contributing to a queue, in queue order, without repeats. */
-export function demoQueueDeckNames(workspace: DemoWorkspace, queue: DemoCard[]): string[] {
+export function demoQueueDeckNames(entities: DemoEntities, queue: Card[]): string[] {
   const names: string[] = []
   for (const card of queue) {
-    const name = workspace.decks.find((deck) => deck.id === card.deckId)?.name
+    const name = entities.decks.find((deck) => deck.id === card.deckId)?.name
     if (name && !names.includes(name)) names.push(name)
   }
   return names

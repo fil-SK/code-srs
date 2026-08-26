@@ -30,10 +30,15 @@ import { isMobileSupabaseConfigured } from '@/src/data/supabaseClient'
 // here for both the repository and auth, so backend mode and auth mode cannot
 // disagree (the same single-value rule apps/web/src/main.tsx follows).
 //
-// In demo mode no backend is registered at all. That is deliberate: an
-// unconfigured `getRepository()` throws, so a screen that starts querying real
-// data by accident fails loudly instead of silently appearing to work against
-// demo content. Nothing in the demo product path queries.
+// Both modes register a backend, and each registers exactly one: Supabase here
+// at module scope for cloud, and the in-memory demo backend from inside
+// DemoWorkspaceProvider for demo (which is what lets the repository seed and the
+// notification inbox come from one `createDemoSeed` call). Demo mode used to
+// register nothing, on the reasoning that an unconfigured `getRepository()`
+// would fail loudly if a screen queried real data by accident. That reasoning
+// is spent: the demo product path now queries deliberately, through the same
+// shared hooks web uses, and the thing it must not reach is Supabase - which it
+// cannot, because nothing on this path constructs a client.
 if (mobileRuntimeMode === 'cloud') {
   composeMobileRepository()
 }

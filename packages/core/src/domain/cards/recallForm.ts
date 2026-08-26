@@ -115,6 +115,28 @@ export function recallFormToRecord(
   }
 }
 
+export interface RecallValidation {
+  canSave: boolean
+  errors: string[]
+}
+
+// Pure validation shared by every Recall editor's Save gating: a Recall card is
+// a prompt and the answer it reveals, so both are required and nothing else is.
+//
+// The rule predates this function - it lived inline in the web editor while the
+// other five types already had a shared validator, which meant a second editor
+// on a second platform would have had to restate it. `errors` follows the same
+// `{canSave, errors}` shape the other five return; a platform may render the
+// list or gate on `canSave` alone, but neither may decide what "valid" means.
+export function validateRecallForm(form: RecallFormState): RecallValidation {
+  const errors: string[] = []
+
+  if (form.prompt.trim().length === 0) errors.push('Prompt is required.')
+  if (form.answer.trim().length === 0) errors.push('Answer is required.')
+
+  return { canSave: errors.length === 0, errors }
+}
+
 export function cardRecordToForm(record: Card): RecallFormState {
   if (record.interaction.type !== 'recall') {
     throw new Error(`Card ${record.id} is not a Recall interaction`)

@@ -3,16 +3,16 @@ import { useMemo, useState } from 'react'
 
 import { TodayScreen } from '@/src/components/today/TodayScreen'
 import { demoTodayViewModel } from '@/src/demo/demoSelectors'
-import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
+import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
 export default function TodayRoute() {
-  const { workspace, now } = useDemoWorkspace()
+  const { entities, now } = useDemoScreen()
   // The one random value on this screen, picked once for the life of the mount.
-  // Everything else about the demo workspace is deterministic.
+  // Everything else about the demo dataset is deterministic.
   const [greeting] = useState(pickDashboardMessage)
   const viewModel = useMemo(
-    () => demoTodayViewModel(workspace, greeting, now),
-    [workspace, greeting, now],
+    () => demoTodayViewModel(entities, greeting, now),
+    [entities, greeting, now],
   )
 
   return <TodayScreen viewModel={viewModel} />

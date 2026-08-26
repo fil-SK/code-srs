@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
 import { useDecks } from '@/hooks/useDecks'
 import type { Card } from '@/types/card'
-import type { RecallFormState } from '@/domain/cards/recallForm'
+import { validateRecallForm, type RecallFormState } from '@/domain/cards/recallForm'
 import { useSaveRecallCard, type SaveRecallCardTarget } from '@/hooks/useCards'
 import { RecallFields } from './RecallFields'
 import { RecallLivePreview } from './RecallLivePreview'
@@ -36,7 +36,7 @@ export function RecallEditorShell({
   const saveRecall = useSaveRecallCard()
 
   const flatDecks = flattenDeckTree(buildDeckTree(decks ?? []))
-  const canSave = form.prompt.trim().length > 0 && form.answer.trim().length > 0
+  const canSave = validateRecallForm(form).canSave
 
   async function handleSave() {
     const record = await saveRecall.mutateAsync({ form, target })

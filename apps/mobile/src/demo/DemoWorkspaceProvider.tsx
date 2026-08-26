@@ -1,151 +1,118 @@
-import type { ID, SchedulingState, SubmitReviewResult } from '@itera/core'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 
 import { DemoWorkspaceContext } from './demoWorkspaceContext'
-import { createDemoWorkspace, type DemoWorkspace } from './demoWorkspace'
+import { composeDemoRepository, demoStartedAt, resetDemoRepository } from './demoRuntime'
+import type { DemoNotification } from './demoWorkspace'
 
-// The demo workspace as React state, and the only place demo state may change.
+// Demo-runtime state that has no Repository store, and nothing else.
 //
-// Deliberately NOT a Repository implementation. The shared `Repository`
-// contract represents real persistence infrastructure; a demo presentation
-// store that pretends to be one would make every future reader ask which of the
-// two is authoritative. This is a plain context, mobile-only, and nothing in
-// @itera/core knows it exists.
+// Decks, cards and review logs used to live here as React state, and this
+// provider was the only place they could change. They now live in the
+// InMemoryRepository that demoRuntime registers, screens read them through the
+// shared hooks, and re-render comes from TanStack Query invalidation - the same
+// mechanism web has always used. Keeping a copy here as well would be two
+// mutable stores for one set of entities, which is the failure this milestone
+// existed to remove.
 //
-// There is no AsyncStorage and no SQLite behind it: demo state lives for the
-// life of the process and resets on a full app restart. That is the documented
-// intent of this milestone, not an oversight - the purpose is an interactive
-// demo, deterministic screenshots and physical-device UI testing, and real
-// persistence is a separate concern that belongs with real data.
+// What is left genuinely belongs to the demo: the clock every due comparison is
+// made against, the notification inbox (the one demo concept with no Repository
+// store), and the development reset that has to coordinate all three layers.
 //
-// `now` travels with the workspace rather than being read at each use site.
-// Due-ness is a comparison against an instant, so the whole tree has to agree
-// about which instant: Today's due count, Library's per-deck counts and the
-// queue a session builds are otherwise free to disagree by however many
-// milliseconds passed between their renders. It advances exactly when the
-// workspace does, which is also the only moment any of those answers can
-// change.
+// There is still no AsyncStorage and no SQLite behind any of it: demo state
+// lives for the life of the process and resets on a full app restart. That is
+// the documented intent - an interactive demo, deterministic screenshots and
+// physical-device UI testing - not an oversight.
 
 interface DemoState {
-  workspace: DemoWorkspace
   now: number
-}
-
-function initialState(): DemoState {
-  const now = Date.now()
-  return { workspace: createDemoWorkspace(now), now }
+  notifications: DemoNotification[]
 }
 
 export function DemoWorkspaceProvider({ children }: { children: ReactNode }) {
-  // Built once for the life of the process, the same rule the query client and
-  // the auth config follow in the composition root.
-  const [state, setState] = useState(initialState)
+  const queryClient = useQueryClient()
 
-  const update = useCallback((next: (workspace: DemoWorkspace) => DemoWorkspace) => {
-    setState((current) => ({ workspace: next(current.workspace), now: Date.now() }))
+  // Built once for the life of the process, the same rule the query client and
+  // the auth config follow in the composition root. Composing the repository
+  // here rather than at module scope keeps the seed and the inbox derived from
+  // one `createDemoSeed` call, so the notification copy cannot quote counts
+  // from a dataset the repository does not hold.
+  const [state, setState] = useState<DemoState>(() => {
+    const seed = composeDemoRepository()
+    return { now: seed.startedAt, notifications: seed.notifications }
+  })
+
+  const refreshDemoNow = useCallback(() => {
+    setState((current) => {
+      const now = Date.now()
+      // Same-millisecond focus events are common on a tab bar; bailing keeps the
+      // context value identity stable so focusing a tab is not a tree-wide
+      // re-render on its own.
+      return now === current.now ? current : { ...current, now }
+    })
   }, [])
+
+  const setNotifications = useCallback(
+    (next: (items: DemoNotification[]) => DemoNotification[]) => {
+      setState((current) => ({ ...current, notifications: next(current.notifications) }))
+    },
+    [],
+  )
 
   const markNotificationRead = useCallback(
     (id: string) => {
-      update((workspace) => ({
-        ...workspace,
-        notifications: workspace.notifications.map((item) =>
-          item.id === id ? { ...item, unread: false } : item,
-        ),
-      }))
+      setNotifications((items) =>
+        items.map((item) => (item.id === id ? { ...item, unread: false } : item)),
+      )
     },
-    [update],
+    [setNotifications],
   )
 
   const markNotificationUnread = useCallback(
     (id: string) => {
-      update((workspace) => ({
-        ...workspace,
-        notifications: workspace.notifications.map((item) =>
-          item.id === id ? { ...item, unread: true } : item,
-        ),
-      }))
+      setNotifications((items) =>
+        items.map((item) => (item.id === id ? { ...item, unread: true } : item)),
+      )
     },
-    [update],
+    [setNotifications],
   )
 
   const markAllNotificationsRead = useCallback(() => {
-    update((workspace) => ({
-      ...workspace,
-      notifications: workspace.notifications.map((item) => ({ ...item, unread: false })),
-    }))
-  }, [update])
+    setNotifications((items) => items.map((item) => ({ ...item, unread: false })))
+  }, [setNotifications])
 
-  // The one write a review performs. The result is computed by the shared
-  // reviewService and arrives here already immutable; nothing is recomputed,
-  // and no FSRS logic lives on this platform.
+  // Restores the seeded dataset and discards everything authored during the run.
   //
-  // Keyed on the log id rather than the card id: a double press on a rating
-  // sends the same result twice, and a demo that recorded two reviews for one
-  // card would misreport its own history. A genuine second review of the same
-  // card carries a different log id and is appended normally.
-  const applyDemoReview = useCallback(
-    (result: SubmitReviewResult) => {
-      update((workspace) => {
-        if (workspace.reviewLogs.some((log) => log.id === result.log.id)) return workspace
-        return {
-          ...workspace,
-          cards: workspace.cards.map((card) =>
-            card.id === result.log.cardId ? { ...card, scheduling: result.after } : card,
-          ),
-          reviewLogs: [...workspace.reviewLogs, result.log],
-        }
-      })
-    },
-    [update],
-  )
-
-  // Restores the recorded pre-grade state rather than running the scheduler
-  // backwards. FSRS is not invertible - re-deriving `before` from `after` would
-  // be a second, wrong implementation of scheduling on the platform that is
-  // least allowed to have one.
-  const undoDemoReview = useCallback(
-    (cardId: ID, before: SchedulingState, logId: ID) => {
-      update((workspace) => {
-        if (!workspace.reviewLogs.some((log) => log.id === logId)) return workspace
-        return {
-          ...workspace,
-          cards: workspace.cards.map((card) =>
-            card.id === cardId ? { ...card, scheduling: before } : card,
-          ),
-          reviewLogs: workspace.reviewLogs.filter((log) => log.id !== logId),
-        }
-      })
-    },
-    [update],
-  )
-
+  // Three layers have to move together. The repository is reseeded from the
+  // recorded anchor, so the rebuild is byte-identical rather than drifting with
+  // the wall clock (D417). The query cache is then cleared, which is load-
+  // bearing: every screen reads through TanStack Query, and without this they
+  // would keep rendering the pre-reset entities from cache until something
+  // happened to invalidate them. The inbox and the clock are restored last,
+  // from the same seed value the repository was given.
   const resetDemoWorkspace = useCallback(() => {
     if (!__DEV__) return
-    setState((current) => ({
-      workspace: createDemoWorkspace(current.workspace.startedAt),
-      now: current.workspace.startedAt,
-    }))
-  }, [])
+    const seed = resetDemoRepository()
+    queryClient.clear()
+    setState({ now: demoStartedAt(), notifications: seed.notifications })
+  }, [queryClient])
 
   const value = useMemo(
     () => ({
-      workspace: state.workspace,
       now: state.now,
+      refreshDemoNow,
+      notifications: state.notifications,
       markNotificationRead,
       markNotificationUnread,
       markAllNotificationsRead,
-      applyDemoReview,
-      undoDemoReview,
       resetDemoWorkspace,
     }),
     [
       state,
+      refreshDemoNow,
       markNotificationRead,
       markNotificationUnread,
       markAllNotificationsRead,
-      applyDemoReview,
-      undoDemoReview,
       resetDemoWorkspace,
     ],
   )

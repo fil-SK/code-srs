@@ -1,6 +1,5 @@
 import type { Card, CardInteraction } from '@itera/core'
 
-import type { DemoCard } from '@/src/demo/demoWorkspace'
 import { ReviewSessionScreen } from './ReviewSessionScreen'
 import { nativeInteractionFor } from './interactions/registry'
 
@@ -18,11 +17,11 @@ import { nativeInteractionFor } from './interactions/registry'
 // work in a session, and a seventh type would need no route work at all.
 //
 // Nothing about this surface can record anything. There is no ReviewLog, no
-// rating, no scheduler call and no write into the demo workspace - not because
-// the writes are suppressed, but because the props that would carry them do not
-// exist in study mode.
+// rating, no scheduler call and no repository write - not because the writes are
+// suppressed, but because the props that would carry them do not exist in study
+// mode.
 
-export function CardStudyScreen({ card, onExit }: { card: DemoCard; onExit: () => void }) {
+export function CardStudyScreen({ card, onExit }: { card: Card; onExit: () => void }) {
   const definition = nativeInteractionFor(card.interaction.type)
 
   return (

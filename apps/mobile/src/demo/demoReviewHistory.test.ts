@@ -12,7 +12,7 @@ import {
   type ReviewLog,
 } from '@itera/core'
 
-import { createDemoWorkspace, type DemoWorkspace } from './demoWorkspace'
+import { createDemoSeed, type DemoSeed } from './demoWorkspace'
 import { demoDeckMetrics, demoProgressViewModel, demoTodayViewModel } from './demoSelectors'
 import { demoTodayRetention } from './demoReviewHistory'
 import { isDemoCardDue } from './demoScheduling'
@@ -21,21 +21,21 @@ const NOW = new Date(2026, 7, 24, 14, 0).getTime()
 const GREETING = { mainText: 'Ready?', subtext: 'Keep going.' }
 
 describe('the deterministic demo review history', () => {
-  const workspace = createDemoWorkspace(NOW)
-  const cardIds = new Set(workspace.cards.map((card) => card.id))
+  const entities = createDemoSeed(NOW)
+  const cardIds = new Set(entities.cards.map((card) => card.id))
 
   it('uses unique stable ids and references only existing cards', () => {
-    expect(new Set(workspace.reviewLogs.map((log) => log.id)).size).toBe(workspace.reviewLogs.length)
-    expect(workspace.reviewLogs.map((log) => log.id)).toEqual(
-      workspace.reviewLogs.map((_, index) => `fixture-review-${String(index + 1).padStart(3, '0')}`),
+    expect(new Set(entities.reviewLogs.map((log) => log.id)).size).toBe(entities.reviewLogs.length)
+    expect(entities.reviewLogs.map((log) => log.id)).toEqual(
+      entities.reviewLogs.map((_, index) => `fixture-review-${String(index + 1).padStart(3, '0')}`),
     )
     // A log naming a card the workspace does not have would make Learned,
     // retention and deck performance disagree with the Library.
-    expect(workspace.reviewLogs.every((log) => cardIds.has(log.cardId))).toBe(true)
+    expect(entities.reviewLogs.every((log) => cardIds.has(log.cardId))).toBe(true)
   })
 
   it('materializes relative to local today and spans a modest pattern with gaps', () => {
-    const offsets = workspace.reviewLogs.map(
+    const offsets = entities.reviewLogs.map(
       (log) => localDayIndex(NOW) - localDayIndex(log.reviewedAt),
     )
     expect(Math.min(...offsets)).toBe(1)
@@ -48,16 +48,16 @@ describe('the deterministic demo review history', () => {
   })
 
   it('is ordered chronologically, so the replay order is the order it happened', () => {
-    for (let i = 1; i < workspace.reviewLogs.length; i++) {
-      expect(workspace.reviewLogs[i].reviewedAt).toBeGreaterThanOrEqual(
-        workspace.reviewLogs[i - 1].reviewedAt,
+    for (let i = 1; i < entities.reviewLogs.length; i++) {
+      expect(entities.reviewLogs[i].reviewedAt).toBeGreaterThanOrEqual(
+        entities.reviewLogs[i - 1].reviewedAt,
       )
     }
   })
 
   it('contains valid believable scheduling inputs and usable durations', () => {
     const states = new Set(['new', 'learning', 'review', 'relearning'])
-    for (const log of workspace.reviewLogs) {
+    for (const log of entities.reviewLogs) {
       expect(states.has(log.stateBefore)).toBe(true)
       expect(states.has(log.state)).toBe(true)
       expect(log.rating).toBeGreaterThanOrEqual(1)
@@ -73,11 +73,11 @@ describe('the deterministic demo review history', () => {
   })
 
   it('re-materializes identically for the same anchor and moves with another local day', () => {
-    expect(createDemoWorkspace(NOW).reviewLogs).toEqual(workspace.reviewLogs)
+    expect(createDemoSeed(NOW).reviewLogs).toEqual(entities.reviewLogs)
     const tomorrow = new Date(2026, 7, 25, 14, 0).getTime()
-    const moved = createDemoWorkspace(tomorrow)
+    const moved = createDemoSeed(tomorrow)
     expect(localDayIndex(moved.reviewLogs[0].reviewedAt)).toBe(
-      localDayIndex(workspace.reviewLogs[0].reviewedAt) + 1,
+      localDayIndex(entities.reviewLogs[0].reviewedAt) + 1,
     )
   })
 })
@@ -87,12 +87,12 @@ describe('the deterministic demo review history', () => {
 // card and a seeded ReviewLog beside it - and they disagreed for six of the
 // twelve reviewed cards. These assertions fail if that is ever reintroduced.
 describe('every demo card agrees with its own review history', () => {
-  const workspace = createDemoWorkspace(NOW)
-  const logsFor = (cardId: string) => workspace.reviewLogs.filter((log) => log.cardId === cardId)
+  const entities = createDemoSeed(NOW)
+  const logsFor = (cardId: string) => entities.reviewLogs.filter((log) => log.cardId === cardId)
 
   it('gives a reviewed card exactly the state its latest log produced', () => {
     let reviewed = 0
-    for (const card of workspace.cards) {
+    for (const card of entities.cards) {
       const logs = logsFor(card.id)
       if (logs.length === 0) continue
       reviewed++
@@ -110,7 +110,7 @@ describe('every demo card agrees with its own review history', () => {
 
   it('leaves a card with no history genuinely new', () => {
     let untouched = 0
-    for (const card of workspace.cards) {
+    for (const card of entities.cards) {
       if (logsFor(card.id).length > 0) continue
       untouched++
       expect(card.scheduling.state).toBe('new')
@@ -122,7 +122,7 @@ describe('every demo card agrees with its own review history', () => {
   })
 
   it('chains the logs of a card so each review begins where the last one ended', () => {
-    for (const card of workspace.cards) {
+    for (const card of entities.cards) {
       const logs = logsFor(card.id)
       // The first review of a card must start from its authored new state.
       if (logs.length > 0) expect(logs[0].stateBefore).toBe('new')
@@ -136,7 +136,7 @@ describe('every demo card agrees with its own review history', () => {
   })
 
   it('counts lapses as the scheduler counted them, not as authored', () => {
-    for (const card of workspace.cards) {
+    for (const card of entities.cards) {
       const logs = logsFor(card.id)
       if (logs.length === 0) continue
       const failedMature = logs.filter(
@@ -197,9 +197,9 @@ describe('Today retention is the trailing 30 calendar days', () => {
   })
 
   it('shows that window on Today, and the same one on Progress', () => {
-    const workspace: DemoWorkspace = { ...createDemoWorkspace(NOW), reviewLogs: logs }
-    const today = demoTodayViewModel(workspace, GREETING, NOW)
-    const progress = demoProgressViewModel(workspace, NOW)
+    const seeded: DemoSeed = { ...createDemoSeed(NOW), reviewLogs: logs }
+    const today = demoTodayViewModel(seeded, GREETING, NOW)
+    const progress = demoProgressViewModel(seeded, NOW)
 
     expect(today.retention).toBe(100)
     expect(Math.round(computeRetention(logs)! * 100)).toBe(50)
@@ -218,29 +218,29 @@ describe('Today retention is the trailing 30 calendar days', () => {
 })
 
 describe('shared statistics power every demo surface', () => {
-  const workspace = createDemoWorkspace(NOW)
-  const dueCards = workspace.cards.filter((card) => isDemoCardDue(card, NOW))
-  const today = demoTodayViewModel(workspace, GREETING, NOW)
-  const progress = demoProgressViewModel(workspace, NOW)
+  const entities = createDemoSeed(NOW)
+  const dueCards = entities.cards.filter((card) => isDemoCardDue(card, NOW))
+  const today = demoTodayViewModel(entities, GREETING, NOW)
+  const progress = demoProgressViewModel(entities, NOW)
   const kpis = computeKpis(
-    workspace.cards,
+    entities.cards,
     dueCards,
-    workspace.reviewLogs,
+    entities.reviewLogs,
     buildRange('30d', NOW),
     NOW,
   )
 
   it('derives Today from canonical due, streak, retention, and duration helpers', () => {
     expect(today.dueToday).toBe(dueCards.length)
-    expect(today.streak).toBe(computeStreak(workspace.reviewLogs, NOW).current)
-    expect(today.retention).toBe(Math.round(demoTodayRetention(workspace.reviewLogs, NOW)! * 100))
+    expect(today.streak).toBe(computeStreak(entities.reviewLogs, NOW).current)
+    expect(today.retention).toBe(Math.round(demoTodayRetention(entities.reviewLogs, NOW)! * 100))
     expect(today.estimatedMinutes).toBe(
-      estimateSessionMinutes(workspace.reviewLogs, dueCards.length),
+      estimateSessionMinutes(entities.reviewLogs, dueCards.length),
     )
   })
 
   it('derives Continue Learning from the same cards and shared deck metrics', () => {
-    const metrics = demoDeckMetrics(workspace, NOW)
+    const metrics = demoDeckMetrics(entities, NOW)
     for (const row of today.decks) {
       expect(row.dueCount).toBe(metricsFor(metrics, row.id).dueCount)
       expect(row.progressPercent).toBe(Math.round(metricsFor(metrics, row.id).masteryFraction * 100))
@@ -250,7 +250,7 @@ describe('shared statistics power every demo surface', () => {
   it('uses canonical Learned, Due, Reviews, Retention, and streak KPIs', () => {
     const metric = (id: string) => progress.metrics.find((entry) => entry.id === id)?.value
     expect(metric('learned')).toBe(
-      String(computeLearned(workspace.cards, workspace.reviewLogs).learned),
+      String(computeLearned(entities.cards, entities.reviewLogs).learned),
     )
     expect(metric('due')).toBe(String(kpis.due))
     expect(metric('reviews')).toBe(String(kpis.reviews.value))
@@ -266,14 +266,14 @@ describe('shared statistics power every demo surface', () => {
   })
 
   it('makes the selected range affect reviews, retention buckets, and heatmap cells', () => {
-    const seven = demoProgressViewModel(workspace, NOW, '7d')
+    const seven = demoProgressViewModel(entities, NOW, '7d')
     expect(Number(progress.metrics.find((entry) => entry.id === 'reviews')?.value)).toBeGreaterThan(
       Number(seven.metrics.find((entry) => entry.id === 'reviews')?.value),
     )
     expect(seven.activityDays).toHaveLength(7)
     expect(progress.activityDays).toHaveLength(30)
     expect(seven.retentionSeries).toHaveLength(7)
-    expect(computeHeatmap(workspace.reviewLogs, 7, NOW).map((day) => day.count)).toEqual(
+    expect(computeHeatmap(entities.reviewLogs, 7, NOW).map((day) => day.count)).toEqual(
       seven.activityDays.map((day) => day.count),
     )
   })

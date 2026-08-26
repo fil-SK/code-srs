@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { LibraryNotFoundScreen } from '@/src/components/library/LibraryNotFoundScreen'
 import { DemoReviewSession } from '@/src/components/review/DemoReviewSession'
 import { findDemoDeck } from '@/src/demo/demoSelectors'
-import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
+import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
 // The immersive session. The tab bar hides while this route is focused; see
 // IteraTabBar.
@@ -16,9 +16,14 @@ import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 export default function ReviewSessionRoute() {
   const router = useRouter()
   const { deckId } = useLocalSearchParams<{ deckId?: string }>()
-  const { workspace } = useDemoWorkspace()
+  const { entities, isLoading } = useDemoScreen()
 
-  if (deckId !== undefined && !findDemoDeck(workspace, deckId)) {
+  // The queue is snapshotted at mount, so the session must not mount before the
+  // decks and cards have been read - an empty first frame would freeze an empty
+  // queue and present it as "all caught up".
+  if (isLoading) return null
+
+  if (deckId !== undefined && !findDemoDeck(entities, deckId)) {
     return (
       <LibraryNotFoundScreen
         detail="This session was scoped to a deck that no longer exists."
@@ -30,6 +35,7 @@ export default function ReviewSessionRoute() {
   return (
     <DemoReviewSession
       deckId={deckId}
+      entities={entities}
       // Back to wherever the session was entered from - the Review tab, Today,
       // or a deck - rather than unconditionally to Today.
       onExit={() => (router.canGoBack() ? router.back() : router.replace('/today'))}

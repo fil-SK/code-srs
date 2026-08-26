@@ -1,13 +1,14 @@
-import { stripInlineMarkers, type InteractionType } from '@itera/core'
+import { stripInlineMarkers, type Card, type InteractionType } from '@itera/core'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 import { DemoWorkspaceProvider } from '@/src/demo/DemoWorkspaceProvider'
-import { useDemoWorkspace, type DemoWorkspaceValue } from '@/src/demo/demoWorkspaceContext'
-import type { DemoCard } from '@/src/demo/demoWorkspace'
-import { mockReducedMotion, settle } from '@/src/test/reviewHarness'
+import { useDemoEntities, type DemoEntities } from '@/src/demo/demoEntities'
+import { createTestQueryClient, settleQueries } from '@/src/test/demoHarness'
+import { mockReducedMotion } from '@/src/test/reviewHarness'
 import { CardStudyScreen } from './CardStudyScreen'
 
-// Card study over the real demo workspace, for all six interaction types.
+// Card study over the real composed demo runtime, for all six interaction types.
 //
 // Two things are being proved, and the second is the reason this file exists.
 //
@@ -17,9 +18,9 @@ import { CardStudyScreen } from './CardStudyScreen'
 //
 // The second is the non-persistence guarantee. Study is not a review, so
 // nothing may be recorded - no ReviewLog, no scheduling change, no due change.
-// That is asserted against the live demo workspace after the card has actually
-// been answered, because "no write happened" is only meaningful once the code
-// path that would have written has run.
+// That is asserted against the live repository-backed entities after the card
+// has actually been answered, because "no write happened" is only meaningful
+// once the code path that would have written has run.
 //
 // The per-type semantics themselves are covered by the six interaction files
 // and by core; what is asserted here is the study surface around them.
@@ -36,33 +37,38 @@ const TYPES: InteractionType[] = [
   'walkthrough',
 ]
 
-let demo: DemoWorkspaceValue
-let studied: DemoCard
+let entities: DemoEntities
+let studied: Card
 
 function StudyHost({
   pick,
   exits,
 }: {
-  pick: (cards: DemoCard[]) => DemoCard | undefined
+  pick: (cards: Card[]) => Card | undefined
   exits: { count: number }
 }) {
-  demo = useDemoWorkspace()
-  // Taken from the provider's own workspace rather than a separately built one,
-  // so the card under test is the same record the assertions read back.
-  const card = pick(demo.workspace.cards)
-  if (!card) throw new Error('The demo workspace has no card matching this test.')
+  const seen = useDemoEntities()
+  entities = { decks: seen.decks, cards: seen.cards, reviewLogs: seen.reviewLogs }
+  // Taken from what the shared hooks actually read rather than a separately
+  // built fixture, so the card under test is the same record the assertions
+  // read back.
+  if (seen.isLoading) return null
+  const card = pick(seen.cards)
+  if (!card) throw new Error('The demo dataset has no card matching this test.')
   studied = card
   return <CardStudyScreen card={card} onExit={() => (exits.count += 1)} />
 }
 
-async function renderStudyCard(pick: (cards: DemoCard[]) => DemoCard | undefined) {
+async function renderStudyCard(pick: (cards: Card[]) => Card | undefined) {
   const exits = { count: 0 }
   const view = render(
-    <DemoWorkspaceProvider>
-      <StudyHost exits={exits} pick={pick} />
-    </DemoWorkspaceProvider>,
+    <QueryClientProvider client={createTestQueryClient()}>
+      <DemoWorkspaceProvider>
+        <StudyHost exits={exits} pick={pick} />
+      </DemoWorkspaceProvider>
+    </QueryClientProvider>,
   )
-  await settle()
+  await settleQueries()
   return { ...view, exits }
 }
 
@@ -71,7 +77,7 @@ function renderStudy(type: InteractionType) {
 }
 
 /** Drives the card to its revealed state, the way its type is meant to be answered. */
-async function inspect(card: DemoCard) {
+async function inspect(card: Card) {
   const interaction = card.interaction
 
   switch (interaction.type) {
@@ -112,11 +118,11 @@ async function inspect(card: DemoCard) {
       for (const row of interaction.relationships) {
         const sourceId = row[sourceColumn.id]
         fireEvent.press(screen.getByLabelText(new RegExp(`^${escape(labelOf(0, sourceId))},`)))
-        await settle()
+        await settleQueries()
         fireEvent.press(
           screen.getByLabelText(new RegExp(`^${escape(labelOf(1, row[valueColumn.id]))}`)),
         )
-        await settle()
+        await settleQueries()
       }
       fireEvent.press(screen.getByText('Submit answer'))
       break
@@ -137,10 +143,10 @@ async function inspect(card: DemoCard) {
         } else {
           fireEvent.press(screen.getByText('Reveal answer'))
         }
-        await settle()
+        await settleQueries()
         if (index < interaction.steps.length - 1) {
           fireEvent.press(screen.getByText('Continue'))
-          await settle()
+          await settleQueries()
         }
       }
       fireEvent.press(screen.getByText('Finish'))
@@ -148,7 +154,7 @@ async function inspect(card: DemoCard) {
     }
   }
 
-  await settle()
+  await settleQueries()
 }
 
 /** Card content is real prose and carries regex metacharacters. */
@@ -195,24 +201,25 @@ describe.each(TYPES)('studying a %s card', (type) => {
 
   it('appends no ReviewLog', async () => {
     await renderStudy(type)
-    const logs = demo.workspace.reviewLogs
+    const logs = entities.reviewLogs
 
     await inspect(studied)
 
     // Identity, not length: a study surface must not touch the history at all.
-    expect(demo.workspace.reviewLogs).toBe(logs)
-    expect(demo.workspace.reviewLogs.some((log) => log.cardId === studied.id)).toBe(
+    // The array can only change identity if something wrote and invalidated.
+    expect(entities.reviewLogs).toBe(logs)
+    expect(entities.reviewLogs.some((log) => log.cardId === studied.id)).toBe(
       logs.some((log) => log.cardId === studied.id),
     )
   })
 
   it('leaves the card s scheduling exactly as it found it', async () => {
     await renderStudy(type)
-    const before = demo.workspace.cards.find((card) => card.id === studied.id)!.scheduling
+    const before = entities.cards.find((card) => card.id === studied.id)!.scheduling
 
     await inspect(studied)
 
-    const after = demo.workspace.cards.find((card) => card.id === studied.id)!.scheduling
+    const after = entities.cards.find((card) => card.id === studied.id)!.scheduling
     expect(after).toBe(before)
     expect(after.due).toBe(before.due)
     expect(after.reps).toBe(before.reps)
@@ -220,19 +227,21 @@ describe.each(TYPES)('studying a %s card', (type) => {
 
   it('exits without recording anything', async () => {
     const { exits } = await renderStudy(type)
-    const workspace = demo.workspace
+    const cards = entities.cards
+    const logs = entities.reviewLogs
 
     await inspect(studied)
     fireEvent.press(screen.getByLabelText('Close card preview'))
 
     expect(exits.count).toBe(1)
-    expect(demo.workspace).toBe(workspace)
+    expect(entities.cards).toBe(cards)
+    expect(entities.reviewLogs).toBe(logs)
   })
 })
 
 describe('card study across decks', () => {
   it('shows the card it was given, not whichever card came first', async () => {
-    const inDeck = (deckId: string) => (cards: DemoCard[]) =>
+    const inDeck = (deckId: string) => (cards: Card[]) =>
       cards.find((card) => card.deckId === deckId)
 
     const cpp = await renderStudyCard(inDeck('fixture-modern-cpp'))

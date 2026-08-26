@@ -2,11 +2,13 @@ import { NotificationsScreen } from '@/src/components/notifications/Notification
 import { demoNotificationsViewModel } from '@/src/demo/demoSelectors'
 import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 
-// Read state lives in the demo workspace rather than in the screen, so the
-// header bell and this inbox cannot disagree about how much is unread.
+// Read state lives in the demo provider rather than in the screen, so the
+// header bell and this inbox cannot disagree about how much is unread. The
+// inbox is the one demo concept with no Repository store, so this route reads
+// the provider directly rather than through the entity seam.
 export default function NotificationsRoute() {
   const {
-    workspace,
+    notifications,
     markNotificationRead,
     markNotificationUnread,
     markAllNotificationsRead,
@@ -17,7 +19,7 @@ export default function NotificationsRoute() {
       onMarkAllRead={markAllNotificationsRead}
       onMarkRead={markNotificationRead}
       onMarkUnread={markNotificationUnread}
-      viewModel={demoNotificationsViewModel(workspace)}
+      viewModel={demoNotificationsViewModel(notifications)}
     />
   )
 }

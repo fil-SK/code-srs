@@ -15,7 +15,7 @@ export function MobileHeader() {
   // registration and no notification backend - so a cloud build has no unread
   // count and correctly shows no dot.
   const demo = useDemoWorkspaceOptional()
-  const unreadCount = demo ? demoUnreadCount(demo.workspace) : 0
+  const unreadCount = demo ? demoUnreadCount(demo.notifications) : 0
 
   return (
     <View style={styles.header}>

@@ -1,6 +1,6 @@
 import { startOfDay } from '@itera/core'
 
-import { createDemoWorkspace } from './demoWorkspace'
+import { createDemoSeed } from './demoWorkspace'
 
 // Notification copy is derived from the same entities the screens show, so the
 // inbox cannot state something the rest of the app contradicts. These assert
@@ -10,10 +10,10 @@ import { createDemoWorkspace } from './demoWorkspace'
 // a hand-written date that had no relationship to the deck it named.
 
 const NOW = Date.UTC(2026, 7, 25, 9, 0, 0)
-const workspace = createDemoWorkspace(NOW)
+const entities = createDemoSeed(NOW)
 
 function notification(id: string) {
-  const item = workspace.notifications.find((entry) => entry.id === id)
+  const item = entities.notifications.find((entry) => entry.id === id)
   if (!item) throw new Error('missing demo notification ' + id)
   return item
 }
@@ -21,11 +21,11 @@ function notification(id: string) {
 describe('new cards added', () => {
   it('counts only the cards actually added on the day it reports', () => {
     const interviewCoreDeckIds = new Set(
-      workspace.decks
-        .filter((deck) => deck.collectionId === 'fixture-interview-core')
+      entities.decks
+        .filter((deck) => deck.parentId === 'fixture-interview-core')
         .map((deck) => deck.id),
     )
-    const cards = workspace.cards.filter((card) => interviewCoreDeckIds.has(card.deckId))
+    const cards = entities.cards.filter((card) => interviewCoreDeckIds.has(card.deckId))
     const latestAddedAt = Math.max(...cards.map((card) => card.createdAt))
     const addedThen = cards.filter(
       (card) => startOfDay(card.createdAt) === startOfDay(latestAddedAt),
@@ -50,13 +50,13 @@ describe('new cards added', () => {
 
 describe('deck import completed', () => {
   it('is dated from the deck it names, not from an authored string', () => {
-    const deck = workspace.decks.find((entry) => entry.id === 'fixture-computer-networks')!
+    const deck = entities.decks.find((entry) => entry.id === 'fixture-computer-networks')!
     const item = notification('fixture-import')
 
     // The deck is authored one day before the anchor, so on the learner's
     // timeline the import happened yesterday - and says so.
     expect(item.timeLabel).toBe('Yesterday')
-    expect(deck.createdAt).toBeLessThanOrEqual(workspace.startedAt)
+    expect(deck.createdAt).toBeLessThanOrEqual(entities.startedAt)
   })
 })
 
@@ -66,7 +66,7 @@ describe('dates on the learner s timeline', () => {
     // history is replayed relative to the current local day. Anything the
     // learner reads has to follow the second clock, or a demo recorded months
     // from now would open on an inbox dated last summer.
-    const muchLater = createDemoWorkspace(NOW + 400 * 86_400_000)
+    const muchLater = createDemoSeed(NOW + 400 * 86_400_000)
     const later = muchLater.notifications.find((entry) => entry.id === 'fixture-import')!
 
     expect(later.timeLabel).toBe('Yesterday')

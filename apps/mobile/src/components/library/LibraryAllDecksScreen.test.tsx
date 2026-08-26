@@ -1,7 +1,8 @@
+import { leafDecks } from '@itera/core'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoLibraryViewModel } from '@/src/demo/demoSelectors'
-import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import {
   pushedCollectionIds,
   pushedDeckIds,
@@ -23,8 +24,8 @@ jest.mock('expo-router', () => ({
 // plain View with no press handler at all, so the only way to reach a deck
 // screen in the whole app was one hard-coded row on the Collection screen.
 
-const workspace = createDemoWorkspace(NOW)
-const viewModel = demoLibraryViewModel(workspace, NOW)
+const entities = createDemoSeed(NOW)
+const viewModel = demoLibraryViewModel(entities, NOW)
 
 beforeEach(() => {
   resetRouterCalls()
@@ -70,11 +71,15 @@ describe('All Decks rows', () => {
     expect(first).not.toBe(second)
   })
 
-  it('reaches every deck in the workspace from this one screen', () => {
+  it('reaches every browsable deck from this one screen', () => {
     render(<LibraryAllDecksScreen viewModel={viewModel} />)
     for (const deck of viewModel.decks) fireEvent.press(rowFor(deck.name))
 
-    expect(new Set(pushedDeckIds())).toEqual(new Set(workspace.decks.map((deck) => deck.id)))
+    // Leaves, not every deck row: the four collections are decks with children,
+    // and a collection is a scope rather than a Library row.
+    expect(new Set(pushedDeckIds())).toEqual(
+      new Set(leafDecks(entities.decks).map((deck) => deck.id)),
+    )
   })
 })
 

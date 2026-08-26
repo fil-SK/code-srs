@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoTodayViewModel } from '@/src/demo/demoSelectors'
-import { createDemoWorkspace } from '@/src/demo/demoWorkspace'
+import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerCalls, routerDouble } from '@/src/test/routerDouble'
 import { TodayScreen } from './TodayScreen'
 
@@ -22,8 +22,8 @@ jest.mock('expo-router', () => ({
 // A fixed greeting, so these assertions do not depend on a random pick.
 const DEMO_GREETING = { mainText: 'Ready to learn?', subtext: 'A demo greeting.' }
 
-const workspace = createDemoWorkspace(NOW)
-const viewModel = demoTodayViewModel(workspace, DEMO_GREETING, NOW)
+const entities = createDemoSeed(NOW)
+const viewModel = demoTodayViewModel(entities, DEMO_GREETING, NOW)
 
 beforeEach(() => {
   resetRouterCalls()
@@ -51,7 +51,7 @@ describe('Continue learning', () => {
   })
 
   it('only lists decks that exist in the workspace', () => {
-    const deckIds = new Set(workspace.decks.map((deck) => deck.id))
+    const deckIds = new Set(entities.decks.map((deck) => deck.id))
     for (const deck of viewModel.decks) {
       expect(deckIds.has(deck.id)).toBe(true)
     }

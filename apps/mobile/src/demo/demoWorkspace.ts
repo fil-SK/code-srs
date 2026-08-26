@@ -16,14 +16,24 @@ import { createDemoReviewHistory, demoTodayRetention } from './demoReviewHistory
 import { isDemoCardDue, resolveDemoScheduling } from './demoScheduling'
 import type { MobileCardStatus } from '@/src/types/library'
 
-// The deterministic demo workspace: one dataset, mobile-only.
+// The deterministic demo seed: one dataset, mobile-only.
 //
-// This is an explicit marketing/demo mode, not production persistence and not a
-// fake cloud. Nothing here is synced, cloud-backed or a persisted account, and
-// no Repository is implemented - the shared Repository contract represents real
-// persistence infrastructure and demo presentation state must not masquerade as
-// one. Demo state lives for the life of the process and resets on a full app
-// restart, which is deliberate: the purpose is an interactive demo,
+// This file authors the dataset and nothing else. It holds no mutable state:
+// `createDemoSeed` returns a fresh set of canonical entities, and the
+// InMemoryRepository registered in src/data/ is what owns them from then on
+// (see demoRuntime.ts). Earlier milestones kept the workspace itself mutable
+// and deliberately refused to implement `Repository`, on the grounds that demo
+// presentation state must not masquerade as persistence infrastructure. That
+// reasoning held while the demo was read-only; it stopped holding once decks
+// and cards had to be authored on the phone, because the shared hooks that own
+// authoring reach storage only through that contract. The demo backend is now
+// an honest, complete Repository implementation that happens to be in memory -
+// which is a different claim from pretending memory is persistence.
+//
+// This is still an explicit marketing/demo mode, not production persistence and
+// not a fake cloud. Nothing here is synced, cloud-backed or a persisted
+// account. Demo state lives for the life of the process and resets on a full
+// app restart, which is deliberate: the purpose is an interactive demo,
 // deterministic screenshots and physical-device UI testing.
 //
 // It exists because every screen used to manufacture its own fixture snapshot,
@@ -39,34 +49,21 @@ import type { MobileCardStatus } from '@/src/types/library'
 export type DemoCardStatus = MobileCardStatus
 export type DemoInteractionType = Card['interaction']['type']
 
-export interface DemoCollection {
-  id: ID
-  name: string
-  description: string
-}
-
-/**
- * Extends core's `Deck` so the demo list can be handed to the shared
- * `sortDecks` without a second comparator existing on this platform.
- */
-export interface DemoDeck extends Deck {
-  description: string
-  /** `null` means unfiled - the deck belongs to no collection. */
-  collectionId: ID | null
-}
-
-/**
- * A demo card is a real core `Card`, plus the one presentation field the deck
- * list shows beside it.
- *
- * It used to be a presentation record carrying `status` and `due` as authored
- * booleans. Those are gone: both are now derived from `scheduling` by
- * demoScheduling.ts, because grading produces a new `SchedulingState` and two
- * hand-maintained flags beside it would immediately contradict it.
- */
-export interface DemoCard extends Card {
-  tag: string
-}
+// There is no demo Collection type, and no demo Deck or Card type.
+//
+// A Collection is not an entity anywhere in Itera: core derives it from the
+// `Deck.parentId` tree (`library/collectionTree.ts` - any deck with at least
+// one child deck is a Collection, and a collection id *is* a deck id). This
+// file used to carry a parallel `DemoCollection[]` plus `DemoDeck.collectionId`,
+// which was a second, mobile-only source of hierarchy truth: no shared hook
+// could write it, a deck authored through `useCreateDeck({parentId})` would
+// have been invisible to it, and a backup exported from the phone would have
+// imported into web as flat top-level decks with every collection silently
+// lost. The four demo collections are now ordinary `Deck` rows that happen to
+// have children, exactly as they would be on web.
+//
+// Likewise the cards are plain core `Card`s. The deck list's tag label reads
+// `card.tags[0]`, which is where the authored tag already lived.
 
 /**
  * Where a notification row goes when it is opened.
@@ -99,18 +96,29 @@ export interface DemoNotification {
   destination?: DemoNotificationDestination
 }
 
-export interface DemoWorkspace {
-  collections: DemoCollection[]
-  decks: DemoDeck[]
-  cards: DemoCard[]
-  notifications: DemoNotification[]
+/**
+ * The deterministic starting state of a demo run.
+ *
+ * Not a store and not a workspace: a plain value handed to the InMemoryRepository
+ * at composition and again at reset. `decks` and `cards` are canonical core
+ * entities, so everything above the repository seam - the shared hooks, the
+ * shared selectors, `collectionTree`, `sortDecks` - reads them without knowing
+ * this file exists.
+ */
+export interface DemoSeed {
+  decks: Deck[]
+  cards: Card[]
   /**
-   * Seeded history plus reviews performed in the current run, all in core's
-   * canonical shape. In memory only - never written to Dexie, SQLite or
-   * Supabase, and gone on a full app restart.
+   * Seeded history in core's canonical shape. Held in memory only - never
+   * written to Dexie, SQLite or Supabase, and gone on a full app restart.
    */
   reviewLogs: ReviewLog[]
-  /** The instant this workspace was built, which every demo due date is relative to. */
+  /**
+   * The inbox. Notifications are the one demo concept with no Repository store,
+   * so they stay outside it (see DemoWorkspaceProvider).
+   */
+  notifications: DemoNotification[]
+  /** The instant this seed was built, which every demo due date is relative to. */
   startedAt: Millis
 }
 
@@ -131,12 +139,17 @@ export const DEMO_INTERACTION_LABELS: Record<DemoInteractionType, string> = {
 }
 
 /**
- * The Library scope rail, in the order the designed screen presents it. Authored
- * as data rather than derived so the two synthetic scopes ("All Decks" and
- * "Unfiled") keep their designed positions among the real collections; the
- * screen still resolves every entry by lookup, never by branching on an id.
+ * The Library scope rail, in the order the designed screen presents it.
+ *
+ * This is presentation order and nothing else - it carries no hierarchy truth.
+ * Which decks belong to which collection comes from `Deck.parentId` through
+ * core's `collectionTree`; this list only says where the designed screen puts
+ * the two synthetic scopes ("All Decks" and "Unfiled") among the real ones. A
+ * collection that exists in the deck tree but is absent here still appears, at
+ * the end - which is what lets a deck authored later create a collection the
+ * rail has never heard of (see demoSelectors' `demoScopeRail`).
  */
-export const DEMO_SCOPE_RAIL: (ID | 'all' | 'unfiled')[] = [
+export const DEMO_COLLECTION_RAIL: (ID | 'all' | 'unfiled')[] = [
   'all',
   'fixture-interview-core',
   'fixture-languages-cpp',
@@ -145,35 +158,48 @@ export const DEMO_SCOPE_RAIL: (ID | 'all' | 'unfiled')[] = [
   'fixture-research',
 ]
 
-const collections: DemoCollection[] = [
+// The four collections, as ordinary Decks. Each has children (below), which is
+// precisely what makes core's `deriveCollections` classify it as a Collection.
+// A collection deck carries no cards of its own in this fixture.
+const collectionDecks: Deck[] = [
   {
     id: 'fixture-interview-core',
     name: 'Interview Core',
     description: 'Reusable reasoning patterns for coding and systems interviews.',
+    createdAt: DEMO_EPOCH - 91 * DAY_MS,
+    updatedAt: DEMO_EPOCH - 4 * DAY_MS,
   },
   {
     id: 'fixture-languages-cpp',
     name: 'Languages & C++',
     description: 'Durable knowledge across modern C++, compilers, and language implementation.',
+    createdAt: DEMO_EPOCH - 151 * DAY_MS,
+    updatedAt: DEMO_EPOCH - 1 * DAY_MS,
   },
   {
     id: 'fixture-systems',
     name: 'Systems',
     description: 'How real systems are built, connected, and kept running.',
+    createdAt: DEMO_EPOCH - 46 * DAY_MS,
+    updatedAt: DEMO_EPOCH - 1 * DAY_MS,
   },
   {
     id: 'fixture-research',
     name: 'Research',
     description: 'Papers worth remembering, distilled into recallable claims.',
+    createdAt: DEMO_EPOCH - 31 * DAY_MS,
+    updatedAt: DEMO_EPOCH - 30 * DAY_MS,
   },
 ]
 
-const decks: DemoDeck[] = [
+// The browsable decks. `parentId` is the only relationship field: a deck with
+// no parent is Unfiled, exactly as on web.
+const leafDecks: Deck[] = [
   {
     id: 'fixture-algorithms',
     name: 'Algorithms & Problem Solving',
     description: 'Invariants, data structures, graph reasoning, and more',
-    collectionId: 'fixture-interview-core',
+    parentId: 'fixture-interview-core',
     createdAt: DEMO_EPOCH - 90 * DAY_MS,
     updatedAt: DEMO_EPOCH - 4 * DAY_MS,
   },
@@ -181,7 +207,7 @@ const decks: DemoDeck[] = [
     id: 'fixture-leetcode-patterns',
     name: 'LeetCode Patterns',
     description: 'Common patterns and problem-solving techniques',
-    collectionId: 'fixture-interview-core',
+    parentId: 'fixture-interview-core',
     createdAt: DEMO_EPOCH - 20 * DAY_MS,
     updatedAt: DEMO_EPOCH - 20 * DAY_MS,
   },
@@ -189,7 +215,7 @@ const decks: DemoDeck[] = [
     id: 'fixture-compilers',
     name: 'Compilers & MLIR',
     description: 'Transferable compiler concepts from theory to IR',
-    collectionId: 'fixture-languages-cpp',
+    parentId: 'fixture-languages-cpp',
     createdAt: DEMO_EPOCH - 120 * DAY_MS,
     updatedAt: DEMO_EPOCH - 1 * DAY_MS,
   },
@@ -197,7 +223,7 @@ const decks: DemoDeck[] = [
     id: 'fixture-modern-cpp',
     name: 'Modern C++ & Memory',
     description: 'Values, lifetime, ownership, and performance',
-    collectionId: 'fixture-languages-cpp',
+    parentId: 'fixture-languages-cpp',
     createdAt: DEMO_EPOCH - 150 * DAY_MS,
     updatedAt: DEMO_EPOCH - 2 * DAY_MS,
   },
@@ -205,7 +231,7 @@ const decks: DemoDeck[] = [
     id: 'fixture-distributed-systems',
     name: 'Systems & Distributed Systems',
     description: 'Concurrency, storage, networking, and scaling',
-    collectionId: 'fixture-systems',
+    parentId: 'fixture-systems',
     createdAt: DEMO_EPOCH - 45 * DAY_MS,
     updatedAt: DEMO_EPOCH - 45 * DAY_MS,
   },
@@ -213,7 +239,7 @@ const decks: DemoDeck[] = [
     id: 'fixture-computer-networks',
     name: 'Computer Networks',
     description: 'Network layers, routing, TCP/IP, and protocols',
-    collectionId: 'fixture-systems',
+    parentId: 'fixture-systems',
     createdAt: DEMO_EPOCH - 1 * DAY_MS,
     updatedAt: DEMO_EPOCH - 1 * DAY_MS,
   },
@@ -221,7 +247,7 @@ const decks: DemoDeck[] = [
     id: 'fixture-compiler-papers',
     name: 'Compiler Research Papers',
     description: 'Key papers on compiler design and optimizations',
-    collectionId: 'fixture-research',
+    parentId: 'fixture-research',
     createdAt: DEMO_EPOCH - 30 * DAY_MS,
     updatedAt: DEMO_EPOCH - 30 * DAY_MS,
   },
@@ -229,7 +255,6 @@ const decks: DemoDeck[] = [
     id: 'fixture-security-engineering',
     name: 'Security Engineering',
     description: 'Security concepts, threat models, and best practices',
-    collectionId: null,
     createdAt: DEMO_EPOCH - 60 * DAY_MS,
     updatedAt: DEMO_EPOCH - 60 * DAY_MS,
   },
@@ -241,7 +266,7 @@ const decks: DemoDeck[] = [
 //
 // The content itself lives in demoCardContent.ts; this turns each authored seed
 // into a real core Card against the workspace's own `now`.
-function createCards(now: Millis): DemoCard[] {
+function createCards(now: Millis): Card[] {
   return DEMO_CARD_SEEDS.map((seed) => ({
     id: seed.id,
     schemaVersion: CARD_SCHEMA_VERSION,
@@ -255,7 +280,6 @@ function createCards(now: Millis): DemoCard[] {
     updatedAt: DEMO_EPOCH - seed.createdDaysAgo * DAY_MS,
     suspended: false,
     scheduling: resolveDemoScheduling(seed.scheduling, now),
-    tag: seed.tag,
   }))
 }
 
@@ -273,14 +297,14 @@ function fixtureDateLabel(authored: Millis, now: Millis): string {
   return formatEventDate(now - (DEMO_EPOCH - authored), now)
 }
 
-function dueCountFor(cards: DemoCard[], deckId: ID, now: Millis): number {
+function dueCountFor(cards: Card[], deckId: ID, now: Millis): number {
   return cards.filter((card) => card.deckId === deckId && isDemoCardDue(card, now)).length
 }
 
 // Notification copy is built from the same counts the screens show, so an inbox
 // cannot claim a deck has five cards due while the deck itself says three.
 function createNotifications(
-  cards: DemoCard[],
+  cards: Card[],
   reviewLogs: ReviewLog[],
   now: Millis,
 ): DemoNotification[] {
@@ -297,7 +321,7 @@ function createNotifications(
   // now come from the cards that were actually added most recently, so the row
   // can only ever describe something that happened.
   const interviewCoreDeckIds = new Set(
-    decks.filter((deck) => deck.collectionId === 'fixture-interview-core').map((deck) => deck.id),
+    leafDecks.filter((deck) => deck.parentId === 'fixture-interview-core').map((deck) => deck.id),
   )
   const interviewCoreCards = cards.filter((card) => interviewCoreDeckIds.has(card.deckId))
   const latestAddedAt = Math.max(...interviewCoreCards.map((card) => card.createdAt))
@@ -366,7 +390,7 @@ function createNotifications(
       // Taken from the deck's own createdAt rather than authored, so the row
       // cannot drift into claiming an import that predates the deck.
       timeLabel: fixtureDateLabel(
-        decks.find((deck) => deck.id === 'fixture-computer-networks')?.createdAt ?? DEMO_EPOCH,
+        leafDecks.find((deck) => deck.id === 'fixture-computer-networks')?.createdAt ?? DEMO_EPOCH,
         now,
       ),
       unread: false,
@@ -386,15 +410,16 @@ function createNotifications(
 }
 
 /**
- * A fresh copy of the demo workspace. Called once by the provider; the returned
- * value is the only mutable demo state in the app.
+ * A fresh copy of the deterministic demo dataset.
  *
  * `now` is a parameter rather than an implicit `Date.now()` at each use site so
  * one instant anchors the whole dataset: every card's due date, the notification
  * counts derived from them, and the queue a session builds all agree. Tests pass
- * a fixed instant; the app passes the real clock once, at startup.
+ * a fixed instant; the app passes the real clock once, at startup, and reset
+ * passes that same recorded instant back so a reset reproduces byte-identical
+ * state rather than drifting with the wall clock (D417).
  */
-export function createDemoWorkspace(now: Millis = Date.now()): DemoWorkspace {
+export function createDemoSeed(now: Millis = Date.now()): DemoSeed {
   // Cards start in the authored "new" state, the history is replayed over them
   // through the shared scheduler, and each reviewed card then *takes* the state
   // that replay left it in. A card's current scheduling is therefore the result
@@ -408,8 +433,9 @@ export function createDemoWorkspace(now: Millis = Date.now()): DemoWorkspace {
   })
 
   return {
-    collections: collections.map((collection) => ({ ...collection })),
-    decks: decks.map((deck) => ({ ...deck })),
+    // Collections first is presentation-irrelevant - every consumer resolves by
+    // id or through collectionTree - but it keeps the seed readable.
+    decks: [...collectionDecks, ...leafDecks].map((deck) => ({ ...deck })),
     cards,
     notifications: createNotifications(cards, history.logs, now),
     reviewLogs: history.logs,

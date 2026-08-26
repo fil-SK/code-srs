@@ -1,8 +1,8 @@
 import { LibraryAllDecksScreen } from '@/src/components/library/LibraryAllDecksScreen'
 import { demoLibraryViewModel } from '@/src/demo/demoSelectors'
-import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
+import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
 export default function LibraryRoute() {
-  const { workspace, now } = useDemoWorkspace()
-  return <LibraryAllDecksScreen viewModel={demoLibraryViewModel(workspace, now)} />
+  const { entities, now } = useDemoScreen()
+  return <LibraryAllDecksScreen viewModel={demoLibraryViewModel(entities, now)} />
 }

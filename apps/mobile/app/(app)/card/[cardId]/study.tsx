@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { LibraryNotFoundScreen } from '@/src/components/library/LibraryNotFoundScreen'
 import { CardStudyScreen } from '@/src/components/review/CardStudyScreen'
 import { findDemoCard } from '@/src/demo/demoSelectors'
-import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
+import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
 // The card study preview, the native equivalent of web's cards/:id/study.
 //
@@ -18,10 +18,12 @@ import { useDemoWorkspace } from '@/src/demo/demoWorkspaceContext'
 export default function CardStudyRoute() {
   const router = useRouter()
   const { cardId } = useLocalSearchParams<{ cardId: string }>()
-  const { workspace } = useDemoWorkspace()
-  const card = findDemoCard(workspace, cardId)
+  const { entities, isLoading } = useDemoScreen()
+  const card = findDemoCard(entities, cardId)
 
   if (!card) {
+    // Not "missing" until the cards have been read at least once.
+    if (isLoading) return null
     return (
       <LibraryNotFoundScreen
         detail="This link points at a card that no longer exists."

@@ -1,3 +1,4 @@
+import { leafDecks } from '@itera/core'
 import { filterAndSortDeckViewModels } from '@/src/components/library/deckSorting'
 import {
   demoCollectionViewModel,
@@ -9,7 +10,7 @@ import {
   findDemoDeck,
   resolveDemoScope,
 } from './demoSelectors'
-import { createDemoWorkspace } from './demoWorkspace'
+import { createDemoSeed } from './demoWorkspace'
 
 // One fixed instant for the whole file: due-ness is a comparison against an
 // instant, so a wall-clock read here would make these assertions time-dependent.
@@ -22,30 +23,30 @@ const NOW = Date.UTC(2026, 7, 24, 9, 0, 0)
 // collection route collapsed every id to one boolean. So a deep link, a stale
 // history entry or a typo silently displayed the wrong entity.
 
-const workspace = createDemoWorkspace(NOW)
+const entities = createDemoSeed(NOW)
 
 describe('deck resolution', () => {
   it('resolves each deck to itself, not to whichever deck the factory preferred', () => {
-    for (const deck of workspace.decks) {
-      expect(demoDeckViewModel(workspace, deck.id, NOW)?.id).toBe(deck.id)
-      expect(demoDeckViewModel(workspace, deck.id, NOW)?.name).toBe(deck.name)
+    for (const deck of entities.decks) {
+      expect(demoDeckViewModel(entities, deck.id, NOW)?.id).toBe(deck.id)
+      expect(demoDeckViewModel(entities, deck.id, NOW)?.name).toBe(deck.name)
     }
   })
 
   it('returns null for an unknown deck id, so the route can say so', () => {
-    expect(findDemoDeck(workspace, 'fixture-does-not-exist')).toBeNull()
-    expect(demoDeckViewModel(workspace, 'fixture-does-not-exist', NOW)).toBeNull()
-    expect(demoDeckViewModel(workspace, undefined, NOW)).toBeNull()
-    expect(demoDeckViewModel(workspace, '', NOW)).toBeNull()
+    expect(findDemoDeck(entities, 'fixture-does-not-exist')).toBeNull()
+    expect(demoDeckViewModel(entities, 'fixture-does-not-exist', NOW)).toBeNull()
+    expect(demoDeckViewModel(entities, undefined, NOW)).toBeNull()
+    expect(demoDeckViewModel(entities, '', NOW)).toBeNull()
   })
 
   it('shows a deck only its own cards', () => {
-    const deck = demoDeckViewModel(workspace, 'fixture-modern-cpp', NOW)
+    const deck = demoDeckViewModel(entities, 'fixture-modern-cpp', NOW)
     expect(deck?.cards.length).toBeGreaterThan(0)
     expect(deck?.cardCount).toBe(deck?.cards.length)
 
     const otherDeckCardIds = new Set(
-      workspace.cards.filter((card) => card.deckId !== 'fixture-modern-cpp').map((card) => card.id),
+      entities.cards.filter((card) => card.deckId !== 'fixture-modern-cpp').map((card) => card.id),
     )
     for (const card of deck?.cards ?? []) {
       expect(otherDeckCardIds.has(card.id)).toBe(false)
@@ -53,16 +54,16 @@ describe('deck resolution', () => {
   })
 
   it('names the deck s own collection on the way back out', () => {
-    expect(demoDeckViewModel(workspace, 'fixture-modern-cpp', NOW)?.collectionName).toBe('Languages & C++')
-    expect(demoDeckViewModel(workspace, 'fixture-security-engineering', NOW)?.collectionName).toBe('Unfiled')
+    expect(demoDeckViewModel(entities, 'fixture-modern-cpp', NOW)?.collectionName).toBe('Languages & C++')
+    expect(demoDeckViewModel(entities, 'fixture-security-engineering', NOW)?.collectionName).toBe('Unfiled')
   })
 })
 
 describe('card resolution', () => {
   it('resolves every populated demo card to itself', () => {
-    expect(workspace.cards.length).toBeGreaterThan(0)
-    for (const card of workspace.cards) {
-      const found = findDemoCard(workspace, card.id)
+    expect(entities.cards.length).toBeGreaterThan(0)
+    for (const card of entities.cards) {
+      const found = findDemoCard(entities, card.id)
       expect(found?.id).toBe(card.id)
       expect(found?.deckId).toBe(card.deckId)
       expect(found?.interaction.type).toBe(card.interaction.type)
@@ -72,25 +73,25 @@ describe('card resolution', () => {
   it('resolves cards from different decks to different cards', () => {
     const decks = ['fixture-modern-cpp', 'fixture-compilers', 'fixture-algorithms']
     const first = decks.map(
-      (deckId) => workspace.cards.find((card) => card.deckId === deckId)!.id,
+      (deckId) => entities.cards.find((card) => card.deckId === deckId)!.id,
     )
 
-    const resolved = first.map((id) => findDemoCard(workspace, id))
+    const resolved = first.map((id) => findDemoCard(entities, id))
 
     expect(new Set(resolved.map((card) => card?.id)).size).toBe(decks.length)
     resolved.forEach((card, index) => expect(card?.deckId).toBe(decks[index]))
   })
 
   it('returns null for an unknown card id, so the route can say so', () => {
-    expect(findDemoCard(workspace, 'fixture-card-does-not-exist')).toBeNull()
-    expect(findDemoCard(workspace, undefined)).toBeNull()
-    expect(findDemoCard(workspace, '')).toBeNull()
+    expect(findDemoCard(entities, 'fixture-card-does-not-exist')).toBeNull()
+    expect(findDemoCard(entities, undefined)).toBeNull()
+    expect(findDemoCard(entities, '')).toBeNull()
   })
 
   it('reaches a card of every interaction type the registry binds', () => {
     // Card study renders through the same registry a session does, so a demo
     // card of each type is what makes that coverage real rather than claimed.
-    const types = new Set(workspace.cards.map((card) => card.interaction.type))
+    const types = new Set(entities.cards.map((card) => card.interaction.type))
     expect(types).toEqual(
       new Set(['recall', 'multiple_choice', 'write_code', 'ordering', 'matching', 'walkthrough']),
     )
@@ -99,15 +100,15 @@ describe('card resolution', () => {
 
 describe('scope resolution', () => {
   it('resolves every scope the rail offers', () => {
-    for (const scope of demoScopeRail(workspace)) {
-      const resolved = resolveDemoScope(workspace, scope.id)
+    for (const scope of demoScopeRail(entities)) {
+      const resolved = resolveDemoScope(entities, scope.id)
       expect(resolved).not.toBeNull()
       expect(resolved?.decks.length).toBeGreaterThan(0)
     }
   })
 
   it('scopes a collection to its own decks', () => {
-    const languages = demoCollectionViewModel(workspace, 'fixture-languages-cpp', NOW)
+    const languages = demoCollectionViewModel(entities, 'fixture-languages-cpp', NOW)
     expect(languages?.name).toBe('Languages & C++')
     expect(languages?.decks.map((deck) => deck.id).sort()).toEqual([
       'fixture-compilers',
@@ -118,29 +119,33 @@ describe('scope resolution', () => {
   it('resolves a different collection to different decks', () => {
     // The old factory returned Interview Core for every id that was not
     // Languages & C++, so this is the case that used to be wrong.
-    const research = demoCollectionViewModel(workspace, 'fixture-research', NOW)
+    const research = demoCollectionViewModel(entities, 'fixture-research', NOW)
     expect(research?.name).toBe('Research')
     expect(research?.decks.map((deck) => deck.id)).toEqual(['fixture-compiler-papers'])
   })
 
   it('resolves unfiled to the decks with no collection', () => {
-    const unfiled = resolveDemoScope(workspace, 'unfiled')
-    expect(unfiled?.decks.every((deck) => deck.collectionId === null)).toBe(true)
+    const unfiled = resolveDemoScope(entities, 'unfiled')
+    expect(unfiled?.decks.every((deck) => deck.parentId === undefined)).toBe(true)
     expect(unfiled?.decks.length).toBeGreaterThan(0)
   })
 
-  it('resolves all to every deck', () => {
-    expect(resolveDemoScope(workspace, 'all')?.decks.length).toBe(workspace.decks.length)
+  it('resolves all to every browsable deck, and not to the collections', () => {
+    const all = resolveDemoScope(entities, 'all')!
+    expect(all.decks).toEqual(leafDecks(entities.decks))
+    // The four collection decks are decks too, and must not be listed as rows.
+    expect(all.decks.length).toBeLessThan(entities.decks.length)
+    expect(all.decks.some((deck) => deck.id === 'fixture-interview-core')).toBe(false)
   })
 
   it('returns null for an unknown collection id', () => {
-    expect(resolveDemoScope(workspace, 'fixture-not-a-collection')).toBeNull()
-    expect(demoCollectionViewModel(workspace, 'fixture-not-a-collection', NOW)).toBeNull()
-    expect(demoCollectionViewModel(workspace, undefined, NOW)).toBeNull()
+    expect(resolveDemoScope(entities, 'fixture-not-a-collection')).toBeNull()
+    expect(demoCollectionViewModel(entities, 'fixture-not-a-collection', NOW)).toBeNull()
+    expect(demoCollectionViewModel(entities, undefined, NOW)).toBeNull()
   })
 
   it('sums a collection s totals from its decks', () => {
-    const languages = demoCollectionViewModel(workspace, 'fixture-languages-cpp', NOW)
+    const languages = demoCollectionViewModel(entities, 'fixture-languages-cpp', NOW)
     expect(languages?.cardCount).toBe(
       languages?.decks.reduce((total, deck) => total + deck.cardCount, 0),
     )
@@ -151,7 +156,7 @@ describe('scope resolution', () => {
 })
 
 describe('library filter and sort', () => {
-  const decks = demoLibraryViewModel(workspace, NOW).decks
+  const decks = demoLibraryViewModel(entities, NOW).decks
 
   it('orders by name ascending', () => {
     const names = filterAndSortDeckViewModels(decks, { sort: 'name' }).map((deck) => deck.name)
@@ -214,23 +219,20 @@ describe('library filter and sort', () => {
 
 describe('notification unread count', () => {
   it('counts the unread items', () => {
-    const expected = workspace.notifications.filter((item) => item.unread).length
-    expect(demoUnreadCount(workspace)).toBe(expected)
+    const expected = entities.notifications.filter((item) => item.unread).length
+    expect(demoUnreadCount(entities.notifications)).toBe(expected)
     expect(expected).toBeGreaterThan(0)
   })
 
   it('reaches zero once everything is read', () => {
-    const allRead = {
-      ...workspace,
-      notifications: workspace.notifications.map((item) => ({ ...item, unread: false })),
-    }
+    const allRead = entities.notifications.map((item) => ({ ...item, unread: false }))
     expect(demoUnreadCount(allRead)).toBe(0)
   })
 
   it('starts with unread items in both groups, so Mark all is testable from either', () => {
     for (const group of ['today', 'earlier'] as const) {
       expect(
-        workspace.notifications.some((item) => item.group === group && item.unread),
+        entities.notifications.some((item) => item.group === group && item.unread),
       ).toBe(true)
     }
   })

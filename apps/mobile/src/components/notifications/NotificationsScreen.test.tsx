@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoNotificationsViewModel, demoUnreadCount } from '@/src/demo/demoSelectors'
-import { createDemoWorkspace, type DemoWorkspace } from '@/src/demo/demoWorkspace'
+import { createDemoSeed, type DemoNotification } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerCalls, routerDouble } from '@/src/test/routerDouble'
 import { NotificationsScreen } from './NotificationsScreen'
 
@@ -10,18 +10,15 @@ jest.mock('expo-router', () => ({
   useRouter: () => require('@/src/test/routerDouble').routerDouble,
 }))
 
-const workspace = createDemoWorkspace()
+const entities = createDemoSeed()
 
-function withReadState(overrides: Record<string, boolean>): DemoWorkspace {
-  return {
-    ...workspace,
-    notifications: workspace.notifications.map((item) =>
-      item.id in overrides ? { ...item, unread: overrides[item.id] } : item,
-    ),
-  }
+function withReadState(overrides: Record<string, boolean>): DemoNotification[] {
+  return entities.notifications.map((item) =>
+    item.id in overrides ? { ...item, unread: overrides[item.id] } : item,
+  )
 }
 
-function renderInbox(ws: DemoWorkspace, handlers: Partial<{
+function renderInbox(ws: DemoNotification[], handlers: Partial<{
   onMarkRead: (id: string) => void
   onMarkUnread: (id: string) => void
   onMarkAllRead: () => void
@@ -42,14 +39,14 @@ beforeEach(() => {
 
 describe('unread state', () => {
   it('counts unread items from the workspace, not from screen-local state', () => {
-    expect(demoUnreadCount(workspace)).toBe(
-      workspace.notifications.filter((item) => item.unread).length,
+    expect(demoUnreadCount(entities.notifications)).toBe(
+      entities.notifications.filter((item) => item.unread).length,
     )
   })
 
   it('marks one item read through the workspace', () => {
     const onMarkRead = jest.fn()
-    renderInbox(workspace, { onMarkRead })
+    renderInbox(entities.notifications, { onMarkRead })
 
     fireEvent.press(screen.getByText("Today's session is ready"))
 
@@ -58,7 +55,7 @@ describe('unread state', () => {
 
   it('marks an item read from its status control without opening it', () => {
     const onMarkRead = jest.fn()
-    renderInbox(workspace, { onMarkRead })
+    renderInbox(entities.notifications, { onMarkRead })
 
     fireEvent.press(screen.getByLabelText("Mark Today's session is ready as read"))
 
@@ -68,8 +65,8 @@ describe('unread state', () => {
 
   it('marks a read item unread from the same status control', () => {
     const onMarkUnread = jest.fn()
-    const retention = workspace.notifications.find((item) => item.id === 'fixture-retention')!
-    renderInbox(workspace, { onMarkUnread })
+    const retention = entities.notifications.find((item) => item.id === 'fixture-retention')!
+    renderInbox(entities.notifications, { onMarkUnread })
 
     fireEvent.press(screen.getByLabelText(`Mark ${retention.title} as unread`))
 
@@ -78,8 +75,8 @@ describe('unread state', () => {
   })
 
   it('filters to unread only', () => {
-    renderInbox(workspace)
-    const retention = workspace.notifications.find((item) => item.id === 'fixture-retention')!
+    renderInbox(entities.notifications)
+    const retention = entities.notifications.find((item) => item.id === 'fixture-retention')!
     expect(screen.queryByText(retention.title)).toBeTruthy()
 
     fireEvent.press(screen.getByLabelText('Show unread only'))
@@ -90,10 +87,7 @@ describe('unread state', () => {
   })
 
   it('says so when nothing is unread', () => {
-    const allRead = {
-      ...workspace,
-      notifications: workspace.notifications.map((item) => ({ ...item, unread: false })),
-    }
+    const allRead = entities.notifications.map((item) => ({ ...item, unread: false }))
     renderInbox(allRead)
 
     fireEvent.press(screen.getByLabelText('Show unread only'))
@@ -104,7 +98,7 @@ describe('unread state', () => {
 describe('mark all as read', () => {
   it('is reachable when Today has unread items', () => {
     const onMarkAllRead = jest.fn()
-    renderInbox(workspace, { onMarkAllRead })
+    renderInbox(entities.notifications, { onMarkAllRead })
 
     fireEvent.press(screen.getByText('Mark all as read'))
     expect(onMarkAllRead).toHaveBeenCalled()
@@ -135,16 +129,13 @@ describe('mark all as read', () => {
   })
 
   it('is absent when there is nothing to mark', () => {
-    const allRead = {
-      ...workspace,
-      notifications: workspace.notifications.map((item) => ({ ...item, unread: false })),
-    }
+    const allRead = entities.notifications.map((item) => ({ ...item, unread: false }))
     renderInbox(allRead)
     expect(screen.queryByText('Mark all as read')).toBeNull()
   })
 
   it('shows only one, never one per group', () => {
-    renderInbox(workspace)
+    renderInbox(entities.notifications)
     expect(screen.getAllByText('Mark all as read')).toHaveLength(1)
   })
 })
@@ -152,7 +143,7 @@ describe('mark all as read', () => {
 describe('destinations', () => {
   it('opens the deck a notification is about, and marks it read', () => {
     const onMarkRead = jest.fn()
-    renderInbox(workspace, { onMarkRead })
+    renderInbox(entities.notifications, { onMarkRead })
 
     fireEvent.press(screen.getByText('Modern C++ & Memory has 3 cards due'))
 
@@ -170,7 +161,7 @@ describe('destinations', () => {
     ['fixture-retention', '/progress'],
   ])('opens %s at %s, and marks it read', (id, pathname) => {
     const onMarkRead = jest.fn()
-    const item = workspace.notifications.find((entry) => entry.id === id)!
+    const item = entities.notifications.find((entry) => entry.id === id)!
     renderInbox(withReadState({ [id]: true }), { onMarkRead })
 
     fireEvent.press(screen.getByText(item.title))
@@ -181,8 +172,8 @@ describe('destinations', () => {
 
   it('opens the collection a notification is about', () => {
     const onMarkRead = jest.fn()
-    const item = workspace.notifications.find((entry) => entry.id === 'fixture-new-cards')!
-    renderInbox(workspace, { onMarkRead })
+    const item = entities.notifications.find((entry) => entry.id === 'fixture-new-cards')!
+    renderInbox(entities.notifications, { onMarkRead })
 
     fireEvent.press(screen.getByText(item.title))
 
@@ -193,9 +184,9 @@ describe('destinations', () => {
   })
 
   it('names the destination in the hint rather than implying one', () => {
-    renderInbox(workspace)
-    const streak = workspace.notifications.find((item) => item.id === 'fixture-streak')!
-    const session = workspace.notifications.find((item) => item.id === 'fixture-session-ready')!
+    renderInbox(entities.notifications)
+    const streak = entities.notifications.find((item) => item.id === 'fixture-streak')!
+    const session = entities.notifications.find((item) => item.id === 'fixture-session-ready')!
     const openingHint = (label: RegExp) =>
       screen
         .getAllByLabelText(label)
@@ -216,7 +207,7 @@ describe('destinations', () => {
   it('offers no notification-settings shortcut in demo mode', () => {
     // In demo mode Profile does not render its settings sections, so the
     // shortcut would land on a screen with nothing to show.
-    renderInbox(workspace)
+    renderInbox(entities.notifications)
 
     expect(screen.queryByLabelText('Open notification settings')).toBeNull()
   })

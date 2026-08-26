@@ -18,9 +18,9 @@ Update it in the same commit as any change to a listed capability.
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
 | Runtime mode (demo / cloud) | — | n/a | demo default, cloud opt-in | native-only (decision) — market validation before live cloud; D364, D366 |
-| Repository composition | data/registry | yes | cloud mode only | implemented — demo mode registers no backend on purpose; D366 |
+| Repository composition | data/registry | yes | yes | implemented — cloud registers SupabaseRepository, demo registers a mobile-owned InMemoryRepository; D423 |
 | Cloud backend | data/supabase/SupabaseRepository | yes | yes | implemented |
-| Local backend | — | Dexie | no | web-only (decision) — mobile is cloud-only; master plan D11 |
+| Local backend | — | Dexie | InMemoryRepository (demo, in memory) | implemented (demo/local) — a complete Repository implementation, mobile-owned and never persisted; SQLite remains master plan Phase 11; D423 |
 | Auth mode rule | auth/resolveAuthState | yes | yes | implemented |
 | Auth engine / provider | auth/authEngine, auth/AuthProvider | yes | yes | implemented |
 | Session storage | auth/types (LocalSessionStore) | localStorage/sessionStorage | SecureStore, chunked | implemented |
@@ -36,6 +36,7 @@ Update it in the same commit as any change to a listed capability.
 | Code display | — | CodeMirror 6 | literal monospace + line numbers | native-only (decision) — no shared tokenizer exists to colour a `code` node; master plan D5a, D380 |
 | Safe card image | content/imageSource (isSafeImageSource) | yes | yes | implemented — the one URL sink, gated by the one shared policy |
 | Interaction behavior | interactions/* | yes | yes | implemented |
+| Card form models and validation | domain/cards/*Form (incl. validateRecallForm) | yes | shared, not yet bound | implemented — all six form models, validators and save paths are platform-neutral; validateRecallForm was extracted on 2026-08-27 so Recall matches the other five; D426 |
 
 ## Today
 
@@ -54,14 +55,14 @@ Update it in the same commit as any change to a listed capability.
 
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
-| Collection tree | library/collectionTree | yes | demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
-| Deck list and metrics | domain/stats/deckMetrics | yes | demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
+| Collection tree | library/collectionTree | yes | yes | implemented (demo/local) — derived from canonical Deck.parentId on both platforms, through the same helpers; the parallel mobile collection model is deleted; D422 |
+| Deck list and metrics | domain/stats/deckMetrics | yes | demo repository | implemented (demo/local) — read through the shared hooks over the demo backend; D424 |
 | Open a deck | — | yes | demo workspace | deferred — master plan Phase 6; every deck row, Today row, Progress row and deck notification resolves its own deckId over demo data, and an unknown id gets a not-found state; D370, D374 |
-| Card list | hooks/useCards | yes | demo workspace | deferred — master plan Phase 6; the list and its rows are functional over the mobile demo workspace (D368, D404) |
+| Card list | hooks/useCards | yes | yes | implemented (demo/local) — mobile reads through useSearchCards over the demo backend; D424 |
 | Open a card | — | study preview | demo workspace | implemented (demo/local) — every card row opens the card it names by its canonical id, and an unknown id gets a not-found state; D404 |
 | Card study preview | interactions/* | cards/:id/study | card/[cardId]/study | implemented (demo/local) — one card inspected outside a session, through the same session shell and registry; records nothing by construction; D403, D405 |
-| Deck create / rename / delete | hooks/useDecks | yes | no | web-only (decision) — deferred for market validation with the rest of mobile authoring; the mobile controls were removed rather than shown disabled; D416 |
-| Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | no | web-only (decision) — deferred for market validation with the rest of mobile authoring; the mobile controls were removed rather than shown disabled; D416 |
+| Deck create / rename / delete | hooks/useDecks | yes | no (next milestone) | deferred — M-PARITY-1B. D416's authoring deferral is superseded by D421; the shared hooks now resolve on mobile, and only the native controls are missing |
+| Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | no (next milestone) | deferred — edit and delete in M-PARITY-1B, duplicate/move/suspend in M-PARITY-2; D421 |
 | Search | domain/search/searchableText | yes | over the demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
 | Filter and sort | library/sortDecks | yes | over the demo workspace | deferred — master plan Phase 6; the control is functional and calls core's sortDecks verbatim, so the four keys match web, but it orders demo data; D371, D372 |
 | List paging | — | pagination | infinite scroll intended | native-only (decision) — pagination is a desktop affordance; master plan Phase 6 |
@@ -85,8 +86,8 @@ Update it in the same commit as any change to a listed capability.
 | FSRS scheduling | domain/scheduling/* | yes | yes | implemented (demo/local) — reviewService.submit computes it; real next-due intervals on the rating buttons |
 | Objective grading semantics | domain/grading/* | yes | yes | implemented — the same graders, called not copied; registry.test.ts asserts the binding by reference |
 | Learner-chosen final rating | — | yes | yes | implemented — recommendation highlights only, never preselects or auto-advances |
-| ReviewLog production | domain/scheduling/scheduler (buildReviewLog) | yes | yes (in memory) | implemented (demo/local) — canonical shape, held in the demo workspace, never written to a store |
-| Transactional review persistence | data/repository (commitReview) | yes | no | deferred — cloud persistence is deferred until after market validation; demo review state is in-memory by decision |
+| ReviewLog production | domain/scheduling/scheduler (buildReviewLog) | yes | yes (in memory) | implemented (demo/local) — canonical shape, committed to the demo backend, never persisted |
+| Transactional review persistence | data/repository (commitReview) | yes | yes (in memory) | implemented (demo/local) — the session commits through usePersistReviewResult, and the demo backend writes both stores as one synchronous swap; cloud persistence stays deferred; D425 |
 | Persist-failure retry | domain/review/reviewPersistFailure | yes | no | deferred — a demo write is synchronous and cannot fail; the awaited onGraded seam is where cloud adds it |
 | Undo on completion | hooks/useReview (useUndoGrade) | yes | yes (in memory) | implemented (demo/local) — one level, restores the recorded pre-grade state and removes exactly that log |
 | Immersive session chrome | — | full-page route | tab bar hidden for the session only | native-only (decision) — the Review tab keeps the bar on its start screen |
@@ -114,7 +115,7 @@ Update it in the same commit as any change to a listed capability.
 | Import / Export backup | data/backup, hooks/useBackup | yes | no | deferred — master plan Phase 10; the mobile panel is hidden in demo mode rather than shown with controls that cannot run, and remains in cloud mode; D410 |
 | Replace-mode import | data/backup (canReplaceImport) | local only | no | web-only (decision) — refused on the cloud backend; no cross-request transaction |
 | Settings sections (Profile, Email, Appearance, Notifications, Privacy, Devices) | — | inert placeholders | cloud mode only | deferred — unbuilt on both; features.md "Planned". Demo mode renders none of them: six could only say "not available yet", which reads as an unfinished product on a build shown to prospective users; D410 |
-| Card authoring, all six types | domain/cards/save*Card | yes | no | web-only (decision) — mobile authoring is deferred for market validation: web is the intended authoring surface and the early story is desktop authoring plus mobile review. Not a technical TODO; D416 |
+| Card authoring, all six types | domain/cards/save*Card | yes | no (next milestones) | deferred — Recall and Multiple Choice in M-PARITY-1B, Ordering and Write Code in M-PARITY-2, Matching and Walkthrough in M-PARITY-3. saveXCard takes the repository as a parameter and is reused verbatim; no native save path is written. D421 |
 
 ## Platform-specific
 
