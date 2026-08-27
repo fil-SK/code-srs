@@ -92,6 +92,12 @@ Signing in is real and gates the whole product: `/login` mints either a Supabase
 
 ---
 
+## Public marketing site — implemented
+
+`apps/marketing` is the separately buildable pre-launch page for market validation. It positions Itera for software engineers and serious technical learning, shows the six interaction types, demonstrates Today/Review/Progress concepts with explicitly illustrative values, explains the intended desktop-authoring-to-mobile-review workflow without claiming production sync, states that the product is preparing for early access, and ends in an early-access interest form.
+
+The form validates email and accepts one optional learning-goal answer. It has **no configured persistence in V1**: its isolated adapter rejects, and the visitor is told that nothing was sent or stored. There is no email provider, Supabase use, analytics, tracking, auth, pricing, billing, blog, or product route in this application.
+
 ## Planned (specified, not built)
 
 Do not describe any of these as shipped, and do not build against them as though they exist.

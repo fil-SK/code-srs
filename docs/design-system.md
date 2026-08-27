@@ -414,4 +414,12 @@ C:\Users\SK\Desktop\itera-mockups\
 
 Where a written brief and a locked mockup conflict, **say so and ask** — do not silently pick one.
 
+---
+
+## 15. Public marketing surface
+
+`apps/marketing` uses the product identity as raw material rather than extending the application shell. Its local presentation tokens repeat the locked navy, orange, canvas, surface, border, ink, muted, radius, Inter and JetBrains Mono values. This is deliberate duplication at a deployment boundary, not a third product token authority: the marketing app does not import `@itera/core`, because it needs no learning-domain code and must remain independently buildable.
+
+The page alternates generous white sections with deep-navy storytelling surfaces. Orange remains a signal: the primary action, small section markers, progress marks, and selected interaction state. Product visuals use layered cards, restrained technical metadata, real Itera interaction names, and explicitly labelled illustrative metrics. Motion is limited to a slow hero-card settle and short interaction-card entrance; one reduced-motion media query neutralizes all animation and smooth scrolling. At phone widths, the hero is re-composed, interaction tabs become a scrollbar-hidden horizontal rail, product chrome simplifies, and the desktop/mobile workflow becomes a deliberate vertical sequence rather than a collapsed desktop grid.
+
 **Verify visually.** Tests are not sufficient for UI work. Run the app and drive Chromium via the `playwright` devDependency (`npx playwright install chromium` once), check 1440×900 and 390×844, and exercise hover, keyboard focus and graded/revealed states — not just the resting state.

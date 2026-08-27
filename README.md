@@ -175,7 +175,7 @@ Imports are validated before anything is written. If a generated file has an uns
 
 ## Project structure
 
-An npm workspace with four owners: the root orchestrates, `apps/*` holds applications, and `packages/*` holds shared platform-neutral code.
+An npm workspace with five owners: the root orchestrates, `apps/*` holds applications, and `packages/*` holds shared platform-neutral code.
 
 ```
 package.json     workspace root only - scripts + repo-wide gates, no app code
@@ -194,6 +194,9 @@ apps/mobile/     @itera/mobile - Expo SDK 54 + Expo Router presentation shell
   app/           tab shell (Today, Library, Review, Progress, Profile) plus the
                  nested Library, Review-preview and Notifications stacks
   src/           mobile presentation, typed view models and fixtures
+apps/marketing/  @itera/marketing - standalone public pre-launch site
+  src/           one-page React presentation + isolated early-access adapter
+  public/        Itera logo and social-preview image
 packages/core/   @itera/core - the shared engine: entity contracts, the
                  Repository seam, the pure domain engine (scheduling/FSRS,
                  grading, stats, search, io), the Supabase backend, the

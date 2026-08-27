@@ -9,13 +9,16 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace @itera/web",
+    "dev:marketing": "npm run dev --workspace @itera/marketing",
     "dev:mobile": "npm run start --workspace @itera/mobile",
     "build": "npm run build --workspace @itera/web",
+    "build:marketing": "npm run build --workspace @itera/marketing",
     "preview": "npm run preview --workspace @itera/web",
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:mobile": "npm run test --workspace @itera/mobile",
+    "test:marketing": "npm run test --workspace @itera/marketing",
     "playwright:install": "playwright install chromium"
   },
   "devDependencies": {

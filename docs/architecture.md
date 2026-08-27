@@ -29,13 +29,13 @@ Six constraints shape everything below. Breaking one of them is a decision, not 
 
 ## Workspace layout
 
-The repository is an **npm workspace with four distinct owners**. The root is orchestration only - it is no longer an application. `apps/*` holds applications; `packages/*` holds shared, platform-neutral code.
+The repository is an **npm workspace with five distinct owners**. The root is orchestration only - it is no longer an application. `apps/*` holds applications; `packages/*` holds shared, platform-neutral code.
 
 ```
 package.json          workspace root ONLY (workspaces: ["apps/*", "packages/*"])
                       orchestration scripts + the repo-wide gates
                       (typescript, oxlint, vitest, playwright). No app code.
-tsconfig.json         the solution: references core, core-tests, web app, web node tooling
+tsconfig.json         the solution: references core, core-tests, web and marketing tooling
 tsconfig.base.json    options shared by every project
 tsconfig.core*.json   @itera/core's two projects (kept at the root; core is not
                       reworked by the relocation)
@@ -62,10 +62,19 @@ apps/mobile/          @itera/mobile - Expo SDK 54 + React Native 0.81.5
   tsconfig.json         Expo's strict, non-composite TypeScript project
   package.json          Expo-supported runtime versions + core's peer suppliers
 
+apps/marketing/       @itera/marketing - public pre-launch website
+  index.html            static metadata and the Vite entry
+  public/               copied Itera logo + social-preview image; no product assets mutated
+  src/                  one-page React presentation and isolated capture adapter
+  vite.config.ts        optional VITE_SITE_URL canonical/social URL injection
+  tsconfig*.json        independently buildable app and tooling projects
+
 packages/core/        @itera/core - the shared engine, unchanged by the move
 ```
 
-**The root is not an application.** Before Phase 2 the root `package.json` was simultaneously the workspace root and the web package, which meant one hoisted dependency tree carrying both Vite's and React Native's requirements. Splitting it is what made the mobile app additive. Root scripts keep `npm run dev|build|preview` delegated to `@itera/web`; `npm run dev:mobile` delegates to `@itera/mobile`; `npm run lint` and `npx vitest run` stay repository-wide gates. `npx tsc -b --force` still builds the existing four web/core projects. Mobile keeps Expo's generated non-composite TypeScript config and is checked independently rather than being forced into that solution graph.
+**The root is not an application.** Before Phase 2 the root `package.json` was simultaneously the workspace root and the web package, which meant one hoisted dependency tree carrying both Vite's and React Native's requirements. Splitting it is what made the mobile app additive. Root scripts keep `npm run dev|build|preview` delegated to `@itera/web`; `npm run dev:mobile` delegates to `@itera/mobile`; and `dev:marketing`, `build:marketing`, and `test:marketing` address the public site explicitly. `npm run lint` and `npx vitest run` stay repository-wide gates. `npx tsc -b --force` builds core, core tests, web, and marketing; mobile keeps Expo's generated non-composite TypeScript config and is checked independently rather than being forced into that solution graph.
+
+**`apps/marketing` is presentation-only and independently deployable.** It is a static one-page React 19 + TypeScript + Vite application with no router, server state, auth, product repository, analytics, or persistence dependency. Its small CSS token layer copies the locked Itera identity values intentionally but does not import `@itera/core`: tying a public page to the learning engine would widen its bundle and ownership surface for no semantic benefit. Product illustrations are marketing-owned static compositions of shipped concepts, not live product components. The early-access form calls one `submitEarlyAccessInterest` adapter; V1 deliberately rejects because no collection service exists, and the visible UI says the submitted details were not sent or stored. A provider can replace that adapter without changing the form.
 
 **`apps/mobile` is presentation/composition only.** It was scaffolded with the official Expo SDK 54 default TypeScript/Expo Router template because Expo's SDK 57 transition guidance still directs physical-device Expo Go users to SDK 54. Phase 3.0's temporary runtime route has been replaced by owner-approved native presentations: typed Today, Notifications, Progress, Profile & Settings, Library (All Decks -> Collection -> Deck, a nested stack) and all six Review interactions, behind a five-item tab shell. It has **two runtime modes**, decided once in `src/config/mobileRuntimeMode.ts` and read by `app/_layout.tsx` for both the repository and auth so the two cannot disagree. **Demo is the default**: core's local auth mode over a pre-seeded demo session, no repository registered at all, and every product screen reading one deterministic demo workspace in `src/demo/` - a mobile-only dataset plus pure selectors and one provider, deliberately **not** a `Repository` implementation. The workspace holds canonical Cards, a modest relative-date ReviewLog history and current-session scheduling/log mutations; Today, Progress and Library feed those entities through core's existing statistics semantics and react in memory. A deck's card rows open `card/[cardId]/study`, the native counterpart of web's `cards/:id/study`, and its Study Now starts the one session route scoped to that deck through core's `subtreeIds`. Nothing is synced, cloud-backed or persisted. **Cloud** (`EXPO_PUBLIC_ITERA_MODE=cloud`) composes a native Supabase client over chunked SecureStore, the shared auth engine behind six-digit OTP, one `QueryClientProvider` and `configureRepository`; it is implemented, unverified against a live project, and deferred by product-owner decision. There is still no native repository-backed product data, persistence/sync, push registration or reminder scheduling. Ordinary sections keep the tab bar; the Review session and Notifications are nested immersive routes that hide it. `react-native-svg` is the one added native rendering dependency - it draws Matching's connector curves, and `docs/mobile_app_conversion/master_plan.md` endorsed it in advance as the single new rendering dependency. Expo's automatic npm-workspace/monorepo support resolves `@itera/core`; there is no `metro.config.js`, `watchFolders`, `resolver.nodeModulesPaths`, alias, or symlink workaround.
 

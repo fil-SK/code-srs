@@ -1139,9 +1139,48 @@ root:        npm run lint          -> clean
 root:        npm run build         -> clean (precache still 24 entries)
 ```
 
-Root hygiene re-checked: no root `.expo/`, no root `eslint.config.js`, `tsconfig.json` unchanged. `npx expo-doctor` and the iOS export were not re-run in this pass.
+Root hygiene re-checked: no root `.expo/`, no root `eslint.config.js`, `tsconfig.json` unchanged. `npx expo-doctor` and the iOS export were not re-run in this pass - they were re-run in the pre-device acceptance pass, §35.
 
 **Physical-device verification is pending the owner and is not claimed.**
+
+---
+
+## 36. Public marketing V1 (2026-08-27)
+
+The first public pre-launch surface now exists as `apps/marketing` (`@itera/marketing`), separate from the product applications and independently buildable. It is a static one-page React 19 + TypeScript + Vite app for market validation. No product route or behavior changed.
+
+### What is live in the site
+
+- A specific product position: “Technical knowledge takes more than a flashcard,” followed by Itera as a spaced-repetition workspace for developers and serious technical learning.
+- A product-led hero and a full static Today demonstration built from shipped Itera concepts, with a clearly identified slot for a future 20–40 second product recording.
+- The product thesis, an interactive six-type showcase (Recall, Multiple Choice, Write Code, Ordering, Matching, Walkthrough), the intended desktop-authoring-to-mobile-review story, Today/review rhythm, Progress, target topics, current status, and a final early-access CTA.
+- Illustrative values are visibly labelled as sample/example product data. Cross-device continuity is described as intended direction rather than a shipped sync claim.
+- The real Itera logo asset is copied into the marketing app. Marketing owns its presentation code and social-preview bitmap; the web app's assets were not modified.
+- Static title, description, Open Graph and X metadata, theme color, favicon, and a generated 1200:630-aspect social card. `VITE_SITE_URL` is the one deployment-time origin setting; without it the build omits canonical and absolute image URLs rather than inventing a domain.
+
+### Early-access capture
+
+The form validates email and accepts one optional answer to “What would you use Itera to learn?”. Its one persistence boundary is `src/earlyAccess.ts`. It is intentionally unconfigured: submission rejects and the visible result says the details were not sent or stored. **No submission is currently persisted.** No provider, API, Supabase table, analytics, tracking pixel, auth, pricing, or billing was added.
+
+### Verification
+
+```
+marketing: typecheck              -> clean
+marketing: lint                   -> clean
+marketing: build                  -> clean
+marketing: vitest                 -> 1 file, 4 tests, passing
+root:      npx vitest run         -> 113 files, 1088 tests, passing
+root:      npx tsc -b --force     -> clean
+root:      npm run lint           -> clean
+root:      npm run build          -> clean (web PWA precache still 24 entries)
+mobile:    jest                    -> 42 suites, 570 tests, passing
+mobile:    tsc --noEmit            -> clean
+mobile:    expo lint               -> clean
+```
+
+The first full root Vitest run hit the repository's recorded intermittent five-second timeout in `MatchingEditorShell.test.tsx`; that file passed immediately in isolation, and the complete 113-file / 1088-test rerun passed. Browser QA covered 1440×900 and 390×844, the horizontal interaction picker, mobile overflow, anchor navigation, the form's invalid-email state and its honest unconfigured state, with no browser console errors. No public deployment was created in this milestone.
+
+**Recommended next marketing task:** connect the existing early-access adapter to the chosen capture backend, then remove the preview-state copy only after a real persisted response can be verified.
 
 ---
 
@@ -1218,5 +1257,58 @@ root:        npm run lint          -> clean
 ```
 
 New coverage: clearing a search on All Decks and on a deck (including that the control is absent with an empty field), the deck actions sheet filing a new deck inside this one, and four cases for a promoted deck's own cards - they are listed, they are counted, each opens its own card, and a collection without them says nothing about them.
+
+---
+
+## 35. Pre-device acceptance pass for M-PARITY-1B (2026-08-27)
+
+**Everything about M-PARITY-1B that can be established without an iPhone now is.** The pass added no capability and no surface: it proved the milestone against the repository, closed three coverage gaps, corrected three defects it found, and re-ran the two gates §32 had left outstanding. The decisions are D447-D449.
+
+### Defects found and fixed
+
+| Found | Cause | Fix |
+|---|---|---|
+| Save was a long scroll below a Multiple Choice form with six options, a tip, an explanation and tags | `EditorScreen`'s own module comment promised a pinned Cancel/title/Save header; only Cancel and the title were ever implemented, and Save was the last child of the ScrollView | Save moved into the pinned header, which sits outside the `KeyboardAvoidingView` and is therefore visible whatever the keyboard is doing (D447) |
+| The Multiple Choice correct-answer marker was a 42-point target | 30 points square with `hitSlop={6}`, two points under the 44 this codebase states everywhere else | `hitSlop={8}` (D448) |
+| The Recall preset chips were 40-point targets | `minHeight: 40` on a `radio` control | `minHeight: 44` (D448) |
+
+### The authoring header
+
+The action row and the title are now two rows rather than one. A single row would have had to shrink or truncate a title like "Edit Multiple Choice card" between two controls at 390 points, and a title whose size is a function of its neighbours is the failure D446 records. The accessible name of the Save control is the action (`Create card` / `Save card` / `Create deck` / `Save deck`) and never the transient "Saving…", so it does not rename itself mid-save; the bottom button is gone, and no existing authoring test needed changing.
+
+### New coverage
+
+Three suites, 42 mobile suites / 570 tests (was 39 / 554):
+
+- **`authoredCardLifecycle.test.tsx` (5)** - the loop the existing suites did not cover: create a deck, author a card into it, review that card through the real `DemoReviewSession`, then edit its wording. Identity, `createdAt`, `deckId`, `suspended`, `order` and every field of the `SchedulingState` survive the edit with the `ReviewLog` still attached, for Recall and for Multiple Choice, including adding an option to an already-reviewed card. Plus the integration claims: an authored card reaches the deck list, the deck search, the status filter, the card count, Card study, `repo.cards.getDue`, Today's due count and Progress's Due KPI, and leaves them again when reviewed. The previous scheduling-preservation tests edited a card the *seed* had already reviewed; these edit a card this device reviewed.
+- **`demoResetAcceptance.test.tsx` (3)** - Reset Demo after a composite run (a custom deck, a Recall card, a Multiple Choice card, an edit to a seeded card, a graded review and a read notification), asserting the repository, the inbox and the Today/Progress/Library view models all equal the seed rather than merely resemble it; that the query cache holds no authored entity afterwards; and that a second reset is a no-op rather than a drift.
+- **`editorScreen.test.tsx` (6)** - the shell's structural promise: Save is rendered outside the `ScrollView`, reflects the shared validator, refuses a press while invalid, and keeps its accessible name while saving.
+
+Two cases were added to existing files: an all-decks (unscoped) session in `demoReviewSession.test.tsx`, which every other case there deck-scopes, and a declared-hit-area case in `multipleChoiceAuthoring.test.tsx`.
+
+### What the pass could not establish, and did not claim
+
+Keyboard behaviour on a real iOS keyboard, swipe-back feel, touch comfort, sheet presentation (the `ActionSheet` to `ConfirmSheet` handover on Delete is two React Native `Modal`s exchanging in one commit, which web cannot reproduce), visual clipping, chart readability at phone size, and whether iOS autocorrect respects the D435 input properties. Those remain the owner's device pass.
+
+### Gates
+
+```
+apps/mobile: npx jest                        -> 42 suites, 570 tests, passing
+apps/mobile: npx jest --runInBand --detectOpenHandles -> passing, no open handles
+apps/mobile: npx tsc --noEmit                -> clean
+apps/mobile: npx expo lint                   -> clean
+apps/mobile: npx expo-doctor                 -> 18/18
+apps/mobile: npx expo export --platform ios  -> 4.28 MB Hermes bundle, 1388 modules
+root:        npx vitest run                  -> 113 files, 1088 tests, passing
+root:        npx tsc -b --force              -> clean
+root:        npm run lint                    -> clean
+root:        npm run build                   -> clean (precache still 24 entries)
+```
+
+Root hygiene re-checked: no root `.expo/`, no root `eslint.config.js`, `tsconfig.json` unchanged. The export's `apps/mobile/dist/` was removed after the run.
+
+**The filtered-Jest hang §32 reported did not reproduce.** The whole suite runs in one process under `--runInBand --detectOpenHandles`, exits 0 and reports no open handles, and three filtered single-file runs (a pure module, a component suite and a demo-runtime suite) each exited cleanly. The only remaining symptom is jest-expo's worker-teardown warning in the parallel run, which does not affect the exit code and is not an Itera resource. The `QueryClient` teardown `demoHarness.tsx` already performs is what removes the one handle Itera could own.
+
+**Physical-device verification is pending the owner and is not claimed.**
 
 ---
