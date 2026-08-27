@@ -320,7 +320,7 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Current counts (2026-08-27, after §33): root `npx vitest run` is 113 files / 1088 tests, `apps/mobile` `npx jest` is 39 suites / 547 tests.** The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
+**Current counts (2026-08-27, after §34): root `npx vitest run` is 113 files / 1088 tests, `apps/mobile` `npx jest` is 39 suites / 554 tests.** The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
 
 ```
 npx vitest run       → 111 test files, 1064 tests, all passing (75.94s)
@@ -1183,5 +1183,40 @@ root:        npm run lint          -> clean
 ```
 
 New coverage: six cases in `packages/core/src/domain/stats/progressMetrics.test.ts` for the shared grid layout, and three in `apps/mobile/src/components/progress/ProgressScreen.test.tsx` for the range group, a non-30D window and the per-cell day labels. The test asserting Progress offered *no* range control was replaced rather than deleted, and says why.
+
+---
+
+## 34. Three more findings from owner testing (2026-08-27)
+
+Reported after §33 landed. Verified in a browser against the Expo web build at 390x844. **Physical-device verification remains the owner's and is not claimed** - and one of these three cannot be reproduced on web at all (see the title note below).
+
+| Reported | Cause | Fix |
+|---|---|---|
+| No way to clear a Library search | `clearButtonMode` is iOS-only, so on Android nothing cleared the field | One `SearchField` primitive with a drawn clear button, used by all three Library searches (D443) |
+| No way to make a collection | A collection IS a deck with children, and nothing on this platform could give a deck a child | **New deck inside**, in the deck's own actions sheet (D444) |
+| The deck name shrinks when the actions sheet opens | `adjustsFontSizeToFit` re-measures on every re-render | Two lines at a fixed size (D446) |
+
+### Making a collection
+
+`New deck inside` runs the create the Collection screen already runs, with this deck as the parent - so a leaf deck becomes a Collection by being given a deck, and no new hierarchy semantics, route or parent picker were added. Creating replaces onto the new deck, and Back from it lands on the promoted parent, which by then redirects to its Collection screen.
+
+**This exposed a real defect, now fixed:** a promoted deck's own cards had nowhere to be seen. The Collection screen listed child decks only, so six cards that were still scheduled, still counted on Today and Progress and still in the repository stopped being reachable from any screen. `MobileCollectionViewModel` gained `ownCards`, the cards metric counts them, and the section reuses the deck screen's card row and card actions - `CardRow.tsx`, `CardActions.tsx` and `cardVisuals.ts` were lifted out of `LibraryDeckScreen` so a card is drawn and managed the same way wherever it is listed (D445). Web already surfaced this case in its own section.
+
+### The title
+
+The measurement that proves this one is only available on a device: React Native Web does not implement `adjustsFontSizeToFit`, so the browser check confirms the title renders at its intended size and does not move when the sheet opens, and cannot confirm the shrink is gone on iOS or Android. The API is removed rather than tuned, which is what makes the size independent of unrelated re-renders.
+
+### Gates
+
+```
+apps/mobile: npx jest              -> 39 suites, 554 tests, passing
+apps/mobile: npx tsc --noEmit      -> clean
+apps/mobile: npx expo lint         -> clean
+root:        npx vitest run        -> 113 files, 1088 tests, passing
+root:        npx tsc -b --force    -> clean
+root:        npm run lint          -> clean
+```
+
+New coverage: clearing a search on All Decks and on a deck (including that the control is absent with an empty field), the deck actions sheet filing a new deck inside this one, and four cases for a promoted deck's own cards - they are listed, they are counted, each opens its own card, and a collection without them says nothing about them.
 
 ---

@@ -8,12 +8,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { IteraButton } from '@/src/components/ui/IteraButton'
+import { SearchField } from '@/src/components/ui/SearchField'
 import { MobileHeader } from '@/src/components/today/MobileHeader'
 import type {
   MobileLibraryCollectionViewModel,
@@ -147,21 +147,14 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           ))}
         </ScrollView>
 
-        <View style={styles.searchWrap}>
-          <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
-          <TextInput
-            accessibilityLabel="Search decks"
-            autoCapitalize="none"
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-            onChangeText={setQuery}
-            placeholder="Search decks..."
-            placeholderTextColor={iteraColors.mutedLight}
-            returnKeyType="search"
-            style={styles.searchInput}
-            value={query}
-          />
-        </View>
+        <SearchField
+          accessibilityLabel="Search decks"
+          clearAccessibilityLabel="Clear deck search"
+          onChangeText={setQuery}
+          placeholder="Search decks..."
+          style={styles.searchWrap}
+          value={query}
+        />
 
         <View style={styles.controlsRow}>
           <Pressable
@@ -325,24 +318,9 @@ const styles = StyleSheet.create({
     color: iteraColors.inkBrand,
     fontWeight: '700',
   },
+  // Only what this screen adds; the field itself is SearchField's.
   searchWrap: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
     marginTop: 18,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    paddingHorizontal: 14,
-  },
-  searchInput: {
-    minWidth: 0,
-    flex: 1,
-    color: iteraColors.inkBrand,
-    fontSize: 15,
-    paddingVertical: 0,
   },
   controlsRow: {
     flexDirection: 'row',

@@ -155,6 +155,22 @@ describe('card search and filter', () => {
     fireEvent.changeText(screen.getByLabelText('Search cards'), 'zzzz')
     expect(screen.getByText('No matching cards')).toBeTruthy()
   })
+
+  it('offers a way out of a search, and it is not there when there is nothing to clear', () => {
+    const viewModel = deck('fixture-modern-cpp')
+    renderDeck(viewModel)
+    expect(screen.queryByLabelText('Clear card search')).toBeNull()
+
+    fireEvent.changeText(screen.getByLabelText('Search cards'), 'zzzz')
+    expect(screen.getByText('No matching cards')).toBeTruthy()
+
+    fireEvent.press(screen.getByLabelText('Clear card search'))
+
+    expect(screen.getByLabelText('Search cards').props.value).toBe('')
+    for (const card of viewModel.cards) {
+      expect(screen.getByText(card.prompt)).toBeTruthy()
+    }
+  })
 })
 
 describe('opening a card', () => {
@@ -345,6 +361,21 @@ describe('deck and card management', () => {
       expect(screen.getByLabelText('Delete card')).toBeTruthy()
       expect(screen.queryByLabelText('Edit card')).toBeNull()
     }
+  })
+
+  it('files a new deck inside this one, which is how a collection is made', () => {
+    // There is no Collection entity to create: a collection IS a deck with
+    // children, so this create is the same one the Collection screen runs,
+    // with this deck as the parent.
+    const viewModel = deck('fixture-modern-cpp')
+    renderDeck(viewModel)
+
+    fireEvent.press(screen.getByLabelText('Deck actions'))
+    fireEvent.press(screen.getByLabelText('New deck inside'))
+
+    expect(pushedTo('/deck/new')).toEqual([
+      { pathname: '/deck/new', params: { parentId: viewModel.id } },
+    ])
   })
 
   it('names the deck in its delete confirmation', () => {

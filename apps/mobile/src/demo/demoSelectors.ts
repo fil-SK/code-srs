@@ -34,6 +34,7 @@ import {
 
 import type {
   MobileCollectionViewModel,
+  MobileDeckCardViewModel,
   MobileDeckViewModel,
   MobileLibraryCollectionViewModel,
   MobileLibraryDeckViewModel,
@@ -272,6 +273,29 @@ export function demoLibraryViewModel(entities: DemoEntities, now: Millis): Mobil
   }
 }
 
+/**
+ * A deck's own cards, as the Library's card rows. Extracted when a Collection
+ * gained a direct-cards section: a deck that is promoted to a Collection keeps
+ * the cards it already had, and both screens must describe them identically.
+ */
+function toDeckCardViewModels(
+  entities: DemoEntities,
+  deckId: string,
+): MobileDeckCardViewModel[] {
+  return demoDeckCards(entities, deckId).map((card) => ({
+    id: card.id,
+    // The card list is one line of plain text, so the shared flattening is
+    // what turns authored markers into a readable label. It is presentation,
+    // never sanitisation - see core's plainText.ts.
+    prompt: stripInlineMarkers(card.prompt.value),
+    interactionType: card.interaction.type,
+    interactionLabel: DEMO_INTERACTION_LABELS[card.interaction.type],
+    // The authored tag, where it already lived on the canonical card.
+    tag: card.tags[0] ?? '',
+    status: demoCardStatus(card),
+  }))
+}
+
 export function demoCollectionViewModel(
   entities: DemoEntities,
   scopeId: string | undefined,
@@ -283,14 +307,23 @@ export function demoCollectionViewModel(
   const metrics = demoDeckMetrics(entities, now)
   const decks = scope.decks.map((deck) => toLibraryDeckViewModel(deck, metrics, now))
 
+  // A Collection IS a deck, so it can hold cards of its own - and it does the
+  // moment a deck that already had cards is given a child. Those cards are
+  // listed rather than silently dropped from the Library, which is the call web
+  // makes for the same case. 'all' and 'unfiled' are not decks and have none.
+  const ownCards = findDemoDeck(entities, scope.id) ? toDeckCardViewModels(entities, scope.id) : []
+
   return {
     id: scope.id,
     name: scope.name,
     description: scope.description,
     deckCount: decks.length,
-    cardCount: decks.reduce((total, deck) => total + deck.cardCount, 0),
+    // Its own cards count too. They are its cards, and a metric that reads 0
+    // beside a visible list of them is the contradiction, not the fix.
+    cardCount: decks.reduce((total, deck) => total + deck.cardCount, 0) + ownCards.length,
     dueToday: decks.reduce((total, deck) => total + deck.dueCount, 0),
     decks,
+    ownCards,
   }
 }
 
@@ -314,18 +347,7 @@ export function demoDeckViewModel(
     dueCount: deckMetrics.dueCount,
     masteryPercent: Math.round(deckMetrics.masteryFraction * 100),
     lastStudiedLabel: demoLastStudiedLabel(deckMetrics.lastStudied, now),
-    cards: demoDeckCards(entities, deck.id).map((card) => ({
-      id: card.id,
-      // The card list is one line of plain text, so the shared flattening is
-      // what turns authored markers into a readable label. It is presentation,
-      // never sanitisation - see core's plainText.ts.
-      prompt: stripInlineMarkers(card.prompt.value),
-      interactionType: card.interaction.type,
-      interactionLabel: DEMO_INTERACTION_LABELS[card.interaction.type],
-      // The authored tag, where it already lived on the canonical card.
-      tag: card.tags[0] ?? '',
-      status: demoCardStatus(card),
-    })),
+    cards: toDeckCardViewModels(entities, deck.id),
   }
 }
 

@@ -1,8 +1,16 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoCollectionViewModel } from '@/src/demo/demoSelectors'
 import { createDemoSeed } from '@/src/demo/demoWorkspace'
-import { pushedDeckIds, resetRouterCalls, routerCalls, routerDouble } from '@/src/test/routerDouble'
+import {
+  pushedCardIds,
+  pushedDeckIds,
+  resetRouterCalls,
+  routerCalls,
+  routerDouble,
+} from '@/src/test/routerDouble'
+import type { MobileCollectionViewModel } from '@/src/types/library'
 import { LibraryCollectionScreen } from './LibraryCollectionScreen'
 
 // One fixed instant for the whole file: due-ness is a comparison against an
@@ -28,6 +36,77 @@ function scope(id: string) {
 
 beforeEach(() => {
   resetRouterCalls()
+})
+
+// A scope that holds cards of its own holds the shared delete mutation with
+// them, which needs a client. Nothing here fires one.
+function renderScope(viewModel: MobileCollectionViewModel) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={client}>
+      <LibraryCollectionScreen viewModel={viewModel} />
+    </QueryClientProvider>,
+  )
+}
+
+describe('a collection that holds cards of its own', () => {
+  // What promoting a deck produces: give a deck that already has cards a child,
+  // and it becomes a Collection whose own cards would otherwise stop being
+  // reachable from any screen while still being scheduled and still counting on
+  // Today and Progress.
+  const promoted = {
+    ...entities,
+    decks: [
+      ...entities.decks,
+      { ...entities.decks[0], id: 'test-child-deck', name: 'Child deck', parentId: 'fixture-modern-cpp' },
+    ],
+  }
+
+  function promotedScope() {
+    const viewModel = demoCollectionViewModel(promoted, 'fixture-modern-cpp', NOW)
+    if (!viewModel) throw new Error('promoted deck is not a collection')
+    return viewModel
+  }
+
+  it('lists them rather than dropping them out of the Library', () => {
+    const viewModel = promotedScope()
+    expect(viewModel.ownCards.length).toBeGreaterThan(0)
+
+    renderScope(viewModel)
+
+    expect(screen.getByText('Cards in Modern C++ & Memory')).toBeTruthy()
+    for (const card of viewModel.ownCards) {
+      expect(screen.getByText(card.prompt)).toBeTruthy()
+    }
+  })
+
+  it('counts them, so the metric agrees with the list', () => {
+    const viewModel = promotedScope()
+    const childCards = viewModel.decks.reduce((total, deck) => total + deck.cardCount, 0)
+    expect(viewModel.cardCount).toBe(childCards + viewModel.ownCards.length)
+  })
+
+  it('opens each of them, by that card s own id', () => {
+    const viewModel = promotedScope()
+    renderScope(viewModel)
+
+    for (const card of viewModel.ownCards) {
+      resetRouterCalls()
+      fireEvent.press(screen.getByText(card.prompt))
+      expect(pushedCardIds()).toEqual([card.id])
+    }
+  })
+
+  it('says nothing about own cards on a collection that has none', () => {
+    const viewModel = scope('fixture-languages-cpp')
+    expect(viewModel.ownCards).toEqual([])
+
+    renderScope(viewModel)
+
+    expect(screen.queryByText(/^Cards in /)).toBeNull()
+  })
 })
 
 describe('collection deck rows', () => {

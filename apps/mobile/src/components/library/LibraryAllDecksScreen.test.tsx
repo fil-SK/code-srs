@@ -165,6 +165,22 @@ describe('filter and search', () => {
     fireEvent.changeText(screen.getByLabelText('Search decks'), 'zzzz')
     expect(screen.getByText('No matching decks')).toBeTruthy()
   })
+
+  it('offers a way out of a search, and it is not there when there is nothing to clear', () => {
+    // `clearButtonMode` is iOS-only, so on Android the only way back to the
+    // unfiltered list was to delete the query one character at a time.
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+    expect(screen.queryByLabelText('Clear deck search')).toBeNull()
+
+    fireEvent.changeText(screen.getByLabelText('Search decks'), 'compilers')
+    expect(screen.queryByText('Security Engineering')).toBeNull()
+
+    fireEvent.press(screen.getByLabelText('Clear deck search'))
+
+    expect(screen.getByLabelText('Search decks').props.value).toBe('')
+    expect(screen.getByText('Security Engineering')).toBeTruthy()
+    expect(screen.queryByLabelText('Clear deck search')).toBeNull()
+  })
 })
 
 describe('deck creation', () => {

@@ -41,6 +41,13 @@ export interface MobileCollectionViewModel {
   cardCount: number
   dueToday: number
   decks: MobileLibraryDeckViewModel[]
+  /**
+   * Cards filed on the collection itself rather than on one of its decks. A
+   * collection IS a deck, so it can hold them - and it does as soon as a deck
+   * with cards is given a child. Empty for the 'all' and 'unfiled' scopes,
+   * which are not decks.
+   */
+  ownCards: MobileDeckCardViewModel[]
 }
 
 export interface MobileDeckCardViewModel {

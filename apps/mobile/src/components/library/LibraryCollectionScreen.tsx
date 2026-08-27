@@ -3,11 +3,18 @@ import { iteraColors, iteraRadii, markLabelFor, type DeckSortKey } from '@itera/
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { IteraButton } from '@/src/components/ui/IteraButton'
-import type { MobileCollectionViewModel, MobileLibraryDeckViewModel } from '@/src/types/library'
+import { SearchField } from '@/src/components/ui/SearchField'
+import type {
+  MobileCollectionViewModel,
+  MobileDeckCardViewModel,
+  MobileLibraryDeckViewModel,
+} from '@/src/types/library'
+import { CardActions } from './CardActions'
+import { CardRow } from './CardRow'
 import { deckSortLabel, filterAndSortDeckViewModels } from './deckSorting'
 import { SortSheet } from './SortSheet'
 
@@ -121,6 +128,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
   // Web defaults a Collection to name order, and All Decks to last studied.
   const [sort, setSort] = useState<DeckSortKey>('name')
   const [sortOpen, setSortOpen] = useState(false)
+  const [actionCard, setActionCard] = useState<MobileDeckCardViewModel | null>(null)
 
   const visibleDecks = useMemo(
     () => filterAndSortDeckViewModels(viewModel.decks, { query, dueOnly, sort }),
@@ -201,21 +209,14 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
 
         <Text style={styles.sectionTitle}>Decks</Text>
 
-        <View style={styles.searchWrap}>
-          <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
-          <TextInput
-            accessibilityLabel="Search collection decks"
-            autoCapitalize="none"
-            autoCorrect={false}
-            clearButtonMode="while-editing"
-            onChangeText={setQuery}
-            placeholder="Search decks..."
-            placeholderTextColor={iteraColors.mutedLight}
-            returnKeyType="search"
-            style={styles.searchInput}
-            value={query}
-          />
-        </View>
+        <SearchField
+          accessibilityLabel="Search collection decks"
+          clearAccessibilityLabel="Clear deck search"
+          onChangeText={setQuery}
+          placeholder="Search decks..."
+          style={styles.searchWrap}
+          value={query}
+        />
 
         <View style={styles.controlsRow}>
           <Pressable
@@ -266,7 +267,41 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
             <Text style={styles.emptyText}>Try another search or turn off Due only.</Text>
           </View>
         ) : null}
+
+        {/*
+          A collection IS a deck, so it can hold cards of its own, and it does
+          from the moment a deck that already had cards is given a child. They
+          are listed here rather than dropped out of the Library the way the
+          promotion used to drop them: they were still scheduled, still counted
+          on Today and Progress, and no longer reachable from any screen. Web
+          surfaces the same case in its own section for the same reason.
+        */}
+        {viewModel.ownCards.length > 0 ? (
+          <View style={styles.ownCardsSection}>
+            <Text style={styles.sectionTitle}>Cards in {viewModel.name}</Text>
+            <Text style={styles.ownCardsCaption}>
+              Filed on this collection itself rather than on one of its decks.
+            </Text>
+            <View style={styles.ownCardsList}>
+              {viewModel.ownCards.map((card) => (
+                <CardRow
+                  key={card.id}
+                  card={card}
+                  onActions={() => setActionCard(card)}
+                  onOpen={() =>
+                    router.push({ pathname: '/card/[cardId]/study', params: { cardId: card.id } })
+                  }
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
+
+      {/* No cards of its own, no card actions - and no delete mutation held. */}
+      {viewModel.ownCards.length > 0 ? (
+        <CardActions card={actionCard} onClose={() => setActionCard(null)} />
+      ) : null}
 
       <SortSheet
         onChange={setSort}
@@ -459,24 +494,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
   },
+  // Only what this screen adds; the field itself is SearchField's.
   searchWrap: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
     marginTop: 12,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    paddingHorizontal: 14,
-  },
-  searchInput: {
-    minWidth: 0,
-    flex: 1,
-    color: iteraColors.inkBrand,
-    fontSize: 15,
-    paddingVertical: 0,
   },
   controlsRow: {
     flexDirection: 'row',
@@ -646,6 +666,21 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     fontWeight: '700',
     textAlign: 'right',
+  },
+  ownCardsSection: {
+    marginTop: 26,
+    borderTopColor: iteraColors.border,
+    borderTopWidth: 1,
+    paddingTop: 18,
+  },
+  ownCardsCaption: {
+    marginTop: 4,
+    color: iteraColors.muted,
+    fontSize: 12,
+  },
+  ownCardsList: {
+    gap: 9,
+    marginTop: 12,
   },
   emptyState: {
     alignItems: 'center',

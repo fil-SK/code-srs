@@ -4,54 +4,31 @@ import {
   iteraColors,
   iteraRadii,
   markLabelFor,
-  useDeleteCard,
   useDeleteDeck,
 } from '@itera/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
   AUTHORABLE_INTERACTION_DESCRIPTIONS,
   AUTHORABLE_INTERACTION_LABELS,
   AUTHORABLE_INTERACTION_TYPES,
-  isAuthorableInteraction,
 } from '@/src/components/cards/authoringTypes'
 import { ActionSheet, type ActionSheetItem } from '@/src/components/ui/ActionSheet'
 import { ConfirmSheet } from '@/src/components/ui/ConfirmSheet'
 import { IteraButton } from '@/src/components/ui/IteraButton'
-import type {
-  MobileCardStatus,
-  MobileDeckCardViewModel,
-  MobileDeckViewModel,
-} from '@/src/types/library'
+import { SearchField } from '@/src/components/ui/SearchField'
+import type { MobileDeckCardViewModel, MobileDeckViewModel } from '@/src/types/library'
+import { CardActions } from './CardActions'
+import { CardRow } from './CardRow'
+import { interactionVisuals, statusColors } from './cardVisuals'
 import { cardStatusMatches, type CardStatusFilter } from './cardFiltering'
 import { CardStatusSheet } from './CardStatusSheet'
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
-
-// A card's lifecycle state, as a colour. Uses the existing palette rather than
-// introducing one: New is neutral, Learning is the accent already used for
-// "due", and Review is the success green the progress bars use.
-const statusColors: Record<MobileCardStatus, string> = {
-  New: iteraColors.mutedLight,
-  Learning: iteraColors.accent,
-  Review: iteraColors.success,
-}
-
-const interactionVisuals: Record<
-  MobileDeckCardViewModel['interactionType'],
-  { icon: IconName; backgroundColor: string }
-> = {
-  recall: { icon: 'code-braces', backgroundColor: iteraColors.navy },
-  walkthrough: { icon: 'source-branch', backgroundColor: '#0d9488' },
-  multiple_choice: { icon: 'format-list-checks', backgroundColor: '#f59e0b' },
-  write_code: { icon: 'code-tags', backgroundColor: '#2563eb' },
-  ordering: { icon: 'format-list-numbered', backgroundColor: '#059669' },
-  matching: { icon: 'vector-link', backgroundColor: '#7c3aed' },
-}
 
 function DeckMetric({
   icon,
@@ -73,63 +50,6 @@ function DeckMetric({
   )
 }
 
-// The row opens the card it names, by its own canonical id, and its trailing
-// control opens that card's actions.
-//
-// The two are deliberately separate targets and the row's tap is never
-// ambiguous: tapping the row is always Study, and management is always the
-// explicit control. An earlier decorative kebab glyph sat here and did nothing;
-// this replaces it with a real 44-point button whose every listed item works.
-function CardRow({
-  card,
-  onOpen,
-  onActions,
-}: {
-  card: MobileDeckCardViewModel
-  onOpen: () => void
-  onActions: () => void
-}) {
-  const visual = interactionVisuals[card.interactionType]
-  return (
-    <View style={styles.cardRowWrap}>
-      <Pressable
-        accessibilityHint="Opens a preview of this card"
-        accessibilityLabel={`${card.prompt}, ${card.interactionLabel}, ${card.status}`}
-        accessibilityRole="button"
-        onPress={onOpen}
-        style={({ pressed }) => [styles.cardRow, pressed && styles.pressed]}
-      >
-        <View style={[styles.interactionMark, { backgroundColor: visual.backgroundColor }]}>
-          <MaterialCommunityIcons color={iteraColors.surface} name={visual.icon} size={25} />
-        </View>
-        <View style={styles.cardCopy}>
-          <Text numberOfLines={1} style={styles.cardPrompt}>
-            {card.prompt}
-          </Text>
-          <Text numberOfLines={1} style={styles.cardMeta}>
-            {card.interactionLabel} · {card.tag}
-          </Text>
-        </View>
-        <View style={styles.cardStatus}>
-          <View style={[styles.statusDot, { backgroundColor: statusColors[card.status] }]} />
-          <Text style={styles.statusText}>{card.status}</Text>
-        </View>
-      </Pressable>
-
-      <Pressable
-        accessibilityHint="Edit or delete this card"
-        accessibilityLabel={`Actions for ${card.prompt}`}
-        accessibilityRole="button"
-        hitSlop={4}
-        onPress={onActions}
-        style={({ pressed }) => [styles.cardActions, pressed && styles.pressed]}
-      >
-        <MaterialCommunityIcons color={iteraColors.muted} name="dots-vertical" size={22} />
-      </Pressable>
-    </View>
-  )
-}
-
 // What a refused deletion says. The rule is core's; only the wording is here,
 // and it names what is actually in the way so "move or delete them first" is
 // actionable rather than a scold.
@@ -147,7 +67,6 @@ function blockedDeletionMessage(viewModel: MobileDeckViewModel): string {
 export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewModel }) {
   const router = useRouter()
   const deleteDeck = useDeleteDeck()
-  const deleteCard = useDeleteCard()
   const [query, setQuery] = useState('')
   // Defaults to showing everything. It used to default to New-only, which hid
   // cards behind a filter nobody had chosen.
@@ -158,7 +77,6 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
   const [deckDeleteOpen, setDeckDeleteOpen] = useState(false)
   const [deckDeleteBlocked, setDeckDeleteBlocked] = useState(false)
   const [actionCard, setActionCard] = useState<MobileDeckCardViewModel | null>(null)
-  const [cardPendingDelete, setCardPendingDelete] = useState<MobileDeckCardViewModel | null>(null)
 
   // The shared rule, called not restated: a deck may not be deleted while its
   // own cards or its child decks would be stranded by the removal. Web asks the
@@ -189,40 +107,26 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         router.push({ pathname: '/deck/[deckId]/edit', params: { deckId: viewModel.id } }),
     },
     {
+      // The only way to make a collection, because a collection IS a deck with
+      // children (D422): filing a deck inside this one promotes it, and there
+      // is no Collection entity to create instead. This is the same create the
+      // Collection screen's New Deck runs, with this deck as the parent, so no
+      // new hierarchy semantics are introduced - and it is here rather than in
+      // the deck form because a new deck's parent comes from where the create
+      // was launched (D432).
+      label: 'New deck inside',
+      icon: 'folder-plus-outline',
+      hint: 'Files a deck inside this one, making this a collection',
+      onPress: () =>
+        router.push({ pathname: '/deck/new', params: { parentId: viewModel.id } }),
+    },
+    {
       label: 'Delete deck',
       icon: 'trash-can-outline',
       danger: true,
       onPress: requestDeckDelete,
     },
   ]
-
-  // Edit is offered only for the interaction types this platform can currently
-  // author. The other four are fully studyable and reviewable and nothing here
-  // calls them broken - they simply have no editor yet, so no control claims
-  // one (see authoringTypes.ts).
-  const cardActions: ActionSheetItem[] = actionCard
-    ? [
-        ...(isAuthorableInteraction(actionCard.interactionType)
-          ? [
-              {
-                label: 'Edit card',
-                icon: 'pencil-outline' as const,
-                onPress: () =>
-                  router.push({
-                    pathname: '/card/[cardId]/edit',
-                    params: { cardId: actionCard.id },
-                  }),
-              },
-            ]
-          : []),
-        {
-          label: 'Delete card',
-          icon: 'trash-can-outline',
-          danger: true,
-          onPress: () => setCardPendingDelete(actionCard),
-        },
-      ]
-    : []
 
   const cardTypeActions: ActionSheetItem[] = AUTHORABLE_INTERACTION_TYPES.map((type) => ({
     label: AUTHORABLE_INTERACTION_LABELS[type],
@@ -287,7 +191,13 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
               {viewModel.collectionName}
             </Text>
             <View style={styles.titleRow}>
-              <Text adjustsFontSizeToFit minimumFontScale={0.82} numberOfLines={2} style={styles.title}>
+              {/*
+                No `adjustsFontSizeToFit`. It re-measures on every re-render, so
+                merely opening the actions sheet shrank the deck's name - the
+                title changed size in response to a control that has nothing to
+                do with it. Two lines at a fixed size, ellipsized past that.
+              */}
+              <Text numberOfLines={2} style={styles.title}>
                 {viewModel.name}
               </Text>
               {/*
@@ -390,21 +300,14 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           <Text style={styles.cardsHeading}>Cards</Text>
 
           <View style={styles.searchRow}>
-            <View style={styles.searchWrap}>
-              <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
-              <TextInput
-                accessibilityLabel="Search cards"
-                autoCapitalize="none"
-                autoCorrect={false}
-                clearButtonMode="while-editing"
-                onChangeText={setQuery}
-                placeholder="Search cards..."
-                placeholderTextColor={iteraColors.mutedLight}
-                returnKeyType="search"
-                style={styles.searchInput}
-                value={query}
-              />
-            </View>
+            <SearchField
+              accessibilityLabel="Search cards"
+              clearAccessibilityLabel="Clear card search"
+              onChangeText={setQuery}
+              placeholder="Search cards..."
+              style={styles.searchWrap}
+              value={query}
+            />
             <Pressable
               accessibilityHint="Filter cards by status"
               accessibilityLabel="Filter cards"
@@ -486,13 +389,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         visible={typeChooserOpen}
       />
 
-      <ActionSheet
-        items={cardActions}
-        onClose={() => setActionCard(null)}
-        subtitle={actionCard?.prompt}
-        title="Card actions"
-        visible={actionCard !== null}
-      />
+      <CardActions card={actionCard} onClose={() => setActionCard(null)} />
 
       <ConfirmSheet
         confirmLabel={`Delete ${viewModel.name}`}
@@ -510,35 +407,9 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         title={`“${viewModel.name}” isn’t empty`}
         visible={deckDeleteBlocked}
       />
-
-      <ConfirmSheet
-        confirmLabel="Delete card"
-        description={
-          cardPendingDelete
-            ? `“${cardPendingDelete.prompt}” will be removed permanently. This cannot be undone.`
-            : ''
-        }
-        onClose={() => setCardPendingDelete(null)}
-        onConfirm={() => {
-          if (cardPendingDelete) deleteCard.mutate(cardPendingDelete.id)
-        }}
-        title="Delete this card?"
-        visible={cardPendingDelete !== null}
-      />
     </SafeAreaView>
   )
 }
-
-const cardShadow = Platform.select({
-  ios: {
-    shadowColor: iteraColors.navy,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-  },
-  android: { elevation: 2 },
-  web: { boxShadow: '0 4px 10px rgba(30,41,59,0.05)' },
-})
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -764,28 +635,13 @@ const styles = StyleSheet.create({
     gap: 9,
     marginTop: 14,
   },
+  // Only what this screen adds; the field itself is SearchField's.
   searchWrap: {
-    minHeight: 50,
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    paddingHorizontal: 13,
-  },
-  searchInput: {
-    minWidth: 0,
-    flex: 1,
-    color: iteraColors.inkBrand,
-    fontSize: 15,
-    paddingVertical: 0,
   },
   filterButton: {
-    width: 50,
-    minHeight: 50,
+    width: 52,
+    minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
     borderColor: iteraColors.borderStrong,
@@ -829,70 +685,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cardRowWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
-    borderWidth: 1,
-    backgroundColor: iteraColors.surface,
-    paddingRight: 2,
-    ...cardShadow,
-  },
-  cardActions: {
-    width: 40,
-    minHeight: 44,
-    flexShrink: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardRow: {
-    minWidth: 0,
-    flex: 1,
-    minHeight: 72,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 9,
-    paddingLeft: 10,
-    paddingRight: 4,
-  },
-  interactionMark: {
-    width: 46,
-    height: 46,
-    flexShrink: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: iteraRadii.control,
-  },
-  cardCopy: {
-    minWidth: 0,
-    flex: 1,
-  },
-  cardPrompt: {
-    color: iteraColors.inkBrand,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  cardMeta: {
-    marginTop: 4,
-    color: iteraColors.muted,
-    fontSize: 11,
-  },
-  cardStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statusDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  statusText: {
-    color: iteraColors.muted,
-    fontSize: 11,
   },
   emptyState: {
     alignItems: 'center',
