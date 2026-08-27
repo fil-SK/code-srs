@@ -45,7 +45,7 @@ export default function EditCardRoute() {
   const goBack = () =>
     router.canGoBack()
       ? router.back()
-      : router.replace({ pathname: '/library/deck/[deckId]', params: { deckId: card.deckId } })
+      : router.replace({ pathname: '/deck/[deckId]', params: { deckId: card.deckId } })
 
   const props = {
     card,

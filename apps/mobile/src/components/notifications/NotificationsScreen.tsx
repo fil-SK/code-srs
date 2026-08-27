@@ -219,7 +219,7 @@ export function NotificationsScreen({
     switch (destination.kind) {
       case 'deck':
         router.push({
-          pathname: '/library/deck/[deckId]',
+          pathname: '/deck/[deckId]',
           params: { deckId: destination.deckId },
         })
         return

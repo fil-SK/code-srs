@@ -610,8 +610,11 @@ const styles = StyleSheet.create({
   },
   deckMark: {
     position: 'relative',
+    // Square, like every other deck and collection mark in the app. A taller
+    // rectangle read as a book spine rather than as the same mark at a larger
+    // size, and the height it borrowed belonged to nothing beside it.
     width: 84,
-    height: 102,
+    height: 84,
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',

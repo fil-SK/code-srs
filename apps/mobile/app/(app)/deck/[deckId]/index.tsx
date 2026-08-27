@@ -5,9 +5,16 @@ import { LibraryNotFoundScreen } from '@/src/components/library/LibraryNotFoundS
 import { demoCollections, demoDeckViewModel } from '@/src/demo/demoSelectors'
 import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
+// A deck is opened from Today, from Progress and from two Library screens, so
+// it is pushed onto the stack above the tabs rather than into the Library tab's
+// own stack. Inside that tab, Back popped to All Decks whichever screen had
+// opened the deck - correct from the Library stack's point of view and wrong
+// from the visitor's, who had come from Today - and the Library tab was left
+// showing a deck it had never been asked to open.
+//
 // The route parameter is resolved, not ignored. This route used to hand deckId
 // to a factory that returned the same deck for every value.
-export default function LibraryDeckRoute() {
+export default function DeckRoute() {
   const { deckId } = useLocalSearchParams<{ deckId: string }>()
   const { entities, now, isLoading } = useDemoScreen()
 

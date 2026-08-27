@@ -11,6 +11,7 @@ import {
   computeKpis,
   computeRetentionSeries,
   computeStreak,
+  dateRangePresetLabel,
   deriveCollections,
   deriveMilestones,
   estimateSessionMinutes,
@@ -378,12 +379,15 @@ export function demoProgressViewModel(
   const range = buildRange(preset, now)
   const kpis = computeKpis(entities.cards, dueCards, entities.reviewLogs, range, now)
   const heatmap = computeHeatmap(entities.reviewLogs, range.days, now)
+  // One bucket per day while the range is short enough for a phone-width chart
+  // to draw one, and never more than 30: a year asked for 365 buckets produces
+  // segments narrower than the line drawing them.
   const retentionPoints = computeRetentionSeries(
     entities.reviewLogs,
     range,
     buildCardDeckMap(entities.cards),
     undefined,
-    range.days,
+    Math.min(range.days, 30),
   )
   const performance = computeDeckPerformance(
     entities.reviewLogs,
@@ -396,6 +400,7 @@ export function demoProgressViewModel(
 
   return {
     rangeLabel: formatRangeLabel(range),
+    metricsHeading: dateRangePresetLabel(preset),
     metrics: [
       {
         id: 'learned',
@@ -423,7 +428,13 @@ export function demoProgressViewModel(
         supportingText: `Best: ${formatDayCount(kpis.bestStreak)}`,
       },
     ],
-    activityDays: heatmap.map((day) => ({ id: String(day.date), level: day.level, count: day.count })),
+    activityDays: heatmap.map((day) => ({
+      id: String(day.date),
+      date: day.date,
+      dateLabel: formatEventDate(day.date, now),
+      level: day.level,
+      count: day.count,
+    })),
     retentionPercent: kpis.retention.value === null ? null : Math.round(kpis.retention.value * 100),
     retentionSeries: retentionPoints.map((point) => point.retention),
     retentionLabels: [

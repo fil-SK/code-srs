@@ -11,6 +11,8 @@ import {
   computeReviewSeries,
   computeDeckPerformance,
   deriveMilestones,
+  heatmapMonthLabels,
+  toHeatmapWeeks,
 } from './progressMetrics'
 
 const MIN = 60_000
@@ -360,5 +362,71 @@ describe('deriveMilestones', () => {
     for (let i = 1; i < events.length; i++) {
       expect(events[i - 1].date).toBeGreaterThanOrEqual(events[i].date)
     }
+  })
+})
+
+describe('heat map layout', () => {
+  // Both renderers draw this grid, so the shape is asserted here rather than in
+  // either of them.
+  const days = (count: number, from: number) =>
+    computeHeatmap([], count, from).map((day) => ({ ...day }))
+
+  it('starts the first column on the weekday the range starts on', () => {
+    const range = days(30, NOW)
+    const weeks = toHeatmapWeeks(range)
+    const mondayFirst = (new Date(range[0].date).getDay() + 6) % 7
+
+    expect(weeks[0].slice(0, mondayFirst).every((day) => day === null)).toBe(true)
+    expect(weeks[0][mondayFirst]?.date).toBe(range[0].date)
+    // Every cell is in the row its own weekday names.
+    for (const week of weeks) {
+      for (const [row, day] of week.entries()) {
+        if (day) expect((new Date(day.date).getDay() + 6) % 7).toBe(row)
+      }
+    }
+  })
+
+  it('pads the last column so every column has seven slots', () => {
+    for (const count of [1, 7, 30, 90, 365]) {
+      const weeks = toHeatmapWeeks(days(count, NOW))
+      expect(weeks.every((week) => week.length === 7)).toBe(true)
+      expect(weeks.flat().filter((day) => day !== null)).toHaveLength(count)
+    }
+  })
+
+  it('carries whatever else a day is decorated with', () => {
+    // Each platform adds its own presentation fields to a HeatmapDay; bucketing
+    // must not flatten them back to the bare shape.
+    const decorated = days(7, NOW).map((day) => ({ ...day, label: 'x' }))
+    const first = toHeatmapWeeks(decorated).flat().find((day) => day !== null)
+    expect(first?.label).toBe('x')
+  })
+
+  it('names a month once, on the column its first day falls in', () => {
+    const weeks = toHeatmapWeeks(days(90, NOW))
+    const labels = heatmapMonthLabels(weeks, 1)
+    const named = labels.filter((label): label is string => label !== null)
+
+    expect(named).toEqual(['May', 'Jun', 'Jul', 'Aug'])
+    expect(new Set(named).size).toBe(named.length)
+    // A label names the month of the column it sits on, not a neighbour's.
+    for (const [column, label] of labels.entries()) {
+      if (label === null) continue
+      const first = weeks[column].find((day) => day !== null)!
+      expect(new Intl.DateTimeFormat('en-US', { month: 'short' }).format(first.date)).toBe(label)
+    }
+  })
+
+  it('drops a label that would collide with the previous one', () => {
+    const weeks = toHeatmapWeeks(days(90, NOW))
+    // Two columns apart is a collision at every cell size either platform uses.
+    expect(heatmapMonthLabels(weeks, 12).filter((label) => label !== null).length).toBeLessThan(
+      heatmapMonthLabels(weeks, 1).filter((label) => label !== null).length,
+    )
+  })
+
+  it('has no labels and no columns for an empty range', () => {
+    expect(toHeatmapWeeks([])).toEqual([])
+    expect(heatmapMonthLabels([])).toEqual([])
   })
 })

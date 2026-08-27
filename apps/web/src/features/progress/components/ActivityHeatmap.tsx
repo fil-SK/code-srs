@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Info } from 'lucide-react'
+import { heatmapMonthLabels, toHeatmapWeeks } from '@itera/core'
 import {
   HEATMAP_RANGE_OPTIONS,
   type HeatmapDay,
@@ -8,7 +9,6 @@ import {
 import { SegmentedToggle } from './SegmentedToggle'
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const MONTH = new Intl.DateTimeFormat('en-US', { month: 'short' })
 
 const LEVEL_BG: Record<HeatmapDay['level'], string> = {
   0: 'var(--itera-surface-subtle)',
@@ -16,44 +16,6 @@ const LEVEL_BG: Record<HeatmapDay['level'], string> = {
   2: 'var(--itera-accent-soft)',
   3: '#ffb37a', // mid step between accent-soft and the full accent
   4: 'var(--itera-accent)',
-}
-
-function toWeeks(days: HeatmapDay[]): (HeatmapDay | null)[][] {
-  if (!days.length) return []
-  const firstDow = (new Date(days[0].date).getDay() + 6) % 7 // Mon=0..Sun=6
-  const weeks: (HeatmapDay | null)[][] = []
-  let week: (HeatmapDay | null)[] = new Array(firstDow).fill(null)
-  for (const d of days) {
-    week.push(d)
-    if (week.length === 7) {
-      weeks.push(week)
-      week = []
-    }
-  }
-  if (week.length) {
-    while (week.length < 7) week.push(null)
-    weeks.push(week)
-  }
-  return weeks
-}
-
-// Month labels above the grid, placed once per week-column where that
-// column's first real day starts a new month — skipped if it would land
-// within 2 columns of the previous label (e.g. a 30D range starting a couple
-// of days into a new month), since two 3-letter labels that close together
-// overlap at this cell size.
-function monthLabels(weeks: (HeatmapDay | null)[][]): (string | null)[] {
-  let lastMonth = -1
-  let lastLabelIndex = -Infinity
-  return weeks.map((week, i) => {
-    const first = week.find((d): d is HeatmapDay => d !== null)
-    if (!first) return null
-    const month = new Date(first.date).getMonth()
-    if (month === lastMonth || i - lastLabelIndex < 3) return null
-    lastMonth = month
-    lastLabelIndex = i
-    return MONTH.format(new Date(first.date))
-  })
 }
 
 export function ActivityHeatmap({
@@ -65,8 +27,8 @@ export function ActivityHeatmap({
   rangeValue: HeatmapRangeValue
   onRangeChange: (value: HeatmapRangeValue) => void
 }) {
-  const weeks = useMemo(() => toWeeks(days), [days])
-  const months = useMemo(() => monthLabels(weeks), [weeks])
+  const weeks = useMemo(() => toHeatmapWeeks(days), [days])
+  const months = useMemo(() => heatmapMonthLabels(weeks), [weeks])
   const cell = 12
   const gap = 3
 

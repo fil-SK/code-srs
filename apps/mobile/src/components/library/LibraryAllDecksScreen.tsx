@@ -84,7 +84,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
   )
 
   function openDeck(deckId: string) {
-    router.push({ pathname: '/library/deck/[deckId]', params: { deckId } })
+    router.push({ pathname: '/deck/[deckId]', params: { deckId } })
   }
 
   return (

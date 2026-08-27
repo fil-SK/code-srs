@@ -167,12 +167,12 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
 
         <View style={styles.metricsCard}>
           <CollectionMetric icon="folder-outline" label="decks" value={viewModel.deckCount} />
-          <CollectionMetric
-            bordered
-            icon="book-open-page-variant-outline"
-            label="cards"
-            value={viewModel.cardCount}
-          />
+          {/*
+            The cards metric carries the same glyph a deck's cards metric does.
+            It used to carry the Library tab's own icon, which made a count of
+            cards read as a count of libraries.
+          */}
+          <CollectionMetric bordered icon="cards-outline" label="cards" value={viewModel.cardCount} />
           <CollectionMetric
             accented
             bordered
@@ -252,7 +252,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
               deck={deck}
               onPress={() =>
                 router.push({
-                  pathname: '/library/deck/[deckId]',
+                  pathname: '/deck/[deckId]',
                   params: { deckId: deck.id },
                 })
               }

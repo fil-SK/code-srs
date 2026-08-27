@@ -26,7 +26,7 @@ export default function NewDeckRoute() {
       onSaved={(deck) =>
         // Replace rather than push, so the form leaves the stack and Back from
         // the new deck returns to the list it was created from.
-        router.replace({ pathname: '/library/deck/[deckId]', params: { deckId: deck.id } })
+        router.replace({ pathname: '/deck/[deckId]', params: { deckId: deck.id } })
       }
       target={{ kind: 'create', parent }}
     />

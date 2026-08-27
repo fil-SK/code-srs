@@ -43,7 +43,7 @@ export function pushedDeckIds(): string[] {
   return routerCalls.push
     .filter(
       (href): href is RouterHref =>
-        typeof href !== 'string' && href.pathname === '/library/deck/[deckId]',
+        typeof href !== 'string' && href.pathname === '/deck/[deckId]',
     )
     .map((href) => href.params?.deckId ?? '')
 }

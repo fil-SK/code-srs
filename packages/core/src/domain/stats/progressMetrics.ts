@@ -194,6 +194,61 @@ export function computeHeatmap(logs: ReviewLog[], days: number, now: Millis = Da
   })
 }
 
+// A heat map reads as a calendar only when its cells are laid out by week, so
+// the week bucketing and the month labelling live here rather than in either
+// renderer: both platforms draw the same grid, and two copies of "which column
+// is this day in" would be two chances to disagree about where a month starts.
+// Only the cell sizes and the scroll behaviour are platform decisions.
+
+/**
+ * Columns of seven, Monday first. The first column is padded with nulls so a
+ * range that does not start on a Monday still lines its days up with the
+ * weekday labels; the last is padded so every column has seven slots.
+ */
+export function toHeatmapWeeks<T extends HeatmapDay>(days: T[]): (T | null)[][] {
+  if (!days.length) return []
+  const firstDow = (new Date(days[0].date).getDay() + 6) % 7 // Mon=0..Sun=6
+  const weeks: (T | null)[][] = []
+  let week: (T | null)[] = new Array(firstDow).fill(null)
+  for (const day of days) {
+    week.push(day)
+    if (week.length === 7) {
+      weeks.push(week)
+      week = []
+    }
+  }
+  if (week.length) {
+    while (week.length < 7) week.push(null)
+    weeks.push(week)
+  }
+  return weeks
+}
+
+const HEATMAP_MONTH = new Intl.DateTimeFormat('en-US', { month: 'short' })
+
+/**
+ * One label per week-column, or null where none belongs: a label is placed on
+ * the column whose first real day starts a new month, and skipped when it would
+ * land within `minColumnGap` columns of the previous one - two three-letter
+ * labels that close together overlap at any cell size either platform uses.
+ */
+export function heatmapMonthLabels(
+  weeks: (HeatmapDay | null)[][],
+  minColumnGap = 3,
+): (string | null)[] {
+  let lastMonth = -1
+  let lastLabelIndex = -Infinity
+  return weeks.map((week, index) => {
+    const first = week.find((day): day is HeatmapDay => day !== null)
+    if (!first) return null
+    const month = new Date(first.date).getMonth()
+    if (month === lastMonth || index - lastLabelIndex < minColumnGap) return null
+    lastMonth = month
+    lastLabelIndex = index
+    return HEATMAP_MONTH.format(new Date(first.date))
+  })
+}
+
 // ---- Retention over time ------------------------------------------------------
 
 export interface RetentionPoint {

@@ -101,11 +101,11 @@ Update it in the same commit as any change to a listed capability.
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
 | Five headline KPIs | domain/stats/progressMetrics, learned, streak | yes | demo workspace | implemented (demo/local) — Learned, Due, Reviews, Retention and Current streak use shared definitions over demo Cards + ReviewLogs |
-| Activity heat map | domain/stats/calendarDay, progressMetrics | yes | demo workspace | implemented (demo/local) — 30 local calendar days, including current-session reviews and zero days |
+| Activity heat map | domain/stats/calendarDay, progressMetrics (`computeHeatmap`, `toHeatmapWeeks`, `heatmapMonthLabels`) | yes | demo workspace | implemented (demo/local) — the selected range in local calendar days, including current-session reviews and zero days; both platforms draw the same week-column grid with weekday rows and month labels from the shared layout helpers, and only cell size and scrolling are platform decisions (D441) |
 | Retention chart | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — mature-only buckets preserve gaps and isolated observations |
 | Deck performance | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — real Learned/Due/Retention inputs; each row opens its deck |
 | Recent milestones | domain/stats/progressMetrics | yes | demo workspace | implemented (demo/local) — derived from seeded and current ReviewLogs; no milestone entity |
-| Date range selection | domain/stats/dateRange | yes | 30D only, no control | implemented (demo/local) — mobile reports one real 30D window and its date label names it; the 3M/1Y buttons were removed rather than left inert, and demoProgressViewModel keeps its DateRangePreset parameter as the seam; D411 |
+| Date range selection | domain/stats/dateRange | yes | 30D / 3M / 1Y | implemented (demo/local) — the mobile group is real again now that a year renders honestly: one `DateRangePreset` held by the Progress route drives the KPI block and its deltas, the heat map, the retention buckets and the date label together. Web additionally offers 7D and a separate heat-map-only range; mobile offers neither. D440 supersedes D411 |
 | Review history | domain/stats/reviewHistory | yes | no | deferred — master plan Phase 8 |
 | Progress sub-pages | — | "Soon" placeholders | no | deferred — unbuilt on both; features.md "Planned" |
 

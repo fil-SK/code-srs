@@ -62,7 +62,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
               deck={deck}
               onPress={() =>
                 router.push({
-                  pathname: '/library/deck/[deckId]',
+                  pathname: '/deck/[deckId]',
                   params: { deckId: deck.id },
                 })
               }

@@ -8,12 +8,25 @@ export { startOfDay }
 
 export type DateRangePreset = '7d' | '30d' | '90d' | '1y'
 
-export const DATE_RANGE_PRESETS: { value: DateRangePreset; label: string; days: number }[] = [
-  { value: '7d', label: 'Last 7 days', days: 7 },
-  { value: '30d', label: 'Last 30 days', days: 30 },
-  { value: '90d', label: 'Last 90 days', days: 90 },
-  { value: '1y', label: 'Last 12 months', days: 365 },
+// `short` is the same preset named for a control too narrow to spell it out - a
+// phone-width segmented control. It is a second *label*, never a second set of
+// presets: a surface that offers "3M" and a surface that offers "Last 90 days"
+// must be offering the same 90 calendar days.
+export const DATE_RANGE_PRESETS: {
+  value: DateRangePreset
+  label: string
+  short: string
+  days: number
+}[] = [
+  { value: '7d', label: 'Last 7 days', short: '7D', days: 7 },
+  { value: '30d', label: 'Last 30 days', short: '30D', days: 30 },
+  { value: '90d', label: 'Last 90 days', short: '3M', days: 90 },
+  { value: '1y', label: 'Last 12 months', short: '1Y', days: 365 },
 ]
+
+export function dateRangePresetLabel(preset: DateRangePreset): string {
+  return DATE_RANGE_PRESETS.find((entry) => entry.value === preset)?.label ?? 'Last 30 days'
+}
 
 export interface DateRange {
   from: Millis // inclusive, start of day

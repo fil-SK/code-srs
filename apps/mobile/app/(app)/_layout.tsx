@@ -10,12 +10,18 @@ import { Stack } from 'expo-router'
 // status filter, and so that an immersive card surface is not drawn behind the
 // tab bar.
 //
+// A deck sits here for a different reason: it is opened from Today, Progress and
+// Library alike, and only a screen above the tabs can return the visitor to the
+// one they actually came from. Inside the Library tab's stack, Back always meant
+// "pop to All Decks".
+//
 // Headers stay hidden: every screen in here already draws its own, and this
 // layout exists for navigation semantics, not chrome.
 export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="deck/[deckId]/index" />
       <Stack.Screen name="card/[cardId]/study" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="diagnostics" />
