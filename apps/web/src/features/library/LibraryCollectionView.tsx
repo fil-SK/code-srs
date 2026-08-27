@@ -17,6 +17,7 @@ import { useDialogs } from '@/components/ui/dialogs'
 import { cn } from '@/lib/cn'
 import { languageLabel } from '@/domain/decks/languages'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
+import { checkDeckDeletion, childDeckCount } from '@itera/core'
 import { useSearchCards } from '@/hooks/useCards'
 import { useCreateDeck, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
 import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
@@ -134,10 +135,21 @@ export function LibraryCollectionView({
   }
 
   async function removeChild(child: Deck, cardCount: number) {
-    if (cardCount > 0) {
+    // Same shared rule as every other delete. These rows are leaves too, so
+    // only the card count can block them.
+    const check = checkDeckDeletion({
+      directCardCount: cardCount,
+      childDeckCount: childDeckCount(decks, child.id),
+    })
+    if (!check.allowed) {
       await dialogs.alert({
         title: `“${child.name}” isn’t empty`,
-        description: `It still has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`,
+        description:
+          check.childDeckCount > 0
+            ? `It still contains ${check.childDeckCount} deck${check.childDeckCount === 1 ? '' : 's'}${
+                check.directCardCount > 0 ? ' and cards of its own' : ''
+              }. Move or delete them first.`
+            : `It still has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`,
       })
       return
     }
@@ -152,7 +164,14 @@ export function LibraryCollectionView({
 
   async function deleteCollection() {
     if (!deck) return
-    if (scoped.length > 0 || directCount > 0) {
+    // scoped is the collection's leaf descendants, which is what the message
+    // names; it is non-empty exactly when the collection has child decks, so
+    // the shared rule sees the same fact the copy reports.
+    const check = checkDeckDeletion({
+      directCardCount: directCount,
+      childDeckCount: scoped.length,
+    })
+    if (!check.allowed) {
       await dialogs.alert({
         title: `“${deck.name}” isn’t empty`,
         description: `It still contains ${scoped.length} deck${scoped.length === 1 ? '' : 's'}${

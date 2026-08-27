@@ -13,6 +13,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { IteraButton } from '@/src/components/ui/IteraButton'
 import { MobileHeader } from '@/src/components/today/MobileHeader'
 import type {
   MobileLibraryCollectionViewModel,
@@ -107,6 +108,20 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           <Text style={styles.title}>All Decks</Text>
           <Text style={styles.subtitle}>View and manage all your decks.</Text>
         </View>
+
+        {/*
+          New Deck creates a top-level deck, which is the same hierarchy
+          semantics web's All Decks action has: no parentId. Creating inside a
+          collection is the Collection screen's own action, because a collection
+          IS a deck and the only thing that differs is the parentId the new deck
+          is given.
+        */}
+        <IteraButton
+          accessibilityHint="Creates a new top-level deck"
+          label="New Deck"
+          onPress={() => router.push('/deck/new')}
+          style={styles.newDeck}
+        />
 
         <Text style={styles.sectionLabel}>Collections</Text>
         <ScrollView
@@ -251,6 +266,9 @@ const styles = StyleSheet.create({
     backgroundColor: iteraColors.accentSoft,
     opacity: 0.7,
     transform: [{ rotate: '-8deg' }],
+  },
+  newDeck: {
+    marginTop: 14,
   },
   intro: {
     marginTop: 20,

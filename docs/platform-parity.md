@@ -36,7 +36,9 @@ Update it in the same commit as any change to a listed capability.
 | Code display | — | CodeMirror 6 | literal monospace + line numbers | native-only (decision) — no shared tokenizer exists to colour a `code` node; master plan D5a, D380 |
 | Safe card image | content/imageSource (isSafeImageSource) | yes | yes | implemented — the one URL sink, gated by the one shared policy |
 | Interaction behavior | interactions/* | yes | yes | implemented |
-| Card form models and validation | domain/cards/*Form (incl. validateRecallForm) | yes | shared, not yet bound | implemented — all six form models, validators and save paths are platform-neutral; validateRecallForm was extracted on 2026-08-27 so Recall matches the other five; D426 |
+| Deck form validation | domain/decks/deckForm (validateDeckForm) | yes | yes | implemented — a deck needs a name; the rule was restated in three web places and is now one function both platforms gate Save on; D428 |
+| Deck deletion guard | domain/decks/deletion (checkDeckDeletion) | yes | yes | implemented — a deck may not be deleted while its own cards or its child decks would be stranded. Extracted from two web page components without changing web's rendered behaviour; the repository still cascades nothing; D429 |
+| Card form models and validation | domain/cards/*Form (incl. validateRecallForm) | yes | Recall and Multiple Choice bound | implemented — all six form models, validators and save paths are platform-neutral; validateRecallForm was extracted on 2026-08-27 so Recall matches the other five; the native editors call two of the six; D426, D430 |
 
 ## Today
 
@@ -61,8 +63,8 @@ Update it in the same commit as any change to a listed capability.
 | Card list | hooks/useCards | yes | yes | implemented (demo/local) — mobile reads through useSearchCards over the demo backend; D424 |
 | Open a card | — | study preview | demo workspace | implemented (demo/local) — every card row opens the card it names by its canonical id, and an unknown id gets a not-found state; D404 |
 | Card study preview | interactions/* | cards/:id/study | card/[cardId]/study | implemented (demo/local) — one card inspected outside a session, through the same session shell and registry; records nothing by construction; D403, D405 |
-| Deck create / rename / delete | hooks/useDecks | yes | no (next milestone) | deferred — M-PARITY-1B. D416's authoring deferral is superseded by D421; the shared hooks now resolve on mobile, and only the native controls are missing |
-| Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | no (next milestone) | deferred — edit and delete in M-PARITY-1B, duplicate/move/suspend in M-PARITY-2; D421 |
+| Deck create / rename / delete | hooks/useDecks, domain/decks/deckForm, domain/decks/deletion | yes | yes (demo) | implemented (demo/local) — New Deck on All Decks and inside a Collection, Edit deck (name + description) and Delete deck behind the shared `checkDeckDeletion` guard, all through the shared hooks; parent selection (Move Deck) stays web-only for now; D427, D428, D429 |
+| Card edit / duplicate / move / suspend / delete | hooks/useCards | yes | edit + delete (demo) | implemented (demo/local) for edit and delete, from the card row's actions sheet; Edit is offered only for a type with an editor. Duplicate, Move and Suspend remain deferred to M-PARITY-2; D421, D430, D431 |
 | Search | domain/search/searchableText | yes | over the demo workspace | deferred — master plan Phase 6; navigation is functional over the mobile demo workspace (D368) |
 | Filter and sort | library/sortDecks | yes | over the demo workspace | deferred — master plan Phase 6; the control is functional and calls core's sortDecks verbatim, so the four keys match web, but it orders demo data; D371, D372 |
 | List paging | — | pagination | infinite scroll intended | native-only (decision) — pagination is a desktop affordance; master plan Phase 6 |
@@ -115,7 +117,8 @@ Update it in the same commit as any change to a listed capability.
 | Import / Export backup | data/backup, hooks/useBackup | yes | no | deferred — master plan Phase 10; the mobile panel is hidden in demo mode rather than shown with controls that cannot run, and remains in cloud mode; D410 |
 | Replace-mode import | data/backup (canReplaceImport) | local only | no | web-only (decision) — refused on the cloud backend; no cross-request transaction |
 | Settings sections (Profile, Email, Appearance, Notifications, Privacy, Devices) | — | inert placeholders | cloud mode only | deferred — unbuilt on both; features.md "Planned". Demo mode renders none of them: six could only say "not available yet", which reads as an unfinished product on a build shown to prospective users; D410 |
-| Card authoring, all six types | domain/cards/save*Card | yes | no (next milestones) | deferred — Recall and Multiple Choice in M-PARITY-1B, Ordering and Write Code in M-PARITY-2, Matching and Walkthrough in M-PARITY-3. saveXCard takes the repository as a parameter and is reused verbatim; no native save path is written. D421 |
+| Card authoring — Recall, Multiple Choice | domain/cards/{recallForm,multipleChoiceForm,saveRecallCard,saveMultipleChoiceCard} | yes | yes (demo) | implemented (demo/local) — native fields bound to the shared form models, validators and save paths; saveXCard is called verbatim and no native save path exists. Editing preserves id, createdAt, suspended, order and the whole scheduling state, and technical content survives byte for byte - both proven end to end against the repository; D430, D438 |
+| Card authoring — Write Code, Ordering, Matching, Walkthrough | domain/cards/save*Card | yes | no (next milestones) | deferred — Write Code and Ordering in M-PARITY-2, Matching and Walkthrough in M-PARITY-3. Existing cards of all four review and study normally on mobile; no control offers an editor that does not exist; D431 |
 
 ## Platform-specific
 

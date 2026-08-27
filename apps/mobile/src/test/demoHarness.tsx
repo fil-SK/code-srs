@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 
 import { DemoWorkspaceProvider } from '@/src/demo/DemoWorkspaceProvider'
 import { useDemoEntities, type DemoEntities } from '@/src/demo/demoEntities'
+import { useDemoWorkspace, type DemoWorkspaceValue } from '@/src/demo/demoWorkspaceContext'
 
 /**
  * Test support for rendering demo screens over the real composed runtime.
@@ -99,6 +100,19 @@ export function createEntitiesProbe() {
     return null
   }
   return { seen, EntitiesProbe }
+}
+
+/**
+ * A probe that publishes the demo workspace value (the clock, the inbox and
+ * reset), for tests that need to drive Reset Demo from inside the tree.
+ */
+export function createWorkspaceProbe() {
+  const seen: { current: DemoWorkspaceValue | null } = { current: null }
+  function WorkspaceProbe() {
+    seen.current = useDemoWorkspace()
+    return null
+  }
+  return { seen, WorkspaceProbe }
 }
 
 export function renderInDemo(children: ReactNode) {

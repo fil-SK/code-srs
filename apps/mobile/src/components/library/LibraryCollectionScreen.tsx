@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { IteraButton } from '@/src/components/ui/IteraButton'
 import type { MobileCollectionViewModel, MobileLibraryDeckViewModel } from '@/src/types/library'
 import { deckSortLabel, filterAndSortDeckViewModels } from './deckSorting'
 import { SortSheet } from './SortSheet'
@@ -180,6 +181,23 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
             value={viewModel.dueToday}
           />
         </View>
+
+        {/*
+          Creating here files the new deck inside this collection, which is
+          nothing more than giving it this collection's id as its parentId - a
+          collection IS a deck, and there is no second membership field to set.
+          The rail, All Decks, this list and the deck caption all derive from
+          that one relationship, so the deck appears everywhere it belongs with
+          no further wiring.
+        */}
+        <IteraButton
+          accessibilityHint={`Creates a new deck inside ${viewModel.name}`}
+          label="New Deck"
+          onPress={() =>
+            router.push({ pathname: '/deck/new', params: { parentId: viewModel.id } })
+          }
+          style={styles.newDeck}
+        />
 
         <Text style={styles.sectionTitle}>Decks</Text>
 
@@ -431,6 +449,9 @@ const styles = StyleSheet.create({
   },
   accentText: {
     color: iteraColors.accent,
+  },
+  newDeck: {
+    marginTop: 18,
   },
   sectionTitle: {
     marginTop: 26,

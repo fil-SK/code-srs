@@ -58,6 +58,12 @@ export interface MobileDeckViewModel {
   name: Deck['name']
   description: NonNullable<Deck['description']>
   cardCount: number
+  /**
+   * Decks whose parentId is this deck. Non-zero means this deck is a
+   * Collection, and it is one of the two facts core's `checkDeckDeletion`
+   * needs - the deck screen must not decide the rule itself.
+   */
+  childDeckCount: number
   dueCount: number
   masteryPercent: number
   lastStudiedLabel: string

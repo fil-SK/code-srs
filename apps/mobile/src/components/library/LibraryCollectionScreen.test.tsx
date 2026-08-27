@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoCollectionViewModel } from '@/src/demo/demoSelectors'
 import { createDemoSeed } from '@/src/demo/demoWorkspace'
-import { pushedDeckIds, resetRouterCalls, routerDouble } from '@/src/test/routerDouble'
+import { pushedDeckIds, resetRouterCalls, routerCalls, routerDouble } from '@/src/test/routerDouble'
 import { LibraryCollectionScreen } from './LibraryCollectionScreen'
 
 // One fixed instant for the whole file: due-ness is a comparison against an
@@ -95,14 +95,29 @@ describe('collection sort', () => {
   })
 })
 
-describe('controls that are not offered', () => {
-  it('renders nothing for deck creation, collection settings or an overflow menu', () => {
-    // Deck and collection management are deferred product scope on this
-    // platform. Three permanently greyed controls under the metrics card made a
-    // working screen look half-finished, so they are removed, not disabled.
+describe('deck creation', () => {
+  it('creates inside this collection by passing its id as the parent', () => {
+    // A collection IS a deck, so membership is parentId and nothing else.
+    // There is no collectionId to set, which is exactly why a deck created here
+    // shows up in the rail, in All Decks and in this list with no further
+    // wiring.
     render(<LibraryCollectionScreen viewModel={scope('fixture-languages-cpp')} />)
 
-    expect(screen.queryByText('New Deck')).toBeNull()
+    fireEvent.press(screen.getByLabelText('New Deck'))
+
+    expect(routerCalls.push).toEqual([
+      { pathname: '/deck/new', params: { parentId: 'fixture-languages-cpp' } },
+    ])
+  })
+})
+
+describe('controls that are not offered', () => {
+  it('renders nothing for collection settings or an overflow menu', () => {
+    // Collection management remains out of scope on this platform. Permanently
+    // greyed controls under the metrics card made a working screen look
+    // half-finished, so they are removed, not disabled.
+    render(<LibraryCollectionScreen viewModel={scope('fixture-languages-cpp')} />)
+
     expect(screen.queryByText('Collection settings')).toBeNull()
     expect(screen.queryByLabelText('More unavailable')).toBeNull()
     expect(screen.UNSAFE_queryAllByProps({ disabled: true })).toHaveLength(0)

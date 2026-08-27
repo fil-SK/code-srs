@@ -95,6 +95,8 @@ export * from './domain/cards/saveWriteCodeCard'
 export * from './domain/cards/walkthroughForm'
 export * from './domain/cards/writeCodeForm'
 
+export * from './domain/decks/deckForm'
+export * from './domain/decks/deletion'
 export * from './domain/decks/languages'
 export * from './domain/decks/tree'
 

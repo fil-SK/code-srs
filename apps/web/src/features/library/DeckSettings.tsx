@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { buildDeckTree, flattenDeckTree, subtreeIds } from '@/domain/decks/tree'
 import { DECK_LANGUAGES } from '@/domain/decks/languages'
+import { validateDeckForm } from '@itera/core'
 import { useSaveDeck } from '@/hooks/useDecks'
 
 // Edit a deck's name, description, and parent. The parent list excludes the
@@ -38,8 +39,12 @@ export function DeckSettings({
     (parentId || undefined) !== deck.parentId ||
     (language || undefined) !== deck.language
 
+  // The shared rule, not a second one: a deck needs a name. Extracted so a
+  // native deck editor gates on the same function rather than restating it.
+  const canSave = validateDeckForm({ name, description }).canSave
+
   function handleSave() {
-    if (!name.trim()) return
+    if (!canSave) return
     save.mutate(
       {
         ...deck,
@@ -87,7 +92,7 @@ export function DeckSettings({
         </select>
       </Field>
       <div className="flex flex-wrap items-center gap-2.5">
-        <Button variant="primary" onClick={handleSave} disabled={!dirty || !name.trim() || save.isPending}>
+        <Button variant="primary" onClick={handleSave} disabled={!dirty || !canSave || save.isPending}>
           {save.isPending ? 'Saving…' : 'Save deck'}
         </Button>
         <Button variant="secondary" onClick={onClose} disabled={save.isPending}>

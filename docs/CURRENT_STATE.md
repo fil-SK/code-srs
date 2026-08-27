@@ -11,13 +11,22 @@
 > `collectionTree` rather than a parallel mobile collection model. **No
 > authoring UI was added and nothing learner-visible was meant to change.**
 >
-> **Mobile authoring is reopened and approved (D421), superseding D416's
-> authoring half.** Physical-device testing found the absence of New Deck and Add
-> Card to be a major product gap. **D416's cloud half stands unchanged:**
-> Supabase, sync and durable persistence remain deferred until after market
-> validation. Demo state still resets on a full app restart. The next milestone
-> is **M-PARITY-1B - Deck CRUD plus Recall and Multiple Choice authoring**
-> (§17). Physical-device verification of M-PARITY-1A is pending the owner.
+> **Mobile authoring parity is now underway (milestone M-PARITY-1B, §32).**
+> Deck create, edit and delete work in Demo mode, as do Recall and Multiple
+> Choice create, edit and delete, all bound to the shared form models,
+> validators and `saveXCard` paths - **no native save logic exists**. The
+> remaining four card editors (Write Code, Ordering, Matching, Walkthrough) are
+> not implemented, and no control offers one; cards of those types study and
+> review normally. Two genuine product rules were extracted into core in the
+> same pass - `validateDeckForm` and the deck deletion guard `checkDeckDeletion`
+> - and web now calls both with its rendered behaviour unchanged.
+>
+> **Demo authoring remains in memory.** Authored decks and cards live in the
+> `InMemoryRepository` for the life of the process and are discarded by Reset
+> Demo and by a full app restart, by decision. **Cloud remains deferred until
+> after market validation** (D416's surviving half). Physical-device
+> verification of M-PARITY-1A and M-PARITY-1B is pending the owner.
+
 
 > **Mobile notification-state refinement (§30).** Read notifications now use a
 > light neutral treatment instead of a compounded gray card plus gray overlay.
@@ -149,7 +158,7 @@ Real data, real behavior, production-routed:
 | **Today** (`/`, `apps/web/src/features/today/`) | **Everything.** Due count, contributing deck names and the duration estimate in the hero; current streak; corrected mature retention; due today; the derived Next milestone; Continue Learning rows; the seven-day pace series; the Adjust session dialog; and the new-user / caught-up / loading states. All computed in `packages/core/src/domain/stats/{todayMetrics,streak,learned,deckMetrics,progressMetrics}.ts` — `TodayPage` is the only fetcher and the four panels are presentational. | Nothing on the page is fabricated. **Deliberately deferred, not faked:** Weekly Goal (removed — no goal concept exists), a richer milestone/achievement system (the row is a derived deck continuation, not an entity), and advanced session controls (time-boxed, weak-cards, new-vs-review, difficulty/interaction/tag filters, custom FSRS). Continue Learning lists leaf decks only, so cards filed directly on a deck-with-children get no row (they are still counted in the hero and Due today). |
 | **Mobile Today** (`/today`, `apps/mobile/src/components/today/`) | Owner-approved native composition: Itera header, shared greeting behavior, stacked hero, Due today / Current streak / Retention / Est. session metrics, Start CTA, Continue Learning rows, scrolling, safe-area handling, and the persistent five-item tab shell with a raised center Today control. **Each Continue Learning row opens its own deck**, and the header bell's unread dot reflects the real demo unread count. The hero's one action switches to **Browse your library** when nothing is due (§28), and Continue Learning states when nothing is in progress. There is no Adjust session control on mobile. | Demo/local (§26, §31): Due, streak, mature Retention, session estimate and Continue Learning are derived from current Cards + ReviewLogs through shared core functions, read through the shared query hooks over the demo `InMemoryRepository`, and react after Review/Undo/reset. No sync and no persistence is involved. |
 | **Mobile Profile & Settings** (`/profile`, `apps/mobile/src/components/profile/`) | **In demo mode the screen is the Itera header, the workspace identity card and the `__DEV__` rows, and nothing else (§28).** It says "Demo workspace", that the data is deterministic and not a synced account, and that nothing is saved between launches; the Sign-out row is absent, because there is no account to sign out of. **In cloud mode the owner-approved structure is unchanged**: the seven selectable settings rows, the six section detail panels, the Import / Export panel, the real session email and a live Sign out. | Nothing is fabricated in either mode. Demo mode no longer advertises the six unbuilt settings sections or a backup this platform cannot perform - six could only say "not available yet", and Import / Export's Merge/Replace radio responded to every press while the buttons above it could not run. Physical-device review of demo mode is pending. |
-| **Mobile Library — All Decks + Collection + Deck** (`/library`, `/library/:collectionId`, `/library/deck/:deckId`, `apps/mobile/src/components/library/`) | Three explicitly separate native depths in one nested Library stack, now **navigable end to end over the demo workspace** (§24). Every All Decks row opens its own deck (they were inert `View`s); every collection scope resolves, including Unfiled, Systems and Research; every Collection deck row opens its own deck; both routes resolve their route parameter, and an unknown id gets a not-found state. Search, the Due-only filter and a four-key Sort (core's `sortDecks`, with the label always showing the active sort) all work, as do the deck's card search and its real status filter. | Values come from the demo `InMemoryRepository` through the shared hooks (§31); Collections are derived from canonical `Deck.parentId` through core's `collectionTree`. **New Deck, Import, Collection settings, deck actions, card actions, Add Card and the Insights tab remain removed (§28)** - mobile authoring is now approved (D421) and returns as functional controls in M-PARITY-1B, not as disabled ones. The deck's card list sits under a plain Cards heading; the deck's back control says "Back" and the collection name is a caption in the identity block. The decorative Filter dropdown and the deck favorite were removed earlier (D372, D373). Per-deck due counts follow real demo scheduling, because a reviewed card's due date moves (§25). Physical-device review is pending. |
+| **Mobile Library — All Decks + Collection + Deck** (`/library`, `/library/:collectionId`, `/library/deck/:deckId`, `apps/mobile/src/components/library/`) | Three explicitly separate native depths in one nested Library stack, now **navigable end to end over the demo workspace** (§24). Every All Decks row opens its own deck (they were inert `View`s); every collection scope resolves, including Unfiled, Systems and Research; every Collection deck row opens its own deck; both routes resolve their route parameter, and an unknown id gets a not-found state. Search, the Due-only filter and a four-key Sort (core's `sortDecks`, with the label always showing the active sort) all work, as do the deck's card search and its real status filter. | Values come from the demo `InMemoryRepository` through the shared hooks (§31); Collections are derived from canonical `Deck.parentId` through core's `collectionTree`. **New Deck, deck actions, card actions and Add Card are back as functional controls (§32):** New Deck on All Decks and inside a Collection, a deck actions sheet with working Edit and Delete behind core's shared deletion guard, a card-type chooser listing only Recall and Multiple Choice, and a per-row card actions sheet whose Edit appears only for a type that has an editor. Import, Collection settings and the Insights tab remain removed (§28). The deck's card list sits under a plain Cards heading; the deck's back control says "Back" and the collection name is a caption in the identity block. The decorative Filter dropdown and the deck favorite were removed earlier (D372, D373). Per-deck due counts follow real demo scheduling, because a reviewed card's due date moves (§25). Physical-device review is pending. |
 | **Mobile Progress** (`/progress`, `apps/mobile/src/components/progress/`) | Native overview adapted from the owner concept at phone-readable density: exactly **Learned · Due · Reviews · Retention · Current streak**, plus a 30-day activity heat map, gap-aware retention trend, deck performance and recent milestones. **Each Deck performance row opens its deck**. The persistent tab shell stays visible with Progress selected. | Demo/local (§26): every value is computed from canonical Cards + ReviewLogs through shared core statistics. **The 30D/3M/1Y range group is removed (§28)** - the page reports one real window and its date pill names it; `demoProgressViewModel` keeps its `DateRangePreset` parameter, so a future range is a wiring change. Review activity, Undo and reset propagate immediately. No repository or persistence; physical-device review is pending. |
 | **Mobile Notifications** (`/notifications`, `apps/mobile/src/components/notifications/`) | Mobile-only native inbox reached from the shared header bell: All/Unread filtering, grouped Today/Earlier updates, Mark all as read, an honest empty state, and a direct link to the existing Notifications settings placeholder. Read state lives in the demo workspace, so **the bell's dot reflects the real unread count** and **Mark all as read is reachable when only Earlier has unread items**. Every notification marks itself read and opens its explicit honest destination (§28), while its separate 44-point status action can mark it Read or Unread without opening it (§30). Read rows use a light neutral surface rather than a gray overlay. The settings shortcut is hidden in demo mode, where the Profile section it opened no longer renders. The nested route hides the persistent tab bar and supplies an explicit back affordance. | Values live in the demo workspace (§24), and read state resets on a full app restart by design. There is no push registration, scheduler, notification repository, persistence or fabricated production event stream. Physical-device review is pending. |
 | **Mobile Review session** (`/review`, `/review/session`, `apps/mobile/src/components/review/`) | A real local demo study session (§25). One immersive shell (`ReviewSessionScreen.tsx`) owns the phase machine, the response, timing, the FSRS interval preview and the objective-result-to-suggested-rating mapping; the six native Views under `interactions/<type>/` render card content only, bound to the shared behaviors by one native registry. The queue is a per-mount snapshot of due demo cards; `reviewService.submit` computes the grade; the resulting `SchedulingState` and canonical `ReviewLog` are committed through the shared review hooks to the demo repository. Real next-due intervals on every rating button, a recommendation the learner may override, session progress, completion, one-level Undo, an honest caught-up state, and exit back to the origin. The tab bar hides for the session only. | Demo/local, in memory (§31): the session writes through the shared `usePersistReviewResult` / `useUndoGrade` hooks onto the demo `InMemoryRepository`, so a graded card and its ReviewLog commit as one operation, but nothing is persisted and the session resets on a full app restart, by decision. There is still no persist-failure state, because a demo write cannot fail - the awaited `onGraded` seam is where cloud adds one. Physical-device review is pending. |
@@ -416,9 +425,13 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 **Mobile authoring is reopened and approved.** D416 deferred it on the reading that Itera's early story is desktop authoring plus mobile review; physical-device testing found the absence of New Deck and Add Card to be a major product gap, and the audit behind this milestone rated the create-material journey as the one broken journey in the app. D421 supersedes D416's authoring half. **Its cloud half stands: Supabase, sync and durable persistence remain deferred until after market validation.** The distinction being held is between user capability ("I can create a card") and persistence infrastructure ("my card survives a reinstall"); the first is required now, the second is not.
 
-**The recommended next milestone is M-PARITY-1B: Deck CRUD plus Recall and Multiple Choice authoring on mobile.** New Deck (All Decks and inside a Collection), deck rename and description, delete deck behind web's non-empty guard, the deck and card row kebabs restored with real items, Add Card with the six-type chooser enabling Recall and Multiple Choice, Edit Card, Delete Card, and a live preview through `ReviewSessionScreen` in `mode: 'study'`. It is unusually low-risk semantically because `packages/core/src/domain/cards/` already owns every form model, every validator and every save path, and `saveXCard` takes the repository as its first parameter: **no native save logic may be written**, only native fields bound to the shared modules, exactly as the six Review Views bind shared behaviors. M-PARITY-1A removed the remaining structural obstacle, so this is now presentation work over a settled seam. Mobile has no shared UI primitive layer (no Button, Field, Dialog or generic sheet), and building a small one is part of the milestone.
+**M-PARITY-1B is implemented (§32) and awaits the owner's physical-device confirmation.** What follows described it before it was built and is kept for its reasoning:
 
-Then **M-PARITY-2** (Ordering and Write Code editors, plus Duplicate/Move/Suspend and the restored deck Insights tab) and **M-PARITY-3** (Matching and Walkthrough, the two hardest editors at 390px; the form logic and its mutation helpers are already shared and unit-tested, so the cost is layout). Matching authoring belongs to master-plan **Phase 9**, not Phase 8 - Phase 8 is Progress.
+> **The recommended next milestone is M-PARITY-1B: Deck CRUD plus Recall and Multiple Choice authoring on mobile.** New Deck (All Decks and inside a Collection), deck rename and description, delete deck behind web's non-empty guard, the deck and card row kebabs restored with real items, Add Card with the six-type chooser enabling Recall and Multiple Choice, Edit Card, Delete Card, and a live preview through `ReviewSessionScreen` in `mode: 'study'`. It is unusually low-risk semantically because `packages/core/src/domain/cards/` already owns every form model, every validator and every save path, and `saveXCard` takes the repository as its first parameter: **no native save logic may be written**, only native fields bound to the shared modules, exactly as the six Review Views bind shared behaviors. M-PARITY-1A removed the remaining structural obstacle, so this is now presentation work over a settled seam. Mobile has no shared UI primitive layer (no Button, Field, Dialog or generic sheet), and building a small one is part of the milestone.
+
+Two things in that paragraph were decided differently once built, both recorded in §32: card management went to the deck row rather than to Card study (D430), and **the in-editor live preview was not built** - a card can be inspected through Card study immediately after saving, and a preview pane inside a 390-point form is a design question this milestone did not open.
+
+**The recommended next milestone is now M-PARITY-2: Write Code and Ordering mobile authoring, plus the remaining basic Card CRUD parity** (Duplicate, Move, Suspend and the restored deck Insights tab). Then **M-PARITY-3** (Matching and Walkthrough, the two hardest editors at 390px; the form logic and its mutation helpers are already shared and unit-tested, so the cost is layout). Matching authoring belongs to master-plan **Phase 9**, not Phase 8 - Phase 8 is Progress.
 
 Deliberately **not** recommended ahead of them: mobile Review History and a Progress deck drill-down (real gaps, but the demo already tells its statistics story), Import/Export (master-plan Phase 10, and it needs `expo-file-system`/`expo-document-picker`), the notifications backend, offline SQLite and sync (Phase 11, whose semantics are a decision rather than an implementation detail), and anything cloud.
 
@@ -1061,5 +1074,70 @@ root:        npm run build         -> clean
 Root hygiene re-checked: no root `.expo/`, no root `eslint.config.js`, `tsconfig.json` unchanged.
 
 **Physical-device verification is pending the owner and is not claimed.** The check is a regression pass rather than a feature pass: demo opens, Today/Library/collections/Deck/Card look unchanged, Review works and completing it moves Today and Progress, Undo works, Reset Demo restores everything, and no red screen appears.
+
+---
+
+## 32. Mobile Deck CRUD and Recall/Multiple Choice authoring (milestone M-PARITY-1B)
+
+**Mobile authoring parity is now underway.** The create-material journey that physical-device testing found missing - Library, New Deck, Deck, Add Card, author, save, edit, delete - works end to end in Demo mode. The decisions are D427-D437 (2026-08-27).
+
+### What works
+
+- **New Deck** on All Decks (top level) and inside a Collection (`parentId` = that collection's id, and nothing else - there is still no `collectionId` and no Collection entity). The form is name plus optional description, gated by core's new `validateDeckForm`. After a successful create the form replaces itself with the new deck's screen (D433).
+- **Edit deck** and **Delete deck** from a real actions control in the deck identity row. Delete goes through core's new `checkDeckDeletion`: a deck with its own cards or with child decks is refused with a message naming what is in the way, and an empty one gets a destructive confirmation that names the deck in words. A successful delete leaves the route.
+- **Add Card** opens a type chooser listing **Recall and Multiple Choice only** - not four disabled rows (D431).
+- **Recall** and **Multiple Choice** create and edit, bound to the shared form models, validators and `saveXCard` paths. **No native save logic exists**: no id, no `RichContent` wrapping, no timestamps, no scheduling seed is constructed on this platform.
+- **Card edit and delete** from a per-row actions control. The row tap still opens Card study; Edit is listed only for a type that has an editor.
+- Authored cards are canonical `Card`s: they appear in the deck list, in search and the status filter, in deck and Today/Progress counts, they open in Card study through the existing registry, and they enter the Review queue when due. Nothing special-cases them.
+
+### Shared core changes (the whole production change outside mobile)
+
+- `packages/core/src/domain/decks/deckForm.ts` - `DeckFormState`, `emptyDeckForm`, `validateDeckForm`, in the `{canSave, errors}` shape the six card validators use.
+- `packages/core/src/domain/decks/deletion.ts` - `checkDeckDeletion({directCardCount, childDeckCount})` and `childDeckCount(decks, id)`.
+- Web calls both. `LibraryBrowserPage`, `LibraryCollectionView` and `DeckSettings` are the only web files touched, and **web's rendered behaviour is unchanged** - each delete call site keeps its own wording, and `DeckSettings` gates Save on the extracted validator instead of an inline `name.trim()`.
+
+### Mobile additions
+
+- `src/components/ui/` - the first shared primitive layer on this platform: `IteraButton`, `FormField`, `FormTextInput`, `ActionSheet`, `ConfirmSheet`, `EditorScreen`. Six files, each used by at least two surfaces, no dependency added, no existing screen restyled (D434).
+- `src/components/cards/` - `DeckFormScreen`, `RecallEditorScreen`, `MultipleChoiceEditorScreen`, `McOptionRow`, `CardContentFields`, and `authoringTypes.ts` (the one list of authorable types, consulted by both the chooser and the row's Edit action).
+- Four routes at the `(app)` level, so each is a pushed detail surface with the native transition and back-swipe and no tab bar: `deck/new`, `deck/[deckId]/edit`, `deck/[deckId]/card-new`, `card/[cardId]/edit`. Each resolves its parameter by lookup and shows an honest not-found state otherwise.
+- `MobileDeckViewModel` gained `childDeckCount`, because the deletion guard needs it and the screen must not compute the rule itself.
+
+### What did not change
+
+- **No persistence.** Authored decks and cards live in the `InMemoryRepository` for the life of the process. Reset Demo discards them through the existing three-layer reset with no new code (D436). No AsyncStorage, no SQLite, no network, and no "unsaved work" warning.
+- **No cloud.** Supabase, OTP, SecureStore and the composition root's cloud branch are untouched. Cloud remains deferred until after market validation.
+- **The remaining four editors.** Write Code, Ordering, Matching and Walkthrough have no authoring UI, and no control offers one. Cards of those types study and review normally.
+- **Move, Duplicate, Suspend, drag reorder, Collection management and Import/Export.** None was started, and none has a placeholder control.
+- **An in-editor live preview.** Web's editors carry one; the native editors do not. A newly saved card can be inspected immediately through Card study, and a preview pane inside a 390-point form is a design question this milestone did not open.
+- **Design.** No new visual system and no layout change to an existing screen.
+
+### Tests
+
+39 mobile suites / 545 tests (was 36 / 503). Three new suites, all driving the real composed demo runtime through `renderInDemo`'s provider and asserting against the repository's actual contents:
+
+- **`deckAuthoring.test.tsx` (9)** - blank-name refusal and Save gating, a canonical top-level create, a create inside a collection with derived membership and no `collectionId`, leaf-to-Collection promotion, edit preserving id/createdAt/parent, both refusal cases of the shared guard, a confirmed delete leaving the route, and Reset discarding an authored deck.
+- **`recallAuthoring.test.tsx` (12)** - Save gated on the shared validator case by case, a canonical Card written through the shared save path (including the form model's tag parsing and de-duplication), canonical New scheduling, **byte-for-byte preservation** of a prompt and answer carrying backticks, `<T>`, `snake_case`, braces and markdown-like punctuation, the card appearing through hook invalidation with no restart, the card opening in Card study through the existing registry, an edit loading every field, an edit preserving id/createdAt/deckId/suspended/order **and the entire `SchedulingState`** with its ReviewLogs still attached, delete from the row actions sheet leaving history orphaned as the product allows, and Reset.
+- **`multipleChoiceAuthoring.test.tsx` (15)** - each shared validation rule surfacing, the two-option floor with Remove disabled rather than hidden, add/remove preserving the right option, single-select exclusivity and the multiple-to-single trim, the accessible names on every option control, a canonical option payload with stable ids, byte-for-byte option text, Card study, an edit loading prompt/mode/options, an edit preserving identity and scheduling, adding an option to an existing card without minting a new one, delete, and Reset.
+
+The deck screen suite additionally gained the chooser's contents, the conditional Edit affordance, the unambiguous row tap, and the delete refusal. Web gained two regressions on the extracted deletion guard; core gained `deletion.test.ts` and `deckForm.test.ts`.
+
+No shared validation rule is restated here - those are unit-tested in core. These prove the native binding: that the screens call them, that the writes reach the configured Repository through the shared hooks, and that what lands there is a canonical Card.
+
+### Gates
+
+```
+apps/mobile: npx jest              -> 39 suites, 545 tests, passing
+apps/mobile: npx tsc --noEmit      -> clean
+apps/mobile: npx expo lint         -> clean
+root:        npx vitest run        -> 113 files, 1082 tests, passing
+root:        npx tsc -b --force    -> clean
+root:        npm run lint          -> clean
+root:        npm run build         -> clean (precache still 24 entries)
+```
+
+Root hygiene re-checked: no root `.expo/`, no root `eslint.config.js`, `tsconfig.json` unchanged. `npx expo-doctor` and the iOS export were not re-run in this pass.
+
+**Physical-device verification is pending the owner and is not claimed.**
 
 ---

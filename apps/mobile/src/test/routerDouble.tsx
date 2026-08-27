@@ -76,3 +76,17 @@ export function pushedCollectionIds(): string[] {
     )
     .map((href) => href.params?.collectionId ?? '')
 }
+
+/** Every href a screen pushed at one route, in order. */
+export function pushedTo(pathname: string): RouterHref[] {
+  return routerCalls.push.filter(
+    (href): href is RouterHref => typeof href !== 'string' && href.pathname === pathname,
+  )
+}
+
+/** Every href a screen replaced with at one route, in order. */
+export function replacedWith(pathname: string): RouterHref[] {
+  return routerCalls.replace.filter(
+    (href): href is RouterHref => typeof href !== 'string' && href.pathname === pathname,
+  )
+}

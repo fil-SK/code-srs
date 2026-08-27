@@ -7,6 +7,7 @@ import {
   pushedCollectionIds,
   pushedDeckIds,
   resetRouterCalls,
+  routerCalls,
   routerDouble,
 } from '@/src/test/routerDouble'
 import { LibraryAllDecksScreen } from './LibraryAllDecksScreen'
@@ -166,15 +167,26 @@ describe('filter and search', () => {
   })
 })
 
-describe('controls that are not offered', () => {
-  it('renders nothing for deck creation, import or an all-collections view', () => {
-    // Deck authoring and backup are deferred product scope on this platform,
-    // not pending work, so the screen does not carry permanently greyed
-    // controls for them - a disabled primary action makes a finished screen
-    // look broken. Nothing replaced them.
+describe('deck creation', () => {
+  it('offers New Deck and opens the create form with no parent', () => {
+    // All Decks creates at the top level, which is the hierarchy web's own All
+    // Decks action uses: no parentId. Creating inside a collection is the
+    // Collection screen's action, and the only difference is the parent.
     render(<LibraryAllDecksScreen viewModel={viewModel} />)
 
-    expect(screen.queryByText('New Deck')).toBeNull()
+    fireEvent.press(screen.getByLabelText('New Deck'))
+
+    expect(routerCalls.push).toEqual(['/deck/new'])
+  })
+})
+
+describe('controls that are not offered', () => {
+  it('renders nothing for import or an all-collections view', () => {
+    // Backup remains deferred product scope on this platform, not pending
+    // work, so the screen carries no permanently greyed control for it - a
+    // disabled primary action makes a finished screen look broken.
+    render(<LibraryAllDecksScreen viewModel={viewModel} />)
+
     expect(screen.queryByText('Import')).toBeNull()
     expect(screen.queryByLabelText('All collections unavailable')).toBeNull()
 

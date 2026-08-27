@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { getRepository } from '@/data'
 import { DialogProvider } from '@/components/ui/dialogs'
 import type { Deck } from '@/types'
+import { createCard, richText } from '@itera/core'
 import { LibraryBrowserPage } from './LibraryBrowserPage'
 
 function renderPage() {
@@ -103,6 +104,49 @@ describe('LibraryBrowserPage', () => {
 
     expect(await screen.findAllByText('Type Deduction')).toHaveLength(2)
     expect(screen.queryByText('Odds and Ends')).toBeNull()
+  })
+
+  // The delete guard moved into core as checkDeckDeletion (shared with the
+  // native Library). These two cases assert the rendered web behaviour is
+  // unchanged: a non-empty deck is refused with its card count, and an empty
+  // one is confirmed and removed.
+  it('refuses to delete a deck that still has cards, naming the count', async () => {
+    const repo = getRepository()
+    await repo.decks.put(misc)
+    await repo.cards.put(
+      createCard({
+        deckId: 'misc',
+        prompt: richText('One'),
+        interaction: { type: 'recall', answer: richText('Two') },
+      }),
+    )
+
+    renderPage()
+
+    ;(await screen.findByRole('button', { name: 'Deck actions' })).click()
+    ;(await screen.findByRole('menuitem', { name: 'Delete' })).click()
+
+    expect(await screen.findByText('It still has 1 card. Move or delete them first.')).toBeTruthy()
+    expect(await repo.decks.getAll()).toHaveLength(1)
+  })
+
+  it('deletes an empty deck after a destructive confirmation', async () => {
+    const repo = getRepository()
+    await repo.decks.put(misc)
+
+    renderPage()
+
+    ;(await screen.findByRole('button', { name: 'Deck actions' })).click()
+    ;(await screen.findByRole('menuitem', { name: 'Delete' })).click()
+
+    expect(
+      await screen.findByText('“Odds and Ends” will be removed permanently. This cannot be undone.'),
+    ).toBeTruthy()
+    ;(await screen.findByRole('button', { name: 'Delete', exact: true })).click()
+
+    await waitFor(async () => {
+      expect(await repo.decks.getAll()).toHaveLength(0)
+    })
   })
 
   it('shows the empty-library state when there are no decks', async () => {

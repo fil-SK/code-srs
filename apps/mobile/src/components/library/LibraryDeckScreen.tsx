@@ -1,11 +1,27 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, markLabelFor } from '@itera/core'
+import {
+  checkDeckDeletion,
+  iteraColors,
+  iteraRadii,
+  markLabelFor,
+  useDeleteCard,
+  useDeleteDeck,
+} from '@itera/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import {
+  AUTHORABLE_INTERACTION_DESCRIPTIONS,
+  AUTHORABLE_INTERACTION_LABELS,
+  AUTHORABLE_INTERACTION_TYPES,
+  isAuthorableInteraction,
+} from '@/src/components/cards/authoringTypes'
+import { ActionSheet, type ActionSheetItem } from '@/src/components/ui/ActionSheet'
+import { ConfirmSheet } from '@/src/components/ui/ConfirmSheet'
+import { IteraButton } from '@/src/components/ui/IteraButton'
 import type {
   MobileCardStatus,
   MobileDeckCardViewModel,
@@ -57,50 +73,167 @@ function DeckMetric({
   )
 }
 
-// The row opens the card it names, by its own canonical id.
+// The row opens the card it names, by its own canonical id, and its trailing
+// control opens that card's actions.
 //
-// It used to be a disabled Pressable with a decorative kebab glyph at its right
-// edge. The glyph is gone rather than disabled: inside a dead row it was merely
-// inert, but inside a live row it reads as an overflow menu and would open the
-// card instead - a worse lie than the one it replaced. Card management actions
-// do not exist on this platform yet, so nothing takes its place.
-function CardRow({ card, onOpen }: { card: MobileDeckCardViewModel; onOpen: () => void }) {
+// The two are deliberately separate targets and the row's tap is never
+// ambiguous: tapping the row is always Study, and management is always the
+// explicit control. An earlier decorative kebab glyph sat here and did nothing;
+// this replaces it with a real 44-point button whose every listed item works.
+function CardRow({
+  card,
+  onOpen,
+  onActions,
+}: {
+  card: MobileDeckCardViewModel
+  onOpen: () => void
+  onActions: () => void
+}) {
   const visual = interactionVisuals[card.interactionType]
   return (
-    <Pressable
-      accessibilityHint="Opens a preview of this card"
-      accessibilityLabel={`${card.prompt}, ${card.interactionLabel}, ${card.status}`}
-      accessibilityRole="button"
-      onPress={onOpen}
-      style={({ pressed }) => [styles.cardRow, pressed && styles.pressed]}
-    >
-      <View style={[styles.interactionMark, { backgroundColor: visual.backgroundColor }]}>
-        <MaterialCommunityIcons color={iteraColors.surface} name={visual.icon} size={25} />
-      </View>
-      <View style={styles.cardCopy}>
-        <Text numberOfLines={1} style={styles.cardPrompt}>
-          {card.prompt}
-        </Text>
-        <Text numberOfLines={1} style={styles.cardMeta}>
-          {card.interactionLabel} · {card.tag}
-        </Text>
-      </View>
-      <View style={styles.cardStatus}>
-        <View style={[styles.statusDot, { backgroundColor: statusColors[card.status] }]} />
-        <Text style={styles.statusText}>{card.status}</Text>
-      </View>
-      <MaterialCommunityIcons color={iteraColors.mutedLight} name="chevron-right" size={22} />
-    </Pressable>
+    <View style={styles.cardRowWrap}>
+      <Pressable
+        accessibilityHint="Opens a preview of this card"
+        accessibilityLabel={`${card.prompt}, ${card.interactionLabel}, ${card.status}`}
+        accessibilityRole="button"
+        onPress={onOpen}
+        style={({ pressed }) => [styles.cardRow, pressed && styles.pressed]}
+      >
+        <View style={[styles.interactionMark, { backgroundColor: visual.backgroundColor }]}>
+          <MaterialCommunityIcons color={iteraColors.surface} name={visual.icon} size={25} />
+        </View>
+        <View style={styles.cardCopy}>
+          <Text numberOfLines={1} style={styles.cardPrompt}>
+            {card.prompt}
+          </Text>
+          <Text numberOfLines={1} style={styles.cardMeta}>
+            {card.interactionLabel} · {card.tag}
+          </Text>
+        </View>
+        <View style={styles.cardStatus}>
+          <View style={[styles.statusDot, { backgroundColor: statusColors[card.status] }]} />
+          <Text style={styles.statusText}>{card.status}</Text>
+        </View>
+      </Pressable>
+
+      <Pressable
+        accessibilityHint="Edit or delete this card"
+        accessibilityLabel={`Actions for ${card.prompt}`}
+        accessibilityRole="button"
+        hitSlop={4}
+        onPress={onActions}
+        style={({ pressed }) => [styles.cardActions, pressed && styles.pressed]}
+      >
+        <MaterialCommunityIcons color={iteraColors.muted} name="dots-vertical" size={22} />
+      </Pressable>
+    </View>
   )
+}
+
+// What a refused deletion says. The rule is core's; only the wording is here,
+// and it names what is actually in the way so "move or delete them first" is
+// actionable rather than a scold.
+function blockedDeletionMessage(viewModel: MobileDeckViewModel): string {
+  const parts: string[] = []
+  if (viewModel.childDeckCount > 0) {
+    parts.push(`${viewModel.childDeckCount} deck${viewModel.childDeckCount === 1 ? '' : 's'}`)
+  }
+  if (viewModel.cardCount > 0) {
+    parts.push(`${viewModel.cardCount} card${viewModel.cardCount === 1 ? '' : 's'}`)
+  }
+  return `It still contains ${parts.join(' and ')}. Move or delete them first.`
 }
 
 export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewModel }) {
   const router = useRouter()
+  const deleteDeck = useDeleteDeck()
+  const deleteCard = useDeleteCard()
   const [query, setQuery] = useState('')
   // Defaults to showing everything. It used to default to New-only, which hid
   // cards behind a filter nobody had chosen.
   const [statusFilter, setStatusFilter] = useState<CardStatusFilter>('all')
   const [filterOpen, setFilterOpen] = useState(false)
+  const [deckActionsOpen, setDeckActionsOpen] = useState(false)
+  const [typeChooserOpen, setTypeChooserOpen] = useState(false)
+  const [deckDeleteOpen, setDeckDeleteOpen] = useState(false)
+  const [deckDeleteBlocked, setDeckDeleteBlocked] = useState(false)
+  const [actionCard, setActionCard] = useState<MobileDeckCardViewModel | null>(null)
+  const [cardPendingDelete, setCardPendingDelete] = useState<MobileDeckCardViewModel | null>(null)
+
+  // The shared rule, called not restated: a deck may not be deleted while its
+  // own cards or its child decks would be stranded by the removal. Web asks the
+  // same function with the same two counts, and neither platform decides it.
+  const deletion = checkDeckDeletion({
+    directCardCount: viewModel.cardCount,
+    childDeckCount: viewModel.childDeckCount,
+  })
+
+  function requestDeckDelete() {
+    if (deletion.allowed) setDeckDeleteOpen(true)
+    else setDeckDeleteBlocked(true)
+  }
+
+  async function confirmDeckDelete() {
+    await deleteDeck.mutateAsync(viewModel.id)
+    // Never leave the user on the route of a deck that no longer exists.
+    if (router.canGoBack()) router.back()
+    else router.replace('/library')
+  }
+
+  const deckActions: ActionSheetItem[] = [
+    {
+      label: 'Edit deck',
+      icon: 'pencil-outline',
+      hint: 'Change the name or description',
+      onPress: () =>
+        router.push({ pathname: '/deck/[deckId]/edit', params: { deckId: viewModel.id } }),
+    },
+    {
+      label: 'Delete deck',
+      icon: 'trash-can-outline',
+      danger: true,
+      onPress: requestDeckDelete,
+    },
+  ]
+
+  // Edit is offered only for the interaction types this platform can currently
+  // author. The other four are fully studyable and reviewable and nothing here
+  // calls them broken - they simply have no editor yet, so no control claims
+  // one (see authoringTypes.ts).
+  const cardActions: ActionSheetItem[] = actionCard
+    ? [
+        ...(isAuthorableInteraction(actionCard.interactionType)
+          ? [
+              {
+                label: 'Edit card',
+                icon: 'pencil-outline' as const,
+                onPress: () =>
+                  router.push({
+                    pathname: '/card/[cardId]/edit',
+                    params: { cardId: actionCard.id },
+                  }),
+              },
+            ]
+          : []),
+        {
+          label: 'Delete card',
+          icon: 'trash-can-outline',
+          danger: true,
+          onPress: () => setCardPendingDelete(actionCard),
+        },
+      ]
+    : []
+
+  const cardTypeActions: ActionSheetItem[] = AUTHORABLE_INTERACTION_TYPES.map((type) => ({
+    label: AUTHORABLE_INTERACTION_LABELS[type],
+    icon: interactionVisuals[type].icon,
+    hint: AUTHORABLE_INTERACTION_DESCRIPTIONS[type],
+    onPress: () =>
+      router.push({
+        pathname: '/deck/[deckId]/card-new',
+        params: { deckId: viewModel.id, type },
+      }),
+  }))
 
   const caughtUpText =
     viewModel.cardCount === 0 ? 'No cards to study yet.' : "You're caught up in this deck."
@@ -163,7 +296,24 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
                 web - no Deck field, hook, filter or sort key exists for it, and
                 no decision approved one. It was removed rather than kept as an
                 invented feature; see itera-decisions.md.
+
+                What sits here now is a real control: every item behind it
+                works.
               */}
+              <Pressable
+                accessibilityHint="Edit or delete this deck"
+                accessibilityLabel="Deck actions"
+                accessibilityRole="button"
+                hitSlop={6}
+                onPress={() => setDeckActionsOpen(true)}
+                style={({ pressed }) => [styles.deckActions, pressed && styles.pressed]}
+              >
+                <MaterialCommunityIcons
+                  color={iteraColors.muted}
+                  name="dots-vertical"
+                  size={22}
+                />
+              </Pressable>
             </View>
 
             <Text style={styles.description}>{viewModel.description}</Text>
@@ -222,6 +372,20 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           </View>
         )}
 
+        {/*
+          Add Card opens the type chooser rather than one hard-wired editor,
+          because the deck holds cards of every interaction type and picking one
+          is the first authoring decision. The chooser lists only what this
+          platform can author today.
+        */}
+        <IteraButton
+          accessibilityHint="Choose a card type to author"
+          label="Add Card"
+          onPress={() => setTypeChooserOpen(true)}
+          style={styles.addCard}
+          variant="secondary"
+        />
+
         <View style={styles.cardsSection}>
           <Text style={styles.cardsHeading}>Cards</Text>
 
@@ -273,6 +437,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
               <CardRow
                 key={card.id}
                 card={card}
+                onActions={() => setActionCard(card)}
                 onOpen={() =>
                   router.push({
                     pathname: '/card/[cardId]/study',
@@ -303,6 +468,62 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         onChange={setStatusFilter}
         onClose={() => setFilterOpen(false)}
         visible={filterOpen}
+      />
+
+      <ActionSheet
+        items={deckActions}
+        onClose={() => setDeckActionsOpen(false)}
+        subtitle={viewModel.name}
+        title="Deck actions"
+        visible={deckActionsOpen}
+      />
+
+      <ActionSheet
+        items={cardTypeActions}
+        onClose={() => setTypeChooserOpen(false)}
+        subtitle="More card types can be authored on the web app."
+        title="Add a card"
+        visible={typeChooserOpen}
+      />
+
+      <ActionSheet
+        items={cardActions}
+        onClose={() => setActionCard(null)}
+        subtitle={actionCard?.prompt}
+        title="Card actions"
+        visible={actionCard !== null}
+      />
+
+      <ConfirmSheet
+        confirmLabel={`Delete ${viewModel.name}`}
+        description="This deck will be removed permanently. This cannot be undone."
+        onClose={() => setDeckDeleteOpen(false)}
+        onConfirm={confirmDeckDelete}
+        title={`Delete “${viewModel.name}”?`}
+        visible={deckDeleteOpen}
+      />
+
+      <ConfirmSheet
+        description={blockedDeletionMessage(viewModel)}
+        kind="alert"
+        onClose={() => setDeckDeleteBlocked(false)}
+        title={`“${viewModel.name}” isn’t empty`}
+        visible={deckDeleteBlocked}
+      />
+
+      <ConfirmSheet
+        confirmLabel="Delete card"
+        description={
+          cardPendingDelete
+            ? `“${cardPendingDelete.prompt}” will be removed permanently. This cannot be undone.`
+            : ''
+        }
+        onClose={() => setCardPendingDelete(null)}
+        onConfirm={() => {
+          if (cardPendingDelete) deleteCard.mutate(cardPendingDelete.id)
+        }}
+        title="Delete this card?"
+        visible={cardPendingDelete !== null}
       />
     </SafeAreaView>
   )
@@ -596,18 +817,43 @@ const styles = StyleSheet.create({
     gap: 9,
     marginTop: 12,
   },
-  cardRow: {
-    minHeight: 72,
+  addCard: {
+    marginTop: 11,
+  },
+  deckActions: {
+    width: 40,
+    height: 40,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardRowWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
     borderColor: iteraColors.border,
     borderRadius: iteraRadii.card,
     borderWidth: 1,
     backgroundColor: iteraColors.surface,
-    paddingVertical: 9,
-    paddingHorizontal: 10,
+    paddingRight: 2,
     ...cardShadow,
+  },
+  cardActions: {
+    width: 40,
+    minHeight: 44,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardRow: {
+    minWidth: 0,
+    flex: 1,
+    minHeight: 72,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 9,
+    paddingLeft: 10,
+    paddingRight: 4,
   },
   interactionMark: {
     width: 46,

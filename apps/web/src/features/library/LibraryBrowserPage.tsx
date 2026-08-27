@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { checkDeckDeletion, childDeckCount } from '@itera/core'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Upload } from 'lucide-react'
 import type { Deck } from '@/types'
@@ -122,10 +123,24 @@ export function LibraryBrowserPage() {
   }
 
   async function remove(deck: Deck, cardCount: number) {
-    if (cardCount > 0) {
+    // The shared rule (checkDeckDeletion): a deck may not be deleted while
+    // anything would be stranded by its removal. Every row here is a leaf
+    // (the list is built from leafDecks), so children can only be zero - the
+    // count is passed rather than assumed so the guard reads the same at all
+    // three call sites.
+    const check = checkDeckDeletion({
+      directCardCount: cardCount,
+      childDeckCount: childDeckCount(decksQuery.data ?? [], deck.id),
+    })
+    if (!check.allowed) {
       await dialogs.alert({
         title: `“${deck.name}” isn’t empty`,
-        description: `It still has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`,
+        description:
+          check.childDeckCount > 0
+            ? `It still contains ${check.childDeckCount} deck${check.childDeckCount === 1 ? '' : 's'}${
+                check.directCardCount > 0 ? ' and cards of its own' : ''
+              }. Move or delete them first.`
+            : `It still has ${cardCount} card${cardCount === 1 ? '' : 's'}. Move or delete them first.`,
       })
       return
     }

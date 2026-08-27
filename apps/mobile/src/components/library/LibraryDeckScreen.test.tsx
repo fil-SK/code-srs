@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, within } from '@testing-library/react-native'
 
 import { demoDeckViewModel } from '@/src/demo/demoSelectors'
@@ -5,6 +6,7 @@ import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import {
   pushedCardIds,
   pushedSessionDeckIds,
+  pushedTo,
   resetRouterCalls,
   routerCalls,
   routerDouble,
@@ -33,11 +35,25 @@ beforeEach(() => {
   resetRouterCalls()
 })
 
+// The screen reads no data - it is handed a view model - but it holds the
+// shared delete mutations, which need a client. Nothing here fires one; the
+// authoring suites drive real mutations over the real repository instead.
+function renderDeck(viewModel: ReturnType<typeof deck>) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
+  return render(
+    <QueryClientProvider client={client}>
+      <LibraryDeckScreen viewModel={viewModel} />
+    </QueryClientProvider>,
+  )
+}
+
 describe('deck identity', () => {
   it('shows the deck the route asked for, not a hard-coded one', () => {
     // The route used to hand deckId to a factory that always returned Modern
     // C++, so this is the case the whole screen used to get wrong.
-    render(<LibraryDeckScreen viewModel={deck('fixture-compilers')} />)
+    renderDeck(deck('fixture-compilers'))
 
     expect(screen.getByText('Compilers & MLIR')).toBeTruthy()
     expect(screen.queryByText('Modern C++ & Memory')).toBeNull()
@@ -45,7 +61,7 @@ describe('deck identity', () => {
 
   it('counts the cards it actually lists', () => {
     const viewModel = deck('fixture-algorithms')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     expect(screen.getByText(String(viewModel.cardCount))).toBeTruthy()
     expect(viewModel.cardCount).toBe(viewModel.cards.length)
@@ -55,7 +71,7 @@ describe('deck identity', () => {
     // The row returns to whatever pushed the deck - All Decks, a collection,
     // Today, Progress or a notification - so it cannot name one of them. The
     // collection is still stated, as context in the identity block.
-    render(<LibraryDeckScreen viewModel={deck('fixture-security-engineering')} />)
+    renderDeck(deck('fixture-security-engineering'))
 
     expect(screen.getByLabelText('Back')).toBeTruthy()
     expect(screen.queryByLabelText('Back to Unfiled')).toBeNull()
@@ -63,7 +79,7 @@ describe('deck identity', () => {
   })
 
   it('says so when a demo deck has no cards, rather than looking broken', () => {
-    render(<LibraryDeckScreen viewModel={deck('fixture-leetcode-patterns')} />)
+    renderDeck(deck('fixture-leetcode-patterns'))
     expect(screen.getByText('No cards yet')).toBeTruthy()
   })
 })
@@ -84,7 +100,7 @@ describe('not found', () => {
 
 describe('card search and filter', () => {
   it('searches this deck s cards', () => {
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+    renderDeck(deck('fixture-modern-cpp'))
 
     fireEvent.changeText(screen.getByLabelText('Search cards'), 'RAII')
 
@@ -94,7 +110,7 @@ describe('card search and filter', () => {
 
   it('shows every card until a filter is chosen', () => {
     const viewModel = deck('fixture-modern-cpp')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     // It used to open with newOnly already true, hiding cards behind a filter
     // nobody had picked and a chip that could not be produced any other way.
@@ -106,7 +122,7 @@ describe('card search and filter', () => {
 
   it('really filters by status, and the chip reflects the choice', () => {
     const viewModel = deck('fixture-modern-cpp')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     fireEvent.press(screen.getByLabelText('Filter cards'))
     fireEvent.press(screen.getByLabelText('Show Learning cards'))
@@ -120,7 +136,7 @@ describe('card search and filter', () => {
 
   it('clears the filter from the chip', () => {
     const viewModel = deck('fixture-modern-cpp')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     fireEvent.press(screen.getByLabelText('Filter cards'))
     fireEvent.press(screen.getByLabelText('Show Review cards'))
@@ -135,7 +151,7 @@ describe('card search and filter', () => {
   })
 
   it('empties honestly when a search matches nothing', () => {
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+    renderDeck(deck('fixture-modern-cpp'))
     fireEvent.changeText(screen.getByLabelText('Search cards'), 'zzzz')
     expect(screen.getByText('No matching cards')).toBeTruthy()
   })
@@ -144,7 +160,7 @@ describe('card search and filter', () => {
 describe('opening a card', () => {
   it('opens the card each row names, by that card s own id', () => {
     const viewModel = deck('fixture-modern-cpp')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     // Every row, not a sample: the failure this replaces was a list of rows
     // that all resolved to the same thing.
@@ -159,11 +175,11 @@ describe('opening a card', () => {
     const cpp = deck('fixture-modern-cpp').cards[0]
     const compilers = deck('fixture-compilers').cards[0]
 
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+    renderDeck(deck('fixture-modern-cpp'))
     fireEvent.press(screen.getByLabelText(new RegExp(`^${escapeForLabel(cpp.prompt)},`)))
     screen.unmount()
 
-    render(<LibraryDeckScreen viewModel={deck('fixture-compilers')} />)
+    renderDeck(deck('fixture-compilers'))
     fireEvent.press(screen.getByLabelText(new RegExp(`^${escapeForLabel(compilers.prompt)},`)))
 
     expect(pushedCardIds()).toEqual([cpp.id, compilers.id])
@@ -171,7 +187,7 @@ describe('opening a card', () => {
   })
 
   it('opens the right card from a filtered list, and keeps the search', () => {
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+    renderDeck(deck('fixture-modern-cpp'))
     const search = screen.getByLabelText('Search cards')
 
     fireEvent.changeText(search, 'RAII')
@@ -185,7 +201,7 @@ describe('opening a card', () => {
 
   it('opens the right card from a status-filtered list, and keeps the filter', () => {
     const viewModel = deck('fixture-modern-cpp')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     fireEvent.press(screen.getByLabelText('Filter cards'))
     fireEvent.press(screen.getByLabelText('Show New cards'))
@@ -202,7 +218,7 @@ describe('Study Now', () => {
   it('starts a session scoped to this deck', () => {
     const viewModel = deck('fixture-modern-cpp')
     expect(viewModel.dueCount).toBeGreaterThan(0)
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     fireEvent.press(screen.getByLabelText(/^Study now,/))
 
@@ -214,7 +230,7 @@ describe('Study Now', () => {
     // have nothing due. Nothing is rescheduled to avoid this state.
     const viewModel = deck('fixture-computer-networks')
     expect(viewModel.dueCount).toBe(0)
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     expect(screen.queryByLabelText(/^Study now,/)).toBeNull()
     expect(screen.getByText('No cards to study yet.')).toBeTruthy()
@@ -226,43 +242,123 @@ describe('removed and unavailable controls', () => {
   it('no longer offers a favorite toggle', () => {
     // Mobile-only, local-only, and with no web equivalent or product decision
     // behind it. Removed rather than kept as an invented feature.
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+    renderDeck(deck('fixture-modern-cpp'))
 
     expect(screen.queryByLabelText('Add to favorites')).toBeNull()
     expect(screen.queryByLabelText('Remove from favorites')).toBeNull()
   })
 
-  it('no longer draws a kebab inside a card row', () => {
-    // Decorative inside a dead row, deceptive inside a live one: tapping it
-    // would open the card rather than a menu that does not exist.
+  it('keeps the row tap unambiguous: the row studies, the control manages', () => {
+    // The decorative kebab that used to sit inside the row is gone. Its
+    // replacement is outside the row's pressable, so a tap anywhere on the row
+    // still opens the card and never opens a menu instead.
     const viewModel = deck('fixture-modern-cpp')
-    render(<LibraryDeckScreen viewModel={viewModel} />)
+    renderDeck(viewModel)
 
     expect(viewModel.cards.length).toBeGreaterThan(1)
     for (const card of viewModel.cards) {
       const row = within(screen.getByLabelText(new RegExp(`^${escapeForLabel(card.prompt)},`)))
-      expect(row.UNSAFE_queryAllByProps({ name: 'dots-horizontal' })).toHaveLength(0)
-      expect(row.UNSAFE_queryAllByProps({ name: 'chevron-right' }).length).toBeGreaterThan(0)
+      expect(row.UNSAFE_queryAllByProps({ name: 'dots-vertical' })).toHaveLength(0)
+      expect(screen.getByLabelText(`Actions for ${card.prompt}`)).toBeTruthy()
     }
+
+    fireEvent.press(screen.getByLabelText(new RegExp(`^${escapeForLabel(viewModel.cards[0].prompt)},`)))
+    expect(pushedCardIds()).toEqual([viewModel.cards[0].id])
   })
 
   it('no longer offers an Insights tab', () => {
     // It was a placeholder that said so. The deck's own metrics above the card
     // list are the real per-deck numbers, and a second per-deck analytics
     // surface exists on neither platform.
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+    renderDeck(deck('fixture-modern-cpp'))
 
     expect(screen.queryByText('Insights')).toBeNull()
     expect(screen.queryByText('Deck insights are not built yet')).toBeNull()
     expect(screen.getByText('Cards')).toBeTruthy()
   })
 
-  it('offers no deck actions or add-card control, disabled or otherwise', () => {
-    render(<LibraryDeckScreen viewModel={deck('fixture-modern-cpp')} />)
+  it('leaves no disabled control on the screen', () => {
+    // D409's rule, still holding after authoring returned: a visible affordance
+    // is functional or absent. Deck actions and Add Card are now functional, so
+    // they are present - and neither is a greyed placeholder.
+    renderDeck(deck('fixture-modern-cpp'))
 
-    expect(screen.queryByLabelText('Deck actions unavailable')).toBeNull()
-    expect(screen.queryByLabelText('Add card unavailable')).toBeNull()
     expect(screen.UNSAFE_queryAllByProps({ disabled: true })).toHaveLength(0)
+  })
+})
+
+describe('deck and card management', () => {
+  it('opens the deck edit form from the deck actions sheet', () => {
+    renderDeck(deck('fixture-modern-cpp'))
+
+    fireEvent.press(screen.getByLabelText('Deck actions'))
+    fireEvent.press(screen.getByLabelText('Edit deck'))
+
+    expect(pushedTo('/deck/[deckId]/edit')).toEqual([
+      { pathname: '/deck/[deckId]/edit', params: { deckId: 'fixture-modern-cpp' } },
+    ])
+  })
+
+  it('offers only the card types this platform can author, and routes each one', () => {
+    // The other four are reviewable and studyable but have no editor yet, so
+    // the chooser does not list them at all - not as disabled rows.
+    renderDeck(deck('fixture-modern-cpp'))
+
+    fireEvent.press(screen.getByLabelText('Add Card'))
+
+    expect(screen.getByLabelText('Recall')).toBeTruthy()
+    expect(screen.getByLabelText('Multiple Choice')).toBeTruthy()
+    expect(screen.queryByLabelText('Write Code')).toBeNull()
+    expect(screen.queryByLabelText('Ordering')).toBeNull()
+    expect(screen.queryByLabelText('Matching')).toBeNull()
+    expect(screen.queryByLabelText('Walkthrough')).toBeNull()
+
+    fireEvent.press(screen.getByLabelText('Recall'))
+    expect(pushedTo('/deck/[deckId]/card-new')).toEqual([
+      {
+        pathname: '/deck/[deckId]/card-new',
+        params: { deckId: 'fixture-modern-cpp', type: 'recall' },
+      },
+    ])
+  })
+
+  it('offers Edit only for a card whose type has an editor', () => {
+    const viewModel = deck('fixture-modern-cpp')
+    const authorable = viewModel.cards.find(
+      (card) => card.interactionType === 'recall' || card.interactionType === 'multiple_choice',
+    )
+    const other = viewModel.cards.find(
+      (card) => card.interactionType !== 'recall' && card.interactionType !== 'multiple_choice',
+    )
+    renderDeck(viewModel)
+
+    if (authorable) {
+      fireEvent.press(screen.getByLabelText(`Actions for ${authorable.prompt}`))
+      expect(screen.getByLabelText('Edit card')).toBeTruthy()
+      expect(screen.getByLabelText('Delete card')).toBeTruthy()
+      fireEvent.press(screen.getByLabelText('Cancel'))
+    }
+
+    if (other) {
+      fireEvent.press(screen.getByLabelText(`Actions for ${other.prompt}`))
+      // Delete still works for every type. Nothing labels the card broken.
+      expect(screen.getByLabelText('Delete card')).toBeTruthy()
+      expect(screen.queryByLabelText('Edit card')).toBeNull()
+    }
+  })
+
+  it('names the deck in its delete confirmation', () => {
+    // An empty deck is deletable; a non-empty one is refused by the shared
+    // guard. fixture-empty-* decks exist in the seed for exactly this shape.
+    renderDeck(deck('fixture-modern-cpp'))
+
+    fireEvent.press(screen.getByLabelText('Deck actions'))
+    fireEvent.press(screen.getByLabelText('Delete deck'))
+
+    // Modern C++ has cards, so the refusal is what shows - naming what is in
+    // the way rather than offering a destructive action that would be refused.
+    expect(screen.getByText(/isn.t empty/)).toBeTruthy()
+    expect(screen.getByText(/Move or delete them first/)).toBeTruthy()
   })
 })
 
