@@ -45,7 +45,8 @@ export function McOptionRow({
         accessibilityLabel={`Option ${position} is correct`}
         accessibilityRole={selectionMode === 'single' ? 'radio' : 'checkbox'}
         accessibilityState={{ checked: option.correct }}
-        hitSlop={6}
+        // 30 points square, so 7 is the slop that reaches 44. 8 for margin.
+        hitSlop={8}
         onPress={onToggleCorrect}
         style={({ pressed }) => [
           styles.marker,

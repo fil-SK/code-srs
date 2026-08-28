@@ -323,7 +323,7 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Current counts (2026-08-28, after the pre-recording polish pass D453-D458): root `npx vitest run` is 115 files / 1106 tests, `apps/mobile` `npx jest` is 39 suites / 554 tests.** `npx tsc -b --force` and `npm run lint` are clean, and the five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
+**Current counts (2026-08-28, after the pre-recording polish pass D453-D458): root `npx vitest run` is 115 files / 1106 tests, `apps/mobile` `npx jest` is 42 suites / 570 tests.** `npx tsc -b --force` and `npm run lint` are clean, and the five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
 
 ```
 npx vitest run       → 111 test files, 1064 tests, all passing (75.94s)

@@ -51,7 +51,7 @@ function Probe() {
  * Mirrors the route: the session takes the entities the hooks read, and must
  * not mount until they have arrived, or it would snapshot an empty queue.
  */
-function Session({ deckId, onExit }: { deckId: string; onExit: () => void }) {
+function Session({ deckId, onExit }: { deckId?: string; onExit: () => void }) {
   const { decks, cards, reviewLogs, isLoading } = useDemoEntities()
   if (isLoading) return null
   return (
@@ -59,7 +59,7 @@ function Session({ deckId, onExit }: { deckId: string; onExit: () => void }) {
   )
 }
 
-function renderSession(deckId: string = DECK) {
+function renderSessionFor(deckId: string | undefined) {
   const exits = { count: 0 }
   const view = render(
     <QueryClientProvider client={createTestQueryClient()}>
@@ -75,6 +75,16 @@ function renderSession(deckId: string = DECK) {
     </QueryClientProvider>,
   )
   return { ...view, exits }
+}
+
+/** The deck-scoped session most of this file drives. */
+function renderSession(deckId: string = DECK) {
+  return renderSessionFor(deckId)
+}
+
+/** The all-decks session the Review tab starts. */
+function renderAllDecksSession() {
+  return renderSessionFor(undefined)
 }
 
 /** Answers whatever card is showing, then rates it. */
@@ -437,5 +447,30 @@ describe('a demo review session', () => {
     expect(demoProgressViewModel(entities, demo.now)).toEqual(
       demoProgressViewModel(pristine, demo.now),
     )
+  })
+})
+
+describe('a session with no deck scope', () => {
+  // The all-decks session the Review tab starts. Everything else in this file
+  // is deck-scoped, which would leave the unscoped path - the one the primary
+  // Review entry point uses - proven only at the queue helper.
+  it('draws from every deck and commits its grade like a scoped one', async () => {
+    renderAllDecksSession()
+    await settleQueries()
+
+    const queue = createDemoQueue(entities, { now: demo.now })
+    const decksInQueue = new Set(queue.map((card) => card.deckId))
+    expect(decksInQueue.size).toBeGreaterThan(1)
+    expect(screen.getByLabelText(`Card 1 of ${queue.length}`)).toBeTruthy()
+
+    const first = queue[0]
+    const logsBefore = entities.reviewLogs.length
+    await answerAndRate()
+
+    const graded = entities.cards.find((card) => card.id === first.id)
+    expect(graded?.scheduling.reps).toBe(first.scheduling.reps + 1)
+    expect(entities.reviewLogs).toHaveLength(logsBefore + 1)
+    const repo = await getRepository().cards.getById(first.id)
+    expect(repo?.scheduling).toEqual(graded?.scheduling)
   })
 })

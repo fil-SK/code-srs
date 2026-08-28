@@ -15,9 +15,9 @@ import { isDemoCardDue } from './demoScheduling'
 // The one piece of scoping semantics *is* shared, through core's `subtreeIds`.
 // Web's `?deck=` means a deck and its whole subtree, and a mobile queue that
 // meant "exactly this deck" would be a second definition of what studying a
-// deck is. Demo decks are flat - they carry a `collectionId`, never a
-// `parentId` - so the resolved set is the deck itself today; the point is that
-// it stops being the deck itself for the right reason if that ever changes.
+// deck is. Demo decks carry canonical `parentId` since D422, and a collection
+// IS a deck with children, so scoping a session to a collection genuinely
+// covers every deck filed inside it, including one authored during the run.
 //
 // The tie-break on `id` is what makes a demo reproducible. The seeded due dates
 // are authored in whole and half days, so several cards share an instant;

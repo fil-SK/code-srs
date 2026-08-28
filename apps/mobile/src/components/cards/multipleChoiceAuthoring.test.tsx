@@ -1,6 +1,7 @@
 import type { Card, MultipleChoiceInteraction } from '@itera/core'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { StyleSheet } from 'react-native'
 import type { ReactNode } from 'react'
 
 import { LibraryDeckScreen } from '@/src/components/library/LibraryDeckScreen'
@@ -238,6 +239,25 @@ describe('the option list', () => {
     expect(isCorrect(3)).toBe(false)
     expect(screen.queryByText('Single-select cards can only have one correct option.')).toBeNull()
     expect(saveDisabled()).toBe(false)
+  })
+
+  it('gives every option control a 44 point target, slop included', async () => {
+    // The declared geometry only. Whether it is comfortable in the hand is a
+    // device question, but a control that cannot reach 44 on paper will not
+    // reach it in the hand either.
+    await mount(<CreateHost />)
+
+    const marker = screen.getByLabelText('Option 1 is correct')
+    const markerBox = StyleSheet.flatten(marker.props.style) as { width: number; height: number }
+    const markerSlop = marker.props.hitSlop as number
+    expect(markerBox.width + markerSlop * 2).toBeGreaterThanOrEqual(44)
+    expect(markerBox.height + markerSlop * 2).toBeGreaterThanOrEqual(44)
+
+    const remove = screen.getByLabelText('Remove option 1')
+    const removeBox = StyleSheet.flatten(remove.props.style) as { width: number; height: number }
+    const removeSlop = remove.props.hitSlop as number
+    expect(removeBox.width + removeSlop * 2).toBeGreaterThanOrEqual(44)
+    expect(removeBox.height + removeSlop * 2).toBeGreaterThanOrEqual(44)
   })
 
   it('names each option control for a screen reader', async () => {

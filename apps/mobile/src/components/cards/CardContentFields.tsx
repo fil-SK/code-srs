@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   chip: {
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: 'center',
     borderColor: iteraColors.border,
     borderRadius: iteraRadii.control,
