@@ -5,6 +5,50 @@ re-derived from scratch each time. Anything here that a milestone has since
 decided on is recorded properly in `itera-decisions.md`; this file is the
 holding pen, not a source of truth.
 
+## Early-access capture is not connected (found 2026-08-28)
+
+`apps/marketing/src/earlyAccess.ts` — `submitEarlyAccessInterest` is
+`Promise.reject(new EarlyAccessCaptureUnavailableError())`, unconditionally.
+The marketing form validates the address, then discards it: the UI says
+"Preview form: submissions are not stored yet" and, on submit,
+"Email capture is not connected yet. Your details have not been sent or
+stored." The honesty is deliberate (D451/D452 refused a mocked success state),
+but the outcome is that **every interested visitor is lost**.
+
+This is a hard blocker the moment `apps/marketing` is linked publicly, and a
+non-issue until then. Closing it means connecting one provider behind the
+existing seam — that file is written as "the only persistence boundary for the
+marketing form" — then removing the "not stored yet" line and adding a **real**
+success state. A real success state does not contradict D452, which refused a
+*mocked* one.
+
+Found by the pre-publish UX audit; ranked P0-1 in
+[`pre-publish-plan.md`](pre-publish-plan.md).
+
+## Seed the web demo workspace (deferred 2026-08-28)
+
+`signInDemo()` (`packages/core/src/auth/authEngine.ts`) mints a session and
+nothing else — there is no content seeding anywhere in `apps/web/src`. So
+`/login`'s **"Continue with demo workspace"** lands a first-time visitor on an
+empty Today with a dashed "No decks yet" box, and the six interaction types
+(the whole differentiation) are invisible unless that visitor authors a card
+first. Mobile does have real demo content:
+`apps/mobile/src/demo/demoCardContent.ts` holds 18 reviewable cards.
+
+**Deferred by product-owner decision, not by oversight.** The consequence to
+plan around in the meantime: a public link should land on the marketing site,
+not on the demo button.
+
+Closing it means seeding on `signInDemo()` in web from the mobile content — 2–3
+decks, ~18 cards covering all six interaction types, and backdated ReviewLogs so
+Today, the streak, the heat map and retention have something true to show —
+clearly labelled as a demo workspace (the account menu already says "Demo
+workspace") and disposable in the local backend. Pairs naturally with the
+"Onboarding demo in the app" item below.
+
+Found by the pre-publish UX audit; ranked P2-1 in
+[`pre-publish-plan.md`](pre-publish-plan.md).
+
 ## Adjust session — advanced controls
 
 Deferred by D214 (Milestone 2). Adjust session ships with deck scope + card
@@ -311,6 +355,26 @@ Before the next public deployment, confirm the Vercel dashboard still uses repos
 
 How to improve Itera with better UX, using famification? For both web and mobile or just mobile?
 
+**Answered 2026-08-28 (owner).** The distinction that governs this, and the two halves must
+not be conflated:
+
+> Don't add a gamification **subsystem**. Make the existing learning loop more **rewarding**.
+
+Out of scope before validation: XP, currency, levels, leaderboards, arbitrary achievements
+— each invents a second scoring model that competes with FSRS and needs a persisted entity
+and a settings surface behind it. A Weekly Goal is in this half too (D209/D210 refused to
+fabricate goal and achievement entities, and were right).
+
+**In scope, and treated as real product work:** streak feedback, mastery moments, session
+summaries, progress celebration, daily-consistency signals, and a satisfying end to a
+review. These are light gamification and Itera currently has almost none of them — every
+mechanic it already computes is unmarked. The four moments worth designing, in order:
+session completion, the streak increment, deck mastery, and returning after a gap. All are
+feedback on numbers that are already true, so nothing is fabricated, and the form stays
+governed by `design-system.md` §11 (quiet momentum; no confetti, no spectacle).
+
+Specified as P1-10 in [`pre-publish-plan.md`](pre-publish-plan.md).
+
 ## LeetCode usage
 
 How to use Itera for SRS in regards to LeetCode? How to market it in that regards as well
@@ -339,3 +403,33 @@ At the end of mobile development: restore `tsconfig.json` to the four bare
 `.gitignore` - only `apps/mobile/.gitignore` covers it today, so the root copy is
 currently committable. Re-verify with `npx tsc -b --force` and one
 `npm run dev:mobile` start.
+
+## Progress
+
+Da odabereš i koliko si napredovao u mesecu. Tamo gde mi stoji datum, da mogu da odaberem datum i da mi se za konkretno njega prikaže
+
+## Color
+
+On each of the pages, there should be an orange-wavy shape
+
+## Scrollbar styling.
+
+## PWA prompts.
+
+## Dark mode.
+
+## Deck identity.
+
+## Route transitions.
+
+## Custom icon sets.
+
+## Mobile navigation.
+
+## Share cards.
+
+## Onboarding.
+
+## Responsive table redesign.
+
+## Milestones
