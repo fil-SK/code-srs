@@ -177,7 +177,10 @@ export function CardTableRow({
           {leading}
         </span>
       )}
-      <Link to={`/cards/${card.id}/study`} className="flex min-w-0 items-center gap-3 hover:text-itera-accent">
+      <Link
+        to={`/cards/${card.id}/study`}
+        className="flex min-w-0 items-center gap-3 transition-colors hover:text-itera-accent"
+      >
         <div className={cn('grid h-8 w-8 flex-none place-items-center rounded-itera-control text-white', visual.tileClass)}>
           <Icon size={15} />
         </div>

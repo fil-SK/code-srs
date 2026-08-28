@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
+import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/features/library/shared/EmptyState'
 import { buildRange } from '@/domain/stats/dateRange'
 import { computeDeckMetrics } from '@/domain/stats/deckMetrics'
@@ -60,6 +61,28 @@ function useIsWideToday(): boolean {
 // Renders through the shared AppShell/TopNav rather than a private per-page
 // shell — the page just returns its content, AppShell supplies
 // IteraSurface/nav/width.
+// Tailwind has no grid-area utility, so this stays an inline style (see the
+// module comment). It is a function rather than two literals so the loading
+// frame below lays out on exactly the same grid the loaded page does - the
+// point of the loading convention is that nothing moves when data lands.
+function gridStyle(isWide: boolean): CSSProperties {
+  return isWide
+    ? {
+        display: 'grid',
+        gridTemplateColumns: 'minmax(720px, 1fr) 430px',
+        gridTemplateAreas: '"hero momentum" "continue pace"',
+        columnGap: '40px',
+        rowGap: '16px',
+        alignItems: 'start',
+      }
+    : {
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gridTemplateAreas: '"hero" "momentum" "continue" "pace"',
+        rowGap: '20px',
+      }
+}
+
 export function TodayPage() {
   const isWide = useIsWideToday()
   // Picked once per mount, not per render — see greetings.ts.
@@ -130,7 +153,20 @@ export function TodayPage() {
     return (
       <div>
         {greeting}
-        <p className="mt-6 text-sm text-itera-muted">Loading…</p>
+        <LoadingRegion label="Loading today" className="mt-6">
+          <div style={gridStyle(isWide)}>
+            <Skeleton
+              className="rounded-[21px]"
+              style={{ gridArea: 'hero', height: 390 }}
+            />
+            <Skeleton
+              className="rounded-itera-card"
+              style={{ gridArea: 'momentum', height: 340, marginTop: isWide ? 21 : undefined }}
+            />
+            <Skeleton className="rounded-itera-card" style={{ gridArea: 'continue', height: 300 }} />
+            <Skeleton className="rounded-itera-card" style={{ gridArea: 'pace', height: 232 }} />
+          </div>
+        </LoadingRegion>
       </div>
     )
   }
@@ -167,26 +203,7 @@ export function TodayPage() {
     <div>
       {greeting}
 
-      <div
-        className="mt-6"
-        style={
-          isWide
-            ? {
-                display: 'grid',
-                gridTemplateColumns: 'minmax(720px, 1fr) 430px',
-                gridTemplateAreas: '"hero momentum" "continue pace"',
-                columnGap: '40px',
-                rowGap: '16px',
-                alignItems: 'start',
-              }
-            : {
-                display: 'grid',
-                gridTemplateColumns: '1fr',
-                gridTemplateAreas: '"hero" "momentum" "continue" "pace"',
-                rowGap: '20px',
-              }
-        }
-      >
+      <div className="mt-6" style={gridStyle(isWide)}>
         <div style={{ gridArea: 'hero' }}>
           <SuggestedSessionHero
             cardCount={queue.dueCount}

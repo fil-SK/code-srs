@@ -190,7 +190,17 @@
   --red: var(--itera-error);
   --blue: var(--itera-accent-active);
 
-  display: block;
+  /* No `display` is declared here on purpose. Everything in this file is
+     unlayered CSS, and Tailwind's utilities live in `@layer utilities`, so an
+     unlayered declaration beats every utility for the same property no matter
+     how specific the utility is. A `display: block` here therefore silently
+     defeated `grid`/`flex` applied to an IteraSurface: the Review terminal
+     screens carried `grid min-h-screen place-items-center` and still computed
+     `display: block`, which is why they sat flush against the top of the
+     viewport. Every consumer of this class is a <div>, which is block by
+     default, so the declaration bought nothing. Do not re-add it - and take the
+     same care with the three properties below, which are here because they must
+     apply to the scope root itself. */
   background: var(--itera-canvas);
   color: var(--itera-ink);
   font-family: var(--font-itera-sans);
@@ -320,6 +330,57 @@ body {
 }
 .reveal-in {
   animation: reveal-in 0.25s ease both;
+}
+
+/* Session completion (SessionCompleteCard.tsx). The one "calm completion
+   transition" docs/design-system.md §11 asks for, at the slow end of its own
+   350-600ms row and on the standard easing. Two steps only - the card, then
+   the numbers inside it - because the point is arrival, not a cascade. */
+@keyframes itera-complete-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.itera-complete-in {
+  animation: itera-complete-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.itera-complete-in-delayed {
+  animation: itera-complete-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itera-complete-in,
+  .itera-complete-in-delayed {
+    animation: none;
+  }
+}
+
+/* Loading placeholders (components/ui/Skeleton.tsx). A slow opacity pulse, not
+   a travelling gradient sweep: the sweep reads as a product waiting on a
+   network, and this app reads from local IndexedDB in a few frames. The point
+   is only that the page frame stays put while its data regions fill in. */
+@keyframes itera-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.itera-skeleton {
+  animation: itera-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itera-skeleton {
+    animation: none;
+  }
 }
 
 /* Card editor's slide-in preview drawer (CardEditorShell.tsx): width/opacity

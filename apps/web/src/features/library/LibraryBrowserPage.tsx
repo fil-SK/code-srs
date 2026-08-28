@@ -18,6 +18,7 @@ import {
 import { computeDeckMetrics, metricsFor } from '@/domain/stats/deckMetrics'
 import { LibraryShell } from './shared/LibraryShell'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
+import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from './shared/EmptyState'
 import { DeckRow, DeckTableHeader } from './DeckRow'
 import { FilterMenu } from './FilterMenu'
@@ -54,6 +55,10 @@ export function LibraryBrowserPage() {
   const createDeck = useCreateDeck()
   const saveDeck = useSaveDeck()
   const deleteDeck = useDeleteDeck()
+
+  // Without this the deck list read `data ?? []` on the first tick and painted
+  // "No decks yet" to every returning learner before the query resolved.
+  const loading = decksQuery.isLoading || allCards.isLoading || dueCards.isLoading
 
   const collections = useMemo(() => deriveCollections(decksQuery.data ?? []), [decksQuery.data])
   const leaves = useMemo(() => leafDecks(decksQuery.data ?? []), [decksQuery.data])
@@ -258,7 +263,33 @@ export function LibraryBrowserPage() {
             </div>
           </div>
 
-          {leaves.length === 0 ? (
+          {loading ? (
+            <LoadingRegion label="Loading your decks">
+              <div className={isAllDecks ? 'px-3' : 'px-5'}>
+                <DeckTableHeader allDecks={isAllDecks} />
+              </div>
+              <div
+                className={
+                  isAllDecks
+                    ? 'rounded-itera-card border border-itera-border bg-itera-surface px-3'
+                    : 'rounded-itera-card border border-itera-border bg-itera-surface px-4'
+                }
+              >
+                <div className="divide-y divide-itera-border">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-4 py-4">
+                      <Skeleton className="size-11 shrink-0 rounded-itera-control" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-3.5 w-48 max-w-full rounded-itera-pill" />
+                        <Skeleton className="h-3 w-72 max-w-full rounded-itera-pill" />
+                      </div>
+                      <Skeleton className="hidden h-3 w-24 rounded-itera-pill sm:block" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </LoadingRegion>
+          ) : leaves.length === 0 ? (
             <EmptyState
               title="No decks yet"
               description="Create your first deck, then add cards to it. Decks can nest, so a broad subject can hold subdecks."

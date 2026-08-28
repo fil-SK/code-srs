@@ -53,6 +53,7 @@ import { CardListFooter } from './shared/CardListFooter'
 import { DeckMark } from './shared/DeckMark'
 import { MasteryRing } from './shared/MasteryRing'
 import { MeterBar } from './shared/MeterBar'
+import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from './shared/EmptyState'
 import { LibraryShell } from './shared/LibraryShell'
 import { DeckSettings } from './DeckSettings'
@@ -292,7 +293,38 @@ export function LibraryDeckPage() {
     )
   }
 
-  if (!deck) return null
+  // Still resolving. This used to `return null`, i.e. a blank white page inside
+  // the app frame; the shell and a deck-shaped placeholder render instead, so
+  // the real deck lands into a page that is already there.
+  if (!deck) {
+    return (
+      <LibraryShell
+        collections={collections}
+        decks={navDecks}
+        selection={{ kind: 'collection', id: '__none__' }}
+        onSelect={(next) => navigate(`/decks?${selectionToSearchParams(next)}`)}
+        onCreateDeck={newDeck}
+      >
+        <LoadingRegion label="Loading deck">
+          <Skeleton className="mb-6 h-4 w-64 max-w-full rounded-itera-pill" />
+          <div className="flex flex-wrap items-start gap-6">
+            <Skeleton className="size-[148px] shrink-0 rounded-itera-card" />
+            <div className="min-w-[240px] flex-1 space-y-3">
+              <Skeleton className="h-7 w-72 max-w-full rounded-itera-pill" />
+              <Skeleton className="h-4 w-full max-w-md rounded-itera-pill" />
+              <Skeleton className="h-4 w-56 max-w-full rounded-itera-pill" />
+            </div>
+          </div>
+          <Skeleton className="mt-8 h-11 w-full rounded-itera-control" />
+          <div className="mt-4 space-y-2">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-[68px] w-full rounded-itera-card" />
+            ))}
+          </div>
+        </LoadingRegion>
+      </LibraryShell>
+    )
+  }
 
   // A deck with children is a Collection (UI-only distinction, see
   // collectionTree.ts) - it has no cards-of-its-own page here. Entry points
@@ -307,8 +339,12 @@ export function LibraryDeckPage() {
   const path = collectionPathFor(collections, cid)
   const metrics = metricsFor(metricsMap, deck.id)
   const totalCards = cards.length
-  const markLabel =
-    path.length > 0 ? markLabelFor(path[path.length - 1].name, 3) : markLabelFor(deck.name, 3)
+  // The deck's own name, always. This used to fall back to the parent
+  // collection's name whenever the deck had one, so "Modern C++ & Memory"
+  // inside "Languages & Compilers" showed a mark for the collection - a
+  // different monogram from the one the same deck carries in the sidebar, on
+  // Today and on Progress.
+  const markLabel = markLabelFor(deck.name, 3)
 
   return (
     <LibraryShell

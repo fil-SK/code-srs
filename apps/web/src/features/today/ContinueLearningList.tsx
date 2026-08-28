@@ -45,7 +45,7 @@ export function ContinueLearningList({ rows }: { rows: ContinueRow[] }) {
               return (
                 <div
                   key={row.deckId}
-                  className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 sm:grid-cols-[40px_minmax(0,1fr)_auto_minmax(140px,0.72fr)_auto] sm:px-5"
+                  className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-itera-surface-subtle sm:grid-cols-[40px_minmax(0,1fr)_auto_minmax(140px,0.72fr)_auto] sm:px-5"
                 >
                   <div className="row-span-2 grid h-10 w-10 place-items-center rounded-itera-control bg-itera-navy font-mono text-xs font-bold text-white sm:row-span-1">
                     {markLabelFor(row.name)}

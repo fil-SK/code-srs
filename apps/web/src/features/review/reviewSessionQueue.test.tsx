@@ -7,7 +7,7 @@
 // reset the position to the first remaining card, shrank the "X of Y" total,
 // discarded the undo stack, and, after the final card, left the due list empty
 // so ReviewPage rendered its pre-session "Nothing due" state instead of the
-// session's own "All done" screen.
+// session's own completion screen.
 //
 // These run through the real ReviewPage against a seeded repository, so they
 // exercise the actual invalidation/refetch path rather than a mock of it.
@@ -148,7 +148,7 @@ describe('review session queue snapshot', () => {
 
     for (let i = 0; i < 5; i++) await gradeCurrent()
 
-    expect(await screen.findByText('All done')).toBeTruthy()
+    expect(await screen.findByText('Session complete')).toBeTruthy()
     expect(screen.getByText('Reviewed 5 cards.')).toBeTruthy()
     expect(screen.queryByText(/Nothing due/)).toBeNull()
   })
@@ -158,7 +158,7 @@ describe('review session queue snapshot', () => {
     expect(await screen.findByText('1 of 5')).toBeTruthy()
 
     for (let i = 0; i < 5; i++) await gradeCurrent()
-    expect(await screen.findByText('All done')).toBeTruthy()
+    expect(await screen.findByText('Session complete')).toBeTruthy()
 
     await user.click(screen.getByRole('button', { name: /Undo last/ }))
 

@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Undo2 } from 'lucide-react'
-import type { Card, ID } from '@/types'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { summarizeSession } from '@itera/core'
+import type { Card, ID, ReviewLog } from '@/types'
 import type { SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
 import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
@@ -9,12 +9,14 @@ import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
 import {
   reviewWriteGuarantee,
   usePersistReviewResult,
+  useReviewLogs,
   useUndoGrade,
 } from '@/hooks/useReview'
 import {
   describeReviewCommitFailure,
   describeReviewUndoFailure,
 } from '@/domain/review/reviewPersistFailure'
+import { SessionCompleteCard } from './SessionCompleteCard'
 
 interface UndoEntry {
   card: Card // the pre-grade card, restored verbatim on undo
@@ -36,8 +38,13 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   const [index, setIndex] = useState(0)
   const [undoStack, setUndoStack] = useState<UndoEntry[]>([])
   const [undoError, setUndoError] = useState<string | null>(null)
+  // The logs this session wrote, kept in order so the completion summary can
+  // describe the session itself rather than the whole of history. Undo pops
+  // the last one, exactly as it pops the undo stack.
+  const [sessionLogs, setSessionLogs] = useState<ReviewLog[]>([])
   const persist = usePersistReviewResult()
   const undo = useUndoGrade()
+  const history = useReviewLogs()
 
   const current = queue[index]
   const isComplete = index >= queue.length
@@ -52,6 +59,7 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
     if (busy) return
     await persist.mutateAsync({ card: original, after: result.after, log: result.log })
     setUndoStack((s) => [...s, { card: original, logId: result.log.id }])
+    setSessionLogs((s) => [...s, result.log])
     setIndex((i) => i + 1)
   }
 
@@ -68,41 +76,31 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
       return
     }
     setUndoStack((s) => s.slice(0, -1))
+    setSessionLogs((s) => s.slice(0, -1))
     setIndex((i) => Math.max(0, i - 1))
   }
 
+  // Frozen when the session ends so the copy and the next-due label stay put
+  // while the learner reads them. Undo drops out of this branch and a later
+  // completion takes a fresh reading, which is correct.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const completedAt = useMemo(() => Date.now(), [isComplete])
+  const summary = useMemo(
+    () => summarizeSession(sessionLogs, history.data ?? [], completedAt),
+    [sessionLogs, history.data, completedAt],
+  )
+
   if (isComplete) {
     return (
-      <IteraSurface>
-        <div className="mx-auto max-w-md rounded-itera-card border border-itera-border bg-itera-surface p-8 text-center shadow-[var(--itera-shadow-card)]">
-          <div className="text-2xl font-bold tracking-tight text-itera-ink-brand">All done</div>
-          <p className="mt-2 text-sm text-itera-muted">
-            Reviewed {queue.length} card{queue.length === 1 ? '' : 's'}.
-          </p>
-          {undoError && (
-            <p role="alert" className="mt-3 text-sm leading-relaxed text-itera-error">
-              {undoError}
-            </p>
-          )}
-          <div className="mt-5 flex justify-center gap-2.5">
-            {undoStack.length > 0 && (
-              <button
-                type="button"
-                onClick={undoLast}
-                disabled={busy}
-                className="inline-flex items-center gap-1.5 rounded-itera-control border border-itera-border bg-itera-surface px-4 py-2.5 text-sm font-semibold text-itera-ink transition-colors hover:border-itera-border-strong disabled:pointer-events-none disabled:opacity-40"
-              >
-                <Undo2 size={15} /> Undo last
-              </button>
-            )}
-            <Link
-              to="/"
-              className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105"
-            >
-              Back to Today
-            </Link>
-          </div>
-        </div>
+      <IteraSurface className="grid min-h-screen place-items-center py-10">
+        <SessionCompleteCard
+          summary={summary}
+          completedAt={completedAt}
+          canUndo={undoStack.length > 0}
+          busy={busy}
+          undoError={undoError}
+          onUndo={undoLast}
+        />
       </IteraSurface>
     )
   }

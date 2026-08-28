@@ -57,7 +57,10 @@ export function DeckPerformanceTable({
                   <Link
                     key={deckId}
                     to={due > 0 ? `/review?deck=${deckId}` : `/decks/${deckId}`}
-                    className={cn(GRID, 'py-3')}
+                    className={cn(
+                      GRID,
+                      '-mx-2 rounded-itera-control px-2 py-3 transition-colors hover:bg-itera-surface-subtle',
+                    )}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <DeckMark label={markLabelFor(deck.name)} />

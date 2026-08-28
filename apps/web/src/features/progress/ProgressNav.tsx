@@ -60,11 +60,27 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
+// Validation-build visibility, not a deletion. D409 made exactly this call on
+// mobile: in front of a prospective user a wall of greyed rows stops saying
+// "this is known, it is not built yet" and starts saying "this product is
+// unfinished", and seven of them filled the left third of Progress - one of the
+// few screens the product demo actually shows. The IA above is kept verbatim so
+// turning these back on is one flag, and so the sidebar's intended shape is
+// still recorded in code.
+const SHOW_UNBUILT_DESTINATIONS: boolean = false
+
+const VISIBLE_GROUPS: NavGroup[] = SHOW_UNBUILT_DESTINATIONS
+  ? NAV_GROUPS
+  : NAV_GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.to),
+    })).filter((group) => group.items.length > 0)
+
 export function ProgressNav() {
   return (
     <div className="flex h-full flex-col p-4">
       <nav aria-label="Progress" className="space-y-5">
-        {NAV_GROUPS.map((group) => (
+        {VISIBLE_GROUPS.map((group) => (
           <div key={group.heading}>
             <div className="mb-1 px-2.5 text-xs font-bold uppercase tracking-wider text-itera-muted">
               {group.heading}

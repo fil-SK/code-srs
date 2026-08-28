@@ -18,6 +18,7 @@ import {
   heatmapDaysFor,
   type HeatmapRangeValue,
 } from '@/domain/stats/progressMetrics'
+import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { ProgressShell } from './ProgressShell'
 import { KpiTile, KpiDelta } from './components/KpiTile'
 import { DateRangePicker } from './components/DateRangePicker'
@@ -108,7 +109,40 @@ export function ProgressPage() {
     dueCardsQuery.isLoading ||
     decksQuery.isLoading
   ) {
-    return <p className="text-sm text-itera-muted">Loading…</p>
+    // The shell, the heading and the range control are known before any query
+    // resolves, so they render immediately and only the data regions fill in.
+    // This used to return a bare line *outside* ProgressShell, so the sidebar
+    // appeared late and the whole page reflowed when it did.
+    return (
+      <ProgressShell>
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="font-itera-display text-3xl font-bold text-itera-ink-brand">
+                Your progress
+              </h1>
+              <p className="mt-1 text-sm text-itera-muted">
+                Track your learning. Build lasting knowledge.
+              </p>
+            </div>
+            <DateRangePicker preset={preset} range={range} onChange={setPreset} />
+          </div>
+          <LoadingRegion label="Loading your progress" className="space-y-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-[148px] rounded-itera-card" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <Skeleton className="h-[246px] rounded-itera-card" />
+              <Skeleton className="h-[246px] rounded-itera-card" />
+              <Skeleton className="h-[386px] rounded-itera-card" />
+              <Skeleton className="h-[386px] rounded-itera-card" />
+            </div>
+          </LoadingRegion>
+        </div>
+      </ProgressShell>
+    )
   }
 
   return (

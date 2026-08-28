@@ -115,6 +115,7 @@ export * from './domain/io/validateBackupEntities'
 export * from './domain/migration/runner'
 
 export * from './domain/review/reviewPersistFailure'
+export * from './domain/review/sessionSummary'
 
 export * from './domain/scheduling/format'
 export * from './domain/scheduling/reviewService'

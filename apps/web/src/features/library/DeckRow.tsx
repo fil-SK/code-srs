@@ -64,7 +64,12 @@ export function DeckRow({
       className={cn(
         allDecks ? ALL_DECKS_GRID : GRID,
         'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent',
-        allDecks ? 'py-3.5' : 'px-1 py-3',
+        // The most-clicked row in the app had no pointer feedback at all: the
+        // cursor changed and nothing else did. The negative margin lets the
+        // highlight reach past the table's own padding without moving any
+        // content inside the row.
+        '-mx-2 rounded-itera-control px-2 transition-colors hover:bg-itera-surface-subtle',
+        allDecks ? 'py-3.5' : 'py-3',
       )}
     >
       <div className="flex min-w-0 items-center gap-3">

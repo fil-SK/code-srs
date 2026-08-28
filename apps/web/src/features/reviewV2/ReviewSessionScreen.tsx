@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Rating, SchedulingState } from '@/types'
 import type { CardInteraction, Card, InteractionType } from '@/types/card'
 import { cn } from '@/lib/cn'
@@ -254,6 +254,47 @@ export function ReviewSessionScreen<T extends InteractionType>({
 
   const showExplanation = phase.kind !== 'presenting' && phase.kind !== 'submitting'
   const showRating = phase.kind !== 'presenting' && phase.kind !== 'submitting'
+  const revealed = showExplanation
+
+  // The reveal used to move the page twice in the same frame: the card itself
+  // changed height (measured at -80px for Multiple Choice and +140px for
+  // Ordering) while the explanation and the rating row appeared instantly
+  // beneath it. The panels below now arrive with `.reveal-in`; this animates
+  // the card's own height so the things under it travel rather than jump.
+  //
+  // No deps on purpose - the ref has to hold the height from the *previous*
+  // commit, and Walkthrough changes height while still in the question phase
+  // as its learner steps through. Only the presenting -> revealed step
+  // animates.
+  const cardRef = useRef<HTMLDivElement>(null)
+  const previous = useRef<{ height: number; revealed: boolean } | null>(null)
+  useLayoutEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+    const height = el.offsetHeight
+    const was = previous.current
+    previous.current = { height, revealed }
+    if (!was || was.revealed === revealed) return
+    if (Math.abs(height - was.height) < 8) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    // Clipped for the duration only: while the card grows, its face is already
+    // at full height and would otherwise overlap the panels sliding in below.
+    // The chain is deliberately overflow-visible at rest (see FlipCard), and
+    // this restores that as soon as the animation ends.
+    const previousOverflow = el.style.overflow
+    el.style.overflow = 'hidden'
+    const animation = el.animate(
+      [{ height: `${was.height}px` }, { height: `${height}px` }],
+      { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' },
+    )
+    const restore = () => {
+      el.style.overflow = previousOverflow
+    }
+    animation.addEventListener('finish', restore)
+    animation.addEventListener('cancel', restore)
+    return () => animation.cancel()
+  })
 
   return (
     <div className={cn(!hideTopBar && 'pb-14')}>
@@ -287,17 +328,23 @@ export function ReviewSessionScreen<T extends InteractionType>({
           entered && 'itera-card-enter-active',
         )}
       >
-        <definition.View
-          card={card}
-          phase={phase}
-          response={response}
-          setResponse={setResponse}
-          onPrimaryAction={primaryAction}
-          responseReady={responseReady}
-        />
+        <div ref={cardRef}>
+          <definition.View
+            card={card}
+            phase={phase}
+            response={response}
+            setResponse={setResponse}
+            onPrimaryAction={primaryAction}
+            responseReady={responseReady}
+          />
+        </div>
 
         {phase.kind === 'presenting' && <TipPanel text={card.tip?.value} />}
 
+        {/* One step, not a cascade: everything the reveal adds arrives
+            together on the existing `.reveal-in` (250ms, reduced-motion-aware
+            in src/index.css). */}
+        <div className={cn(revealed && 'reveal-in')}>
         {showExplanation && <ExplanationPanel text={card.explanation?.value} />}
 
         {showRating && !hideRating && (
@@ -325,6 +372,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   )

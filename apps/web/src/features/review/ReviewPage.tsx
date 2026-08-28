@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
+import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { subtreeIds } from '@/domain/decks/tree'
 import { resolveSessionLimit } from '@/domain/stats/todayMetrics'
 import { useDueCards } from '@/hooks/useCards'
@@ -53,10 +54,34 @@ export function ReviewPage() {
   // IteraSurface), so every return branch here wraps itself — the loading/
   // empty branches previously relied on AppShell for this; ReviewSessionV2
   // below already self-wraps and needs no change.
+  // Entering a session used to paint the word "Loading" on an empty canvas -
+  // the single most visible transition in the product. The session strip and a
+  // card-shaped placeholder render instead, in the same geometry
+  // ReviewSessionScreen uses, so the first card lands into the frame that is
+  // already there rather than replacing a different screen.
   if (loading || !session) {
     return (
-      <IteraSurface className="grid min-h-screen place-items-center">
-        <p className="text-sm text-itera-muted">Loading…</p>
+      <IteraSurface className="min-h-screen">
+        <LoadingRegion label="Preparing your session">
+          <header className="mb-14 min-h-20 w-full border-b border-itera-border bg-itera-surface px-4 sm:px-6">
+            <div className="mx-auto grid min-h-20 w-full max-w-[1280px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
+              <Link
+                to="/"
+                className="inline-flex w-fit items-center gap-2 text-sm font-medium text-itera-ink transition-colors hover:text-itera-ink-brand sm:text-base"
+              >
+                <span aria-hidden="true" className="text-lg leading-none">
+                  &lt;
+                </span>
+                Exit session
+              </Link>
+              <Skeleton className="h-4 w-[4.25rem] rounded-itera-pill" />
+              <span />
+            </div>
+          </header>
+          <div className="mx-auto max-w-2xl px-4">
+            <Skeleton className="h-[360px] w-full rounded-itera-card" />
+          </div>
+        </LoadingRegion>
       </IteraSurface>
     )
   }
