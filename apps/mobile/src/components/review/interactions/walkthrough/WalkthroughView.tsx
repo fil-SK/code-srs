@@ -2,8 +2,8 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
   gradeWalkthroughStep,
   initialWalkthroughState,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   stripInlineMarkers,
   walkthroughBehavior,
   type ID,
@@ -12,7 +12,7 @@ import {
   type WalkthroughState,
   type WalkthroughStep,
   type WalkthroughStepAnswer,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useState } from 'react'
 import {
   Keyboard,
@@ -50,7 +50,7 @@ function WalkthroughBadge({ finished }: { finished: boolean }) {
   return (
     <View style={[styles.badge, finished && styles.badgeFinished]}>
       <MaterialCommunityIcons
-        color={finished ? iteraColors.accent : iteraColors.inkBrand}
+        color={finished ? fliptapColors.accent : fliptapColors.inkBrand}
         name={finished ? 'check-decagram-outline' : 'vector-polyline'}
         size={21}
       />
@@ -76,7 +76,7 @@ function InfoPanel({
     <View style={[styles.infoPanel, explanation ? styles.explanationPanel : styles.tipPanel]}>
       <View style={[styles.infoIcon, explanation ? styles.explanationIcon : styles.tipIcon]}>
         <MaterialCommunityIcons
-          color={explanation ? iteraColors.success : iteraColors.accent}
+          color={explanation ? fliptapColors.success : fliptapColors.accent}
           name={explanation ? 'book-open-page-variant-outline' : 'lightbulb-outline'}
           size={21}
         />
@@ -130,7 +130,7 @@ function ResultNote({ result }: { result: ObjectiveResult | null | undefined }) 
       ]}
     >
       <MaterialCommunityIcons
-        color={result.correct ? iteraColors.success : iteraColors.error}
+        color={result.correct ? fliptapColors.success : fliptapColors.error}
         name={result.correct ? 'check-circle-outline' : 'close-circle-outline'}
         size={18}
       />
@@ -205,7 +205,7 @@ function MultipleChoiceStep({
               >
                 {(isSelected || correctChoice) && (
                   <MaterialCommunityIcons
-                    color={iteraColors.surface}
+                    color={fliptapColors.surface}
                     name={selectedWrong ? 'close' : 'check'}
                     size={17}
                   />
@@ -259,9 +259,9 @@ function ExactInputStep({
         editable={!readOnly}
         onChangeText={onChange}
         placeholder="Type your answer"
-        placeholderTextColor={iteraColors.muted}
+        placeholderTextColor={fliptapColors.muted}
         returnKeyType="done"
-        selectionColor={iteraColors.accent}
+        selectionColor={fliptapColors.accent}
         style={[
           styles.exactInput,
           Platform.OS === 'web' && ({ outlineStyle: 'none' } as unknown as TextStyle),
@@ -305,7 +305,7 @@ function RecallStep({
     <View style={styles.responseBlock}>
       {revealed ? (
         <View style={styles.recallAnswer}>
-          <MaterialCommunityIcons color={iteraColors.accent} name="lightbulb-on-outline" size={22} />
+          <MaterialCommunityIcons color={fliptapColors.accent} name="lightbulb-on-outline" size={22} />
           <RichTextNative style={styles.recallAnswerText} text={answerContent.value} />
         </View>
       ) : (
@@ -314,7 +314,7 @@ function RecallStep({
           onPress={() => onSubmit({ type: 'recall', revealed: true })}
           style={({ pressed }) => [styles.revealButton, pressed && styles.pressed]}
         >
-          <MaterialCommunityIcons color={iteraColors.inkBrand} name="cards-outline" size={19} />
+          <MaterialCommunityIcons color={fliptapColors.inkBrand} name="cards-outline" size={19} />
           <Text style={styles.revealButtonText}>Reveal answer</Text>
         </Pressable>
       )}
@@ -473,7 +473,7 @@ export function WalkthroughView({
             pressed && styles.pressed,
           ]}
         >
-          <MaterialCommunityIcons color={iteraColors.muted} name="chevron-left" size={20} />
+          <MaterialCommunityIcons color={fliptapColors.muted} name="chevron-left" size={20} />
           <Text style={styles.previousText}>Previous</Text>
         </Pressable>
 
@@ -491,7 +491,7 @@ export function WalkthroughView({
           >
             <Text style={styles.continueText}>{isLast ? 'Finish' : 'Continue'}</Text>
             <MaterialCommunityIcons
-              color={iteraColors.surface}
+              color={fliptapColors.surface}
               name={isLast ? 'check' : 'chevron-right'}
               size={20}
             />
@@ -507,7 +507,7 @@ export function WalkthroughView({
           ]}
         >
           <MaterialCommunityIcons
-            color={cardResult?.correct === false ? iteraColors.error : iteraColors.success}
+            color={cardResult?.correct === false ? fliptapColors.error : fliptapColors.success}
             name={cardResult?.correct === false ? 'alert-circle-outline' : 'check-circle-outline'}
             size={20}
           />
@@ -530,67 +530,67 @@ export function WalkthroughView({
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 20, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, paddingHorizontal: 18, paddingVertical: 20, alignItems: 'center', ...Platform.select({ ios: { shadowColor: iteraColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
-  badge: { minHeight: 42, paddingHorizontal: 16, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  badgeFinished: { backgroundColor: iteraColors.accentSofter },
-  badgeText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
-  badgeTextFinished: { color: iteraColors.accentActive },
-  prompt: { marginTop: 20, color: iteraColors.inkBrand, fontSize: 23, lineHeight: 31, fontWeight: '700', letterSpacing: -0.35, textAlign: 'center' },
-  scenario: { marginTop: 10, color: iteraColors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
-  infoPanel: { alignSelf: 'stretch', borderRadius: iteraRadii.card, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  tipPanel: { marginTop: 16, borderColor: '#f4dccb', backgroundColor: iteraColors.accentSofter },
-  explanationPanel: { marginTop: 14, borderColor: '#cfe5d5', backgroundColor: iteraColors.successSoft },
-  infoIcon: { width: 36, height: 36, flexShrink: 0, borderRadius: iteraRadii.control, alignItems: 'center', justifyContent: 'center' },
-  tipIcon: { backgroundColor: iteraColors.surface },
-  explanationIcon: { backgroundColor: iteraColors.surface },
+  card: { borderRadius: 20, borderWidth: 1, borderColor: fliptapColors.border, backgroundColor: fliptapColors.surface, paddingHorizontal: 18, paddingVertical: 20, alignItems: 'center', ...Platform.select({ ios: { shadowColor: fliptapColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
+  badge: { minHeight: 42, paddingHorizontal: 16, borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  badgeFinished: { backgroundColor: fliptapColors.accentSofter },
+  badgeText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  badgeTextFinished: { color: fliptapColors.accentActive },
+  prompt: { marginTop: 20, color: fliptapColors.inkBrand, fontSize: 23, lineHeight: 31, fontWeight: '700', letterSpacing: -0.35, textAlign: 'center' },
+  scenario: { marginTop: 10, color: fliptapColors.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  infoPanel: { alignSelf: 'stretch', borderRadius: fliptapRadii.card, borderWidth: 1, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  tipPanel: { marginTop: 16, borderColor: '#f4dccb', backgroundColor: fliptapColors.accentSofter },
+  explanationPanel: { marginTop: 14, borderColor: '#cfe5d5', backgroundColor: fliptapColors.successSoft },
+  infoIcon: { width: 36, height: 36, flexShrink: 0, borderRadius: fliptapRadii.control, alignItems: 'center', justifyContent: 'center' },
+  tipIcon: { backgroundColor: fliptapColors.surface },
+  explanationIcon: { backgroundColor: fliptapColors.surface },
   infoCopy: { flex: 1 },
-  infoTitle: { color: iteraColors.inkBrand, fontSize: 13, fontWeight: '800' },
-  infoText: { marginTop: 3, color: iteraColors.muted, fontSize: 12, lineHeight: 18 },
-  codeBlock: { alignSelf: 'stretch', marginTop: 18, overflow: 'hidden', borderRadius: iteraRadii.card, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surfaceSubtle, paddingVertical: 10 },
+  infoTitle: { color: fliptapColors.inkBrand, fontSize: 13, fontWeight: '800' },
+  infoText: { marginTop: 3, color: fliptapColors.muted, fontSize: 12, lineHeight: 18 },
+  codeBlock: { alignSelf: 'stretch', marginTop: 18, overflow: 'hidden', borderRadius: fliptapRadii.card, borderWidth: 1, borderColor: fliptapColors.border, backgroundColor: fliptapColors.surfaceSubtle, paddingVertical: 10 },
   codeLine: { minHeight: 23, paddingVertical: 1, flexDirection: 'row', alignItems: 'flex-start' },
   codeLineFocused: { backgroundColor: '#fff1e7' },
-  lineNumber: { width: 30, paddingRight: 7, color: iteraColors.muted, fontFamily: mono, fontSize: 10, lineHeight: 21, textAlign: 'right' },
-  codeText: { flex: 1, paddingRight: 6, color: iteraColors.inkBrand, fontFamily: mono, fontSize: 10.5, lineHeight: 21 },
+  lineNumber: { width: 30, paddingRight: 7, color: fliptapColors.muted, fontFamily: mono, fontSize: 10, lineHeight: 21, textAlign: 'right' },
+  codeText: { flex: 1, paddingRight: 6, color: fliptapColors.inkBrand, fontFamily: mono, fontSize: 10.5, lineHeight: 21 },
   stepHeader: { alignSelf: 'stretch', marginTop: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  stepCount: { color: iteraColors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
+  stepCount: { color: fliptapColors.muted, fontSize: 12, fontWeight: '800', letterSpacing: 0.4, textTransform: 'uppercase' },
   stepDots: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  stepDot: { width: 24, height: 6, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.border },
+  stepDot: { width: 24, height: 6, borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.border },
   stepDotAnswered: { backgroundColor: '#79b98a' },
-  stepDotCurrent: { backgroundColor: iteraColors.accent },
-  stepPanel: { alignSelf: 'stretch', marginTop: 10, borderRadius: iteraRadii.card, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, padding: 14 },
-  stepPrompt: { color: iteraColors.inkBrand, fontSize: 17, lineHeight: 24, fontWeight: '700' },
+  stepDotCurrent: { backgroundColor: fliptapColors.accent },
+  stepPanel: { alignSelf: 'stretch', marginTop: 10, borderRadius: fliptapRadii.card, borderWidth: 1, borderColor: fliptapColors.border, backgroundColor: fliptapColors.surface, padding: 14 },
+  stepPrompt: { color: fliptapColors.inkBrand, fontSize: 17, lineHeight: 24, fontWeight: '700' },
   responseBlock: { marginTop: 14 },
   choices: { gap: 10 },
-  choice: { minHeight: 72, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, paddingHorizontal: 12, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 11 },
-  choiceSelected: { borderWidth: 1.5, borderColor: iteraColors.accent, backgroundColor: iteraColors.accentSofter },
-  choiceCorrect: { borderColor: '#86c99b', backgroundColor: iteraColors.successSoft },
-  choiceIncorrect: { borderColor: '#e1a29e', backgroundColor: iteraColors.errorSoft },
-  choiceIndicator: { width: 30, height: 30, flexShrink: 0, borderRadius: 15, borderWidth: 2, borderColor: iteraColors.borderStrong, alignItems: 'center', justifyContent: 'center' },
-  choiceIndicatorSelected: { borderColor: iteraColors.accent, backgroundColor: iteraColors.accent },
-  choiceIndicatorCorrect: { borderColor: iteraColors.success, backgroundColor: iteraColors.success },
-  choiceIndicatorIncorrect: { borderColor: iteraColors.error, backgroundColor: iteraColors.error },
-  choiceText: { flex: 1, color: iteraColors.inkBrand, fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  stepSubmit: { minHeight: 46, marginTop: 12, borderRadius: iteraRadii.control, backgroundColor: iteraColors.accent, alignItems: 'center', justifyContent: 'center' },
-  stepSubmitText: { color: iteraColors.surface, fontSize: 14, fontWeight: '800' },
-  exactInput: { minHeight: 48, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.borderStrong, backgroundColor: iteraColors.surface, paddingHorizontal: 13, color: iteraColors.inkBrand, fontFamily: mono, fontSize: 15, outlineWidth: 0 },
-  stepResult: { minHeight: 38, borderRadius: iteraRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  stepResultCorrect: { backgroundColor: iteraColors.successSoft },
-  stepResultIncorrect: { backgroundColor: iteraColors.errorSoft },
+  choice: { minHeight: 72, borderRadius: fliptapRadii.control, borderWidth: 1, borderColor: fliptapColors.border, backgroundColor: fliptapColors.surface, paddingHorizontal: 12, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  choiceSelected: { borderWidth: 1.5, borderColor: fliptapColors.accent, backgroundColor: fliptapColors.accentSofter },
+  choiceCorrect: { borderColor: '#86c99b', backgroundColor: fliptapColors.successSoft },
+  choiceIncorrect: { borderColor: '#e1a29e', backgroundColor: fliptapColors.errorSoft },
+  choiceIndicator: { width: 30, height: 30, flexShrink: 0, borderRadius: 15, borderWidth: 2, borderColor: fliptapColors.borderStrong, alignItems: 'center', justifyContent: 'center' },
+  choiceIndicatorSelected: { borderColor: fliptapColors.accent, backgroundColor: fliptapColors.accent },
+  choiceIndicatorCorrect: { borderColor: fliptapColors.success, backgroundColor: fliptapColors.success },
+  choiceIndicatorIncorrect: { borderColor: fliptapColors.error, backgroundColor: fliptapColors.error },
+  choiceText: { flex: 1, color: fliptapColors.inkBrand, fontSize: 14, lineHeight: 20, fontWeight: '600' },
+  stepSubmit: { minHeight: 46, marginTop: 12, borderRadius: fliptapRadii.control, backgroundColor: fliptapColors.accent, alignItems: 'center', justifyContent: 'center' },
+  stepSubmitText: { color: fliptapColors.surface, fontSize: 14, fontWeight: '800' },
+  exactInput: { minHeight: 48, borderRadius: fliptapRadii.control, borderWidth: 1, borderColor: fliptapColors.borderStrong, backgroundColor: fliptapColors.surface, paddingHorizontal: 13, color: fliptapColors.inkBrand, fontFamily: mono, fontSize: 15, outlineWidth: 0 },
+  stepResult: { minHeight: 38, borderRadius: fliptapRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  stepResultCorrect: { backgroundColor: fliptapColors.successSoft },
+  stepResultIncorrect: { backgroundColor: fliptapColors.errorSoft },
   stepResultText: { fontSize: 13, fontWeight: '800' },
-  correctText: { color: iteraColors.success },
-  incorrectText: { color: iteraColors.error },
-  recallAnswer: { borderRadius: iteraRadii.control, backgroundColor: iteraColors.navySoft, padding: 13, flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
-  recallAnswerText: { flex: 1, color: iteraColors.inkBrand, fontSize: 14, lineHeight: 21, fontWeight: '600' },
-  revealButton: { minHeight: 48, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.borderStrong, backgroundColor: iteraColors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  revealButtonText: { color: iteraColors.inkBrand, fontSize: 14, fontWeight: '700' },
+  correctText: { color: fliptapColors.success },
+  incorrectText: { color: fliptapColors.error },
+  recallAnswer: { borderRadius: fliptapRadii.control, backgroundColor: fliptapColors.navySoft, padding: 13, flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
+  recallAnswerText: { flex: 1, color: fliptapColors.inkBrand, fontSize: 14, lineHeight: 21, fontWeight: '600' },
+  revealButton: { minHeight: 48, borderRadius: fliptapRadii.control, borderWidth: 1, borderColor: fliptapColors.borderStrong, backgroundColor: fliptapColors.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  revealButtonText: { color: fliptapColors.inkBrand, fontSize: 14, fontWeight: '700' },
   navigationRow: { alignSelf: 'stretch', minHeight: 50, marginTop: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  previousButton: { minWidth: 112, minHeight: 46, borderRadius: iteraRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  previousText: { color: iteraColors.muted, fontSize: 14, fontWeight: '700' },
-  continueButton: { minWidth: 126, minHeight: 48, paddingHorizontal: 16, borderRadius: iteraRadii.control, backgroundColor: iteraColors.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  continueText: { color: iteraColors.surface, fontSize: 15, fontWeight: '800' },
-  finalResult: { alignSelf: 'stretch', minHeight: 50, marginTop: 8, borderRadius: iteraRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
-  finalResultCorrect: { backgroundColor: iteraColors.successSoft },
-  finalResultIncorrect: { backgroundColor: iteraColors.errorSoft },
+  previousButton: { minWidth: 112, minHeight: 46, borderRadius: fliptapRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  previousText: { color: fliptapColors.muted, fontSize: 14, fontWeight: '700' },
+  continueButton: { minWidth: 126, minHeight: 48, paddingHorizontal: 16, borderRadius: fliptapRadii.control, backgroundColor: fliptapColors.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  continueText: { color: fliptapColors.surface, fontSize: 15, fontWeight: '800' },
+  finalResult: { alignSelf: 'stretch', minHeight: 50, marginTop: 8, borderRadius: fliptapRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  finalResultCorrect: { backgroundColor: fliptapColors.successSoft },
+  finalResultIncorrect: { backgroundColor: fliptapColors.errorSoft },
   finalResultText: { fontSize: 13, fontWeight: '800' },
   disabled: { opacity: 0.36 },
   pressed: { opacity: 0.72 },

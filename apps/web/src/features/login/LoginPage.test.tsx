@@ -38,7 +38,7 @@ function fakeSession(email: string): Session {
 
 function seedLocalSession() {
   window.localStorage.setItem(
-    'itera.session',
+    'fliptap.session',
     JSON.stringify({ id: 'x', email: 'stale@local.test', kind: 'local', createdAt: '' }),
   )
 }
@@ -170,8 +170,8 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText('Password'), 'hunter2')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    expect(window.localStorage.getItem('itera.session')).toBeNull()
-    expect(window.sessionStorage.getItem('itera.session')).toBeTruthy()
+    expect(window.localStorage.getItem('fliptap.session')).toBeNull()
+    expect(window.sessionStorage.getItem('fliptap.session')).toBeTruthy()
   })
 
   it('persists the session across restarts when Remember me is checked', async () => {
@@ -183,8 +183,8 @@ describe('LoginPage', () => {
     await user.type(screen.getByLabelText('Password'), 'hunter2')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    expect(window.localStorage.getItem('itera.session')).toBeTruthy()
-    expect(window.sessionStorage.getItem('itera.session')).toBeNull()
+    expect(window.localStorage.getItem('fliptap.session')).toBeTruthy()
+    expect(window.sessionStorage.getItem('fliptap.session')).toBeNull()
   })
 
   it('creates a demo session from the demo workspace button', async () => {
@@ -211,7 +211,7 @@ describe('LoginPage', () => {
 
   it('redirects away when a session already exists', () => {
     window.sessionStorage.setItem(
-      'itera.session',
+      'fliptap.session',
       JSON.stringify({ id: 'x', email: 'a@b.com', kind: 'local', createdAt: '' }),
     )
     renderLogin()
@@ -253,7 +253,7 @@ describe('LoginPage - Supabase mode', () => {
 
   it('redirects a real Supabase session to the route it was sent from', async () => {
     seedLocalSession()
-    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@itera.test') } })
+    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@fliptap.test') } })
 
     await act(async () => {
       renderLogin({ pathname: '/login', state: { from: '/review' } })

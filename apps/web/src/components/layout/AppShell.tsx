@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import { cn } from '@/lib/cn'
 import { TopNav } from './TopNav'
 import { AccountMenu } from './AccountMenu'
@@ -8,12 +8,12 @@ import { primaryNavLinks } from './primaryNavLinks'
 
 // The one shared shell for every standard product route (Today, Library,
 // focused Deck, Roadmaps, Progress, Settings, Card create/edit/preview) — see
-// docs/itera-decisions.md's App Shell convergence entry. Review is NOT a
+// docs/fliptap-decisions.md's App Shell convergence entry. Review is NOT a
 // child of this route (router.tsx moves it to its own top-level, chrome-free
 // entry, the same structural pattern Today/design-preview already used
 // before this milestone) — there is no CSS-hiding involved.
 //
-// There is no theme toggle: the app is light-only (Itera has no dark palette
+// There is no theme toggle: the app is light-only (FlipTap has no dark palette
 // yet) and ForceLightTheme pins this tree to light, so a toggle would be
 // inert. ThemeProvider/useTheme survive only because CodeView/CodeEditor read
 // the theme to choose their syntax palette.
@@ -23,7 +23,7 @@ export function AppShell() {
     pathname === '/preview' || /^\/cards\/[^/]+\/study$/.test(pathname)
 
   return (
-    <IteraSurface className="min-h-screen">
+    <FlipTapSurface className="min-h-screen">
       <TopNav
         navLinks={primaryNavLinks}
         rightSlot={
@@ -43,6 +43,6 @@ export function AppShell() {
       >
         <Outlet />
       </main>
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

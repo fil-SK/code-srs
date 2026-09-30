@@ -6,7 +6,7 @@ import {
   walkthroughBehavior,
   writeCodeBehavior,
   type InteractionType,
-} from '@itera/core'
+} from '@fliptap/core'
 
 import { MatchingView } from './matching/MatchingView'
 import { MultipleChoiceView } from './multipleChoice/MultipleChoiceView'

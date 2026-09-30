@@ -8,7 +8,7 @@ import {
   writeLocalSession,
 } from './localSession'
 
-const KEY = 'itera.session'
+const KEY = 'fliptap.session'
 
 describe('localSession', () => {
   afterEach(() => {
@@ -45,7 +45,7 @@ describe('localSession', () => {
   })
 
   it('records the session kind', () => {
-    writeLocalSession(createLocalSession('demo@itera.local', 'demo'), { remember: false })
+    writeLocalSession(createLocalSession('demo@fliptap.local', 'demo'), { remember: false })
     expect(readLocalSession()?.kind).toBe('demo')
   })
 
@@ -64,7 +64,7 @@ describe('localSession', () => {
   })
 })
 
-// The same three operations as @itera/core's LocalSessionStore sees them. The
+// The same three operations as @fliptap/core's LocalSessionStore sees them. The
 // shared auth layer only ever reaches storage through this object, so it is
 // what actually has to behave, not just the named functions beside it.
 describe('browserSessionStore', () => {

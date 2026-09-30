@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
-import type { DateRangePreset } from '@itera/core'
+import type { DateRangePreset } from '@fliptap/core'
 import { demoProgressViewModel } from '@/src/demo/demoSelectors'
 import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import { pushedDeckIds, resetRouterCalls, routerDouble } from '@/src/test/routerDouble'

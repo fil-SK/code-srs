@@ -1,12 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
   gradeMultipleChoice,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   stripInlineMarkers,
   type ID,
   type MultipleChoiceGrade,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -26,7 +26,7 @@ function MultipleChoiceBadge({ submitted }: { submitted: boolean }) {
   return (
     <View style={[styles.badge, submitted && styles.badgeSubmitted]}>
       <MaterialCommunityIcons
-        color={submitted ? iteraColors.accent : iteraColors.inkBrand}
+        color={submitted ? fliptapColors.accent : fliptapColors.inkBrand}
         name={submitted ? 'check-decagram-outline' : 'format-list-checks'}
         size={21}
       />
@@ -49,7 +49,7 @@ function ChoiceIndicator({
   if (result === 'incorrect') {
     return (
       <View style={[styles.indicator, styles.indicatorIncorrect]}>
-        <MaterialCommunityIcons color={iteraColors.surface} name="close" size={22} />
+        <MaterialCommunityIcons color={fliptapColors.surface} name="close" size={22} />
       </View>
     )
   }
@@ -63,7 +63,7 @@ function ChoiceIndicator({
         ]}
       >
         <MaterialCommunityIcons
-          color={result === 'missed' ? iteraColors.success : iteraColors.surface}
+          color={result === 'missed' ? fliptapColors.success : fliptapColors.surface}
           name="check"
           size={22}
         />
@@ -76,7 +76,7 @@ function ChoiceIndicator({
         (single ? (
           <View style={styles.radioDot} />
         ) : (
-          <MaterialCommunityIcons color={iteraColors.surface} name="check" size={22} />
+          <MaterialCommunityIcons color={fliptapColors.surface} name="check" size={22} />
         ))}
     </View>
   )
@@ -203,7 +203,7 @@ export function MultipleChoiceView({
         <View style={styles.actionRow}>
           <View style={styles.helper}>
             <MaterialCommunityIcons
-              color={iteraColors.accent}
+              color={fliptapColors.accent}
               name="information-outline"
               size={20}
             />
@@ -234,7 +234,7 @@ export function MultipleChoiceView({
           style={[styles.summary, grade?.correct ? styles.summaryCorrect : styles.summaryIncorrect]}
         >
           <MaterialCommunityIcons
-            color={grade?.correct ? iteraColors.success : iteraColors.error}
+            color={grade?.correct ? fliptapColors.success : fliptapColors.error}
             name={grade?.correct ? 'check-circle-outline' : 'alert-circle-outline'}
             size={21}
           />
@@ -263,14 +263,14 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 18,
     paddingVertical: 20,
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 7 },
         shadowOpacity: 0.08,
         shadowRadius: 18,
@@ -282,18 +282,18 @@ const styles = StyleSheet.create({
   badge: {
     minHeight: 42,
     paddingHorizontal: 16,
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.surfaceSubtle,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  badgeSubmitted: { backgroundColor: iteraColors.accentSofter },
-  badgeText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
-  badgeTextSubmitted: { color: iteraColors.accentActive },
+  badgeSubmitted: { backgroundColor: fliptapColors.accentSofter },
+  badgeText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  badgeTextSubmitted: { color: fliptapColors.accentActive },
   prompt: {
     marginTop: 22,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 25,
     lineHeight: 34,
     fontWeight: '700',
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   },
   instruction: {
     marginTop: 9,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 21,
     textAlign: 'center',
@@ -310,10 +310,10 @@ const styles = StyleSheet.create({
   options: { alignSelf: 'stretch', marginTop: 24, gap: 12 },
   option: {
     minHeight: 90,
-    borderRadius: iteraRadii.card,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 15,
     paddingVertical: 14,
     flexDirection: 'row',
@@ -322,15 +322,15 @@ const styles = StyleSheet.create({
   },
   optionSelected: {
     borderWidth: 1.5,
-    borderColor: iteraColors.inkBrand,
-    backgroundColor: iteraColors.selectionSoft,
+    borderColor: fliptapColors.inkBrand,
+    backgroundColor: fliptapColors.selectionSoft,
   },
-  optionCorrect: { borderColor: '#86c99b', backgroundColor: iteraColors.successSoft },
-  optionIncorrect: { borderColor: '#e1a29e', backgroundColor: iteraColors.errorSoft },
+  optionCorrect: { borderColor: '#86c99b', backgroundColor: fliptapColors.successSoft },
+  optionIncorrect: { borderColor: '#e1a29e', backgroundColor: fliptapColors.errorSoft },
   optionMissed: {
     borderWidth: 1.5,
-    borderColor: iteraColors.success,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.success,
+    backgroundColor: fliptapColors.surface,
   },
   indicator: {
     width: 42,
@@ -338,17 +338,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     borderRadius: 21,
     borderWidth: 2,
-    borderColor: iteraColors.borderStrong,
+    borderColor: fliptapColors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  indicatorSelected: { borderColor: iteraColors.navy, backgroundColor: iteraColors.navy },
-  indicatorCorrect: { borderColor: iteraColors.success, backgroundColor: iteraColors.success },
-  indicatorIncorrect: { borderColor: iteraColors.error, backgroundColor: iteraColors.error },
-  indicatorMissed: { backgroundColor: iteraColors.surface },
-  radioDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: iteraColors.surface },
+  indicatorSelected: { borderColor: fliptapColors.navy, backgroundColor: fliptapColors.navy },
+  indicatorCorrect: { borderColor: fliptapColors.success, backgroundColor: fliptapColors.success },
+  indicatorIncorrect: { borderColor: fliptapColors.error, backgroundColor: fliptapColors.error },
+  indicatorMissed: { backgroundColor: fliptapColors.surface },
+  radioDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: fliptapColors.surface },
   optionCopy: { flex: 1, gap: 5 },
-  optionText: { color: iteraColors.inkBrand, fontSize: 16, lineHeight: 23, fontWeight: '600' },
+  optionText: { color: fliptapColors.inkBrand, fontSize: 16, lineHeight: 23, fontWeight: '600' },
   resultLabel: {
     fontSize: 11,
     lineHeight: 15,
@@ -356,8 +356,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  correctText: { color: iteraColors.success },
-  incorrectText: { color: iteraColors.error },
+  correctText: { color: fliptapColors.success },
+  incorrectText: { color: fliptapColors.error },
   actionRow: { alignSelf: 'stretch', marginTop: 20, gap: 12 },
   helper: {
     minHeight: 28,
@@ -366,31 +366,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
   },
-  helperText: { color: iteraColors.muted, fontSize: 13, fontWeight: '600' },
+  helperText: { color: fliptapColors.muted, fontSize: 13, fontWeight: '600' },
   submit: {
     minHeight: 54,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitDisabled: { opacity: 0.38 },
-  submitText: { color: iteraColors.surface, fontSize: 17, fontWeight: '700' },
+  submitText: { color: fliptapColors.surface, fontSize: 17, fontWeight: '700' },
   summary: {
     alignSelf: 'stretch',
     minHeight: 58,
     marginTop: 20,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 9,
   },
-  summaryCorrect: { backgroundColor: iteraColors.successSoft },
-  summaryIncorrect: { backgroundColor: iteraColors.errorSoft },
+  summaryCorrect: { backgroundColor: fliptapColors.successSoft },
+  summaryIncorrect: { backgroundColor: fliptapColors.errorSoft },
   summaryCopy: { alignItems: 'center' },
   summaryTitle: { fontSize: 14, fontWeight: '800' },
-  summaryDetail: { marginTop: 2, color: iteraColors.muted, fontSize: 11, fontWeight: '600' },
+  summaryDetail: { marginTop: 2, color: fliptapColors.muted, fontSize: 11, fontWeight: '600' },
   pressed: { opacity: 0.72 },
 })

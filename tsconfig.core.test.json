@@ -1,5 +1,5 @@
 {
-  /* @itera/core's tests.
+  /* @fliptap/core's tests.
 
      The web app deliberately does not typecheck its tests (tsconfig.app.json
      excludes *.test.ts(x)), and that historical choice was not copied here:

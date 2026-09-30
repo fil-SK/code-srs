@@ -61,7 +61,7 @@ export function splitIntoChunks(value: string, maxBytes = MAX_CHUNK_BYTES): stri
 // JSON and not a bare number: a value written by some earlier, unchunked
 // implementation (or by anything else that owned this key) must read as
 // "unrecognized" rather than being mistaken for a chunk count.
-const MANIFEST_PREFIX = 'itera.chunked.v1:'
+const MANIFEST_PREFIX = 'fliptap.chunked.v1:'
 
 export function formatManifest(chunkCount: number): string {
   return `${MANIFEST_PREFIX}${chunkCount}`

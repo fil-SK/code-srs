@@ -35,16 +35,16 @@ export function DateRangePicker({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 whitespace-nowrap rounded-itera-control border border-itera-border bg-itera-surface px-3 py-2 text-sm font-medium text-itera-ink-brand shadow-[var(--itera-shadow-card)] hover:border-itera-border-strong"
+        className="inline-flex items-center gap-2 whitespace-nowrap rounded-fliptap-control border border-fliptap-border bg-fliptap-surface px-3 py-2 text-sm font-medium text-fliptap-ink-brand shadow-[var(--fliptap-shadow-card)] hover:border-fliptap-border-strong"
       >
-        <Calendar size={14} className="text-itera-muted" />
+        <Calendar size={14} className="text-fliptap-muted" />
         {formatRangeLabel(range)}
-        <ChevronDown size={14} className="text-itera-muted" />
+        <ChevronDown size={14} className="text-fliptap-muted" />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 z-20 mt-1 w-48 rounded-itera-control border border-itera-border bg-itera-surface py-1 shadow-[var(--itera-shadow-float)]"
+          className="absolute right-0 z-20 mt-1 w-48 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface py-1 shadow-[var(--fliptap-shadow-float)]"
         >
           {DATE_RANGE_PRESETS.map((option) => (
             <button
@@ -56,10 +56,10 @@ export function DateRangePicker({
                 onChange(option.value)
                 setOpen(false)
               }}
-              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-itera-ink hover:bg-itera-surface-subtle"
+              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-fliptap-ink hover:bg-fliptap-surface-subtle"
             >
               {option.label}
-              {option.value === preset && <Check size={14} className="text-itera-accent" />}
+              {option.value === preset && <Check size={14} className="text-fliptap-accent" />}
             </button>
           ))}
         </div>

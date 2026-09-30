@@ -10,7 +10,7 @@ import { OrderingItemRow } from './OrderingItemRow'
 // item-list editor (add/remove/reorder) as the centerpiece plus the
 // randomize-order control. No native <input type="checkbox"> anywhere in this
 // file, per spec — the toggle is a small custom role="checkbox" button styled
-// with itera tokens. Item order in the list IS the correct order — there is
+// with fliptap tokens. Item order in the list IS the correct order — there is
 // no per-item "mark correct" control the way Multiple Choice has one.
 export function OrderingFields({
   form,
@@ -64,7 +64,7 @@ export function OrderingFields({
         />
       </Field>
 
-      <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+      <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
         <button
           type="button"
           role="checkbox"
@@ -73,8 +73,8 @@ export function OrderingFields({
           className={cn(
             'flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border transition-colors',
             form.randomize
-              ? 'border-itera-accent bg-itera-accent'
-              : 'border-itera-border-strong bg-itera-surface',
+              ? 'border-fliptap-accent bg-fliptap-accent'
+              : 'border-fliptap-border-strong bg-fliptap-surface',
           )}
         >
           {form.randomize && <span className="h-2 w-2 rounded-[1px] bg-white" />}
@@ -83,7 +83,7 @@ export function OrderingFields({
       </label>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Items (in the correct order)
         </span>
         {form.items.map((item, i) => (
@@ -105,7 +105,7 @@ export function OrderingFields({
       </div>
 
       {validation.errors.length > 0 && (
-        <ul className="space-y-1 text-xs font-medium text-itera-error">
+        <ul className="space-y-1 text-xs font-medium text-fliptap-error">
           {validation.errors.map((message) => (
             <li key={message}>{message}</li>
           ))}

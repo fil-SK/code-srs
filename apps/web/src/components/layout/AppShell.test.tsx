@@ -53,7 +53,7 @@ describe('AppShell', () => {
 
   it('renders the shared TopNav with all primary destinations on a standard route', async () => {
     renderAt('/decks')
-    expect(await screen.findByText('Itera')).toBeTruthy()
+    expect(await screen.findByText('FlipTap')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Today' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Library' })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Progress' })).toBeTruthy()
@@ -64,8 +64,8 @@ describe('AppShell', () => {
     renderAt('/decks')
     const library = await screen.findByRole('link', { name: 'Library' })
     const today = screen.getByRole('link', { name: 'Today' })
-    expect(library.className).toMatch(/border-itera-accent/)
-    expect(today.className).not.toMatch(/border-itera-accent/)
+    expect(library.className).toMatch(/border-fliptap-accent/)
+    expect(today.className).not.toMatch(/border-fliptap-accent/)
   })
 
   it('renders the account menu and no global Search or Create action', async () => {
@@ -90,7 +90,7 @@ describe('AppShell', () => {
   it('does not render the shared shell around a route outside AppShell (Review)', async () => {
     renderAt('/review')
     expect(await screen.findByText('Review content')).toBeTruthy()
-    expect(screen.queryByText('Itera')).toBeNull()
+    expect(screen.queryByText('FlipTap')).toBeNull()
     expect(screen.queryByRole('link', { name: 'Library' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Open account menu' })).toBeNull()
   })

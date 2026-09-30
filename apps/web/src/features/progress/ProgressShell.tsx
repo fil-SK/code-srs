@@ -12,14 +12,14 @@ export function ProgressShell({ children }: { children: ReactNode }) {
 
   return isWide ? (
     <div className="grid grid-cols-[240px_1fr] items-stretch gap-8">
-      <div className="border-r border-itera-border pr-2">
+      <div className="border-r border-fliptap-border pr-2">
         <ProgressNav />
       </div>
       <div className="min-w-0">{children}</div>
     </div>
   ) : (
     <div className="flex flex-col gap-4">
-      <div className="rounded-itera-card border border-itera-border bg-itera-surface">
+      <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface">
         <ProgressNav />
       </div>
       <div className="min-w-0">{children}</div>

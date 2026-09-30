@@ -30,7 +30,7 @@ import {
   markLabelFor,
   metricsFor,
   stripInlineMarkers,
-} from '@itera/core'
+} from '@fliptap/core'
 
 import type {
   MobileCollectionViewModel,
@@ -58,7 +58,7 @@ import {
 // route file stays a thin binding and the resolution rules are unit-testable.
 // That matters more than usual here: test files may not live under app/,
 // because Expo Router's require.context would pull them into the bundle
-// (itera-decisions D356), so any logic worth proving has to live in src/.
+// (fliptap-decisions D356), so any logic worth proving has to live in src/.
 //
 // Deck numbers are derived from the demo card list rather than authored per
 // screen. That is the whole point of the layer: Today, Library, the Deck screen

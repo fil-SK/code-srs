@@ -42,8 +42,8 @@ export function OverflowMenu({
           setOpen((v) => !v)
         }}
         className={cn(
-          'grid h-8 w-8 place-items-center rounded-itera-control text-itera-muted hover:bg-itera-surface-subtle hover:text-itera-ink',
-          bordered && 'h-11 w-11 border border-itera-border hover:border-itera-border-strong',
+          'grid h-8 w-8 place-items-center rounded-fliptap-control text-fliptap-muted hover:bg-fliptap-surface-subtle hover:text-fliptap-ink',
+          bordered && 'h-11 w-11 border border-fliptap-border hover:border-fliptap-border-strong',
         )}
       >
         {bordered ? <MoreHorizontal size={18} /> : <MoreVertical size={16} />}
@@ -69,8 +69,8 @@ export function OverflowMenu({
               className={cn(
                 'flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm',
                 danger
-                  ? 'text-itera-error hover:bg-itera-error-soft'
-                  : 'text-itera-ink hover:bg-itera-surface-subtle',
+                  ? 'text-fliptap-error hover:bg-fliptap-error-soft'
+                  : 'text-fliptap-ink hover:bg-fliptap-surface-subtle',
               )}
             >
               <Icon size={14} />

@@ -12,9 +12,9 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-itera-card border border-dashed border-itera-border px-6 py-16 text-center">
-      <p className="text-sm font-semibold text-itera-ink-brand">{title}</p>
-      <p className="mt-1 max-w-sm text-sm text-itera-muted">{description}</p>
+    <div className="flex flex-col items-center justify-center rounded-fliptap-card border border-dashed border-fliptap-border px-6 py-16 text-center">
+      <p className="text-sm font-semibold text-fliptap-ink-brand">{title}</p>
+      <p className="mt-1 max-w-sm text-sm text-fliptap-muted">{description}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
   )

@@ -10,7 +10,7 @@ export interface DeckMetrics {
 const EMPTY: DeckMetrics = { cardCount: 0, dueCount: 0, masteryFraction: 0 }
 
 // Per-deck metrics derived from real data — no separate "mastery"/"last
-// studied" concept exists yet (see docs/itera-decisions.md), so
+// studied" concept exists yet (see docs/fliptap-decisions.md), so
 // masteryFraction is an honest proxy (share of non-suspended cards that have
 // reached FSRS's "review" state) rather than a fabricated number.
 //

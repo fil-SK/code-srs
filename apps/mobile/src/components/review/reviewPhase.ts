@@ -1,4 +1,4 @@
-import type { ObjectiveResult } from '@itera/core'
+import type { ObjectiveResult } from '@fliptap/core'
 
 // The native Review state machine.
 //

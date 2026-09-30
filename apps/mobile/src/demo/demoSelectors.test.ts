@@ -1,4 +1,4 @@
-import { leafDecks } from '@itera/core'
+import { leafDecks } from '@fliptap/core'
 import { filterAndSortDeckViewModels } from '@/src/components/library/deckSorting'
 import {
   demoCollectionViewModel,

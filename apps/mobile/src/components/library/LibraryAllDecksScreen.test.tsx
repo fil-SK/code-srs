@@ -1,4 +1,4 @@
-import { leafDecks } from '@itera/core'
+import { leafDecks } from '@fliptap/core'
 import { fireEvent, render, screen } from '@testing-library/react-native'
 
 import { demoLibraryViewModel } from '@/src/demo/demoSelectors'

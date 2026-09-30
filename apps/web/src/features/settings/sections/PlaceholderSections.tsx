@@ -26,8 +26,8 @@ export function AppearanceSection() {
   return (
     <PlaceholderSection
       title="Appearance"
-      description="How Itera looks."
-      note="Not available yet. Itera is light-only for now — its palette has no dark variant, so a theme control would have nothing to switch to. The toggle returns once one exists."
+      description="How FlipTap looks."
+      note="Not available yet. FlipTap is light-only for now — its palette has no dark variant, so a theme control would have nothing to switch to. The toggle returns once one exists."
       planned={['Light / dark / system theme', 'Interface density', 'Code font and size']}
     />
   )
@@ -37,8 +37,8 @@ export function NotificationsSection() {
   return (
     <PlaceholderSection
       title="Notifications"
-      description="When and how Itera reminds you to study."
-      note="Not available yet. Itera never sends anything — there is no reminder scheduler and no push registration."
+      description="When and how FlipTap reminds you to study."
+      note="Not available yet. FlipTap never sends anything — there is no reminder scheduler and no push registration."
       planned={['Daily study reminder', 'Streak-at-risk alerts', 'Email digests']}
     />
   )
@@ -48,7 +48,7 @@ export function PrivacySection() {
   return (
     <PlaceholderSection
       title="Privacy"
-      description="What Itera stores and who can see it."
+      description="What FlipTap stores and who can see it."
       note="Not available yet. Nothing is collected: your data is in this browser's IndexedDB, or in your own Supabase project if you configured one. There is no analytics or telemetry to opt out of."
       planned={['Public profile visibility', 'Data collection controls', 'Download all data']}
     />

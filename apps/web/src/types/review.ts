@@ -8,4 +8,4 @@ export type {
   SchedulingStateKind,
   SessionSource,
   StudySession,
-} from '@itera/core'
+} from '@fliptap/core'

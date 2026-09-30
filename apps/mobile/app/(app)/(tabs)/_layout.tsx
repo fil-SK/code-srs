@@ -1,12 +1,12 @@
 import { Tabs } from 'expo-router'
 
-import { IteraTabBar } from '@/src/components/navigation/IteraTabBar'
+import { FlipTapTabBar } from '@/src/components/navigation/FlipTapTabBar'
 
 export default function TabLayout() {
   return (
     <Tabs
       initialRouteName="today"
-      tabBar={(props) => <IteraTabBar {...props} />}
+      tabBar={(props) => <FlipTapTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="library" options={{ title: 'Library' }} />

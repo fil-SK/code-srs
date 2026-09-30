@@ -1,4 +1,4 @@
-import type { DashboardMessage, Deck } from '@itera/core'
+import type { DashboardMessage, Deck } from '@fliptap/core'
 
 export interface MobileTodayDeckViewModel {
   id: Deck['id']

@@ -12,7 +12,7 @@ import { walkthroughDefinition } from './walkthrough'
 // rendering nothing, same rationale as when this only covered three types.
 //
 // This is the web platform's registry: each entry is one shared behavior from
-// @itera/core bound to this platform's View. A native app registers the same
+// @fliptap/core bound to this platform's View. A native app registers the same
 // behaviors against native Views in its own registry - the lookup is per
 // platform, the meaning of each interaction is not.
 const registry: Partial<{ [T in InteractionType]: WebInteractionDefinition<T> }> = {

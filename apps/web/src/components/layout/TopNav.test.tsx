@@ -36,13 +36,13 @@ describe('TopNav', () => {
 
   it('marks only the link matching the current path as active', () => {
     renderNav('/progress')
-    expect(screen.getByRole('link', { name: 'Progress' }).className).toMatch(/border-itera-accent/)
-    expect(screen.getByRole('link', { name: 'Today' }).className).not.toMatch(/border-itera-accent/)
-    expect(screen.getByRole('link', { name: 'Library' }).className).not.toMatch(/border-itera-accent/)
+    expect(screen.getByRole('link', { name: 'Progress' }).className).toMatch(/border-fliptap-accent/)
+    expect(screen.getByRole('link', { name: 'Today' }).className).not.toMatch(/border-fliptap-accent/)
+    expect(screen.getByRole('link', { name: 'Library' }).className).not.toMatch(/border-fliptap-accent/)
   })
 
   it('matches Today only exactly at "/", not as a prefix of every route', () => {
     renderNav('/decks')
-    expect(screen.getByRole('link', { name: 'Today' }).className).not.toMatch(/border-itera-accent/)
+    expect(screen.getByRole('link', { name: 'Today' }).className).not.toMatch(/border-fliptap-accent/)
   })
 })

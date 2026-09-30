@@ -6,7 +6,7 @@ import { subtreeIds } from '@/domain/decks/tree'
 import { resolveSessionLimit } from '@/domain/stats/todayMetrics'
 import { useDueCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import { ReviewSessionV2 } from './ReviewSessionV2'
 import { useSessionQueue } from './useSessionQueue'
 
@@ -51,7 +51,7 @@ export function ReviewPage() {
   const loading = isLoading || decksLoading
 
   // Review is a top-level, chrome-free route (no AppShell ancestor providing
-  // IteraSurface), so every return branch here wraps itself — the loading/
+  // FlipTapSurface), so every return branch here wraps itself — the loading/
   // empty branches previously relied on AppShell for this; ReviewSessionV2
   // below already self-wraps and needs no change.
   // Entering a session used to paint the word "Loading" on an empty canvas -
@@ -61,37 +61,37 @@ export function ReviewPage() {
   // already there rather than replacing a different screen.
   if (loading || !session) {
     return (
-      <IteraSurface className="min-h-screen">
+      <FlipTapSurface className="min-h-screen">
         <LoadingRegion label="Preparing your session">
-          <header className="mb-14 min-h-20 w-full border-b border-itera-border bg-itera-surface px-4 sm:px-6">
+          <header className="mb-14 min-h-20 w-full border-b border-fliptap-border bg-fliptap-surface px-4 sm:px-6">
             <div className="mx-auto grid min-h-20 w-full max-w-[1280px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
               <Link
                 to="/"
-                className="inline-flex w-fit items-center gap-2 text-sm font-medium text-itera-ink transition-colors hover:text-itera-ink-brand sm:text-base"
+                className="inline-flex w-fit items-center gap-2 text-sm font-medium text-fliptap-ink transition-colors hover:text-fliptap-ink-brand sm:text-base"
               >
                 <span aria-hidden="true" className="text-lg leading-none">
                   &lt;
                 </span>
                 Exit session
               </Link>
-              <Skeleton className="h-4 w-[4.25rem] rounded-itera-pill" />
+              <Skeleton className="h-4 w-[4.25rem] rounded-fliptap-pill" />
               <span />
             </div>
           </header>
           <div className="mx-auto max-w-2xl px-4">
-            <Skeleton className="h-[360px] w-full rounded-itera-card" />
+            <Skeleton className="h-[360px] w-full rounded-fliptap-card" />
           </div>
         </LoadingRegion>
-      </IteraSurface>
+      </FlipTapSurface>
     )
   }
 
   if (session.cards.length === 0) {
     return (
-      <IteraSurface className="grid min-h-screen place-items-center px-4">
-        <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
-          <div className="text-lg font-semibold text-itera-ink-brand">Nothing due 🎯</div>
-          <p className="mt-2 text-sm text-itera-muted">
+      <FlipTapSurface className="grid min-h-screen place-items-center px-4">
+        <div className="mx-auto max-w-md rounded-fliptap-card border border-dashed border-fliptap-border bg-fliptap-surface p-10 text-center">
+          <div className="text-lg font-semibold text-fliptap-ink-brand">Nothing due 🎯</div>
+          <p className="mt-2 text-sm text-fliptap-muted">
             {scope
               ? `No cards due in “${scope.name}”. Open the deck to add cards or study ahead.`
               : 'No cards are due right now. Add cards from a deck, or come back later.'}
@@ -111,17 +111,17 @@ export function ReviewPage() {
             </Link>
           </div>
         </div>
-      </IteraSurface>
+      </FlipTapSurface>
     )
   }
 
   return (
-    <IteraSurface className="min-h-screen">
+    <FlipTapSurface className="min-h-screen">
       {scope && (
-        <div className="mx-auto max-w-3xl px-4 pt-4 text-sm text-itera-muted">
-          Studying <span className="font-semibold text-itera-ink-brand">{scope.name}</span>{' '}
+        <div className="mx-auto max-w-3xl px-4 pt-4 text-sm text-fliptap-muted">
+          Studying <span className="font-semibold text-fliptap-ink-brand">{scope.name}</span>{' '}
           and its subdecks ·{' '}
-          <Link to="/review" className="text-itera-accent hover:underline">
+          <Link to="/review" className="text-fliptap-accent hover:underline">
             all decks
           </Link>
         </div>
@@ -129,6 +129,6 @@ export function ReviewPage() {
       {/* Keyed by the snapshot id, never by the live queue's length - the
           latter remounted the session on every grade. */}
       <ReviewSessionV2 key={session.id} cards={session.cards} />
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

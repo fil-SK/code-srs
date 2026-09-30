@@ -33,7 +33,7 @@ export function MatchingColumnEditor({
   onRemoveOption: (optionId: string) => void
 }) {
   return (
-    <div className="space-y-3 rounded-itera-control border border-itera-border p-3">
+    <div className="space-y-3 rounded-fliptap-control border border-fliptap-border p-3">
       <div className="flex items-center gap-2.5">
         <input
           className={fieldClass}
@@ -47,15 +47,15 @@ export function MatchingColumnEditor({
           disabled={!canRemove}
           aria-label="Remove column"
           className={cn(
-            'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-            canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+            'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+            canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
           )}
         >
           <X size={15} />
         </button>
       </div>
 
-      <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+      <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
         <button
           type="button"
           role="checkbox"
@@ -64,8 +64,8 @@ export function MatchingColumnEditor({
           className={cn(
             'flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border transition-colors',
             column.fixed
-              ? 'border-itera-accent bg-itera-accent'
-              : 'border-itera-border-strong bg-itera-surface',
+              ? 'border-fliptap-accent bg-fliptap-accent'
+              : 'border-fliptap-border-strong bg-fliptap-surface',
           )}
         >
           {column.fixed && <span className="h-2 w-2 rounded-[1px] bg-white" />}
@@ -74,7 +74,7 @@ export function MatchingColumnEditor({
       </label>
 
       {column.fixed && (
-        <div className="space-y-2 border-t border-dashed border-itera-border pt-3">
+        <div className="space-y-2 border-t border-dashed border-fliptap-border pt-3">
           {column.options.map((option) => (
             <MatchingOptionRow
               key={option.id}

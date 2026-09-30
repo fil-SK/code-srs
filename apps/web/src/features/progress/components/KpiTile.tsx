@@ -19,7 +19,7 @@ export function KpiDelta({
 }) {
   if (delta === null) {
     return (
-      <span className={dark ? 'text-white/60' : 'text-itera-muted'}>No prior data</span>
+      <span className={dark ? 'text-white/60' : 'text-fliptap-muted'}>No prior data</span>
     )
   }
   const rounded = Math.round(Math.abs(delta))
@@ -29,10 +29,10 @@ export function KpiDelta({
   const tone = flat
     ? dark
       ? 'text-white/70'
-      : 'text-itera-muted'
+      : 'text-fliptap-muted'
     : positive
-      ? 'text-itera-success'
-      : 'text-itera-error'
+      ? 'text-fliptap-success'
+      : 'text-fliptap-error'
 
   return (
     <span className={cn('inline-flex items-center gap-1 font-semibold', tone)}>
@@ -64,10 +64,10 @@ export function KpiTile({
 }) {
   const dark = variant === 'dark'
   const lightIconTone = {
-    accent: 'bg-itera-accent-soft text-itera-accent',
-    navy: 'bg-itera-navy-soft text-itera-navy',
-    success: 'bg-itera-success-soft text-itera-success',
-    warning: 'bg-itera-warning-soft text-itera-warning',
+    accent: 'bg-fliptap-accent-soft text-fliptap-accent',
+    navy: 'bg-fliptap-navy-soft text-fliptap-navy',
+    success: 'bg-fliptap-success-soft text-fliptap-success',
+    warning: 'bg-fliptap-warning-soft text-fliptap-warning',
   }[iconTone]
 
   return (
@@ -75,17 +75,17 @@ export function KpiTile({
       role="group"
       aria-label={label}
       className={cn(
-        'rounded-itera-card border p-5',
+        'rounded-fliptap-card border p-5',
         dark
-          ? 'border-itera-navy bg-itera-navy'
-          : 'border-itera-border bg-itera-surface shadow-[var(--itera-shadow-card)]',
+          ? 'border-fliptap-navy bg-fliptap-navy'
+          : 'border-fliptap-border bg-fliptap-surface shadow-[var(--fliptap-shadow-card)]',
       )}
     >
       <div className="flex items-center gap-2">
         <span
           className={cn(
             'grid h-9 w-9 flex-none place-items-center',
-            dark ? 'rounded-itera-control bg-white/10 text-white' : `rounded-full ${lightIconTone}`,
+            dark ? 'rounded-fliptap-control bg-white/10 text-white' : `rounded-full ${lightIconTone}`,
           )}
         >
           <Icon size={17} strokeWidth={2.15} fill={iconFilled ? 'currentColor' : 'none'} aria-hidden="true" />
@@ -93,7 +93,7 @@ export function KpiTile({
         <span
           className={cn(
             'text-xs font-semibold uppercase tracking-wide',
-            dark ? 'text-white/70' : 'text-itera-muted',
+            dark ? 'text-white/70' : 'text-fliptap-muted',
           )}
         >
           {label}
@@ -103,15 +103,15 @@ export function KpiTile({
       <div className="mt-3 flex min-w-0 items-end gap-3">
         <div
           className={cn(
-            'min-w-0 font-itera-display text-[30px] font-medium leading-none',
-            dark ? 'text-white' : 'text-itera-ink-brand',
+            'min-w-0 font-fliptap-display text-[30px] font-medium leading-none',
+            dark ? 'text-white' : 'text-fliptap-ink-brand',
           )}
         >
           {value}
         </div>
         {sparkline && sparkline.length >= 2 && (
           <div className="min-w-0 flex-1 pb-0.5">
-            <Sparkline values={sparkline} color="var(--itera-accent)" width={76} />
+            <Sparkline values={sparkline} color="var(--fliptap-accent)" width={76} />
           </div>
         )}
       </div>

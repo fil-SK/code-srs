@@ -1,4 +1,4 @@
--- CardState extraction (Itera redesign Phase D, docs/itera-migration-plan.md
+-- CardState extraction (FlipTap redesign Phase D, docs/fliptap-migration-plan.md
 -- §4). Additive only — nothing existing changes. One row per Card, holding
 -- the CardV2 CardState shape (src/types/cardV2.ts): scheduling fields plus
 -- `suspended`, folded together per that type's own design (unlike v1, where
@@ -9,7 +9,7 @@
 -- alongside it, not yet read from anywhere.
 --
 -- Unverified against a live database: written while this project's Supabase
--- instance was deleted (see itera-decisions.md). Apply and check RLS/grants
+-- instance was deleted (see fliptap-decisions.md). Apply and check RLS/grants
 -- before relying on it against a real project.
 
 create table if not exists public.card_states (

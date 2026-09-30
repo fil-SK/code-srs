@@ -4,7 +4,7 @@ import {
   VALID_PNG_DATA_URL,
   XSS_CODE_BLOCK,
   XSS_PAYLOADS,
-} from '@itera/core/src/test/attackPayloads'
+} from '@fliptap/core/src/test/attackPayloads'
 import { render, screen } from '@testing-library/react-native'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -19,7 +19,7 @@ import { SafeCardImage } from './SafeCardImage'
 // The shared parser produces a safe *tree*; that is not the same as rendering it
 // safely, which is why this exists as its own pass rather than being inherited.
 // The fixture is the same one the web suite drives, imported by source path -
-// the deliberate test-only deep import into @itera/core, which production code
+// the deliberate test-only deep import into @fliptap/core, which production code
 // must never copy.
 //
 // React Native does not execute DOM HTML, but "no DOM" is not the same as "no

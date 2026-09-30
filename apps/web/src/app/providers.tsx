@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider, type AuthConfig } from '@itera/core'
+import { AuthProvider, type AuthConfig } from '@fliptap/core'
 import { DialogProvider } from '@/components/ui/dialogs'
 import { ThemeProvider } from './theme'
 import { queryClient } from './queryClient'

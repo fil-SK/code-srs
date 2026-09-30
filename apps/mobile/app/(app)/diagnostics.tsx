@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, useAuth, useCreateDeck, useDecks, useDeleteDeck } from '@itera/core'
+import { fliptapColors, fliptapRadii, useAuth, useCreateDeck, useDecks, useDeleteDeck } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -38,7 +38,7 @@ export default function DiagnosticsRoute() {
   if (mobileRuntimeMode !== 'cloud') {
     return (
       <StatusScreen
-        detail="This probe exercises the shared Repository against Supabase. Demo mode registers no backend, so there is nothing for it to reach. Set EXPO_PUBLIC_ITERA_MODE=cloud with valid Supabase configuration to use it."
+        detail="This probe exercises the shared Repository against Supabase. Demo mode registers no backend, so there is nothing for it to reach. Set EXPO_PUBLIC_FLIPTAP_MODE=cloud with valid Supabase configuration to use it."
         title="Diagnostics need cloud mode"
       />
     )
@@ -67,13 +67,13 @@ function CloudDiagnostics() {
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/profile'))}
           style={({ pressed }) => [styles.back, pressed && styles.pressed]}
         >
-          <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-left" size={27} />
+          <MaterialCommunityIcons color={fliptapColors.inkBrand} name="chevron-left" size={27} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
 
         <Text style={styles.title}>Repository diagnostics</Text>
         <Text style={styles.subtitle}>
-          Development only. Reads and writes real account data through @itera/core.
+          Development only. Reads and writes real account data through @fliptap/core.
         </Text>
 
         <View style={styles.card}>
@@ -90,7 +90,7 @@ function CloudDiagnostics() {
           <Text style={styles.cardTitle}>Read</Text>
           {decks.isPending ? (
             <View style={styles.busyRow}>
-              <ActivityIndicator color={iteraColors.accent} />
+              <ActivityIndicator color={fliptapColors.accent} />
               <Text style={styles.value}>Loading decks…</Text>
             </View>
           ) : decks.isError ? (
@@ -146,7 +146,7 @@ function CloudDiagnostics() {
             ]}
           >
             {createDeck.isPending ? (
-              <ActivityIndicator color={iteraColors.surface} />
+              <ActivityIndicator color={fliptapColors.surface} />
             ) : (
               <Text style={styles.primaryButtonText}>Create probe deck</Text>
             )}
@@ -172,7 +172,7 @@ function CloudDiagnostics() {
                 style={({ pressed }) => pressed && styles.pressed}
               >
                 <MaterialCommunityIcons
-                  color={iteraColors.error}
+                  color={fliptapColors.error}
                   name="trash-can-outline"
                   size={22}
                 />
@@ -199,49 +199,49 @@ function Row({ label, value, mono = false }: { label: string; value: string; mon
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   content: { paddingHorizontal: 18, paddingTop: 8, paddingBottom: 48, gap: 14 },
   back: { minHeight: 44, flexDirection: 'row', alignItems: 'center' },
-  backText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '600' },
-  title: { color: iteraColors.inkBrand, fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
-  subtitle: { color: iteraColors.muted, fontSize: 14, lineHeight: 20 },
+  backText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '600' },
+  title: { color: fliptapColors.inkBrand, fontSize: 24, fontWeight: '700', letterSpacing: -0.5 },
+  subtitle: { color: fliptapColors.muted, fontSize: 14, lineHeight: 20 },
   card: {
     gap: 8,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 14,
   },
-  cardTitle: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  cardTitle: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
-  label: { color: iteraColors.muted, fontSize: 14 },
-  value: { flexShrink: 1, color: iteraColors.ink, fontSize: 14, fontWeight: '600' },
+  label: { color: fliptapColors.muted, fontSize: 14 },
+  value: { flexShrink: 1, color: fliptapColors.ink, fontSize: 14, fontWeight: '600' },
   mono: { fontSize: 12, fontWeight: '400' },
-  errorText: { color: iteraColors.error },
-  listItem: { color: iteraColors.muted, fontSize: 13 },
-  hint: { color: iteraColors.mutedLight, fontSize: 12, lineHeight: 18 },
+  errorText: { color: fliptapColors.error },
+  listItem: { color: fliptapColors.muted, fontSize: 13 },
+  hint: { color: fliptapColors.mutedLight, fontSize: 12, lineHeight: 18 },
   busyRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   primaryButton: {
     minHeight: 46,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
   },
-  primaryButtonText: { color: iteraColors.surface, fontSize: 15, fontWeight: '700' },
+  primaryButtonText: { color: fliptapColors.surface, fontSize: 15, fontWeight: '700' },
   buttonDisabled: { opacity: 0.6 },
   secondaryButton: {
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
   },
-  secondaryButtonText: { color: iteraColors.inkBrand, fontSize: 14, fontWeight: '600' },
+  secondaryButtonText: { color: fliptapColors.inkBrand, fontSize: 14, fontWeight: '600' },
   probeRow: {
     minHeight: 44,
     flexDirection: 'row',
@@ -249,6 +249,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  probeName: { flex: 1, color: iteraColors.ink, fontSize: 14 },
+  probeName: { flex: 1, color: fliptapColors.ink, fontSize: 14 },
   pressed: { opacity: 0.68 },
 })

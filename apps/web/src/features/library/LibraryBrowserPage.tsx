@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { checkDeckDeletion, childDeckCount } from '@itera/core'
+import { checkDeckDeletion, childDeckCount } from '@fliptap/core'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Upload } from 'lucide-react'
 import type { Deck } from '@/types'
@@ -28,7 +28,7 @@ import { CardListFooter } from './shared/CardListFooter'
 
 const ALL_DECKS_PAGE_SIZE = 10
 
-// The default Library destination (/decks). Replaced the pre-Itera flat/nested
+// The default Library destination (/decks). Replaced the pre-FlipTap flat/nested
 // deck-tree browser with the redesigned Collection-nav + Deck-list layout,
 // promoted out of a fixture preview and wired to real Deck/Card data (the
 // preview it came from has since been deleted). Collections are UI-only,
@@ -177,25 +177,25 @@ export function LibraryBrowserPage() {
       ) : (
         <>
           {isAllDecks ? (
-            <div className="mb-6 flex flex-wrap items-start justify-between gap-5 border-b border-itera-border pb-5">
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-5 border-b border-fliptap-border pb-5">
               <div>
-                <h1 className="font-itera-display text-3xl font-bold tracking-tight text-itera-ink-brand">
+                <h1 className="font-fliptap-display text-3xl font-bold tracking-tight text-fliptap-ink-brand">
                   All Decks
                 </h1>
-                <p className="mt-1.5 text-sm text-itera-muted">View and manage all your decks.</p>
+                <p className="mt-1.5 text-sm text-fliptap-muted">View and manage all your decks.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={newDeck}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-itera-control bg-itera-accent px-5 text-sm font-semibold text-white transition-[filter] hover:brightness-95"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-fliptap-control bg-fliptap-accent px-5 text-sm font-semibold text-white transition-[filter] hover:brightness-95"
                 >
                   <Plus size={18} strokeWidth={1.8} /> New Deck
                 </button>
                 <Link
                   to="/settings/import-export"
-                  title="Open Itera JSON import"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-itera-control border border-itera-border-strong bg-itera-surface px-5 text-sm font-semibold text-itera-ink-brand transition-colors hover:border-itera-accent hover:text-itera-accent"
+                  title="Open FlipTap JSON import"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-fliptap-control border border-fliptap-border-strong bg-fliptap-surface px-5 text-sm font-semibold text-fliptap-ink-brand transition-colors hover:border-fliptap-accent hover:text-fliptap-accent"
                 >
                   <Upload size={17} strokeWidth={1.8} /> Import Deck
                 </Link>
@@ -203,7 +203,7 @@ export function LibraryBrowserPage() {
             </div>
           ) : (
             <div className="mb-4 flex items-center justify-between">
-              <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand">
+              <h1 className="font-fliptap-display text-2xl font-bold tracking-tight text-fliptap-ink-brand">
                 Library
               </h1>
               <Button variant="primary" onClick={newDeck}>
@@ -229,13 +229,13 @@ export function LibraryBrowserPage() {
               <Search
                 size={isAllDecks ? 18 : 15}
                 strokeWidth={isAllDecks ? 1.8 : 2}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-itera-muted"
+                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fliptap-muted"
               />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search decks..."
-                className={`${fieldClass} ${isAllDecks ? 'h-11 bg-itera-surface pl-11' : 'pl-9'}`}
+                className={`${fieldClass} ${isAllDecks ? 'h-11 bg-fliptap-surface pl-11' : 'pl-9'}`}
               />
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -271,19 +271,19 @@ export function LibraryBrowserPage() {
               <div
                 className={
                   isAllDecks
-                    ? 'rounded-itera-card border border-itera-border bg-itera-surface px-3'
-                    : 'rounded-itera-card border border-itera-border bg-itera-surface px-4'
+                    ? 'rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-3'
+                    : 'rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-4'
                 }
               >
-                <div className="divide-y divide-itera-border">
+                <div className="divide-y divide-fliptap-border">
                   {[0, 1, 2, 3].map((i) => (
                     <div key={i} className="flex items-center gap-4 py-4">
-                      <Skeleton className="size-11 shrink-0 rounded-itera-control" />
+                      <Skeleton className="size-11 shrink-0 rounded-fliptap-control" />
                       <div className="min-w-0 flex-1 space-y-2">
-                        <Skeleton className="h-3.5 w-48 max-w-full rounded-itera-pill" />
-                        <Skeleton className="h-3 w-72 max-w-full rounded-itera-pill" />
+                        <Skeleton className="h-3.5 w-48 max-w-full rounded-fliptap-pill" />
+                        <Skeleton className="h-3 w-72 max-w-full rounded-fliptap-pill" />
                       </div>
-                      <Skeleton className="hidden h-3 w-24 rounded-itera-pill sm:block" />
+                      <Skeleton className="hidden h-3 w-24 rounded-fliptap-pill sm:block" />
                     </div>
                   ))}
                 </div>
@@ -320,11 +320,11 @@ export function LibraryBrowserPage() {
                 <div
                   className={
                     isAllDecks
-                      ? 'rounded-itera-card border border-itera-border bg-itera-surface px-3'
-                      : 'rounded-itera-card border border-itera-border bg-itera-surface px-4'
+                      ? 'rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-3'
+                      : 'rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-4'
                   }
                 >
-                  <div className="divide-y divide-itera-border">
+                  <div className="divide-y divide-fliptap-border">
                     {visibleDecks.map((deck) => (
                       <DeckRow
                         key={deck.id}

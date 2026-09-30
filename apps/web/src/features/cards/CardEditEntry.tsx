@@ -24,7 +24,7 @@ export function CardEditEntry() {
   const query = useCard(id)
 
   if (query.isLoading) {
-    return <p className="text-sm text-itera-muted">Loading…</p>
+    return <p className="text-sm text-fliptap-muted">Loading…</p>
   }
 
   const record = query.data
@@ -60,9 +60,9 @@ export function CardEditEntry() {
   }
 
   return (
-    <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
-      <div className="text-lg font-semibold text-itera-ink-brand">Card not found</div>
-      <p className="mt-2 text-sm text-itera-muted">
+    <div className="mx-auto max-w-md rounded-fliptap-card border border-dashed border-fliptap-border bg-fliptap-surface p-10 text-center">
+      <div className="text-lg font-semibold text-fliptap-ink-brand">Card not found</div>
+      <p className="mt-2 text-sm text-fliptap-muted">
         This card may have been deleted, or the link may be out of date.
       </p>
       <Link to="/decks" className="mt-4 inline-block">

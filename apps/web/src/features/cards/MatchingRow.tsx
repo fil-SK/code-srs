@@ -40,7 +40,7 @@ export function MatchingRow({
   const atBottom = index === total - 1
 
   return (
-    <div className="flex items-start gap-2.5 rounded-itera-control border border-itera-border p-2.5">
+    <div className="flex items-start gap-2.5 rounded-fliptap-control border border-fliptap-border p-2.5">
       <span className="mt-2 flex flex-none items-center gap-1">
         <button
           type="button"
@@ -48,7 +48,7 @@ export function MatchingRow({
           aria-disabled={atTop}
           onClick={onMoveUp}
           className={cn(
-            'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+            'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
             atTop && 'pointer-events-none opacity-30',
           )}
         >
@@ -60,7 +60,7 @@ export function MatchingRow({
           aria-disabled={atBottom}
           onClick={onMoveDown}
           className={cn(
-            'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+            'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
             atBottom && 'pointer-events-none opacity-30',
           )}
         >
@@ -110,8 +110,8 @@ export function MatchingRow({
         disabled={!canRemove}
         aria-label={`Remove row ${index + 1}`}
         className={cn(
-          'mt-1 grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-          canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+          'mt-1 grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+          canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
         )}
       >
         <X size={15} />

@@ -5,7 +5,7 @@ import path from 'node:path'
 // sharing one was hiding that.
 //
 // The web setup gives every test file fake-indexeddb and a configured Dexie
-// repository. Running @itera/core's tests through it would mean core - the code
+// repository. Running @fliptap/core's tests through it would mean core - the code
 // a React Native app also runs - was only ever proven under a web-specific
 // bootstrap, with a browser storage shim installed and a backend the package is
 // not allowed to know about already registered. A core test that accidentally

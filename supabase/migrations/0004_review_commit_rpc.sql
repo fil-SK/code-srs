@@ -1,4 +1,4 @@
--- Atomic review persistence (docs/itera-decisions.md, 2026-08-22; audit
+-- Atomic review persistence (docs/fliptap-decisions.md, 2026-08-22; audit
 -- §10 items 5 and 6). Grading writes two tables: the card's advanced
 -- scheduling and the immutable review log describing the transition. As two
 -- PostgREST requests those are two committed statements, so a failure between

@@ -1,8 +1,8 @@
-import type { AuthConfig } from '@itera/core'
+import type { AuthConfig } from '@fliptap/core'
 import { getSupabase } from '@/data/supabase/client'
 import { browserSessionStore } from './localSession'
 
-// What the browser supplies to @itera/core's shared auth layer: a decided mode,
+// What the browser supplies to @fliptap/core's shared auth layer: a decided mode,
 // a session store, and a way to reach the Supabase client - never the client
 // itself, and never the environment it was configured from.
 //

@@ -7,7 +7,7 @@ import {
   type Card,
   type RecallFormState,
   type SaveRecallCardTarget,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useState } from 'react'
 
 import { EditorScreen } from '@/src/components/ui/EditorScreen'
@@ -17,7 +17,7 @@ import { CardCommonFields, ChipRow } from './CardContentFields'
 
 // Native Recall authoring, bound to the shared Recall form model.
 //
-// Every semantic decision on this screen is made in @itera/core and called from
+// Every semantic decision on this screen is made in @fliptap/core and called from
 // here: `emptyRecallForm` / `cardRecordToForm` shape the state,
 // `validateRecallForm` decides whether Save is available, and
 // `useSaveRecallCard` -> `saveRecallCard(repo, form, target)` performs the write.

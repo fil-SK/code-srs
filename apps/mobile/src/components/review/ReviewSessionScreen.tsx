@@ -1,7 +1,7 @@
 import {
   formatInterval,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   reviewService,
   type Card,
   type CardInteraction,
@@ -10,7 +10,7 @@ import {
   type Rating,
   type SchedulingState,
   type SubmitReviewResult,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useMemo, useReducer, useState } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -249,21 +249,21 @@ export function ReviewSessionScreen<T extends InteractionType>(
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   keyboardView: { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 16 },
   previewNotice: {
-    borderRadius: iteraRadii.card,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surfaceSubtle,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  previewNoticeText: { color: iteraColors.inkBrand, fontSize: 14, fontWeight: '700' },
+  previewNoticeText: { color: fliptapColors.inkBrand, fontSize: 14, fontWeight: '700' },
   previewNoticeDetail: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     lineHeight: 19,
   },

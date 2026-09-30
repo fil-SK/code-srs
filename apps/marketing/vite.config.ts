@@ -12,7 +12,7 @@ function publicMetadata(siteUrl: string): Plugin {
     : ''
 
   return {
-    name: 'itera-public-metadata',
+    name: 'fliptap-public-metadata',
     transformIndexHtml(html) {
       return html.replace('<!-- PUBLIC_URL_METADATA -->', tags)
     },

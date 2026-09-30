@@ -1,4 +1,4 @@
-// @itera/core - the shared, platform-neutral product engine.
+// @fliptap/core - the shared, platform-neutral product engine.
 //
 // One public entry point on purpose: the package manifest has no `exports`
 // map, so consumers reach exactly this barrel and never a path inside the
@@ -59,7 +59,7 @@ export * from './hooks/useDrafts'
 export * from './hooks/useReview'
 export * from './hooks/useRoadmaps'
 
-// ---- content: one interpretation of the Itera text syntax --------------------
+// ---- content: one interpretation of the FlipTap text syntax --------------------
 // Parsing is shared; rendering is not. These modules turn a card's persisted
 // text into semantic nodes and never build markup, so the web renderer and a
 // future native renderer map the same tree onto their own elements instead of

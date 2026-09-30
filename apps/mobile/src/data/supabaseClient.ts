@@ -6,7 +6,7 @@ import { secureSessionStorage } from './secureSessionStorage'
 // The mobile app's Supabase connection, and the only place this workspace reads
 // its own configuration.
 //
-// @itera/core takes a ready client and never looks at an environment, which is
+// @fliptap/core takes a ready client and never looks at an environment, which is
 // exactly what lets the same SupabaseRepository and the same auth engine run
 // under Metro and under Vite. Everything Expo-specific stops here: core learns
 // nothing about EXPO_PUBLIC_*, SecureStore, AppState or React Native.

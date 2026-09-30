@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, type DeckSortKey } from '@itera/core'
+import { fliptapColors, fliptapRadii, type DeckSortKey } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { IteraButton } from '@/src/components/ui/IteraButton'
+import { FlipTapButton } from '@/src/components/ui/FlipTapButton'
 import { SearchField } from '@/src/components/ui/SearchField'
 import { MobileHeader } from '@/src/components/today/MobileHeader'
 import type {
@@ -59,7 +59,7 @@ function CollectionPill({
       ]}
     >
       <MaterialCommunityIcons
-        color={selected ? iteraColors.inkBrand : iteraColors.muted}
+        color={selected ? fliptapColors.inkBrand : fliptapColors.muted}
         name={icon}
         size={18}
       />
@@ -116,7 +116,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           IS a deck and the only thing that differs is the parentId the new deck
           is given.
         */}
-        <IteraButton
+        <FlipTapButton
           accessibilityHint="Creates a new top-level deck"
           label="New Deck"
           onPress={() => router.push('/deck/new')}
@@ -164,11 +164,11 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
             onPress={() => setSortOpen(true)}
             style={({ pressed }) => [styles.control, pressed && styles.pressed]}
           >
-            <MaterialCommunityIcons color={iteraColors.inkBrand} name="sort" size={20} />
+            <MaterialCommunityIcons color={fliptapColors.inkBrand} name="sort" size={20} />
             <Text numberOfLines={1} style={styles.controlText}>
               Sort: {deckSortLabel(sort)}
             </Text>
-            <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-down" size={18} />
+            <MaterialCommunityIcons color={fliptapColors.inkBrand} name="chevron-down" size={18} />
           </Pressable>
           <Pressable
             accessibilityRole="checkbox"
@@ -178,7 +178,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           >
             <View style={[styles.checkbox, dueOnly && styles.checkboxChecked]}>
               {dueOnly ? (
-                <MaterialCommunityIcons color={iteraColors.surface} name="check" size={15} />
+                <MaterialCommunityIcons color={fliptapColors.surface} name="check" size={15} />
               ) : null}
             </View>
             <Text numberOfLines={1} style={styles.controlText}>
@@ -195,7 +195,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
 
         {visibleDecks.length === 0 ? (
           <View style={styles.emptyState}>
-            <MaterialCommunityIcons color={iteraColors.mutedLight} name="cards-outline" size={28} />
+            <MaterialCommunityIcons color={fliptapColors.mutedLight} name="cards-outline" size={28} />
             <Text style={styles.emptyTitle}>No matching decks</Text>
             <Text style={styles.emptyText}>Try another search or turn off Due only.</Text>
           </View>
@@ -215,7 +215,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   scroll: {
     zIndex: 1,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     width: 290,
     height: 165,
     borderRadius: 88,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     transform: [{ rotate: '-13deg' }],
   },
   decorativeShapeSmall: {
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 108,
     borderRadius: 65,
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     opacity: 0.7,
     transform: [{ rotate: '-8deg' }],
   },
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   title: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 30,
     fontWeight: '700',
     letterSpacing: -0.8,
@@ -275,13 +275,13 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 5,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
   },
   sectionLabel: {
     marginTop: 24,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -299,23 +299,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.pill,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.pill,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 14,
   },
   collectionPillSelected: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accentSoft,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accentSoft,
   },
   collectionPillText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     fontWeight: '500',
   },
   collectionPillTextSelected: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontWeight: '700',
   },
   // Only what this screen adds; the field itself is SearchField's.
@@ -335,10 +335,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 5,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 10,
   },
   dueControl: {
@@ -349,15 +349,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 7,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 8,
   },
   controlText: {
     minWidth: 0,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -367,14 +367,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.muted,
+    borderColor: fliptapColors.muted,
     borderRadius: 4,
     borderWidth: 1.4,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
   checkboxChecked: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accent,
   },
   deckList: {
     gap: 10,
@@ -383,21 +383,21 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     marginTop: 16,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 24,
   },
   emptyTitle: {
     marginTop: 9,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 16,
     fontWeight: '700',
   },
   emptyText: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     textAlign: 'center',
   },

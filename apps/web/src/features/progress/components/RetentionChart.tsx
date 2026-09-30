@@ -44,14 +44,14 @@ export function RetentionChart({
       : Array.from({ length: labelCount }, (_, i) => Math.round((i / (labelCount - 1)) * (points.length - 1)))
 
   return (
-    <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
+    <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-itera-ink-brand">Retention over time</h3>
-            <Info size={14} strokeWidth={1.9} className="text-itera-muted" aria-hidden="true" />
+            <h3 className="text-base font-semibold text-fliptap-ink-brand">Retention over time</h3>
+            <Info size={14} strokeWidth={1.9} className="text-fliptap-muted" aria-hidden="true" />
           </div>
-          <p className="text-xs text-itera-muted">Your ability to recall cards</p>
+          <p className="text-xs text-fliptap-muted">Your ability to recall cards</p>
         </div>
         <DeckScopeDropdown
           options={[{ value: 'all', label: 'All decks' }, ...deckOptions]}
@@ -61,7 +61,7 @@ export function RetentionChart({
       </div>
 
       {known.length < 2 ? (
-        <p className="mt-8 text-sm text-itera-muted">Not enough review history yet to chart a trend.</p>
+        <p className="mt-8 text-sm text-fliptap-muted">Not enough review history yet to chart a trend.</p>
       ) : (
         <div className="relative mt-4">
           <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label="Retention rate over time">
@@ -72,7 +72,7 @@ export function RetentionChart({
                 x2={WIDTH - PAD_X}
                 y1={yFor(v)}
                 y2={yFor(v)}
-                stroke="var(--itera-border)"
+                stroke="var(--fliptap-border)"
                 strokeWidth="1"
               />
             ))}
@@ -83,7 +83,7 @@ export function RetentionChart({
                 x2={WIDTH - PAD_X}
                 y1={yFor(average)}
                 y2={yFor(average)}
-                stroke="var(--itera-border-strong)"
+                stroke="var(--fliptap-border-strong)"
                 strokeWidth="1.5"
                 strokeDasharray="3 4"
               />
@@ -95,7 +95,7 @@ export function RetentionChart({
                 data-retention-segment="true"
                 d={linePath}
                 fill="none"
-                stroke="var(--itera-accent)"
+                stroke="var(--fliptap-accent)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -113,14 +113,14 @@ export function RetentionChart({
                 cx={marker.x}
                 cy={marker.y}
                 r="4"
-                fill="var(--itera-accent)"
+                fill="var(--fliptap-accent)"
               />
             ))}
 
             {last && (
               <>
-                <circle cx={lastX} cy={lastY} r="4.5" fill="var(--itera-accent)" />
-                <circle cx={lastX} cy={lastY} r="4.5" fill="none" stroke="var(--itera-surface)" strokeWidth="2" />
+                <circle cx={lastX} cy={lastY} r="4.5" fill="var(--fliptap-accent)" />
+                <circle cx={lastX} cy={lastY} r="4.5" fill="none" stroke="var(--fliptap-surface)" strokeWidth="2" />
               </>
             )}
 
@@ -130,7 +130,7 @@ export function RetentionChart({
                 x={xFor(i, points.length)}
                 y={HEIGHT - 6}
                 textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
-                className="fill-itera-muted text-[10px]"
+                className="fill-fliptap-muted text-[10px]"
               >
                 {DATE_LABEL.format(new Date(points[i].bucketStart))}
               </text>
@@ -139,7 +139,7 @@ export function RetentionChart({
 
           {last && (
             <span
-              className="absolute rounded-itera-pill bg-itera-accent px-2 py-0.5 text-xs font-semibold text-white"
+              className="absolute rounded-fliptap-pill bg-fliptap-accent px-2 py-0.5 text-xs font-semibold text-white"
               style={{
                 left: `${(lastX / WIDTH) * 100}%`,
                 top: `${(lastY / HEIGHT) * 100}%`,

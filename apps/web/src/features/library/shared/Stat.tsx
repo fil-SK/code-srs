@@ -19,13 +19,13 @@ export function Stat({
       <Icon
         size={21}
         strokeWidth={1.8}
-        className={`mt-0.5 flex-none ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}
+        className={`mt-0.5 flex-none ${accent ? 'text-fliptap-accent' : 'text-fliptap-ink-brand'}`}
       />
       <div>
-        <div className={`font-itera-display text-lg font-bold ${accent ? 'text-itera-accent' : 'text-itera-ink-brand'}`}>
+        <div className={`font-fliptap-display text-lg font-bold ${accent ? 'text-fliptap-accent' : 'text-fliptap-ink-brand'}`}>
           {value}
         </div>
-        <div className="text-xs text-itera-muted">{label}</div>
+        <div className="text-xs text-fliptap-muted">{label}</div>
       </div>
     </div>
   )

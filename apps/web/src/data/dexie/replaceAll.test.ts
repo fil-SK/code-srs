@@ -25,7 +25,7 @@ afterEach(async () => {
 })
 
 function freshDb(): AppDB {
-  const name = `itera-replace-${Date.now()}-${Math.random()}`
+  const name = `fliptap-replace-${Date.now()}-${Math.random()}`
   names.push(name)
   return new AppDB(name)
 }

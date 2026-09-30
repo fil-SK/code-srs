@@ -1,4 +1,4 @@
-import type { DateRangePreset } from '@itera/core'
+import type { DateRangePreset } from '@fliptap/core'
 import { useMemo, useState } from 'react'
 
 import { ProgressScreen } from '@/src/components/progress/ProgressScreen'

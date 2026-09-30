@@ -1,12 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, markLabelFor, type DeckSortKey } from '@itera/core'
+import { fliptapColors, fliptapRadii, markLabelFor, type DeckSortKey } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { IteraButton } from '@/src/components/ui/IteraButton'
+import { FlipTapButton } from '@/src/components/ui/FlipTapButton'
 import { SearchField } from '@/src/components/ui/SearchField'
 import type {
   MobileCollectionViewModel,
@@ -33,7 +33,7 @@ function CollectionMetric({
   accented?: boolean
   bordered?: boolean
 }) {
-  const color = accented ? iteraColors.accent : iteraColors.inkBrand
+  const color = accented ? fliptapColors.accent : fliptapColors.inkBrand
   return (
     <View style={[styles.collectionMetric, bordered && styles.collectionMetricBorder]}>
       <View style={styles.collectionMetricTop}>
@@ -77,16 +77,16 @@ function CollectionDeckRow({
 
           <View style={styles.deckMetaRow}>
             <View style={styles.deckMeta}>
-              <MaterialCommunityIcons color={iteraColors.muted} name="cards-outline" size={15} />
+              <MaterialCommunityIcons color={fliptapColors.muted} name="cards-outline" size={15} />
               <Text style={styles.deckMetaText}>{deck.cardCount} cards</Text>
             </View>
             <View style={styles.deckMeta}>
-              <MaterialCommunityIcons color={iteraColors.accent} name="bell-outline" size={15} />
+              <MaterialCommunityIcons color={fliptapColors.accent} name="bell-outline" size={15} />
               <Text style={styles.deckDueText}>{deck.dueCount} due</Text>
             </View>
             <View style={styles.deckMeta}>
               <MaterialCommunityIcons
-                color={iteraColors.muted}
+                color={fliptapColors.muted}
                 name="calendar-blank-outline"
                 size={15}
               />
@@ -102,7 +102,7 @@ function CollectionDeckRow({
           is removed rather than left to read as an enabled no-op.
         */}
         <View style={styles.deckTrailing}>
-          <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={23} />
+          <MaterialCommunityIcons color={fliptapColors.muted} name="chevron-right" size={23} />
         </View>
       </View>
 
@@ -198,7 +198,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
           that one relationship, so the deck appears everywhere it belongs with
           no further wiring.
         */}
-        <IteraButton
+        <FlipTapButton
           accessibilityHint={`Creates a new deck inside ${viewModel.name}`}
           label="New Deck"
           onPress={() =>
@@ -229,7 +229,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
             <Text numberOfLines={1} style={styles.controlText}>
               Sort: {deckSortLabel(sort)}
             </Text>
-            <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-down" size={19} />
+            <MaterialCommunityIcons color={fliptapColors.inkBrand} name="chevron-down" size={19} />
           </Pressable>
           <Pressable
             accessibilityRole="checkbox"
@@ -239,7 +239,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
           >
             <View style={[styles.checkbox, dueOnly && styles.checkboxChecked]}>
               {dueOnly ? (
-                <MaterialCommunityIcons color={iteraColors.surface} name="check" size={15} />
+                <MaterialCommunityIcons color={fliptapColors.surface} name="check" size={15} />
               ) : null}
             </View>
             <Text style={styles.controlText}>Due only</Text>
@@ -315,7 +315,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
 
 const cardShadow = Platform.select({
   ios: {
-    shadowColor: iteraColors.navy,
+    shadowColor: fliptapColors.navy,
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.06,
     shadowRadius: 13,
@@ -327,7 +327,7 @@ const cardShadow = Platform.select({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   scroll: {
     zIndex: 1,
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     width: 285,
     height: 165,
     borderRadius: 88,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     transform: [{ rotate: '-13deg' }],
   },
   decorativeShapeSmall: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     width: 235,
     height: 108,
     borderRadius: 65,
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     opacity: 0.7,
     transform: [{ rotate: '-8deg' }],
   },
@@ -400,12 +400,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: iteraRadii.card,
-    backgroundColor: iteraColors.navy,
+    borderRadius: fliptapRadii.card,
+    backgroundColor: fliptapColors.navy,
   },
   collectionMarkText: {
     zIndex: 2,
-    color: iteraColors.surface,
+    color: fliptapColors.surface,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 26,
     fontWeight: '700',
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     bottom: 5,
     width: 82,
     height: 7,
-    backgroundColor: iteraColors.accent,
+    backgroundColor: fliptapColors.accent,
     transform: [{ rotate: '-34deg' }],
   },
   identityCopy: {
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 29,
     fontWeight: '700',
     letterSpacing: -0.8,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   },
   description: {
     marginTop: 6,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -450,10 +450,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     marginTop: 22,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingVertical: 12,
     ...cardShadow,
   },
@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   collectionMetricBorder: {
-    borderLeftColor: iteraColors.border,
+    borderLeftColor: fliptapColors.border,
     borderLeftWidth: 1,
   },
   collectionMetricTop: {
@@ -472,25 +472,25 @@ const styles = StyleSheet.create({
     gap: 9,
   },
   collectionMetricValue: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 21,
     fontVariant: ['tabular-nums'],
     fontWeight: '700',
   },
   collectionMetricLabel: {
     marginTop: 5,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   accentText: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
   },
   newDeck: {
     marginTop: 18,
   },
   sectionTitle: {
     marginTop: 26,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -510,10 +510,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 13,
   },
   dueControl: {
@@ -522,14 +522,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 14,
   },
   controlText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 13,
     fontWeight: '500',
   },
@@ -538,24 +538,24 @@ const styles = StyleSheet.create({
     height: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.muted,
+    borderColor: fliptapColors.muted,
     borderRadius: 4,
     borderWidth: 1.4,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
   checkboxChecked: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accent,
   },
   deckList: {
     gap: 10,
     marginTop: 16,
   },
   deckRow: {
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 12,
     ...cardShadow,
   },
@@ -571,12 +571,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.navy,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.navy,
   },
   deckMarkLabel: {
     zIndex: 2,
-    color: iteraColors.surface,
+    color: fliptapColors.surface,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 14,
     fontWeight: '700',
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     bottom: -1,
     width: 58,
     height: 5,
-    backgroundColor: iteraColors.accent,
+    backgroundColor: fliptapColors.accent,
     transform: [{ rotate: '-34deg' }],
   },
   deckIdentity: {
@@ -605,13 +605,13 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   deckName: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 15,
     fontWeight: '700',
   },
   deckDescription: {
     marginTop: 3,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
   },
   deckMetaRow: {
@@ -626,11 +626,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   deckMetaText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 10,
   },
   deckDueText: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontSize: 10,
     fontWeight: '700',
   },
@@ -651,17 +651,17 @@ const styles = StyleSheet.create({
     height: 5,
     flex: 1,
     overflow: 'hidden',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.border,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.border,
   },
   progressFill: {
     height: '100%',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.success,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.success,
   },
   progressText: {
     width: 30,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 11,
     fontVariant: ['tabular-nums'],
     fontWeight: '700',
@@ -669,13 +669,13 @@ const styles = StyleSheet.create({
   },
   ownCardsSection: {
     marginTop: 26,
-    borderTopColor: iteraColors.border,
+    borderTopColor: fliptapColors.border,
     borderTopWidth: 1,
     paddingTop: 18,
   },
   ownCardsCaption: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   ownCardsList: {
@@ -685,20 +685,20 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     marginTop: 16,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 24,
   },
   emptyTitle: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 16,
     fontWeight: '700',
   },
   emptyText: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     textAlign: 'center',
   },

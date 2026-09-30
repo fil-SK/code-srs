@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -19,7 +19,7 @@ function RecallBadge({ answer = false }: { answer?: boolean }) {
   return (
     <View style={[styles.badge, answer && styles.badgeAnswer]}>
       <MaterialCommunityIcons
-        color={answer ? iteraColors.accent : iteraColors.inkBrand}
+        color={answer ? fliptapColors.accent : fliptapColors.inkBrand}
         name={answer ? 'check-decagram-outline' : 'head-question-outline'}
         size={20}
       />
@@ -94,7 +94,7 @@ export function RecallView({ card, phase, onPrimaryAction }: NativeInteractionVi
           {revealed ? (
             <View style={styles.answerBody}>
               <MaterialCommunityIcons
-                color={iteraColors.accent}
+                color={fliptapColors.accent}
                 name="lightbulb-on-outline"
                 size={34}
               />
@@ -124,13 +124,13 @@ const styles = StyleSheet.create({
     minHeight: 520,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 22,
     paddingVertical: 24,
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 7 },
         shadowOpacity: 0.08,
         shadowRadius: 18,
@@ -144,28 +144,28 @@ const styles = StyleSheet.create({
   badge: {
     minHeight: 42,
     paddingHorizontal: 16,
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.surfaceSubtle,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  badgeAnswer: { backgroundColor: iteraColors.accentSofter },
-  badgeText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
-  badgeTextAnswer: { color: iteraColors.accentActive },
+  badgeAnswer: { backgroundColor: fliptapColors.accentSofter },
+  badgeText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  badgeTextAnswer: { color: fliptapColors.accentActive },
   questionBody: { width: '100%', gap: 22 },
   questionText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 24,
     lineHeight: 33,
     fontWeight: '700',
     letterSpacing: -0.35,
   },
   answerBody: { width: '100%', alignItems: 'center', gap: 18, paddingHorizontal: 4 },
-  answerDivider: { width: 78, height: 2, borderRadius: 1, backgroundColor: iteraColors.accent },
-  answerText: { color: iteraColors.ink, fontSize: 17, lineHeight: 27 },
+  answerDivider: { width: 78, height: 2, borderRadius: 1, backgroundColor: fliptapColors.accent },
+  answerText: { color: fliptapColors.ink, fontSize: 17, lineHeight: 27 },
   flipInstruction: { alignItems: 'center', gap: 8 },
-  flipInstructionText: { color: iteraColors.muted, fontSize: 13, fontWeight: '500' },
+  flipInstructionText: { color: fliptapColors.muted, fontSize: 13, fontWeight: '500' },
   flipCue: { width: 36, height: 29 },
   cueCard: {
     position: 'absolute',
@@ -173,13 +173,13 @@ const styles = StyleSheet.create({
     height: 27,
     borderRadius: 3,
     borderWidth: 1.5,
-    borderColor: iteraColors.muted,
+    borderColor: fliptapColors.muted,
   },
   cueCardBack: { left: 4, top: 0, transform: [{ rotateZ: '-12deg' }] },
   cueCardFront: {
     right: 4,
     top: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     transform: [{ rotateZ: '9deg' }],
   },
 })

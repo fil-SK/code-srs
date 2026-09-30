@@ -1,4 +1,4 @@
-import { multipleChoiceBehavior } from '@itera/core'
+import { multipleChoiceBehavior } from '@fliptap/core'
 import type { WebInteractionDefinition } from '../types'
 import { MultipleChoiceView } from './MultipleChoiceView'
 

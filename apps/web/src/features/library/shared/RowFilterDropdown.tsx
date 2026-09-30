@@ -64,20 +64,20 @@ export function RowFilterDropdown({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'inline-flex h-11 items-center justify-between gap-3 whitespace-nowrap rounded-itera-control border bg-itera-surface px-4 text-sm font-medium',
+          'inline-flex h-11 items-center justify-between gap-3 whitespace-nowrap rounded-fliptap-control border bg-fliptap-surface px-4 text-sm font-medium',
           label === 'Sort' ? (wide ? 'min-w-[192px]' : 'min-w-[164px]') : 'min-w-[112px]',
           isDefault
-            ? 'border-itera-border text-itera-ink hover:border-itera-border-strong'
-            : 'border-itera-border-strong text-itera-ink-brand',
+            ? 'border-fliptap-border text-fliptap-ink hover:border-fliptap-border-strong'
+            : 'border-fliptap-border-strong text-fliptap-ink-brand',
         )}
       >
         {triggerText}
-        <ChevronDown size={15} strokeWidth={1.8} className="text-itera-ink-brand" />
+        <ChevronDown size={15} strokeWidth={1.8} className="text-fliptap-ink-brand" />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 z-20 mt-1 w-48 rounded-itera-control border border-itera-border bg-itera-surface py-1 shadow-[var(--itera-shadow-float)]"
+          className="absolute left-0 z-20 mt-1 w-48 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface py-1 shadow-[var(--fliptap-shadow-float)]"
         >
           {options.map((option) => (
             <button
@@ -89,10 +89,10 @@ export function RowFilterDropdown({
                 onChange(option.value)
                 setOpen(false)
               }}
-              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-itera-ink hover:bg-itera-surface-subtle"
+              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-fliptap-ink hover:bg-fliptap-surface-subtle"
             >
               {option.label}
-              {option.value === value && <Check size={14} className="text-itera-accent" />}
+              {option.value === value && <Check size={14} className="text-fliptap-accent" />}
             </button>
           ))}
         </div>

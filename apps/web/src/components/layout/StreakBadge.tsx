@@ -23,19 +23,19 @@ export function StreakBadge() {
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <StreakFlameIcon size={24} className="text-itera-accent" />
+      <StreakFlameIcon size={24} className="text-fliptap-accent" />
       <div className="hidden leading-tight sm:block">
         {pending ? (
-          <Skeleton className="mb-1 mt-0.5 h-3.5 w-6 rounded-itera-pill" />
+          <Skeleton className="mb-1 mt-0.5 h-3.5 w-6 rounded-fliptap-pill" />
         ) : (
-          <div className="text-base font-bold text-itera-ink-brand">{streak}</div>
+          <div className="text-base font-bold text-fliptap-ink-brand">{streak}</div>
         )}
-        <div className="text-xs text-itera-muted">day streak</div>
+        <div className="text-xs text-fliptap-muted">day streak</div>
       </div>
       {pending ? (
-        <Skeleton className="h-3.5 w-4 rounded-itera-pill sm:hidden" />
+        <Skeleton className="h-3.5 w-4 rounded-fliptap-pill sm:hidden" />
       ) : (
-        <span className="text-sm font-semibold text-itera-ink-brand sm:hidden">{streak}</span>
+        <span className="text-sm font-semibold text-fliptap-ink-brand sm:hidden">{streak}</span>
       )}
     </div>
   )

@@ -1,8 +1,8 @@
 // Compatibility shim - defines nothing. The canonical implementation lives in
-// packages/core/src/charts/retentionChartPath.ts and is published as @itera/core.
+// packages/core/src/charts/retentionChartPath.ts and is published as @fliptap/core.
 //
 // It exists so relocating the domain layer did not have to be the same commit
-// as rewriting ~130 files' imports. New code should import from '@itera/core'
+// as rewriting ~130 files' imports. New code should import from '@fliptap/core'
 // directly; this layer is transitional.
 
 export {
@@ -12,6 +12,6 @@ export {
   buildRetentionGeometry,
   xFor,
   yFor,
-} from '@itera/core'
+} from '@fliptap/core'
 
-export type { RetentionGeometry, RetentionMarker } from '@itera/core'
+export type { RetentionGeometry, RetentionMarker } from '@fliptap/core'

@@ -1,6 +1,6 @@
 import { createDemoSeed, DEMO_COLLECTION_RAIL } from './demoWorkspace'
 import { isDemoCardDue } from './demoScheduling'
-import { deriveCollections, leafDecks, metricsFor } from '@itera/core'
+import { deriveCollections, leafDecks, metricsFor } from '@fliptap/core'
 import { demoDeckMetrics, demoTodayViewModel, demoProgressViewModel } from './demoSelectors'
 
 // One fixed instant for the whole file: due-ness is a comparison against an

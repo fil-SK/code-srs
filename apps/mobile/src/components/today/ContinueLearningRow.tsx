@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, markLabelFor } from '@itera/core'
+import { fliptapColors, fliptapRadii, markLabelFor } from '@fliptap/core'
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { MobileTodayDeckViewModel } from '@/src/types/today'
@@ -46,7 +46,7 @@ export function ContinueLearningRow({ deck, onPress }: ContinueLearningRowProps)
 
       <View style={styles.trailing}>
         <Text style={styles.due}>{deck.dueCount} due</Text>
-        <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={21} />
+        <MaterialCommunityIcons color={fliptapColors.muted} name="chevron-right" size={21} />
       </View>
     </Pressable>
   )
@@ -57,16 +57,16 @@ const styles = StyleSheet.create({
     minHeight: 92,
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingVertical: 11,
     paddingLeft: 11,
     paddingRight: 9,
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.05,
         shadowRadius: 10,
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.navy,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.navy,
   },
   deckMarkLabel: {
     zIndex: 2,
-    color: iteraColors.surface,
+    color: fliptapColors.surface,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 14,
     fontWeight: '700',
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     bottom: -1,
     width: 58,
     height: 5,
-    backgroundColor: iteraColors.accent,
+    backgroundColor: fliptapColors.accent,
     transform: [{ rotate: '-34deg' }],
   },
   content: {
@@ -123,13 +123,13 @@ const styles = StyleSheet.create({
   },
   name: {
     minWidth: 0,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 14,
     fontWeight: '700',
   },
   due: {
     flex: 1,
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontSize: 12,
     fontVariant: ['tabular-nums'],
     fontWeight: '700',
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   description: {
     marginTop: 3,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   progressRow: {
@@ -157,13 +157,13 @@ const styles = StyleSheet.create({
     height: 5,
     flex: 1,
     overflow: 'hidden',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.border,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.border,
   },
   progressFill: {
     height: '100%',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.success,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.success,
   },
   progressText: {
     width: 31,

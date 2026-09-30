@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, useAuth } from '@itera/core'
+import { fliptapColors, fliptapRadii, useAuth } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useState } from 'react'
@@ -46,9 +46,9 @@ const sections: ProfileSection[] = [
 const unavailableSections: Record<Exclude<ProfileSectionId, 'import-export'>, UnavailableSection> = {
   profile: {
     title: 'Profile',
-    description: 'Manage your personal information and how you appear in Itera.',
+    description: 'Manage your personal information and how you appear in FlipTap.',
     notice:
-      'Not available yet. Itera has no profile record: an account is identified by the email you sign in with.',
+      'Not available yet. FlipTap has no profile record: an account is identified by the email you sign in with.',
     planned: ['Full name and username', 'Profile photo', 'Learning bio'],
   },
   email: {
@@ -60,23 +60,23 @@ const unavailableSections: Record<Exclude<ProfileSectionId, 'import-export'>, Un
   },
   appearance: {
     title: 'Appearance',
-    description: 'How Itera looks.',
+    description: 'How FlipTap looks.',
     notice:
-      'Not available yet. Itera is light-only for now because its palette has no dark variant.',
+      'Not available yet. FlipTap is light-only for now because its palette has no dark variant.',
     planned: ['Light / dark / system theme', 'Interface density', 'Code font and size'],
   },
   notifications: {
     title: 'Notifications',
-    description: 'When and how Itera reminds you to study.',
+    description: 'When and how FlipTap reminds you to study.',
     notice:
-      'Not available yet. Itera has no reminder scheduler or mobile push registration.',
+      'Not available yet. FlipTap has no reminder scheduler or mobile push registration.',
     planned: ['Daily study reminder', 'Streak-at-risk alerts', 'Email digests'],
   },
   privacy: {
     title: 'Privacy',
-    description: 'What Itera stores and who can see it.',
+    description: 'What FlipTap stores and who can see it.',
     notice:
-      'Not available yet. Itera has no analytics or telemetry to opt out of.',
+      'Not available yet. FlipTap has no analytics or telemetry to opt out of.',
     planned: ['Public profile visibility', 'Data collection controls', 'Download all data'],
   },
   devices: {
@@ -112,7 +112,7 @@ function SettingsRow({
       ]}
     >
       <MaterialCommunityIcons
-        color={selected ? iteraColors.accent : '#49658e'}
+        color={selected ? fliptapColors.accent : '#49658e'}
         name={section.icon}
         size={24}
       />
@@ -120,7 +120,7 @@ function SettingsRow({
         {section.label}
       </Text>
       <MaterialCommunityIcons
-        color={selected ? iteraColors.accent : iteraColors.muted}
+        color={selected ? fliptapColors.accent : fliptapColors.muted}
         name="chevron-right"
         size={24}
       />
@@ -135,7 +135,7 @@ function UnavailableDetail({ section }: { section: UnavailableSection }) {
       <Text style={styles.detailDescription}>{section.description}</Text>
 
       <View style={styles.notice}>
-        <MaterialCommunityIcons color={iteraColors.warning} name="sign-caution" size={19} />
+        <MaterialCommunityIcons color={fliptapColors.warning} name="sign-caution" size={19} />
         <Text style={styles.noticeText}>{section.notice}</Text>
       </View>
 
@@ -160,7 +160,7 @@ function BackupButton({ icon, label }: { icon: IconName; label: string }) {
       disabled
       style={styles.backupButton}
     >
-      <MaterialCommunityIcons color={iteraColors.inkBrand} name={icon} size={21} />
+      <MaterialCommunityIcons color={fliptapColors.inkBrand} name={icon} size={21} />
       <Text style={styles.backupButtonText}>{label}</Text>
     </Pressable>
   )
@@ -177,7 +177,7 @@ function ImportExportDetail() {
       </Text>
 
       <View style={styles.notice}>
-        <MaterialCommunityIcons color={iteraColors.warning} name="sign-caution" size={19} />
+        <MaterialCommunityIcons color={fliptapColors.warning} name="sign-caution" size={19} />
         <Text style={styles.noticeText}>
           Mobile backup actions will become available after native data access is connected.
         </Text>
@@ -225,7 +225,7 @@ function WorkspaceCard({
   const body = (
     <>
       <View style={styles.avatar}>
-        <MaterialCommunityIcons color={iteraColors.surface} name="account-outline" size={34} />
+        <MaterialCommunityIcons color={fliptapColors.surface} name="account-outline" size={34} />
       </View>
       <View style={styles.workspaceCopy}>
         <Text numberOfLines={1} style={styles.workspaceTitle}>
@@ -241,7 +241,7 @@ function WorkspaceCard({
         </Text>
       </View>
       {onPress ? (
-        <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={25} />
+        <MaterialCommunityIcons color={fliptapColors.muted} name="chevron-right" size={25} />
       ) : null}
     </>
   )
@@ -362,9 +362,9 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
             onPress={() => router.push('/diagnostics')}
             style={({ pressed }) => [styles.devRow, pressed && styles.pressed]}
           >
-            <MaterialCommunityIcons color={iteraColors.muted} name="bug-outline" size={21} />
+            <MaterialCommunityIcons color={fliptapColors.muted} name="bug-outline" size={21} />
             <Text style={styles.devRowLabel}>Repository diagnostics (dev)</Text>
-            <MaterialCommunityIcons color={iteraColors.muted} name="chevron-right" size={22} />
+            <MaterialCommunityIcons color={fliptapColors.muted} name="chevron-right" size={22} />
           </Pressable>
         ) : null}
 
@@ -382,7 +382,7 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
             onPress={demoWorkspace.resetDemoWorkspace}
             style={({ pressed }) => [styles.devRow, pressed && styles.pressed]}
           >
-            <MaterialCommunityIcons color={iteraColors.muted} name="restore" size={21} />
+            <MaterialCommunityIcons color={fliptapColors.muted} name="restore" size={21} />
             <Text style={styles.devRowLabel}>Reset demo workspace (dev)</Text>
           </Pressable>
         ) : null}
@@ -397,7 +397,7 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
             onPress={() => void handleSignOut()}
             style={({ pressed }) => [styles.signOutButton, pressed && styles.pressed]}
           >
-            <MaterialCommunityIcons color={iteraColors.error} name="logout" size={21} />
+            <MaterialCommunityIcons color={fliptapColors.error} name="logout" size={21} />
             <Text style={styles.signOutLabel}>{signingOut ? 'Signing out…' : 'Sign out'}</Text>
           </Pressable>
         )}
@@ -408,7 +408,7 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
 
 const cardShadow = Platform.select({
   ios: {
-    shadowColor: iteraColors.navy,
+    shadowColor: fliptapColors.navy,
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.06,
     shadowRadius: 13,
@@ -420,7 +420,7 @@ const cardShadow = Platform.select({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   scroll: {
     zIndex: 1,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     width: 280,
     height: 170,
     borderRadius: 90,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     transform: [{ rotate: '-14deg' }],
   },
   decorativeShapeSmall: {
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     width: 230,
     height: 115,
     borderRadius: 70,
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     opacity: 0.7,
     transform: [{ rotate: '-8deg' }],
   },
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   title: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 30,
     fontWeight: '700',
     letterSpacing: -0.8,
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
   subtitle: {
     maxWidth: 390,
     marginTop: 6,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -487,10 +487,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 22,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.dialog,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.dialog,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 16,
     ...cardShadow,
   },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 32,
-    backgroundColor: iteraColors.navy,
+    backgroundColor: fliptapColors.navy,
   },
   workspaceCopy: {
     minWidth: 0,
@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   workspaceTitle: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -520,16 +520,16 @@ const styles = StyleSheet.create({
   },
   workspaceMeta: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   settingsCard: {
     marginTop: 18,
     overflow: 'hidden',
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.dialog,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.dialog,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 14,
     ...cardShadow,
   },
@@ -541,43 +541,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   settingsRowBorder: {
-    borderBottomColor: iteraColors.border,
+    borderBottomColor: fliptapColors.border,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   settingsRowSelected: {
     marginHorizontal: -14,
     borderBottomColor: 'transparent',
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     paddingHorizontal: 19,
   },
   settingsRowLabel: {
     minWidth: 0,
     flex: 1,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 16,
     fontWeight: '500',
   },
   settingsRowLabelSelected: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontWeight: '700',
   },
   detailCard: {
     marginTop: 18,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.dialog,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.dialog,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 17,
     ...cardShadow,
   },
   detailTitle: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 20,
     fontWeight: '700',
   },
   detailDescription: {
     marginTop: 5,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -586,22 +586,22 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 9,
     marginTop: 15,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surfaceSubtle,
+    backgroundColor: fliptapColors.surfaceSubtle,
     padding: 12,
   },
   noticeText: {
     minWidth: 0,
     flex: 1,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
     lineHeight: 18,
   },
   plannedLabel: {
     marginTop: 17,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
@@ -619,10 +619,10 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 3,
-    backgroundColor: iteraColors.borderStrong,
+    backgroundColor: fliptapColors.borderStrong,
   },
   plannedText: {
-    color: iteraColors.mutedLight,
+    color: fliptapColors.mutedLight,
     fontSize: 13,
   },
   backupActions: {
@@ -637,14 +637,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
     opacity: 0.62,
     paddingHorizontal: 10,
   },
   backupButtonText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     height: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.muted,
+    borderColor: fliptapColors.muted,
     borderRadius: 11,
     borderWidth: 1.5,
   },
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1687ff',
   },
   modeLabel: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 14,
   },
   devRow: {
@@ -687,13 +687,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     marginTop: 14,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
     borderStyle: 'dashed',
     paddingHorizontal: 14,
   },
-  devRowLabel: { flex: 1, color: iteraColors.muted, fontSize: 15, fontWeight: '600' },
+  devRowLabel: { flex: 1, color: fliptapColors.muted, fontSize: 15, fontWeight: '600' },
   signOutButton: {
     minHeight: 52,
     flexDirection: 'row',
@@ -701,12 +701,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 9,
     marginTop: 14,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
-  signOutLabel: { color: iteraColors.error, fontSize: 15, fontWeight: '700' },
+  signOutLabel: { color: fliptapColors.error, fontSize: 15, fontWeight: '700' },
   pressed: {
     opacity: 0.68,
   },

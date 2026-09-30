@@ -8,7 +8,7 @@
    per-weight @fontsource packages so any weight (400/500/600/700/...) is
    available without adding more imports.
    Note: @font-face registration is global by nature (it can't be scoped to
-   .itera-scope), so loading these here also fixes production's
+   .fliptap-scope), so loading these here also fixes production's
    --font-sans/--font-mono, which have referenced these same font names since
    before this redesign and were silently falling back to system-ui the whole
    time — this is a pre-existing bug fix, not a redesign decision. */
@@ -16,7 +16,7 @@
 @import '@fontsource-variable/jetbrains-mono/wght.css';
 
 /* ---------- Semantic theme variables ----------
-   The app is light-only: .itera-scope re-points these to Itera values (see
+   The app is light-only: .fliptap-scope re-points these to FlipTap values (see
    below), and there is no dark palette. The former [data-theme='dark'] block
    and the `dark` custom-variant were deleted because nothing could match them
    — zero `dark:` utilities exist — and keeping them claimed a capability the
@@ -45,10 +45,10 @@
 
 /* ---------- Map theme vars to Tailwind tokens ----------
    `inline` makes utilities emit var(--…) directly, so they pick up the
-   .itera-scope re-point below rather than being frozen at build time.
+   .fliptap-scope re-point below rather than being frozen at build time.
    Usage: bg-panel, text-muted, border-border, etc. Mappings whose utility had
-   no consumers left (bg-bg, bg-bg-elev, bg-itera-canvas, font-itera-mono,
-   rounded-itera-code, …) were removed; the underlying vars they aliased are
+   no consumers left (bg-bg, bg-bg-elev, bg-fliptap-canvas, font-fliptap-mono,
+   rounded-fliptap-code, …) were removed; the underlying vars they aliased are
    still defined where CSS itself reads them. */
 @theme inline {
   --color-panel: var(--panel);
@@ -68,55 +68,55 @@
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
 
-  /* Adopt the itera-scoped radius everywhere: --radius-itera-card (14px) was
+  /* Adopt the fliptap-scoped radius everywhere: --radius-fliptap-card (14px) was
      a second, larger value living alongside this one under a different name
-     — not a namespacing duplicate but a real conflict, since .itera-scope
+     — not a namespacing duplicate but a real conflict, since .fliptap-scope
      now wraps the whole app. One card radius, defined once. */
-  --radius-card: var(--radius-itera-card);
+  --radius-card: var(--radius-fliptap-card);
 
-  /* ---------- Itera design-preview tokens (additive; see .itera-scope below) ----------
-     New itera-prefixed utilities (bg-itera-surface, text-itera-ink, rounded-itera-card,
+  /* ---------- FlipTap design-preview tokens (additive; see .fliptap-scope below) ----------
+     New fliptap-prefixed utilities (bg-fliptap-surface, text-fliptap-ink, rounded-fliptap-card,
      etc.) so /design-preview/* can be styled without touching any utility above. */
-  --color-itera-surface: var(--itera-surface);
-  --color-itera-surface-subtle: var(--itera-surface-subtle);
-  --color-itera-ink: var(--itera-ink);
-  --color-itera-ink-brand: var(--itera-ink-brand);
-  --color-itera-muted: var(--itera-muted);
-  --color-itera-muted-light: var(--itera-muted-light);
-  --color-itera-border: var(--itera-border);
-  --color-itera-border-strong: var(--itera-border-strong);
-  --color-itera-accent: var(--itera-accent);
-  --color-itera-accent-hover: var(--itera-accent-hover);
-  --color-itera-accent-soft: var(--itera-accent-soft);
-  --color-itera-accent-softer: var(--itera-accent-softer);
-  --color-itera-navy: var(--itera-navy);
-  --color-itera-navy-soft: var(--itera-navy-soft);
-  --color-itera-selection-soft: var(--itera-selection-soft);
-  --color-itera-selection-border: var(--itera-selection-border);
-  --color-itera-success: var(--itera-success);
-  --color-itera-success-soft: var(--itera-success-soft);
-  --color-itera-error: var(--itera-error);
-  --color-itera-error-soft: var(--itera-error-soft);
-  --color-itera-warning: var(--itera-warning);
-  --color-itera-warning-soft: var(--itera-warning-soft);
+  --color-fliptap-surface: var(--fliptap-surface);
+  --color-fliptap-surface-subtle: var(--fliptap-surface-subtle);
+  --color-fliptap-ink: var(--fliptap-ink);
+  --color-fliptap-ink-brand: var(--fliptap-ink-brand);
+  --color-fliptap-muted: var(--fliptap-muted);
+  --color-fliptap-muted-light: var(--fliptap-muted-light);
+  --color-fliptap-border: var(--fliptap-border);
+  --color-fliptap-border-strong: var(--fliptap-border-strong);
+  --color-fliptap-accent: var(--fliptap-accent);
+  --color-fliptap-accent-hover: var(--fliptap-accent-hover);
+  --color-fliptap-accent-soft: var(--fliptap-accent-soft);
+  --color-fliptap-accent-softer: var(--fliptap-accent-softer);
+  --color-fliptap-navy: var(--fliptap-navy);
+  --color-fliptap-navy-soft: var(--fliptap-navy-soft);
+  --color-fliptap-selection-soft: var(--fliptap-selection-soft);
+  --color-fliptap-selection-border: var(--fliptap-selection-border);
+  --color-fliptap-success: var(--fliptap-success);
+  --color-fliptap-success-soft: var(--fliptap-success-soft);
+  --color-fliptap-error: var(--fliptap-error);
+  --color-fliptap-error-soft: var(--fliptap-error-soft);
+  --color-fliptap-warning: var(--fliptap-warning);
+  --color-fliptap-warning-soft: var(--fliptap-warning-soft);
 
-  /* One literal font stack per family, not two: the itera-prefixed font
+  /* One literal font stack per family, not two: the fliptap-prefixed font
      utilities alias the Tailwind-required keys above. `display` remains as a
      compatibility name for existing components, but deliberately resolves to
      the same Inter family as every other non-code surface. */
-  --font-itera-sans: var(--font-sans);
-  --font-itera-display: var(--font-sans);
+  --font-fliptap-sans: var(--font-sans);
+  --font-fliptap-display: var(--font-sans);
 
-  --radius-itera-control: 9px;
-  --radius-itera-card: 14px;
-  --radius-itera-dialog: 16px;
-  --radius-itera-pill: 999px;
+  --radius-fliptap-control: 9px;
+  --radius-fliptap-card: 14px;
+  --radius-fliptap-dialog: 16px;
+  --radius-fliptap-pill: 999px;
 }
 
-/* Itera redesign — namespaced design tokens (docs/design-system.md).
-   Applied via the .itera-scope class, now wrapping the *whole app*
-   (AppShell, via IteraSurface — src/features/reviewV2/components/IteraSurface.tsx),
-   not just /design-preview/* and Review. Defines a distinct --itera-*
+/* FlipTap redesign — namespaced design tokens (docs/design-system.md).
+   Applied via the .fliptap-scope class, now wrapping the *whole app*
+   (AppShell, via FlipTapSurface — src/features/reviewV2/components/FlipTapSurface.tsx),
+   not just /design-preview/* and Review. Defines a distinct --fliptap-*
    custom-property namespace so nothing here can collide with the tokens above,
    and additionally re-points the *existing* semantic var names (--bg, --panel,
    --accent, --green, --amber, --red, --blue, ...) locally within this scope
@@ -128,85 +128,85 @@
    ThemeContext, not from a CSS var, so overriding --code-bg alone would leave
    a dark-palette code block on a light background. Fixed at the root by
    ForceLightTheme (src/features/reviewV2/components/ForceLightTheme.tsx,
-   composed into IteraSurface), which locally overrides ThemeContext to
+   composed into FlipTapSurface), which locally overrides ThemeContext to
    'light' for the whole app, so the palette and this background always
    agree. Only light values are defined here; spec §36 defers dark mode for
    the MVP, so there is no theme toggle in the app at all
-   (see docs/itera-decisions.md). */
-.itera-scope {
-  --itera-navy: #1e293b;
+   (see docs/fliptap-decisions.md). */
+.fliptap-scope {
+  --fliptap-navy: #1e293b;
 
-  --itera-canvas: #f6f7f9;
-  --itera-surface: #ffffff;
-  --itera-surface-subtle: #f9fafb;
-  --itera-ink: #172033;
-  --itera-ink-brand: #1e293b;
-  --itera-muted: #64748b;
-  --itera-muted-light: #94a3b8;
-  --itera-border: #e3e7ed;
-  --itera-border-strong: #cbd3de;
+  --fliptap-canvas: #f6f7f9;
+  --fliptap-surface: #ffffff;
+  --fliptap-surface-subtle: #f9fafb;
+  --fliptap-ink: #172033;
+  --fliptap-ink-brand: #1e293b;
+  --fliptap-muted: #64748b;
+  --fliptap-muted-light: #94a3b8;
+  --fliptap-border: #e3e7ed;
+  --fliptap-border-strong: #cbd3de;
 
-  --itera-accent: #ff6902;
-  --itera-accent-hover: #ea5f00;
-  --itera-accent-active: #d95700;
-  --itera-accent-soft: #fff2e8;
-  --itera-accent-softer: #fff8f3;
+  --fliptap-accent: #ff6902;
+  --fliptap-accent-hover: #ea5f00;
+  --fliptap-accent-active: #d95700;
+  --fliptap-accent-soft: #fff2e8;
+  --fliptap-accent-softer: #fff8f3;
 
-  --itera-navy-soft: #eef2f7;
-  --itera-selection-soft: #f2f6fc;
-  --itera-selection-border: #9cb4db;
+  --fliptap-navy-soft: #eef2f7;
+  --fliptap-selection-soft: #f2f6fc;
+  --fliptap-selection-border: #9cb4db;
 
-  --itera-success: #15803d;
-  --itera-success-soft: #ecfdf3;
-  --itera-error: #c2413a;
-  --itera-error-soft: #fef2f2;
-  --itera-warning: #b45309;
-  --itera-warning-soft: #fff7ed;
+  --fliptap-success: #15803d;
+  --fliptap-success-soft: #ecfdf3;
+  --fliptap-error: #c2413a;
+  --fliptap-error-soft: #fef2f2;
+  --fliptap-warning: #b45309;
+  --fliptap-warning-soft: #fff7ed;
 
-  --itera-shadow-card:
+  --fliptap-shadow-card:
     0 12px 30px rgba(23, 32, 51, 0.08), 0 2px 6px rgba(23, 32, 51, 0.05);
-  --itera-shadow-float: 0 18px 50px rgba(23, 32, 51, 0.12);
+  --fliptap-shadow-float: 0 18px 50px rgba(23, 32, 51, 0.12);
 
   /* Scoped re-point of the legacy semantic names (see comment above). */
-  --bg: var(--itera-canvas);
-  --bg-elev: var(--itera-surface);
-  --panel: var(--itera-surface);
-  --panel-2: var(--itera-surface-subtle);
-  --border: var(--itera-border);
-  --text: var(--itera-ink);
-  --muted: var(--itera-muted);
-  --faint: var(--itera-muted-light);
-  --accent: var(--itera-accent);
-  --accent-soft: var(--itera-accent-soft);
-  --shadow: var(--itera-shadow-card);
-  --code-bg: var(--itera-surface-subtle);
+  --bg: var(--fliptap-canvas);
+  --bg-elev: var(--fliptap-surface);
+  --panel: var(--fliptap-surface);
+  --panel-2: var(--fliptap-surface-subtle);
+  --border: var(--fliptap-border);
+  --text: var(--fliptap-ink);
+  --muted: var(--fliptap-muted);
+  --faint: var(--fliptap-muted-light);
+  --accent: var(--fliptap-accent);
+  --accent-soft: var(--fliptap-accent-soft);
+  --shadow: var(--fliptap-shadow-card);
+  --code-bg: var(--fliptap-surface-subtle);
   /* Status colors (tags, due badges, correct/incorrect banners in v1
-     components) - re-pointed too, now that .itera-scope wraps the whole app
+     components) - re-pointed too, now that .fliptap-scope wraps the whole app
      (not just Review), so these don't stay the old literal hues. --blue has
-     no itera equivalent token (informational, not success/warning/error) so
+     no fliptap equivalent token (informational, not success/warning/error) so
      it lands on the accent-adjacent active shade instead. */
-  --green: var(--itera-success);
-  --amber: var(--itera-warning);
-  --red: var(--itera-error);
-  --blue: var(--itera-accent-active);
+  --green: var(--fliptap-success);
+  --amber: var(--fliptap-warning);
+  --red: var(--fliptap-error);
+  --blue: var(--fliptap-accent-active);
 
   /* No `display` is declared here on purpose. Everything in this file is
      unlayered CSS, and Tailwind's utilities live in `@layer utilities`, so an
      unlayered declaration beats every utility for the same property no matter
      how specific the utility is. A `display: block` here therefore silently
-     defeated `grid`/`flex` applied to an IteraSurface: the Review terminal
+     defeated `grid`/`flex` applied to an FlipTapSurface: the Review terminal
      screens carried `grid min-h-screen place-items-center` and still computed
      `display: block`, which is why they sat flush against the top of the
      viewport. Every consumer of this class is a <div>, which is block by
      default, so the declaration bought nothing. Do not re-add it - and take the
      same care with the three properties below, which are here because they must
      apply to the scope root itself. */
-  background: var(--itera-canvas);
-  color: var(--itera-ink);
-  font-family: var(--font-itera-sans);
+  background: var(--fliptap-canvas);
+  color: var(--fliptap-ink);
+  font-family: var(--font-fliptap-sans);
 }
 
-/* Itera's flip primitive, and the only one (src/features/reviewV2/components/
+/* FlipTap's flip primitive, and the only one (src/features/reviewV2/components/
    FlipCard.tsx). Grid-overlap sizing (both faces share one grid cell, so the
    container sizes to the taller face) plus backface-visibility and
    reduced-motion handling. It began as a namespaced duplicate of an earlier
@@ -216,35 +216,35 @@
    component additionally makes the front face a real, keyboard-operable
    button (role, tabIndex, Enter/Space, focus-visible ring, aria-hidden on the
    inactive face) — see that file for why. */
-.itera-flip {
+.fliptap-flip {
   display: grid;
   perspective: 2000px;
 }
-.itera-flip-face {
+.fliptap-flip-face {
   grid-area: 1 / 1;
   backface-visibility: hidden;
   will-change: transform;
   transition: transform 0.55s cubic-bezier(0.34, 1.32, 0.5, 1);
 }
-.itera-flip-front {
+.fliptap-flip-front {
   transform: rotateY(0deg);
 }
-.itera-flip-back {
+.fliptap-flip-back {
   transform: rotateY(180deg);
 }
-.itera-flip.is-flipped .itera-flip-front {
+.fliptap-flip.is-flipped .fliptap-flip-front {
   transform: rotateY(180deg);
   pointer-events: none;
 }
-.itera-flip.is-flipped .itera-flip-back {
+.fliptap-flip.is-flipped .fliptap-flip-back {
   transform: rotateY(360deg);
 }
-.itera-flip:not(.is-flipped) .itera-flip-back {
+.fliptap-flip:not(.is-flipped) .fliptap-flip-back {
   pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .itera-flip-face {
+  .fliptap-flip-face {
     transition: none;
   }
 }
@@ -252,19 +252,19 @@
 /* Next-card entrance (ReviewSessionScreen.tsx): replaces the old instant
    remount-and-blink between cards with the next card visibly settling into
    place, evoking the two-overlapping-rotated-cards "draw the next card off
-   the deck" motif (see itera-reveal-hint in the design inspiration set)
-   rather than a generic fade. `.itera-card-enter` is the off-stack resting
+   the deck" motif (see fliptap-reveal-hint in the design inspiration set)
+   rather than a generic fade. `.fliptap-card-enter` is the off-stack resting
    pose (rotated, offset, slightly scaled down, faded); `-active` is applied
    one animation frame after mount so the browser actually transitions
    between the two rather than starting already in the resting state. */
-.itera-card-enter {
+.fliptap-card-enter {
   transform: translateY(14px) scale(0.97) rotate(-2.5deg);
   opacity: 0;
   transition:
     transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.35s ease-out;
 }
-.itera-card-enter-active {
+.fliptap-card-enter-active {
   transform: translateY(0) scale(1) rotate(0deg);
   opacity: 1;
 }
@@ -273,12 +273,12 @@
    Scaling and rotating an ancestor makes its monospace glyphs temporarily
    rasterize off-pixel; a scroll repaints them, which looked like delayed code
    rendering. Keep the entrance fade, but let the code use stable geometry. */
-.itera-card-enter.itera-card-enter-crisp-code {
+.fliptap-card-enter.fliptap-card-enter-crisp-code {
   transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .itera-card-enter {
+  .fliptap-card-enter {
     transition: none;
     transform: none;
     opacity: 1;
@@ -315,7 +315,7 @@ body {
 /* ---------- Reveal animations ---------- */
 
 /* The former .flip* rules were deleted with the v1 FlipCard component that was
-   their only consumer. The live flip primitive is .itera-flip* above. */
+   their only consumer. The live flip primitive is .fliptap-flip* above. */
 
 /* Slide/fade reveal for taller or interactive cards. */
 @keyframes reveal-in {
@@ -336,7 +336,7 @@ body {
    transition" docs/design-system.md §11 asks for, at the slow end of its own
    350-600ms row and on the standard easing. Two steps only - the card, then
    the numbers inside it - because the point is arrival, not a cascade. */
-@keyframes itera-complete-in {
+@keyframes fliptap-complete-in {
   from {
     opacity: 0;
     transform: translateY(10px) scale(0.985);
@@ -346,16 +346,16 @@ body {
     transform: none;
   }
 }
-.itera-complete-in {
-  animation: itera-complete-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.fliptap-complete-in {
+  animation: fliptap-complete-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.itera-complete-in-delayed {
-  animation: itera-complete-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s both;
+.fliptap-complete-in-delayed {
+  animation: fliptap-complete-in 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .itera-complete-in,
-  .itera-complete-in-delayed {
+  .fliptap-complete-in,
+  .fliptap-complete-in-delayed {
     animation: none;
   }
 }
@@ -364,7 +364,7 @@ body {
    a travelling gradient sweep: the sweep reads as a product waiting on a
    network, and this app reads from local IndexedDB in a few frames. The point
    is only that the page frame stays put while its data regions fill in. */
-@keyframes itera-skeleton-pulse {
+@keyframes fliptap-skeleton-pulse {
   0%,
   100% {
     opacity: 1;
@@ -373,12 +373,12 @@ body {
     opacity: 0.5;
   }
 }
-.itera-skeleton {
-  animation: itera-skeleton-pulse 1.6s ease-in-out infinite;
+.fliptap-skeleton {
+  animation: fliptap-skeleton-pulse 1.6s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .itera-skeleton {
+  .fliptap-skeleton {
     animation: none;
   }
 }
@@ -409,7 +409,7 @@ body {
   letter-spacing: 0;
 }
 .card-create-panel :is(input, textarea, select) {
-  background-color: var(--itera-surface);
+  background-color: var(--fliptap-surface);
 }
 
 @media (prefers-reduced-motion: reduce) {

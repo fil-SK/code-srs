@@ -1,4 +1,4 @@
-import { subtreeIds, type Card, type ID, type Millis } from '@itera/core'
+import { subtreeIds, type Card, type ID, type Millis } from '@fliptap/core'
 
 import type { DemoEntities } from './demoEntities'
 import { isDemoCardDue } from './demoScheduling'

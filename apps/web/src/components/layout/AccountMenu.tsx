@@ -8,7 +8,7 @@ import { AccountMenuContent } from './AccountMenuContent'
 import { useIsNarrowShell } from './useIsNarrowShell'
 
 const PANEL_CLASS =
-  'max-h-[calc(100vh-16px)] w-[300px] max-w-[calc(100vw-16px)] overflow-y-auto rounded-itera-dialog py-0'
+  'max-h-[calc(100vh-16px)] w-[300px] max-w-[calc(100vw-16px)] overflow-y-auto rounded-fliptap-dialog py-0'
 
 // The global account menu: the avatar in the top-right of the shared top nav
 // opens a compact floating popover anchored to it. Mounted once, from
@@ -43,11 +43,11 @@ export function AccountMenu() {
         aria-expanded={open}
         aria-label="Open account menu"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-itera-pill p-1 hover:bg-itera-surface-subtle"
+        className="flex items-center gap-1.5 rounded-fliptap-pill p-1 hover:bg-fliptap-surface-subtle"
       >
         <span
           aria-hidden="true"
-          className="grid h-9 w-9 flex-none place-items-center rounded-full bg-itera-navy text-sm font-semibold text-white"
+          className="grid h-9 w-9 flex-none place-items-center rounded-full bg-fliptap-navy text-sm font-semibold text-white"
         >
           {initial ?? <User size={17} />}
         </span>
@@ -85,7 +85,7 @@ function Chevron({ open }: { open: boolean }) {
     <ChevronDown
       size={16}
       aria-hidden="true"
-      className="flex-none text-itera-muted"
+      className="flex-none text-fliptap-muted"
       style={{
         transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
         transition: reduced ? undefined : 'transform 150ms ease',
@@ -147,10 +147,10 @@ function AccountMenuSheet({
   }, [])
 
   return createPortal(
-    // document.body sits outside `.itera-scope`, so the portal re-establishes
+    // document.body sits outside `.fliptap-scope`, so the portal re-establishes
     // the token scope and cancels the canvas background the class paints.
     <div
-      className="itera-scope"
+      className="fliptap-scope"
       style={{ position: 'fixed', inset: 0, background: 'transparent', zIndex: 60 }}
     >
       <div className="absolute inset-0 bg-[rgba(23,32,51,0.35)]" onClick={onClose} aria-hidden="true" />
@@ -158,11 +158,11 @@ function AccountMenuSheet({
         ref={sheetRef}
         role="menu"
         aria-label="Account"
-        className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-itera-dialog border-t border-itera-border bg-itera-surface pb-3 shadow-[var(--itera-shadow-float)]"
+        className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-fliptap-dialog border-t border-fliptap-border bg-fliptap-surface pb-3 shadow-[var(--fliptap-shadow-float)]"
       >
         <div
           aria-hidden="true"
-          className="mx-auto mt-2 mb-1 h-1 w-9 rounded-itera-pill bg-itera-border-strong"
+          className="mx-auto mt-2 mb-1 h-1 w-9 rounded-fliptap-pill bg-fliptap-border-strong"
         />
         <AccountMenuContent onNavigate={onClose} />
       </div>

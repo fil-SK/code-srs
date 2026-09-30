@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useState } from 'react'
 import {
   ActivityIndicator,
@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { AUTH_ERROR_COPY, authErrorMessage, looksLikeEmail } from '@/src/auth/authErrorCopy'
 
-const iteraSymbol = require('../../../assets/itera-logo.png')
+const fliptapSymbol = require('../../../assets/fliptap-logo.png')
 
 const OTP_LENGTH = 6
 
@@ -35,7 +35,7 @@ type Stage = 'email' | 'code'
 
 // Functional sign-in infrastructure, not a designed surface.
 //
-// Deliberately plain: the Itera mark, one field, one action. The web login
+// Deliberately plain: the FlipTap mark, one field, one action. The web login
 // screen's illustration, principles row and typographic work are a finished
 // design that this milestone has no mandate to reinterpret on a phone, and
 // inventing a second visual language for it here would be harder to undo than to
@@ -122,8 +122,8 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.brand}>
-            <Image resizeMode="contain" source={iteraSymbol} style={styles.symbol} />
-            <Text style={styles.wordmark}>Itera</Text>
+            <Image resizeMode="contain" source={fliptapSymbol} style={styles.symbol} />
+            <Text style={styles.wordmark}>FlipTap</Text>
           </View>
 
           <Text style={styles.title}>{stage === 'email' ? 'Sign in' : 'Enter your code'}</Text>
@@ -135,7 +135,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
 
           {bootstrapError && stage === 'email' ? (
             <View style={[styles.banner, styles.bannerWarning]}>
-              <MaterialCommunityIcons color={iteraColors.warning} name="sign-caution" size={19} />
+              <MaterialCommunityIcons color={fliptapColors.warning} name="sign-caution" size={19} />
               <Text style={styles.bannerText}>{bootstrapError}</Text>
             </View>
           ) : null}
@@ -155,7 +155,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
               }}
               onSubmitEditing={() => void sendCode()}
               placeholder="you@example.com"
-              placeholderTextColor={iteraColors.mutedLight}
+              placeholderTextColor={fliptapColors.mutedLight}
               returnKeyType="go"
               style={styles.input}
               value={email}
@@ -175,7 +175,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
               }}
               onSubmitEditing={() => void verify()}
               placeholder="000000"
-              placeholderTextColor={iteraColors.mutedLight}
+              placeholderTextColor={fliptapColors.mutedLight}
               returnKeyType="go"
               style={[styles.input, styles.codeInput]}
               textContentType="oneTimeCode"
@@ -186,7 +186,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
           {error ? (
             <View style={[styles.banner, styles.bannerError]}>
               <MaterialCommunityIcons
-                color={iteraColors.error}
+                color={fliptapColors.error}
                 name="alert-circle-outline"
                 size={19}
               />
@@ -209,7 +209,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
             ]}
           >
             {busy ? (
-              <ActivityIndicator color={iteraColors.surface} />
+              <ActivityIndicator color={fliptapColors.surface} />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {stage === 'email' ? 'Send code' : 'Verify'}
@@ -241,7 +241,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
           ) : null}
 
           <Text style={styles.footnote}>
-            Itera on this device reads your account in the cloud. A workspace that only exists in a
+            FlipTap on this device reads your account in the cloud. A workspace that only exists in a
             browser stays in that browser.
           </Text>
         </ScrollView>
@@ -251,7 +251,7 @@ export function SignInScreen({ onRequestCode, onVerifyCode, bootstrapError }: Si
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   flex: { flex: 1 },
   content: {
     width: '100%',
@@ -265,13 +265,13 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 26 },
   symbol: { width: 40, height: 40 },
   wordmark: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 27,
     fontWeight: '700',
     letterSpacing: -0.7,
   },
   title: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.6,
@@ -279,17 +279,17 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 7,
     marginBottom: 22,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
   },
   input: {
     minHeight: 52,
-    color: iteraColors.ink,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.control,
+    color: fliptapColors.ink,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 15,
     fontSize: 16,
   },
@@ -304,24 +304,24 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 9,
     marginTop: 14,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     padding: 12,
   },
-  bannerError: { backgroundColor: iteraColors.errorSoft },
-  bannerWarning: { marginTop: 0, marginBottom: 14, backgroundColor: iteraColors.warningSoft },
-  bannerText: { flex: 1, color: iteraColors.ink, fontSize: 14, lineHeight: 20 },
-  notice: { marginTop: 14, color: iteraColors.muted, fontSize: 14, lineHeight: 20 },
+  bannerError: { backgroundColor: fliptapColors.errorSoft },
+  bannerWarning: { marginTop: 0, marginBottom: 14, backgroundColor: fliptapColors.warningSoft },
+  bannerText: { flex: 1, color: fliptapColors.ink, fontSize: 14, lineHeight: 20 },
+  notice: { marginTop: 14, color: fliptapColors.muted, fontSize: 14, lineHeight: 20 },
   primaryButton: {
     minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
   },
-  primaryButtonDisabled: { backgroundColor: iteraColors.borderStrong },
-  primaryButtonText: { color: iteraColors.surface, fontSize: 16, fontWeight: '700' },
+  primaryButtonDisabled: { backgroundColor: fliptapColors.borderStrong },
+  primaryButtonText: { color: fliptapColors.surface, fontSize: 16, fontWeight: '700' },
   secondaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -329,10 +329,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 6,
   },
-  secondaryText: { color: iteraColors.accent, fontSize: 14, fontWeight: '600' },
+  secondaryText: { color: fliptapColors.accent, fontSize: 14, fontWeight: '600' },
   footnote: {
     marginTop: 24,
-    color: iteraColors.mutedLight,
+    color: fliptapColors.mutedLight,
     fontSize: 12,
     lineHeight: 18,
   },

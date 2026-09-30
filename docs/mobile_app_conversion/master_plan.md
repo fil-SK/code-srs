@@ -1,4 +1,4 @@
-# Itera web + native convergence — Phase 0 architecture report
+# FlipTap web + native convergence — Phase 0 architecture report
 
 **Status: READ-ONLY analysis. `git status` is clean; nothing in the repository was modified.**
 Verified against the working tree on branch `mvp_demo_cleaning` (2026-08-22), source of truth = the code, not the docs.
@@ -7,7 +7,7 @@ Verified against the working tree on branch `mvp_demo_cleaning` (2026-08-22), so
 
 ## Context
 
-Itera is a stable web MVP (React 19 + Vite 8 + TS, 825 passing tests, clean `tsc -b --force`, clean lint). The strategic goal is a first-class React Native / Expo app at **feature parity**, kept in sync as the product evolves — not a reduced review client. The correctness work already invested (DST-safe calendar days, transactional review persistence, auth/backend-mode coherence, complete Supabase pagination, replace-import safety) must be **moved into shared ownership, not re-implemented for mobile**.
+FlipTap is a stable web MVP (React 19 + Vite 8 + TS, 825 passing tests, clean `tsc -b --force`, clean lint). The strategic goal is a first-class React Native / Expo app at **feature parity**, kept in sync as the product evolves — not a reduced review client. The correctness work already invested (DST-safe calendar days, transactional review persistence, auth/backend-mode coherence, complete Supabase pagination, replace-import safety) must be **moved into shared ownership, not re-implemented for mobile**.
 
 The decisive finding of this audit: **the repository is already structured for this.** `src/domain/` (4,686 LOC, 40 modules, 35 test files) imports nothing browser-specific — no `window`, no `document`, no `localStorage`, no `import.meta`. `src/hooks/` (441 LOC) has zero DOM references. The `Repository` seam already takes an injected client. There is exactly **one** `import.meta.env` site in the entire non-test codebase. This is a low-risk extraction, not a rewrite.
 
@@ -25,7 +25,7 @@ Decisions confirmed with the user before writing this plan:
 ```
 packages/core   — types, domain, Repository contract, SupabaseRepository, TanStack hooks,
                   auth policy, RichText parser, chart projections, parity fixtures
-packages/tokens — the Itera palette / radii / type scale as platform-neutral TS
+packages/tokens — the FlipTap palette / radii / type scale as platform-neutral TS
 apps/web        — the existing web app, moved verbatim, minus what core now owns
 apps/mobile     — Expo Router + React Native, consuming the same core
 ```
@@ -176,9 +176,9 @@ Legend: **A** share unchanged · **B** share after extraction · **C** web only 
 ## 4. Recommended repository structure
 
 ```
-itera/
+fliptap/
 ├── package.json                  # workspace root: workspaces, shared devDeps, scripts
-├── tsconfig.base.json            # strict flags + paths: @itera/core, @itera/tokens
+├── tsconfig.base.json            # strict flags + paths: @fliptap/core, @fliptap/tokens
 ├── .oxlintrc.json
 ├── docs/                         # unchanged, workspace-level
 ├── supabase/                     # unchanged, workspace-level (schema.sql, migrations/)
@@ -209,7 +209,7 @@ itera/
 │   │
 │   └── tokens/
 │       ├── package.json
-│       └── src/index.ts          # itera palette, radii, type scale, icon names
+│       └── src/index.ts          # fliptap palette, radii, type scale, icon names
 │
 └── apps/
     ├── web/                      # the current app, moved verbatim
@@ -224,7 +224,7 @@ itera/
     │       ├── data/dexie/       # web-only backend
     │       ├── data/supabase/client.ts   # import.meta.env lives HERE, only here
     │       ├── lib/              # cn, download, lazyWithRetry
-    │       └── index.css         # asserts against @itera/tokens in a test
+    │       └── index.css         # asserts against @fliptap/tokens in a test
     │
     └── mobile/
         ├── package.json          # expo, expo-router, react-native, react-native-svg,
@@ -239,7 +239,7 @@ itera/
             ├── auth/             # SecureStore SessionStore adapter, guard
             ├── components/       # Text, Card, RichText, CodeText, Button, ...
             ├── interactions/     # six native Views bound to core behaviours
-            └── theme/            # StyleSheet built from @itera/tokens
+            └── theme/            # StyleSheet built from @fliptap/tokens
 ```
 
 **Why this shape, and not the alternatives:**
@@ -247,7 +247,7 @@ itera/
 | Criterion | **A: apps/packages monorepo (recommended)** | B: web at root + `mobile/` + `shared/` | C: separate repos, published package |
 |---|---|---|---|
 | Migration complexity | Two gated steps: extract, then move | One step (no move) | Extract + publish + version |
-| Import ergonomics | `@itera/core` everywhere, symmetric | Asymmetric: web uses `@/…`, mobile uses `../../shared` | `@itera/core@x.y.z` — needs a release for every change |
+| Import ergonomics | `@fliptap/core` everywhere, symmetric | Asymmetric: web uses `@/…`, mobile uses `../../shared` | `@fliptap/core@x.y.z` — needs a release for every change |
 | Metro compatibility | Standard Expo monorepo setup (`watchFolders`, `nodeModulesPaths`) | Metro must escape `mobile/` upward into a root `node_modules` shared with Vite | Cleanest for Metro, worst for iteration |
 | Vite compatibility | `apps/web` is an ordinary Vite root; workspace symlinks resolve | Fine | Fine |
 | TS config complexity | One `tsconfig.base.json`, two extending configs, `paths` for editors | Root tsconfig serves two very different targets (DOM vs RN libs) | Needs emitted `.d.ts` per release |
@@ -265,13 +265,13 @@ Every step below is one commit, with the same gate: **`npx vitest run` (825+, no
 The invariant across all of Phase 1: **`apps/web`'s behaviour does not change.** No route, no component, no query key, no persisted shape. If the test count moves for any reason other than tests physically relocating between packages, the step is wrong.
 
 ### Step 1.0 — Workspace scaffolding *(no code moves)*
-- **Change:** add `"workspaces": ["packages/*"]` to the root `package.json`; create `packages/core` with `"main": "src/index.ts"` and an empty `src/index.ts`; add `tsconfig.base.json` with a `@itera/core` path mapping; add a `vitest.config.ts` in core.
+- **Change:** add `"workspaces": ["packages/*"]` to the root `package.json`; create `packages/core` with `"main": "src/index.ts"` and an empty `src/index.ts`; add `tsconfig.base.json` with a `@fliptap/core` path mapping; add a `vitest.config.ts` in core.
 - **Risk:** low. npm may re-hoist `node_modules`.
 - **Gate:** all four commands clean, unchanged test count.
 - **Checkpoint:** the web app still builds and runs with a workspace present but unused.
 
 ### Step 1.1 — `types` → core
-- **Change:** move `src/types/*`. Web re-exports from `@itera/core` under `@/types` so **no web import changes** (a one-file shim). This is the trick that keeps every subsequent step small.
+- **Change:** move `src/types/*`. Web re-exports from `@fliptap/core` under `@/types` so **no web import changes** (a one-file shim). This is the trick that keeps every subsequent step small.
 - **Risk:** low. Proves TS path resolution, Vite resolution and Vitest resolution across a workspace boundary in one shot.
 - **Gate:** as above. **This step is the real proof that the structure works.** If `tsc -b --force` cannot resolve source TS across the boundary, stop and fix the config here, not later.
 
@@ -307,7 +307,7 @@ The invariant across all of Phase 1: **`apps/web`'s behaviour does not change.**
 - **Gate:** all four commands + the `RequireAuth.test.tsx` Supabase-mode block green with no edits to its assertions.
 
 ### Step 1.6 — `packages/tokens` + the RichText parser
-- **Change:** create `packages/tokens` from the `--itera-*` block in `src/index.css` (lines ~139-190). Add a **drift test** in `apps/web` that reads `index.css` and asserts every `--itera-*` value equals the TS module — no build step, no generated CSS. Extract `parseRichContent` into core; `RichText.tsx`/`InlineText` render the returned node tree.
+- **Change:** create `packages/tokens` from the `--fliptap-*` block in `src/index.css` (lines ~139-190). Add a **drift test** in `apps/web` that reads `index.css` and asserts every `--fliptap-*` value equals the TS module — no build step, no generated CSS. Extract `parseRichContent` into core; `RichText.tsx`/`InlineText` render the returned node tree.
 - **Risk:** low. The parser has no test file today — **write tests for it during extraction** (fences, inline code precedence over emphasis, underscores staying literal, the XSS-safety property).
 - **Gate:** as above, plus a visual check of a card with fenced code, inline code, bold and `snake_case`.
 
@@ -318,7 +318,7 @@ The invariant across all of Phase 1: **`apps/web`'s behaviour does not change.**
 
 ### Step 2 — move web into `apps/web`
 - **Change:** `git mv src public index.html vite.config.ts vitest.config.ts tsconfig.app.json … apps/web/`. Split the root `package.json` into a workspace root (shared devDeps, scripts) and `apps/web/package.json` (vite, react-dom, dexie, codemirror, dnd-kit, tailwind, router, lucide). Update `vite.config.ts`'s `path.resolve(__dirname, './src')` and `vitest.config.ts` identically. Update `docs/` paths in the same pass.
-- **Why after Phase 1:** by now web imports `@itera/core` through a real workspace resolution, so the move cannot also be hiding a resolution bug.
+- **Why after Phase 1:** by now web imports `@fliptap/core` through a real workspace resolution, so the move cannot also be hiding a resolution bug.
 - **Risk:** medium-mechanical. The failure modes are all path-shaped and all caught by `npm run build`.
 - **Gate:** all four commands from `apps/web`, plus `npm run preview` and a full browser pass of every route in `CURRENT_STATE.md` §18.
 - **Checkpoint:** tag this commit. It is the last point before any native code exists.
@@ -438,7 +438,7 @@ When offline review is taken up, the smallest safe design — and the one the cu
 |---|---|---|
 | Config source | `import.meta.env.VITE_SUPABASE_*` | `process.env.EXPO_PUBLIC_SUPABASE_*` (inlined by `babel-preset-expo`) |
 | Client options | `persistSession`, `autoRefreshToken`, **`detectSessionInUrl: true`** | `persistSession`, `autoRefreshToken`, **`detectSessionInUrl: false`** (no URL bar), plus an explicit `storage` adapter |
-| Session storage | `localStorage` / `sessionStorage`, one key `itera.session` | `expo-secure-store`, or AsyncStorage — see the caveat below |
+| Session storage | `localStorage` / `sessionStorage`, one key `fliptap.session` | `expo-secure-store`, or AsyncStorage — see the caveat below |
 | Token refresh | Handled by supabase-js in a live tab | **Must be driven by `AppState`**: `startAutoRefresh()` on `active`, `stopAutoRefresh()` on `background`. Without this, a session that expired while backgrounded surfaces as 401s on resume, not as a sign-out. |
 | App resume/background | n/a | `AppState` also drives TanStack `focusManager`, so returning to the app refetches Today/due rather than showing stale counts |
 | Sign-in method | Magic link (`signInWithOtp`), unchanged | **6-digit email OTP**: `signInWithOtp({ email })` then `verifyOtp({ email, token, type: 'email' })` |
@@ -450,7 +450,7 @@ When offline review is taken up, the smallest safe design — and the one the cu
 
 **How the P1-3 bug is prevented from recurring on native — three structural guarantees:**
 1. `resolveAuthState` is **one shared pure function**. Native cannot answer "is this a session?" differently, because native does not implement that answer.
-2. Native has no local-session concept at all. `SessionStore` on native holds only the Supabase session; there is no `itera.session`-shaped record for a stale one to come from.
+2. Native has no local-session concept at all. `SessionStore` on native holds only the Supabase session; there is no `fliptap.session`-shaped record for a stale one to come from.
 3. The guard reads `isAuthenticated` from the shared provider. **Nothing on mobile may read SecureStore/AsyncStorage for an auth decision** — the same rule `localSession.ts` states for web, restated per platform and enforced by the `SessionStore` boundary.
 
 **The one native storage caveat that needs a decision:** `expo-secure-store` warns above ~2048 bytes per value, and a Supabase session (access + refresh JWT + user object) can exceed that. Options: (a) AsyncStorage — simple, but the refresh token sits in plain app-sandbox storage; (b) SecureStore with a chunking adapter — secure, slightly more code; (c) refresh token in SecureStore, the rest in AsyncStorage. **Recommend (b)**, decided in Phase 3 (§22 D4).
@@ -501,7 +501,7 @@ app/
 - **Immersive Review.** `/review` lives inside `(app)` but **outside `(tabs)`**, mirroring web's structural separation of `ReviewPage` from `AppShell`. Chrome-free by construction, not by hiding it. `gestureEnabled: false` on the screen so a swipe-back cannot silently abandon a session mid-grade — the web equivalent is that Exit is an explicit control. Exit and "Back to Today" both `router.replace('/(tabs)')`, which unmounts the screen and therefore ends the queue snapshot, preserving `useSessionQueue`'s lifecycle contract exactly.
 - **Modals.** `AdjustSessionDialog` and `DeckSettings` become native sheets (`presentation: 'modal'` / `'formSheet'`). Web already renders both as bottom sheets below 480px, so the interaction model is already designed.
 - **Back navigation.** Hardware back on Android maps to the stack automatically. The one place it must be intercepted is `/review` mid-session (confirm-to-exit), matching the deliberate friction Exit already has.
-- **Deep linking.** Register a scheme in `app.json` for `itera://deck/<id>` and `itera://review?deck=<id>` — useful for notifications later. **Not required for auth** (that is the whole point of the OTP decision).
+- **Deep linking.** Register a scheme in `app.json` for `fliptap://deck/<id>` and `fliptap://review?deck=<id>` — useful for notifications later. **Not required for auth** (that is the whole point of the OTP decision).
 - **Authenticated route group.** One `_layout.tsx` guard, one place, exactly as web has one `RequireAuth`. The guard reads the shared `resolveAuthState`.
 - **Roadmaps** (`/roadmaps`) is **deliberately absent**. It is out of scope per `features.md`, and its hand-built SVG canvas plus pointer-drag editing is a poor phone target. Record it as web-only-by-decision.
 - **`/design-preview/*`** — optional. A `__dev__`-gated route group is cheap and would give native the same "six interactions against fixtures" surface that keeps the web previews from drifting. Recommended in Phase 7, not before.
@@ -637,7 +637,7 @@ Difficulty: T=trivial, S=small, M=medium, H=hard. Risk = risk of *silent behavio
 ### 11.1 Recall — **trivial/small**
 
 - **Shared:** nothing to grade (self-graded, no grader file). `RecallInteraction`, `AuthoringPreset`, prompt/answer as `RichContent`.
-- **Web-specific UI:** `FlipCard` (CSS `perspective` + `rotateY` + `backface-visibility`, `.itera-flip*` in `index.css`), `RichText`, `LazyCodeView` for fenced code in the answer.
+- **Web-specific UI:** `FlipCard` (CSS `perspective` + `rotateY` + `backface-visibility`, `.fliptap-flip*` in `index.css`), `RichText`, `LazyCodeView` for fenced code in the answer.
 - **Native model:** tap the card to flip. React Native supports `transform: [{ rotateY }]` and `backfaceVisibility: 'hidden'` natively; drive with Reanimated. Honour `prefers-reduced-motion` via `AccessibilityInfo.isReduceMotionEnabled` — the web CSS already has the reduced-motion branch, so the *behaviour* is decided, only the API differs.
 - **Risks:** if the 3D flip proves unstable on low-end Android, a cross-fade is an acceptable substitute. The flip is presentation; the two-phase flow is the contract.
 - **Visual parity:** not appropriate to force. Semantic parity = one continuous element across the reveal, Tip before, Explanation after, then rating.
@@ -782,13 +782,13 @@ Then `apps/web/src/components/text/RichText.tsx` maps `RichNode[]` → `<div>`/`
 **Do not share CSS. Share token values.**
 
 **Create `packages/tokens`** as a platform-neutral TS module — the single source of truth for:
-- The `--itera-*` palette: `navy`, `canvas`, `surface`, `surfaceSubtle`, `ink`, `inkBrand`, `muted`, `mutedLight`, `border`, `borderStrong`, `accent`/`accentHover`/`accentActive`/`accentSoft`/`accentSofter`, `navySoft`, `selectionSoft`/`selectionBorder`, `success`/`successSoft`, `error`/`errorSoft`, `warning`/`warningSoft`.
+- The `--fliptap-*` palette: `navy`, `canvas`, `surface`, `surfaceSubtle`, `ink`, `inkBrand`, `muted`, `mutedLight`, `border`, `borderStrong`, `accent`/`accentHover`/`accentActive`/`accentSoft`/`accentSofter`, `navySoft`, `selectionSoft`/`selectionBorder`, `success`/`successSoft`, `error`/`errorSoft`, `warning`/`warningSoft`.
 - Radii: `control` 9, `card` 14, `dialog` 16, `pill` 999.
 - Type families: Inter (sans), JetBrains Mono (mono), and the finalized weights (headings 650, body/UI 400-600).
 - Shadow *intent* names (`card`, `float`) — the values differ per platform (`box-shadow` vs `elevation`/`shadowOpacity`), so share the name and the intent, not the string.
 - **Semantic icon names** (`streak`, `due`, `recall`, `multiple_choice`, …) so web resolves to `lucide-react` and native to `lucide-react-native` from one mapping.
 
-**Keeping web and the token module in sync without a build step:** `index.css` stays the web source, and a **drift test** in `apps/web` parses the `.itera-scope` block and asserts every `--itera-*` value equals the module. No generated CSS, no watch process, and a mismatch fails the existing gate. This matches the repository's established style (hand-built, test-enforced) and respects the note in `index.css` that the semantic re-point mechanism must not be "simplified away".
+**Keeping web and the token module in sync without a build step:** `index.css` stays the web source, and a **drift test** in `apps/web` parses the `.fliptap-scope` block and asserts every `--fliptap-*` value equals the module. No generated CSS, no watch process, and a mismatch fails the existing gate. This matches the repository's established style (hand-built, test-enforced) and respects the note in `index.css` that the semantic re-point mechanism must not be "simplified away".
 
 **Native consumes the tokens through a `theme` module** producing `StyleSheet` objects. **Recommend plain `StyleSheet` over NativeWind** for the first client: NativeWind is an extra dependency, an extra Metro/Babel transform, and an extra failure mode, and it would tempt literal class-name copying — which is exactly the pixel-parity trap to avoid.
 
@@ -810,7 +810,7 @@ Then `apps/web/src/components/text/RichText.tsx` maps `RichNode[]` → `<div>`/`
 
 **What must be preserved verbatim:** the orange restraint rule (one primary orange action plus at most two or three minor accents per screen), the light-only palette (there is no dark palette; do not invent one for native — see `CURRENT_STATE.md` §4), the LOCKED/DIRECTION/CONCEPT reference tiers, the standing rule that a mockup element with no backing feature is omitted or shown as a disabled "Soon" row rather than fabricated, and reduced-motion respect (`AccessibilityInfo.isReduceMotionEnabled` is the native reading of `prefers-reduced-motion`).
 
-Note `C:\Users\SK\Desktop\itera-mockups\mobile\` already exists and should be treated under the same tier rules before any native screen is designed.
+Note `C:\Users\SK\Desktop\fliptap-mockups\mobile\` already exists and should be treated under the same tier rules before any native screen is designed.
 
 ---
 
@@ -922,9 +922,9 @@ Concrete, and each with a mitigation.
 
 3. **Metro package `exports` resolution.** Recent Expo SDKs enable `exports` support by default, which changes resolution for some transitive dependencies. **Mitigation:** keep `packages/core`'s own `package.json` minimal — `"main": "src/index.ts"`, no `exports` map, no `browser` field — so its resolution is boring on both bundlers. Verify at scaffold; if a third-party package misresolves, `resolver.unstable_enablePackageExports` is the knob.
 
-4. **TS `paths` vs runtime resolution.** These are different mechanisms and both must work. **Mitigation:** rely on the **npm workspace symlink** for runtime resolution on both bundlers (Vite and Metro both follow `node_modules/@itera/core` → `packages/core`), and use `tsconfig.base.json` `paths` **only** for editor navigation and `tsc`. Do not make Vite's `resolve.alias` or Metro's `extraNodeModules` the primary mechanism — an alias that works in one bundler and not the other is the classic monorepo failure.
+4. **TS `paths` vs runtime resolution.** These are different mechanisms and both must work. **Mitigation:** rely on the **npm workspace symlink** for runtime resolution on both bundlers (Vite and Metro both follow `node_modules/@fliptap/core` → `packages/core`), and use `tsconfig.base.json` `paths` **only** for editor navigation and `tsc`. Do not make Vite's `resolve.alias` or Metro's `extraNodeModules` the primary mechanism — an alias that works in one bundler and not the other is the classic monorepo failure.
 
-5. **Vite aliases.** `apps/web/vite.config.ts` keeps `'@' → ./src`. Do **not** add a `@itera/core` alias; the symlink handles it. One resolution mechanism, not two.
+5. **Vite aliases.** `apps/web/vite.config.ts` keeps `'@' → ./src`. Do **not** add a `@fliptap/core` alias; the symlink handles it. One resolution mechanism, not two.
 
 6. **Source TS vs prebuilt package.** **Ship `packages/core` as source TypeScript with no build step.** Metro transpiles TS natively via `babel-preset-expo`; Vite via esbuild; Vitest natively. A `tsc -b` watch process would be a permanent developer tax for no benefit, and its stale-output failures are confusing. Cost: consumers typecheck core's source (fine, and arguably better). **Verify in Step 1.1 that `npx tsc -b --force` stays clean across the workspace boundary** — that step exists specifically to catch this early.
 
@@ -998,7 +998,7 @@ The **architecture validation slice** — the smallest thing that proves every s
 
 ## 19. Full phased roadmap
 
-Standing rules for every phase: `packages/core` and `apps/web` gates (`npx vitest run`, `npx tsc -b --force`, `npm run lint`, `npm run build`) must be clean; UI work is verified in a real browser (1440×900 and 390×844) and on a real device/simulator; docs are updated in the same pass when a phase reaches finalized state; `docs/itera-decisions.md` gets a new dated entry per material decision (append-only).
+Standing rules for every phase: `packages/core` and `apps/web` gates (`npx vitest run`, `npx tsc -b --force`, `npm run lint`, `npm run build`) must be clean; UI work is verified in a real browser (1440×900 and 390×844) and on a real device/simulator; docs are updated in the same pass when a phase reaches finalized state; `docs/fliptap-decisions.md` gets a new dated entry per material decision (append-only).
 
 ---
 
@@ -1159,7 +1159,7 @@ Step 3 is the load-bearing one. "Resolved" has exactly three legal values: **imp
 2. **The parity fixture is the enforcement mechanism.** A new derived value adds an entry to `PARITY_EXPECTATIONS`; both platforms assert against it. A platform that quietly computes something else fails a test rather than a code review.
 3. **Extend the "Adding an interaction" checklist** in `docs/architecture.md` with native touchpoints. The compiler already enforces most of the web ones (`searchableText`'s `never` guard, the union exhaustiveness); the registry step is the one it does not, and native adds a second registry with the same property. Both should throw loudly for a missing type.
 4. **A recurring parity review** at every milestone boundary: read `docs/platform-parity.md` top to bottom and re-confirm every non-implemented row is still a deliberate decision. Cheap, and it is the only thing that catches slow drift.
-5. **Deliberate platform-specific features are legitimate** — Roadmaps is web-only, notifications will be native-only — but each needs a dated `itera-decisions.md` entry, not a silent gap.
+5. **Deliberate platform-specific features are legitimate** — Roadmaps is web-only, notifications will be native-only — but each needs a dated `fliptap-decisions.md` entry, not a silent gap.
 
 ---
 
@@ -1187,7 +1187,7 @@ Every non-`implemented` status MUST carry a reason and, for `deferred`, an owner
 ```
 
 **It explicitly does NOT own:**
-- *Why* a decision was made beyond one clause → `itera-decisions.md` (append-only, cited by date).
+- *Why* a decision was made beyond one clause → `fliptap-decisions.md` (append-only, cited by date).
 - Implementation status of the web app → `CURRENT_STATE.md`.
 - What the product does → `features.md`.
 - How anything is built → `architecture.md`.
@@ -1240,12 +1240,12 @@ Ranked by consequence × how early it must be settled.
 
 Concretely:
 1. Add `"workspaces": ["packages/*"]` to the root `package.json`.
-2. Create `packages/core` with `package.json` (`"name": "@itera/core"`, `"main": "src/index.ts"`, `react` as a peer dependency, no build script) and a `vitest.config.ts` with `environment: 'node'`.
-3. Add `tsconfig.base.json` carrying the current strict flags plus a `@itera/core` path mapping; have `tsconfig.app.json` extend it.
+2. Create `packages/core` with `package.json` (`"name": "@fliptap/core"`, `"main": "src/index.ts"`, `react` as a peer dependency, no build script) and a `vitest.config.ts` with `environment: 'node'`.
+3. Add `tsconfig.base.json` carrying the current strict flags plus a `@fliptap/core` path mapping; have `tsconfig.app.json` extend it.
 4. `git mv src/types/* packages/core/src/types/` and export them from `packages/core/src/index.ts`.
-5. Leave a one-file `src/types/index.ts` in web that re-exports from `@itera/core`, so **not a single existing web import changes**.
+5. Leave a one-file `src/types/index.ts` in web that re-exports from `@fliptap/core`, so **not a single existing web import changes**.
 6. Run the gate: `npx vitest run` (825, unchanged), `npx tsc -b --force`, `npm run lint`, `npm run build`, then `npm run dev` and load Today, a deck, a review session and Progress.
 
-**Why this first, and why it is exactly the right size:** it is the smallest change that proves all four resolution paths at once — TypeScript's, Vite's, Vitest's and (later) Metro's — across a workspace boundary, using source TypeScript with no build step. If any of them cannot resolve `@itera/core`, that is discovered in a commit that moved zero logic and can be reverted in one command. Every later step in Phase 1 is a larger move that assumes this works.
+**Why this first, and why it is exactly the right size:** it is the smallest change that proves all four resolution paths at once — TypeScript's, Vite's, Vitest's and (later) Metro's — across a workspace boundary, using source TypeScript with no build step. If any of them cannot resolve `@fliptap/core`, that is discovered in a commit that moved zero logic and can be reverted in one command. Every later step in Phase 1 is a larger move that assumes this works.
 
 **Do not, in that milestone:** move `domain/`, touch the hooks, scaffold anything Expo, or move the web app into `apps/web`.

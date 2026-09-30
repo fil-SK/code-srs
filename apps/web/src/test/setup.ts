@@ -1,8 +1,8 @@
 // The web suite's bootstrap. Runs before every src/ test file, and only those:
-// @itera/core's tests are a separate Vitest project with no setup at all
+// @fliptap/core's tests are a separate Vitest project with no setup at all
 // (vitest.config.ts).
 import 'fake-indexeddb/auto' // an in-memory IndexedDB so Dexie works under Node
-import { configureRepository } from '@itera/core'
+import { configureRepository } from '@fliptap/core'
 import { DexieRepository } from '@/data/dexie/DexieRepository'
 
 // Explicit, because it is no longer implied. Tests used to get Dexie by

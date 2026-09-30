@@ -1,4 +1,4 @@
-import { type AuthConfig, getRepository, resolveAuthState, SupabaseRepository } from '@itera/core'
+import { type AuthConfig, getRepository, resolveAuthState, SupabaseRepository } from '@fliptap/core'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { inertLocalSessionStore } from '@/src/auth/mobileAuthConfig'
@@ -46,9 +46,9 @@ describe('mobile auth config', () => {
   // evaluated, so each case re-imports the module graph under a different
   // environment rather than trying to mutate a resolved constant.
   function configForMode(mode: string | undefined) {
-    const previous = process.env.EXPO_PUBLIC_ITERA_MODE
-    if (mode === undefined) delete process.env.EXPO_PUBLIC_ITERA_MODE
-    else process.env.EXPO_PUBLIC_ITERA_MODE = mode
+    const previous = process.env.EXPO_PUBLIC_FLIPTAP_MODE
+    if (mode === undefined) delete process.env.EXPO_PUBLIC_FLIPTAP_MODE
+    else process.env.EXPO_PUBLIC_FLIPTAP_MODE = mode
 
     let config: AuthConfig | undefined
     jest.isolateModules(() => {
@@ -56,8 +56,8 @@ describe('mobile auth config', () => {
       config = require('@/src/auth/mobileAuthConfig').createMobileAuthConfig()
     })
 
-    if (previous === undefined) delete process.env.EXPO_PUBLIC_ITERA_MODE
-    else process.env.EXPO_PUBLIC_ITERA_MODE = previous
+    if (previous === undefined) delete process.env.EXPO_PUBLIC_FLIPTAP_MODE
+    else process.env.EXPO_PUBLIC_FLIPTAP_MODE = previous
 
     if (!config) throw new Error('unreachable')
     return config
@@ -123,7 +123,7 @@ describe('mobile auth config', () => {
       { id: 'other', email: 'someone@example.com', kind: 'local', createdAt: '2026-01-01' },
       { remember: true },
     )
-    expect(config.localSessionStore.read()?.email).toBe('demo@itera.app')
+    expect(config.localSessionStore.read()?.email).toBe('demo@fliptap.app')
 
     config.localSessionStore.clear()
     expect(config.localSessionStore.read()).not.toBeNull()

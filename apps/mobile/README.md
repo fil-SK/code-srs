@@ -1,6 +1,6 @@
-# Itera mobile
+# FlipTap mobile
 
-This workspace is Itera's Expo/React Native presentation and composition app.
+This workspace is FlipTap's Expo/React Native presentation and composition app.
 
 It runs in one of two modes.
 
@@ -14,8 +14,8 @@ Demo data is **deterministic demo data**. It is not synced, not cloud-backed, no
 a persisted account and not production data. It lives in memory and resets on a
 full app restart, deliberately.
 
-**Cloud (`EXPO_PUBLIC_ITERA_MODE=cloud`).** The real composition root: a native
-Supabase client over a chunked SecureStore session, the shared `@itera/core` auth
+**Cloud (`EXPO_PUBLIC_FLIPTAP_MODE=cloud`).** The real composition root: a native
+Supabase client over a chunked SecureStore session, the shared `@fliptap/core` auth
 engine behind six-digit email OTP, `Stack.Protected` route groups, one
 `QueryClientProvider`, and the shared `Repository` registered through
 `configureRepository`. Profile shows the real account identity and can sign out.
@@ -45,7 +45,7 @@ web/native table.
 and opens the product immediately.
 
 For cloud mode, copy `.env.local.example` to `.env.local`, set
-`EXPO_PUBLIC_ITERA_MODE=cloud`, and fill in your Supabase project URL and
+`EXPO_PUBLIC_FLIPTAP_MODE=cloud`, and fill in your Supabase project URL and
 publishable key. With the mode set and those unset the app renders a
 configuration notice instead of the product - there is no native local storage
 fallback, and a web workspace that only exists in a browser will not appear here.
@@ -72,7 +72,7 @@ Expo Go's scanner.
 If the LAN route is blocked by the network or Windows firewall:
 
 ```bash
-npm run start --workspace @itera/mobile -- --tunnel
+npm run start --workspace @fliptap/mobile -- --tunnel
 ```
 
 Everything this workspace depends on is available in Expo Go for SDK 54, so no
@@ -82,7 +82,7 @@ development build is required.
 
 ```bash
 npm run test:mobile                              # from the repository root
-npm run test    --workspace @itera/mobile        # jest-expo + RNTL
+npm run test    --workspace @fliptap/mobile        # jest-expo + RNTL
 npx tsc --noEmit                                 # from apps/mobile
 npx expo lint
 npx expo-doctor
@@ -106,5 +106,5 @@ covers `apps/web` and `packages/core` only and never sees these files.
 - Never import a backend from a screen, hook or component.
 
 SDK-specific implementation guidance lives in the exact Expo 54 documentation.
-The repository-root `AGENTS.md` remains authoritative for Itera architecture and
+The repository-root `AGENTS.md` remains authoritative for FlipTap architecture and
 scope.

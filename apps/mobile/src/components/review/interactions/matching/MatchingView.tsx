@@ -1,8 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
   gradeMatching,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   matchingBehavior,
   stripInlineMarkers,
   type ID,
@@ -10,7 +10,7 @@ import {
   type MatchingGrade,
   type MatchingInteraction,
   type MatchingResponse,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AccessibilityInfo,
@@ -51,7 +51,7 @@ function MatchingBadge({ results = false }: { results?: boolean }) {
   return (
     <View style={[styles.badge, results && styles.badgeResults]}>
       <MaterialCommunityIcons
-        color={results ? iteraColors.accent : iteraColors.inkBrand}
+        color={results ? fliptapColors.accent : fliptapColors.inkBrand}
         name={results ? 'check-decagram-outline' : 'link-variant'}
         size={21}
       />
@@ -131,7 +131,7 @@ function SourceCell({
         {correct !== null ? (
           <>
             <MaterialCommunityIcons
-              color={correct ? iteraColors.success : iteraColors.error}
+              color={correct ? fliptapColors.success : fliptapColors.error}
               name={correct ? 'check-circle' : 'close-circle'}
               size={15}
             />
@@ -141,7 +141,7 @@ function SourceCell({
           </>
         ) : complete ? (
           <>
-            <MaterialCommunityIcons color={iteraColors.success} name="check-circle-outline" size={15} />
+            <MaterialCommunityIcons color={fliptapColors.success} name="check-circle-outline" size={15} />
             <Text style={[styles.cellStatusText, styles.correctText]}>Matched</Text>
           </>
         ) : selected ? (
@@ -196,7 +196,7 @@ function OptionCell({
       {showingResult ? (
         <View style={styles.resultMark}>
           <MaterialCommunityIcons
-            color={correctChoice ? iteraColors.success : iteraColors.error}
+            color={correctChoice ? fliptapColors.success : fliptapColors.error}
             name={correctChoice ? 'check-circle' : 'close-circle'}
             size={16}
           />
@@ -205,7 +205,7 @@ function OptionCell({
           </Text>
         </View>
       ) : selected ? (
-        <MaterialCommunityIcons color={iteraColors.accent} name="check-circle" size={17} />
+        <MaterialCommunityIcons color={fliptapColors.accent} name="check-circle" size={17} />
       ) : null}
     </Pressable>
   )
@@ -228,12 +228,12 @@ function ConnectionPath({
     ? '#e1a29e'
     : correct === true
       ? '#86c99b'
-      : iteraColors.borderStrong
+      : fliptapColors.borderStrong
   const markerColor = correct === false
-    ? iteraColors.error
+    ? fliptapColors.error
     : correct === true
-      ? iteraColors.success
-      : iteraColors.navy
+      ? fliptapColors.success
+      : fliptapColors.navy
   const controlPull = (toX - fromX) * 0.48
   const markerX = (fromX + toX) / 2
   const markerY = (fromY + toY) / 2
@@ -248,7 +248,7 @@ function ConnectionPath({
       <Path
         d={markerGlyph}
         fill="none"
-        stroke={iteraColors.surface}
+        stroke={fliptapColors.surface}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth={2}
@@ -426,7 +426,7 @@ function MatchBoard({
 
       {isWideBoard && (
         <View style={styles.swipeNote}>
-          <MaterialCommunityIcons color={iteraColors.muted} name="gesture-swipe-horizontal" size={18} />
+          <MaterialCommunityIcons color={fliptapColors.muted} name="gesture-swipe-horizontal" size={18} />
           <Text style={styles.swipeNoteText}>Swipe sideways to view every column</Text>
         </View>
       )}
@@ -595,7 +595,7 @@ export function MatchingView({
           style={[styles.summary, grade?.correct ? styles.summaryCorrect : styles.summaryIncorrect]}
         >
           <MaterialCommunityIcons
-            color={grade?.correct ? iteraColors.success : iteraColors.error}
+            color={grade?.correct ? fliptapColors.success : fliptapColors.error}
             name={grade?.correct ? 'check-circle-outline' : 'alert-circle-outline'}
             size={20}
           />
@@ -616,52 +616,52 @@ export function MatchingView({
 }
 
 const styles = StyleSheet.create({
-  card: { overflow: 'hidden', borderRadius: 20, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surface, paddingVertical: 20, alignItems: 'center', ...Platform.select({ ios: { shadowColor: iteraColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
-  badge: { minHeight: 42, paddingHorizontal: 16, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  badgeResults: { backgroundColor: iteraColors.accentSofter },
-  badgeText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
-  badgeTextResults: { color: iteraColors.accentActive },
-  prompt: { marginTop: 22, paddingHorizontal: 18, color: iteraColors.inkBrand, fontSize: 23, lineHeight: 32, fontWeight: '700', letterSpacing: -0.3, textAlign: 'center' },
-  instruction: { marginTop: 8, paddingHorizontal: 20, color: iteraColors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  card: { overflow: 'hidden', borderRadius: 20, borderWidth: 1, borderColor: fliptapColors.border, backgroundColor: fliptapColors.surface, paddingVertical: 20, alignItems: 'center', ...Platform.select({ ios: { shadowColor: fliptapColors.navy, shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 18 }, android: { elevation: 4 }, web: { boxShadow: '0 7px 18px rgba(30,41,59,0.08)' } }) },
+  badge: { minHeight: 42, paddingHorizontal: 16, borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.surfaceSubtle, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  badgeResults: { backgroundColor: fliptapColors.accentSofter },
+  badgeText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  badgeTextResults: { color: fliptapColors.accentActive },
+  prompt: { marginTop: 22, paddingHorizontal: 18, color: fliptapColors.inkBrand, fontSize: 23, lineHeight: 32, fontWeight: '700', letterSpacing: -0.3, textAlign: 'center' },
+  instruction: { marginTop: 8, paddingHorizontal: 20, color: fliptapColors.muted, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   completionRow: { width: '100%', marginTop: 20, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  completionText: { color: iteraColors.muted, fontSize: 12, fontWeight: '700' },
-  completionTrack: { flex: 1, height: 4, overflow: 'hidden', borderRadius: iteraRadii.pill, backgroundColor: iteraColors.border },
-  completionFill: { height: '100%', borderRadius: iteraRadii.pill, backgroundColor: iteraColors.accent },
+  completionText: { color: fliptapColors.muted, fontSize: 12, fontWeight: '700' },
+  completionTrack: { flex: 1, height: 4, overflow: 'hidden', borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.border },
+  completionFill: { height: '100%', borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.accent },
   boardSection: { width: '100%', marginTop: 14 },
-  activeContext: { minHeight: 54, marginHorizontal: 18, marginBottom: 12, borderRadius: iteraRadii.control, backgroundColor: iteraColors.navySoft, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  activeContext: { minHeight: 54, marginHorizontal: 18, marginBottom: 12, borderRadius: fliptapRadii.control, backgroundColor: fliptapColors.navySoft, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   activeContextCopy: { flex: 1 },
-  activeContextLabel: { color: iteraColors.muted, fontSize: 9, fontWeight: '800', letterSpacing: 0.7 },
-  activeContextValue: { marginTop: 2, color: iteraColors.inkBrand, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }), fontSize: 14, fontWeight: '700' },
-  activeContextHint: { color: iteraColors.muted, fontSize: 11, fontWeight: '600' },
+  activeContextLabel: { color: fliptapColors.muted, fontSize: 9, fontWeight: '800', letterSpacing: 0.7 },
+  activeContextValue: { marginTop: 2, color: fliptapColors.inkBrand, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }), fontSize: 14, fontWeight: '700' },
+  activeContextHint: { color: fliptapColors.muted, fontSize: 11, fontWeight: '600' },
   board: { position: 'relative', paddingHorizontal: 18, paddingBottom: 8, alignItems: 'flex-start' },
   column: { zIndex: 3, gap: CELL_GAP },
-  columnLabel: { minHeight: COLUMN_LABEL_HEIGHT, color: iteraColors.muted, fontSize: 11, lineHeight: 14, fontWeight: '800', letterSpacing: 0.35, textTransform: 'uppercase' },
-  cell: { height: CELL_HEIGHT, borderRadius: iteraRadii.card, borderWidth: 1, borderColor: iteraColors.border, backgroundColor: iteraColors.surfaceSubtle, paddingHorizontal: 11, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', gap: 7 },
-  sourceCell: { backgroundColor: iteraColors.surface },
-  cellSelected: { borderWidth: 1.5, borderColor: iteraColors.accent, backgroundColor: iteraColors.accentSofter },
-  cellUsed: { backgroundColor: iteraColors.selectionSoft },
+  columnLabel: { minHeight: COLUMN_LABEL_HEIGHT, color: fliptapColors.muted, fontSize: 11, lineHeight: 14, fontWeight: '800', letterSpacing: 0.35, textTransform: 'uppercase' },
+  cell: { height: CELL_HEIGHT, borderRadius: fliptapRadii.card, borderWidth: 1, borderColor: fliptapColors.border, backgroundColor: fliptapColors.surfaceSubtle, paddingHorizontal: 11, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', gap: 7 },
+  sourceCell: { backgroundColor: fliptapColors.surface },
+  cellSelected: { borderWidth: 1.5, borderColor: fliptapColors.accent, backgroundColor: fliptapColors.accentSofter },
+  cellUsed: { backgroundColor: fliptapColors.selectionSoft },
   cellDisabled: { opacity: 0.62 },
-  cellCorrect: { borderColor: '#86c99b', backgroundColor: iteraColors.successSoft },
-  cellIncorrect: { borderColor: '#e1a29e', backgroundColor: iteraColors.errorSoft },
-  sourceCode: { color: iteraColors.accent, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }), fontSize: 14, fontWeight: '700', textAlign: 'center' },
-  optionText: { color: iteraColors.inkBrand, fontSize: 14, lineHeight: 19, fontWeight: '600', textAlign: 'center' },
-  disabledText: { color: iteraColors.muted },
+  cellCorrect: { borderColor: '#86c99b', backgroundColor: fliptapColors.successSoft },
+  cellIncorrect: { borderColor: '#e1a29e', backgroundColor: fliptapColors.errorSoft },
+  sourceCode: { color: fliptapColors.accent, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }), fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  optionText: { color: fliptapColors.inkBrand, fontSize: 14, lineHeight: 19, fontWeight: '600', textAlign: 'center' },
+  disabledText: { color: fliptapColors.muted },
   cellStatus: { minHeight: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
-  cellStatusText: { color: iteraColors.muted, fontSize: 9, fontWeight: '700' },
-  selectedText: { color: iteraColors.accentActive, fontSize: 9, fontWeight: '800' },
+  cellStatusText: { color: fliptapColors.muted, fontSize: 9, fontWeight: '700' },
+  selectedText: { color: fliptapColors.accentActive, fontSize: 9, fontWeight: '800' },
   resultMark: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   resultMarkText: { fontSize: 9, fontWeight: '800' },
   connectionLayer: { position: 'absolute', zIndex: 2, left: 18, right: 18, top: 0, bottom: 8 },
-  correctText: { color: iteraColors.success },
-  incorrectText: { color: iteraColors.error },
+  correctText: { color: fliptapColors.success },
+  incorrectText: { color: fliptapColors.error },
   swipeNote: { marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  swipeNoteText: { color: iteraColors.muted, fontSize: 11, fontWeight: '600' },
-  submit: { alignSelf: 'stretch', minHeight: 54, marginTop: 20, marginHorizontal: 18, borderRadius: iteraRadii.control, backgroundColor: iteraColors.accent, alignItems: 'center', justifyContent: 'center' },
+  swipeNoteText: { color: fliptapColors.muted, fontSize: 11, fontWeight: '600' },
+  submit: { alignSelf: 'stretch', minHeight: 54, marginTop: 20, marginHorizontal: 18, borderRadius: fliptapRadii.control, backgroundColor: fliptapColors.accent, alignItems: 'center', justifyContent: 'center' },
   submitDisabled: { opacity: 0.38 },
-  submitText: { color: iteraColors.surface, fontSize: 17, fontWeight: '700' },
-  summary: { alignSelf: 'stretch', minHeight: 48, marginTop: 18, marginHorizontal: 18, borderRadius: iteraRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  summaryCorrect: { backgroundColor: iteraColors.successSoft },
-  summaryIncorrect: { backgroundColor: iteraColors.errorSoft },
+  submitText: { color: fliptapColors.surface, fontSize: 17, fontWeight: '700' },
+  summary: { alignSelf: 'stretch', minHeight: 48, marginTop: 18, marginHorizontal: 18, borderRadius: fliptapRadii.control, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  summaryCorrect: { backgroundColor: fliptapColors.successSoft },
+  summaryIncorrect: { backgroundColor: fliptapColors.errorSoft },
   summaryText: { fontSize: 14, fontWeight: '700' },
   pressed: { opacity: 0.72 },
 })

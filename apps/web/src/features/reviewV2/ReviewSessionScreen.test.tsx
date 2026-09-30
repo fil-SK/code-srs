@@ -147,10 +147,10 @@ describe('ReviewSessionScreen (via Recall)', () => {
 
     await waitFor(() => {
       const again = screen.getByRole('button', { name: /Again/ })
-      expect(again.className).toMatch(/border-itera-accent/)
+      expect(again.className).toMatch(/border-fliptap-accent/)
     })
     const easy = screen.getByRole('button', { name: /Easy/ })
-    expect(easy.className).not.toMatch(/border-itera-accent/)
+    expect(easy.className).not.toMatch(/border-fliptap-accent/)
   })
 
   it('Space targeted at a focused interactive control is ignored by the page-level handler, not double-handled', () => {

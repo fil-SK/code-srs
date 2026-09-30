@@ -1,4 +1,4 @@
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { FormField } from '@/src/components/ui/FormField'
@@ -113,23 +113,23 @@ const styles = StyleSheet.create({
   chip: {
     minHeight: 44,
     justifyContent: 'center',
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 13,
   },
   chipSelected: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accentSofter,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accentSofter,
   },
   chipText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     fontWeight: '600',
   },
   chipTextSelected: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
   },
   pressed: {
     opacity: 0.65,

@@ -1,10 +1,10 @@
-import type { AuthConfig, LocalSessionStore } from '@itera/core'
+import type { AuthConfig, LocalSessionStore } from '@fliptap/core'
 
 import { mobileRuntimeMode } from '@/src/config/mobileRuntimeMode'
 import { getMobileSupabase } from '@/src/data/supabaseClient'
 import { demoSessionStore } from './demoSessionStore'
 
-// What this platform hands @itera/core's shared auth layer. Nothing more.
+// What this platform hands @fliptap/core's shared auth layer. Nothing more.
 //
 // The session lifecycle, the bootstrap, the identity rule and the "am I signed
 // in?" answer all stay in core (packages/core/src/auth/). This file supplies

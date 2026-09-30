@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { buildDeckTree, flattenDeckTree, subtreeIds } from '@/domain/decks/tree'
 import { DECK_LANGUAGES } from '@/domain/decks/languages'
-import { validateDeckForm } from '@itera/core'
+import { validateDeckForm } from '@fliptap/core'
 import { useSaveDeck } from '@/hooks/useDecks'
 
 // Edit a deck's name, description, and parent. The parent list excludes the
@@ -58,7 +58,7 @@ export function DeckSettings({
   }
 
   return (
-    <div className="mb-4 mt-6 space-y-4 rounded-itera-card border border-itera-border bg-itera-surface p-5">
+    <div className="mb-4 mt-6 space-y-4 rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5">
       <Field label="Name">
         <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} />
       </Field>

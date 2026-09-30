@@ -4,7 +4,7 @@ import {
   validateDeckForm,
   type Deck,
   type DeckFormState,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useState } from 'react'
 
 import { EditorScreen } from '@/src/components/ui/EditorScreen'

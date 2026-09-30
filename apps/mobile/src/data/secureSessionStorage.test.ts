@@ -46,9 +46,9 @@ describe('chunk arithmetic', () => {
     expect(parseManifest('')).toBeNull()
     expect(parseManifest('3')).toBeNull()
     expect(parseManifest('{"n":3}')).toBeNull()
-    expect(parseManifest('itera.chunked.v1:0')).toBeNull()
-    expect(parseManifest('itera.chunked.v1:abc')).toBeNull()
-    expect(parseManifest('itera.chunked.v1:2')).toBe(2)
+    expect(parseManifest('fliptap.chunked.v1:0')).toBeNull()
+    expect(parseManifest('fliptap.chunked.v1:abc')).toBeNull()
+    expect(parseManifest('fliptap.chunked.v1:2')).toBe(2)
   })
 })
 

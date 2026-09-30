@@ -1,4 +1,4 @@
-// The Itera brand identity as platform-neutral values.
+// The FlipTap brand identity as platform-neutral values.
 //
 // These exist because a React Native app cannot read a CSS custom property.
 // The web app's src/index.css remains the source that actually paints the
@@ -25,9 +25,9 @@
 //    `box-shadow` and React Native's elevation/shadowOpacity are different
 //    models rather than different syntaxes for one thing.
 
-// The locked --itera-* palette. Light-only: the app declares itself light and
+// The locked --fliptap-* palette. Light-only: the app declares itself light and
 // has no dark palette to pair these with (docs/CURRENT_STATE.md).
-export const iteraColors = {
+export const fliptapColors = {
   navy: '#1e293b',
 
   canvas: '#f6f7f9',
@@ -58,32 +58,32 @@ export const iteraColors = {
   warningSoft: '#fff7ed',
 } as const
 
-export type IteraColorName = keyof typeof iteraColors
+export type FlipTapColorName = keyof typeof fliptapColors
 
 // Density units, not a spacing scale: pills, controls, cards and dialogs each
 // have one radius and the difference between them is meaningful ("don't round
 // everything equally"). Numbers rather than 'px' strings, because React Native
 // takes numbers and the web adds the unit.
-export const iteraRadii = {
+export const fliptapRadii = {
   control: 9,
   card: 14,
   dialog: 16,
   pill: 999,
 } as const
 
-export type IteraRadiusName = keyof typeof iteraRadii
+export type FlipTapRadiusName = keyof typeof fliptapRadii
 
 // Two families, no more (docs/design-system.md, locked). `mono` is for code,
 // keyboard shortcuts and selected technical metadata; `sans` is everything
 // else, including headings and wordmarks - hierarchy comes from weight and
 // scale, never from a third family.
-export const iteraFonts = {
+export const fliptapFonts = {
   sans: 'Inter',
   mono: 'JetBrains Mono',
 } as const
 
 // The finalized weights: headings sit at 650, body and UI copy in 400-600.
-export const iteraFontWeights = {
+export const fliptapFontWeights = {
   heading: 650,
   bodyMin: 400,
   bodyMax: 600,
@@ -92,5 +92,5 @@ export const iteraFontWeights = {
 // Shared as intent names only - see the module comment. A platform resolves
 // `card` to its own elevation treatment; `card` is for the main Review cards
 // and comparable surfaces, `float` for genuinely floating elements.
-export const ITERA_SHADOW_INTENTS = ['card', 'float'] as const
-export type IteraShadowIntent = (typeof ITERA_SHADOW_INTENTS)[number]
+export const FLIPTAP_SHADOW_INTENTS = ['card', 'float'] as const
+export type FlipTapShadowIntent = (typeof FLIPTAP_SHADOW_INTENTS)[number]

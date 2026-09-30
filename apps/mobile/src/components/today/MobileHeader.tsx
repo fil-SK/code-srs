@@ -1,12 +1,12 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { demoUnreadCount } from '@/src/demo/demoSelectors'
 import { useDemoWorkspaceOptional } from '@/src/demo/demoWorkspaceContext'
 
-const iteraSymbol = require('../../../assets/itera-logo.png')
+const fliptapSymbol = require('../../../assets/fliptap-logo.png')
 
 export function MobileHeader() {
   const router = useRouter()
@@ -20,8 +20,8 @@ export function MobileHeader() {
   return (
     <View style={styles.header}>
       <View style={styles.brand}>
-        <Image resizeMode="contain" source={iteraSymbol} style={styles.symbol} />
-        <Text style={styles.wordmark}>Itera</Text>
+        <Image resizeMode="contain" source={fliptapSymbol} style={styles.symbol} />
+        <Text style={styles.wordmark}>FlipTap</Text>
       </View>
 
       <Pressable
@@ -35,7 +35,7 @@ export function MobileHeader() {
         onPress={() => router.push('/notifications')}
         style={({ pressed }) => [styles.bellWrap, pressed && styles.pressed]}
       >
-        <MaterialCommunityIcons color={iteraColors.inkBrand} name="bell-outline" size={28} />
+        <MaterialCommunityIcons color={fliptapColors.inkBrand} name="bell-outline" size={28} />
         {unreadCount > 0 ? <View style={styles.notificationDot} /> : null}
       </Pressable>
     </View>
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     height: 42,
   },
   wordmark: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 28,
     fontWeight: '700',
     letterSpacing: -0.7,
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
     right: 6,
     width: 8,
     height: 8,
-    borderColor: iteraColors.canvas,
+    borderColor: fliptapColors.canvas,
     borderRadius: 4,
     borderWidth: 1,
-    backgroundColor: iteraColors.accent,
+    backgroundColor: fliptapColors.accent,
   },
 })

@@ -103,11 +103,11 @@ Open the printed URL (default http://localhost:5173). With no `.env.local`, it r
 
 You land on `/login` first. There is no accounts backend in local mode, so it is a session boundary rather than authentication — **Continue with demo workspace** gets you straight in, or sign in with any email and password (the password is never stored, sent, or checked). Signing out from the avatar menu returns you here. With Supabase configured, the same page sends a real magic link instead.
 
-The login is a compact, mockup-driven split surface using Inter Variable throughout. Its product panel carries the real Itera mark, a three-card equal-width learning fan, and the Local-first / Private by default / Built for engineers principles; the form stays intentionally quieter on the right.
+The login is a compact, mockup-driven split surface using Inter Variable throughout. Its product panel carries the real FlipTap mark, a three-card equal-width learning fan, and the Local-first / Private by default / Built for engineers principles; the form stays intentionally quieter on the right.
 
 ### Scripts
 
-All run from the repository root. Existing web commands continue to delegate to `@itera/web`; the mobile app has its own command.
+All run from the repository root. Existing web commands continue to delegate to `@fliptap/web`; the mobile app has its own command.
 
 | Command | Description |
 | --- | --- |
@@ -116,7 +116,7 @@ All run from the repository root. Existing web commands continue to delegate to 
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | Lint the whole tree with oxlint |
 | `npm run test` | Run the Vitest unit suite (web + core projects) |
-| `npm run dev --workspace @itera/web` | The same dev server, addressed directly |
+| `npm run dev --workspace @fliptap/web` | The same dev server, addressed directly |
 | `npm run dev:mobile` | Start Expo/Metro and serve the mobile app to a physical device via Expo Go |
 
 ---
@@ -146,7 +146,7 @@ Free and takes a few minutes.
 The app is a static build plus a Vercel rewrite (already in [`vercel.json`](vercel.json)) so client-side routing survives refreshes.
 
 1. Push the repo to GitHub.
-2. On [Vercel](https://vercel.com), **Add New → Project** and import the repo (connect GitHub if needed). Keep the project's **Root Directory** at the repository root: `npm run build` delegates to the `@itera/web` workspace and `vercel.json` declares the resulting `outputDirectory` as `apps/web/dist`. (If you instead point Root Directory at `apps/web`, drop that key — the output there is plain `dist`.)
+2. On [Vercel](https://vercel.com), **Add New → Project** and import the repo (connect GitHub if needed). Keep the project's **Root Directory** at the repository root: `npm run build` delegates to the `@fliptap/web` workspace and `vercel.json` declares the resulting `outputDirectory` as `apps/web/dist`. (If you instead point Root Directory at `apps/web`, drop that key — the output there is plain `dist`.)
 3. Add the two environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) for the **Production** environment.
 4. Deploy. Add your Vercel URL to the Supabase **redirect allow-list** (step 4 above) so magic links return to the site.
 
@@ -179,7 +179,7 @@ An npm workspace with five owners: the root orchestrates, `apps/*` holds applica
 
 ```
 package.json     workspace root only - scripts + repo-wide gates, no app code
-apps/web/        @itera/web - the web application
+apps/web/        @fliptap/web - the web application
   index.html  public/  vite.config.ts  tsconfig.{app,node}.json
   src/
     app/         providers, router, theme, query client
@@ -189,15 +189,15 @@ apps/web/        @itera/web - the web application
     data/        Dexie backend + the Supabase browser client
     features/    cards, library, login, preview, progress, review, reviewV2,
                  roadmaps, settings, today
-    domain/ hooks/ types/   thin re-export shims over @itera/core
-apps/mobile/     @itera/mobile - Expo SDK 54 + Expo Router presentation shell
+    domain/ hooks/ types/   thin re-export shims over @fliptap/core
+apps/mobile/     @fliptap/mobile - Expo SDK 54 + Expo Router presentation shell
   app/           tab shell (Today, Library, Review, Progress, Profile) plus the
                  nested Library, Review-preview and Notifications stacks
   src/           mobile presentation, typed view models and fixtures
-apps/marketing/  @itera/marketing - standalone public pre-launch site
+apps/marketing/  @fliptap/marketing - standalone public pre-launch site
   src/           one-page React presentation + isolated early-access adapter
-  public/        Itera logo and social-preview image
-packages/core/   @itera/core - the shared engine: entity contracts, the
+  public/        FlipTap logo and social-preview image
+packages/core/   @fliptap/core - the shared engine: entity contracts, the
                  Repository seam, the pure domain engine (scheduling/FSRS,
                  grading, stats, search, io), the Supabase backend, the
                  TanStack Query hooks, the auth policy, the text parser and
@@ -218,7 +218,7 @@ For a full technical reference beyond this README — exact color tokens, the co
 - [`docs/architecture.md`](docs/architecture.md) — storage seam, data hooks, card-type registries, auth boundary, routing, scheduling, migration machinery.
 - [`docs/design-system.md`](docs/design-system.md) — brand, tokens, typography, navigation, motion, accessibility, responsive rules.
 - [`docs/features.md`](docs/features.md) — current feature/page inventory, plus what is planned and what is out of scope.
-- [`docs/itera-decisions.md`](docs/itera-decisions.md) — the append-only decision log.
+- [`docs/fliptap-decisions.md`](docs/fliptap-decisions.md) — the append-only decision log.
 
 Project history (the original repository audit, the phased redesign plan, and the original master spec) is preserved under [`docs/archive/`](docs/archive/) and is **not** a current source of truth.
 

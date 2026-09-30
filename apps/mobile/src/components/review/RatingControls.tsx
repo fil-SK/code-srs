@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, type Rating } from '@itera/core'
+import { fliptapColors, fliptapRadii, type Rating } from '@fliptap/core'
 import type { ComponentProps } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -19,7 +19,7 @@ const ratingPresentation: {
 
 // The final grade, which the learner always chooses.
 //
-// Itera's locked rule is that objective correctness is not recall quality: a
+// FlipTap's locked rule is that objective correctness is not recall quality: a
 // card can be answered correctly after a struggle, or missed on something the
 // learner otherwise knows cold. So an auto-graded result may *recommend* a
 // rating - shown here as a "Suggested" marker - and never selects one, never
@@ -69,7 +69,7 @@ export function RatingControls({
             >
               {isSuggested && <Text style={styles.suggested}>Suggested</Text>}
               <MaterialCommunityIcons
-                color={isSelected || isSuggested ? iteraColors.accent : iteraColors.muted}
+                color={isSelected || isSuggested ? fliptapColors.accent : fliptapColors.muted}
                 name={item.icon}
                 size={24}
               />
@@ -89,7 +89,7 @@ export function RatingControls({
 const styles = StyleSheet.create({
   heading: {
     marginBottom: 10,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
@@ -99,28 +99,28 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 118,
     overflow: 'hidden',
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
   },
-  buttonSuggested: { borderColor: iteraColors.accent, backgroundColor: iteraColors.accentSoft },
-  buttonSelected: { borderColor: iteraColors.accent, backgroundColor: iteraColors.accentSofter },
+  buttonSuggested: { borderColor: fliptapColors.accent, backgroundColor: fliptapColors.accentSoft },
+  buttonSelected: { borderColor: fliptapColors.accent, backgroundColor: fliptapColors.accentSofter },
   buttonDisabled: { opacity: 0.5 },
   suggested: {
     position: 'absolute',
     top: 8,
-    color: iteraColors.accentActive,
+    color: fliptapColors.accentActive,
     fontSize: 9,
     fontWeight: '800',
     letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
-  label: { color: iteraColors.inkBrand, fontSize: 14, fontWeight: '700' },
-  interval: { color: iteraColors.muted, fontSize: 11 },
+  label: { color: fliptapColors.inkBrand, fontSize: 14, fontWeight: '700' },
+  interval: { color: fliptapColors.muted, fontSize: 11 },
   accent: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 4 },
   pressed: { opacity: 0.68 },
 })

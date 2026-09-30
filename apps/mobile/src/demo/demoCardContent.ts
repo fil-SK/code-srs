@@ -1,8 +1,8 @@
-import { richText, type CardInteraction, type ID } from '@itera/core'
+import { richText, type CardInteraction, type ID } from '@fliptap/core'
 
 import type { DemoSchedulingSeed } from './demoScheduling'
 
-// The demo workspace's card content: eighteen real, reviewable Itera cards.
+// The demo workspace's card content: eighteen real, reviewable FlipTap cards.
 //
 // M-DEMO-1 gave each demo card a prompt string and a type so the Library could
 // list it. That is not enough to review one: a session needs the interaction
@@ -13,7 +13,7 @@ import type { DemoSchedulingSeed } from './demoScheduling'
 // unchanged, because those numbers are already device-verified on Library,
 // Today and Progress. Only content and scheduling are added.
 //
-// The prose uses Itera's real text syntax - inline code, bold, italic and
+// The prose uses FlipTap's real text syntax - inline code, bold, italic and
 // fenced blocks - rather than plain strings, so the native renderer is
 // exercised by the demo itself and not only by its tests. Prompts carry markers
 // too; the deck list flattens them through core's stripInlineMarkers.

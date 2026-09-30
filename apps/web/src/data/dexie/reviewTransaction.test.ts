@@ -23,7 +23,7 @@ afterEach(async () => {
 })
 
 function freshDb(): AppDB {
-  const name = `itera-review-tx-${Date.now()}-${Math.random()}`
+  const name = `fliptap-review-tx-${Date.now()}-${Math.random()}`
   names.push(name)
   return new AppDB(name)
 }

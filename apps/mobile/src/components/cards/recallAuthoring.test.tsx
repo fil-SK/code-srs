@@ -1,4 +1,4 @@
-import type { Card, RecallInteraction } from '@itera/core'
+import type { Card, RecallInteraction } from '@fliptap/core'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'

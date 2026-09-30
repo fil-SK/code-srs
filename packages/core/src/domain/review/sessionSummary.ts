@@ -6,7 +6,7 @@ import { computeStreak } from '../stats/streak'
 //
 // Every field here is read straight out of the ReviewLogs the session just
 // wrote - nothing is scored, weighted or invented, and there is no second
-// currency underneath FSRS (docs/itera-decisions.md D209/D210). `recalled`
+// currency underneath FSRS (docs/fliptap-decisions.md D209/D210). `recalled`
 // reuses Progress's own `computeRetention`, so the completion screen and the
 // Progress page can never disagree about what counts as a successful recall.
 

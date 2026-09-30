@@ -60,7 +60,7 @@ function useIsWideToday(): boolean {
 //
 // Renders through the shared AppShell/TopNav rather than a private per-page
 // shell — the page just returns its content, AppShell supplies
-// IteraSurface/nav/width.
+// FlipTapSurface/nav/width.
 // Tailwind has no grid-area utility, so this stays an inline style (see the
 // module comment). It is a function rather than two literals so the loading
 // frame below lays out on exactly the same grid the loaded page does - the
@@ -138,10 +138,10 @@ export function TodayPage() {
 
   const greeting = (
     <>
-      <h1 className="text-3xl font-bold tracking-tight text-itera-ink-brand">
+      <h1 className="text-3xl font-bold tracking-tight text-fliptap-ink-brand">
         {message.mainText}
       </h1>
-      <p className="mt-1 text-itera-muted">{message.subtext}</p>
+      <p className="mt-1 text-fliptap-muted">{message.subtext}</p>
     </>
   )
 
@@ -160,11 +160,11 @@ export function TodayPage() {
               style={{ gridArea: 'hero', height: 390 }}
             />
             <Skeleton
-              className="rounded-itera-card"
+              className="rounded-fliptap-card"
               style={{ gridArea: 'momentum', height: 340, marginTop: isWide ? 21 : undefined }}
             />
-            <Skeleton className="rounded-itera-card" style={{ gridArea: 'continue', height: 300 }} />
-            <Skeleton className="rounded-itera-card" style={{ gridArea: 'pace', height: 232 }} />
+            <Skeleton className="rounded-fliptap-card" style={{ gridArea: 'continue', height: 300 }} />
+            <Skeleton className="rounded-fliptap-card" style={{ gridArea: 'pace', height: 232 }} />
           </div>
         </LoadingRegion>
       </div>
@@ -182,7 +182,7 @@ export function TodayPage() {
         <div className="mt-6">
           <EmptyState
             title="No decks yet"
-            description="Create your first deck to start learning, or import an existing Itera backup."
+            description="Create your first deck to start learning, or import an existing FlipTap backup."
             action={
               <div className="flex flex-wrap justify-center gap-2.5">
                 <Link to="/decks">

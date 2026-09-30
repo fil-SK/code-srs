@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 // reintroduces the second source of truth that audit P1-3 was about, and it
 // would pass every other test in this repo.
 //
-// Now that the auth policy itself lives in @itera/core - which cannot name a
+// Now that the auth policy itself lives in @fliptap/core - which cannot name a
 // browser API, and is guarded on that by packages/core/src/platformNeutrality.
 // test.ts - this is the matching guard on the web half: core owns the decision,
 // exactly one web module owns the storage.

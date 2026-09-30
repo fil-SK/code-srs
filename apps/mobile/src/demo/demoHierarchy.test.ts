@@ -1,4 +1,4 @@
-import { collectionIdFor, deriveCollections, leafDecks, subtreeIds, type Deck } from '@itera/core'
+import { collectionIdFor, deriveCollections, leafDecks, subtreeIds, type Deck } from '@fliptap/core'
 
 import { createDemoQueue } from './demoQueue'
 import type { DemoEntities } from './demoEntities'

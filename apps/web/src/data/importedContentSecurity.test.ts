@@ -12,13 +12,13 @@ import {
   serializeBackup,
   type Card,
   type WalkthroughInteraction,
-} from '@itera/core'
+} from '@fliptap/core'
 import {
   MUST_SURVIVE_LITERALLY,
   REJECTED_IMAGE_SOURCES,
   VALID_PNG_DATA_URL,
   XSS_PAYLOADS,
-} from '@itera/core/src/test/attackPayloads'
+} from '@fliptap/core/src/test/attackPayloads'
 
 // Stored XSS is a sequence, not a single call: a malicious backup is imported,
 // the content is persisted, and the victim opens the card later. The renderer

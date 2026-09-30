@@ -1,5 +1,5 @@
 // Mostly a compatibility shim: Collection derivation moved to
-// packages/core/src/library/collectionTree.ts and is published as @itera/core,
+// packages/core/src/library/collectionTree.ts and is published as @fliptap/core,
 // so the web and a future native Library cannot derive two different trees from
 // the same Deck.parentId data.
 //
@@ -10,7 +10,7 @@
 // the one mechanism that enforces platform neutrality. The `LibrarySelection`
 // type itself comes from core, so there is still one definition of what a
 // selection is; only its URL encoding is web-local.
-import type { LibrarySelection } from '@itera/core'
+import type { LibrarySelection } from '@fliptap/core'
 
 export {
   buildCollectionTree,
@@ -24,9 +24,9 @@ export {
   // The browsable Library decks. Core exports the deck-tree function directly;
   // this module used to carry a one-line delegation of the same name.
   leafDecks,
-} from '@itera/core'
+} from '@fliptap/core'
 
-export type { CollectionNode, LibraryCollection, LibrarySelection } from '@itera/core'
+export type { CollectionNode, LibraryCollection, LibrarySelection } from '@fliptap/core'
 
 // Round-trips a LibrarySelection through a URL query string so navigating
 // from the focused Deck page's Collection nav/breadcrumb back to the browser

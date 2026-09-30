@@ -26,7 +26,7 @@ export interface MatchingGrade {
 // authored item id for this row+column," with no separate fixed-vs-unique
 // branch (unlike the v1 matching renderer, which has to special-case fixed
 // columns because its options are graded by string value). See
-// docs/itera-decisions.md for this deliberate simplification.
+// docs/fliptap-decisions.md for this deliberate simplification.
 export function gradeMatching(
   interaction: MatchingInteraction,
   response: MatchingResponse,

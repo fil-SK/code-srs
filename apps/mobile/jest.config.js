@@ -18,7 +18,7 @@ module.exports = {
   },
   // Extend the preset rather than replacing it: its list is what makes Expo's
   // own ESM sources loadable, and rewriting it by hand means silently losing
-  // entries on every SDK upgrade. Only the two packages @itera/core pulls in are
+  // entries on every SDK upgrade. Only the two packages @fliptap/core pulls in are
   // added. Core itself needs no entry - it resolves through the workspace
   // symlink to packages/core, outside node_modules, so it is transformed like
   // our own source.

@@ -1,4 +1,4 @@
-// Mechanical enforcement of the two rules that make @itera/core shareable, both
+// Mechanical enforcement of the two rules that make @fliptap/core shareable, both
 // of which a human reviewer will eventually miss.
 //
 // tsconfig.core.json already fails the build on `window`/`document`/`process`
@@ -93,7 +93,7 @@ const ALLOWED_PACKAGES = [...DEPENDENCIES, ...PEER_DEPENDENCIES]
 
 const files = sourceFiles(CORE_SRC)
 
-describe('@itera/core platform neutrality', () => {
+describe('@fliptap/core platform neutrality', () => {
   it('scans a non-empty set of core source files', () => {
     expect(files.length).toBeGreaterThan(50)
   })
@@ -142,7 +142,7 @@ describe('@itera/core platform neutrality', () => {
 
   it('never imports its own package name, which would make the barrel circular', () => {
     const hits = files.filter((file) =>
-      specifiers(fs.readFileSync(file, 'utf8')).some((s) => s.startsWith('@itera/core')),
+      specifiers(fs.readFileSync(file, 'utf8')).some((s) => s.startsWith('@fliptap/core')),
     )
     expect(hits).toEqual([])
   })

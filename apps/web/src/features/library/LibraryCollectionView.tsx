@@ -17,7 +17,7 @@ import { useDialogs } from '@/components/ui/dialogs'
 import { cn } from '@/lib/cn'
 import { languageLabel } from '@/domain/decks/languages'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
-import { checkDeckDeletion, childDeckCount } from '@itera/core'
+import { checkDeckDeletion, childDeckCount } from '@fliptap/core'
 import { useSearchCards } from '@/hooks/useCards'
 import { useCreateDeck, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
 import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
@@ -46,7 +46,7 @@ const PAGE_SIZE = 10
 
 // Rendered by LibraryBrowserPage when `selection.kind === 'collection'` - the
 // Collection/container identity view for a legacy Deck-with-children (see
-// docs/itera-decisions.md D8: a "Collection" is UI-only, derived from
+// docs/fliptap-decisions.md D8: a "Collection" is UI-only, derived from
 // Deck.parentId, not a real entity). Deliberately shares the focused Deck
 // page's shell primitives (DeckMark, Stat, CardTable*, CardListFooter,
 // RowFilterDropdown, DeckRow) rather than the flat admin-table look the
@@ -197,8 +197,8 @@ export function LibraryCollectionView({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex items-center gap-1.5 text-sm text-itera-muted">
-          <button type="button" onClick={() => onSelect({ kind: 'all' })} className="hover:text-itera-ink">
+        <nav className="flex items-center gap-1.5 text-sm text-fliptap-muted">
+          <button type="button" onClick={() => onSelect({ kind: 'all' })} className="hover:text-fliptap-ink">
             Library
           </button>
           {ancestors.map((c) => (
@@ -207,14 +207,14 @@ export function LibraryCollectionView({
               <button
                 type="button"
                 onClick={() => onSelect({ kind: 'collection', id: c.id })}
-                className="hover:text-itera-ink"
+                className="hover:text-fliptap-ink"
               >
                 {c.name}
               </button>
             </span>
           ))}
           <ChevronRight size={13} />
-          <span className="font-medium text-itera-ink">{deck.name}</span>
+          <span className="font-medium text-fliptap-ink">{deck.name}</span>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -228,10 +228,10 @@ export function LibraryCollectionView({
             onClick={() => setSettingsOpen((o) => !o)}
             aria-expanded={settingsOpen}
             className={cn(
-              'inline-flex h-10 items-center gap-1.5 rounded-itera-control border px-3.5 text-sm font-semibold transition-colors',
+              'inline-flex h-10 items-center gap-1.5 rounded-fliptap-control border px-3.5 text-sm font-semibold transition-colors',
               settingsOpen
-                ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                : 'border-itera-border-strong text-itera-ink hover:border-itera-accent hover:text-itera-ink-brand',
+                ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                : 'border-fliptap-border-strong text-fliptap-ink hover:border-fliptap-accent hover:text-fliptap-ink-brand',
             )}
           >
             <Settings size={15} /> Collection settings
@@ -244,18 +244,18 @@ export function LibraryCollectionView({
           <DeckMark label={markLabel} size="lg" />
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="font-itera-display text-3xl font-bold tracking-tight text-itera-ink-brand">
+              <h1 className="font-fliptap-display text-3xl font-bold tracking-tight text-fliptap-ink-brand">
                 {deck.name}
               </h1>
               {deck.language && (
-                <span className="rounded-full bg-itera-navy-soft px-2 py-0.5 text-[11px] font-semibold text-itera-ink-brand">
+                <span className="rounded-full bg-fliptap-navy-soft px-2 py-0.5 text-[11px] font-semibold text-fliptap-ink-brand">
                   {languageLabel(deck.language)}
                 </span>
               )}
             </div>
-            {deck.description && <p className="mt-2 max-w-md text-sm text-itera-muted">{deck.description}</p>}
+            {deck.description && <p className="mt-2 max-w-md text-sm text-fliptap-muted">{deck.description}</p>}
 
-            <div className="mt-7 flex flex-wrap items-center divide-x divide-itera-border">
+            <div className="mt-7 flex flex-wrap items-center divide-x divide-fliptap-border">
               <div className="pr-6">
                 <Stat icon={Folder} label="decks" value={String(agg.deckCount)} />
               </div>
@@ -285,7 +285,7 @@ export function LibraryCollectionView({
         <DeckSettings deck={deck} decks={decks} onClose={() => setSettingsOpen(false)} />
       )}
 
-      <h2 className="mb-5 mt-9 border-b border-itera-border pb-2.5 text-sm font-bold text-itera-ink-brand">
+      <h2 className="mb-5 mt-9 border-b border-fliptap-border pb-2.5 text-sm font-bold text-fliptap-ink-brand">
         Decks
       </h2>
 
@@ -293,7 +293,7 @@ export function LibraryCollectionView({
         <div className="relative w-full max-w-[280px]">
           <Search
             size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fliptap-muted"
           />
           <input
             value={search}
@@ -305,17 +305,17 @@ export function LibraryCollectionView({
         <div className="flex flex-wrap items-center gap-3">
           <label
             className={cn(
-              'inline-flex cursor-pointer items-center gap-1.5 rounded-itera-control border px-3 py-2 text-sm font-semibold',
+              'inline-flex cursor-pointer items-center gap-1.5 rounded-fliptap-control border px-3 py-2 text-sm font-semibold',
               dueOnly
-                ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                : 'border-itera-border text-itera-ink hover:border-itera-border-strong',
+                ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                : 'border-fliptap-border text-fliptap-ink hover:border-fliptap-border-strong',
             )}
           >
             <input
               type="checkbox"
               checked={dueOnly}
               onChange={(e) => setDueOnly(e.target.checked)}
-              className="accent-itera-accent"
+              className="accent-fliptap-accent"
             />
             Due only
           </label>
@@ -352,8 +352,8 @@ export function LibraryCollectionView({
             <div className="px-5">
               <DeckTableHeader />
             </div>
-            <div className="rounded-itera-card border border-itera-border bg-itera-surface px-4">
-              <div className="divide-y divide-itera-border">
+            <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-4">
+              <div className="divide-y divide-fliptap-border">
                 {paged.map((child) => (
                   <DeckRow
                     key={child.id}
@@ -381,10 +381,10 @@ export function LibraryCollectionView({
 
       {directCount > 0 && (
         <>
-          <h2 className="mb-2 mt-9 border-b border-itera-border pb-2.5 text-sm font-bold text-itera-ink-brand">
+          <h2 className="mb-2 mt-9 border-b border-fliptap-border pb-2.5 text-sm font-bold text-fliptap-ink-brand">
             Cards
           </h2>
-          <p className="mb-5 text-xs text-itera-muted">
+          <p className="mb-5 text-xs text-fliptap-muted">
             These cards are filed directly in this collection (legacy compatibility) - move them into one of the
             decks above when convenient.
           </p>
@@ -392,8 +392,8 @@ export function LibraryCollectionView({
             <div className="px-5">
               <CardTableHeader />
             </div>
-            <div className="rounded-itera-card border border-itera-border bg-itera-surface px-4">
-              <div className="divide-y divide-itera-border">
+            <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-4">
+              <div className="divide-y divide-fliptap-border">
                 {(directCards.data ?? []).map((card) => (
                   <CardTableRow key={card.id} card={card} decks={flatDecks} now={now} />
                 ))}

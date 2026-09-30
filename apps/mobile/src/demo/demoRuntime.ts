@@ -1,4 +1,4 @@
-import { configureRepository, type Millis, type WorkspaceSnapshot } from '@itera/core'
+import { configureRepository, type Millis, type WorkspaceSnapshot } from '@fliptap/core'
 
 import { InMemoryRepository } from '@/src/data/InMemoryRepository'
 import { createDemoSeed, type DemoSeed } from './demoWorkspace'

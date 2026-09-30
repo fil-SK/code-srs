@@ -10,7 +10,7 @@ export function SegmentedToggle<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div className="inline-flex items-center rounded-itera-control border border-itera-border bg-itera-surface-subtle p-0.5">
+    <div className="inline-flex items-center rounded-fliptap-control border border-fliptap-border bg-fliptap-surface-subtle p-0.5">
       {options.map((option) => (
         <button
           key={option.value}
@@ -20,8 +20,8 @@ export function SegmentedToggle<T extends string>({
           className={cn(
             'rounded-[7px] px-2.5 py-1 text-xs font-semibold',
             option.value === value
-              ? 'bg-itera-surface text-itera-ink-brand shadow-[var(--itera-shadow-card)]'
-              : 'text-itera-muted hover:text-itera-ink',
+              ? 'bg-fliptap-surface text-fliptap-ink-brand shadow-[var(--fliptap-shadow-card)]'
+              : 'text-fliptap-muted hover:text-fliptap-ink',
           )}
         >
           {option.label}

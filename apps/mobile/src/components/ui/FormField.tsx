@@ -1,4 +1,4 @@
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import type { ReactNode } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
@@ -37,18 +37,18 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: 7,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 13,
     fontWeight: '700',
   },
   optional: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
     fontWeight: '500',
   },
   hint: {
     marginTop: 6,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
     lineHeight: 17,
   },

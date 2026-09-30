@@ -11,7 +11,7 @@ import {
   type Rating,
   type ReviewLog,
   type SchedulingState,
-} from '@itera/core'
+} from '@fliptap/core'
 
 // The demo's review history, replayed rather than asserted.
 //

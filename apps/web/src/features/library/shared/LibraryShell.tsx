@@ -35,8 +35,8 @@ export function LibraryShell({
   const isWide = useIsWideLibrary()
 
   return isWide ? (
-    <div className="grid min-h-[calc(100vh-8rem)] grid-cols-[252px_1fr] items-stretch overflow-hidden rounded-itera-card border border-itera-border bg-itera-surface">
-      <div className="border-r border-itera-border bg-itera-surface">
+    <div className="grid min-h-[calc(100vh-8rem)] grid-cols-[252px_1fr] items-stretch overflow-hidden rounded-fliptap-card border border-fliptap-border bg-fliptap-surface">
+      <div className="border-r border-fliptap-border bg-fliptap-surface">
         <CollectionNav
           collections={collections}
           decks={decks}
@@ -46,10 +46,10 @@ export function LibraryShell({
           onCreateDeck={onCreateDeck}
         />
       </div>
-      <div className="min-w-0 bg-itera-surface px-8 py-6">{children}</div>
+      <div className="min-w-0 bg-fliptap-surface px-8 py-6">{children}</div>
     </div>
   ) : (
-    <div className="flex flex-col gap-4 rounded-itera-card border border-itera-border bg-itera-surface p-4">
+    <div className="flex flex-col gap-4 rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-4">
       <CollectionNavDrawer
         collections={collections}
         decks={decks}

@@ -1,10 +1,10 @@
-import { type Deck, type DeckMetrics, type DeckSortKey, type ID, sortDecks } from '@itera/core'
+import { type Deck, type DeckMetrics, type DeckSortKey, type ID, sortDecks } from '@fliptap/core'
 
 import type { MobileLibraryDeckViewModel } from '@/src/types/library'
 
 // The one place a mobile deck list is filtered and ordered.
 //
-// The ordering itself is not implemented here. `sortDecks` in @itera/core is
+// The ordering itself is not implemented here. `sortDecks` in @fliptap/core is
 // what web's Library uses, and it is called verbatim, so all four keys mean
 // exactly the same thing on both platforms and there is no second comparator to
 // keep in step. This module only projects the presentation rows into the shapes

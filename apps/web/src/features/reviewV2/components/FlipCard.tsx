@@ -1,12 +1,12 @@
 import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
-// Itera's flip primitive, and now the only one. It replaced an earlier shared
+// FlipTap's flip primitive, and now the only one. It replaced an earlier shared
 // FlipCard whose front face was a plain <div onClick> with no tabIndex, role,
 // or keyboard handler, so it failed keyboard activation and accessible
 // semantics; rather than edit that file in place, this was written as a
 // separate accessible replacement, and the original has since been deleted.
-// The underlying mechanism is .itera-flip* in src/index.css:
+// The underlying mechanism is .fliptap-flip* in src/index.css:
 //   - content-driven height: both faces share one grid cell (grid-area: 1/1),
 //     so the container sizes to the taller face with no JS measuring.
 //   - backface-visibility: hidden, so only the front face is present while
@@ -77,7 +77,7 @@ export function FlipCard({
   }
 
   return (
-    <div className={cn('itera-flip', flipped && 'is-flipped')}>
+    <div className={cn('fliptap-flip', flipped && 'is-flipped')}>
       <div
         role={activateOnSurface ? 'button' : undefined}
         tabIndex={activateOnSurface ? (flipped ? -1 : 0) : undefined}
@@ -87,9 +87,9 @@ export function FlipCard({
         onClick={activateOnSurface ? onFaceClick : undefined}
         onKeyDown={activateOnSurface ? onFaceKeyDown : undefined}
         className={cn(
-          'itera-flip-face itera-flip-front',
+          'fliptap-flip-face fliptap-flip-front',
           activateOnSurface &&
-            'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+            'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2',
           faceClassName,
         )}
       >
@@ -104,9 +104,9 @@ export function FlipCard({
         onClick={activateOnSurface ? onFaceClick : undefined}
         onKeyDown={activateOnSurface ? onFaceKeyDown : undefined}
         className={cn(
-          'itera-flip-face itera-flip-back',
+          'fliptap-flip-face fliptap-flip-back',
           activateOnSurface &&
-            'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+            'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2',
           faceClassName,
         )}
       >

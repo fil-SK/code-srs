@@ -4,7 +4,7 @@ import type {
   InteractionBehavior,
   InteractionResponse,
   InteractionType,
-} from '@itera/core'
+} from '@fliptap/core'
 import type { ComponentType } from 'react'
 
 import type { ReviewPhase } from '../reviewPhase'

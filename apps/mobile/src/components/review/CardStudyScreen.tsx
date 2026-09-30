@@ -1,4 +1,4 @@
-import type { Card, CardInteraction } from '@itera/core'
+import type { Card, CardInteraction } from '@fliptap/core'
 
 import { ReviewSessionScreen } from './ReviewSessionScreen'
 import { nativeInteractionFor } from './interactions/registry'
@@ -7,7 +7,7 @@ import { nativeInteractionFor } from './interactions/registry'
 //
 // The native equivalent of web's CardStudyPreviewPage: the Deck row's primary
 // tap target, and the closest thing either platform has to a card detail view -
-// web deliberately has no separate read-only page (itera-decisions D69), and
+// web deliberately has no separate read-only page (fliptap-decisions D69), and
 // mobile does not invent one.
 //
 // It is the mirror of DemoReviewSession: that one owns a queue and hands each

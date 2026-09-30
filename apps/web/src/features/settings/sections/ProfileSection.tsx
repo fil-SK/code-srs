@@ -13,13 +13,13 @@ export function ProfileSection() {
   return (
     <SectionShell
       title="Profile"
-      description="Manage your personal information and how you appear in Itera."
+      description="Manage your personal information and how you appear in FlipTap."
       action={
         <button
           type="button"
           aria-disabled="true"
           onClick={(e) => e.preventDefault()}
-          className="inline-flex cursor-default items-center gap-2 rounded-itera-control border border-itera-border px-3.5 py-2 text-sm font-semibold text-itera-muted-light"
+          className="inline-flex cursor-default items-center gap-2 rounded-fliptap-control border border-fliptap-border px-3.5 py-2 text-sm font-semibold text-fliptap-muted-light"
         >
           View public profile
           <ExternalLink size={15} aria-hidden="true" />
@@ -27,19 +27,19 @@ export function ProfileSection() {
       }
     >
       <NotBuiltYet>
-        Not available yet. Itera has no profile record — cards and decks live in this browser (or
+        Not available yet. FlipTap has no profile record — cards and decks live in this browser (or
         your own Supabase project), and nothing here is stored or sent anywhere.
       </NotBuiltYet>
 
       <Panel>
         <div className="flex flex-col gap-6 sm:flex-row">
           <div className="relative h-[92px] w-[92px] flex-none">
-            <span className="grid h-full w-full place-items-center rounded-full bg-itera-navy text-white">
+            <span className="grid h-full w-full place-items-center rounded-full bg-fliptap-navy text-white">
               <User size={38} aria-hidden="true" />
             </span>
             <span
               aria-hidden="true"
-              className="absolute bottom-0 right-0 grid h-7 w-7 place-items-center rounded-full border-2 border-itera-surface bg-itera-navy-soft text-itera-muted-light"
+              className="absolute bottom-0 right-0 grid h-7 w-7 place-items-center rounded-full border-2 border-fliptap-surface bg-fliptap-navy-soft text-fliptap-muted-light"
             >
               <Camera size={14} />
             </span>
@@ -51,18 +51,18 @@ export function ProfileSection() {
               <DisabledField
                 label="Username"
                 placeholder="username"
-                hint="This is how you'll appear in Itera."
+                hint="This is how you'll appear in FlipTap."
               />
             </div>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
                 Bio
               </span>
               <textarea
                 disabled
                 rows={3}
                 placeholder="A short description of what you're learning."
-                className="w-full resize-none rounded-itera-control border border-itera-border bg-itera-surface-subtle px-3.5 py-2.5 text-sm text-itera-muted-light placeholder:text-itera-muted-light"
+                className="w-full resize-none rounded-fliptap-control border border-fliptap-border bg-fliptap-surface-subtle px-3.5 py-2.5 text-sm text-fliptap-muted-light placeholder:text-fliptap-muted-light"
               />
             </label>
             <div className="flex justify-end">
@@ -70,7 +70,7 @@ export function ProfileSection() {
                 type="button"
                 aria-disabled="true"
                 onClick={(e) => e.preventDefault()}
-                className="cursor-default rounded-itera-control bg-itera-accent/40 px-4 py-2 text-sm font-semibold text-white"
+                className="cursor-default rounded-fliptap-control bg-fliptap-accent/40 px-4 py-2 text-sm font-semibold text-white"
               >
                 Save changes
               </button>
@@ -80,33 +80,33 @@ export function ProfileSection() {
       </Panel>
 
       <Panel>
-        <h3 className="text-sm font-semibold text-itera-ink-brand">Statistics</h3>
-        <p className="mt-0.5 text-sm text-itera-muted">Your learning at a glance.</p>
+        <h3 className="text-sm font-semibold text-fliptap-ink-brand">Statistics</h3>
+        <p className="mt-0.5 text-sm text-fliptap-muted">Your learning at a glance.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat icon={BookOpen} label="Cards reviewed" caption="All time" />
           <Stat icon={Calendar} label="Study sessions" caption="All time" />
           <Stat icon={StreakFlameIcon} label="Day streak" caption="Current" />
           <Stat icon={Clock} label="Study time" caption="All time" />
         </div>
-        <p className="mt-4 text-xs text-itera-muted-light">
+        <p className="mt-4 text-xs text-fliptap-muted-light">
           Not wired up here yet — the Progress page already computes real numbers from your review
           history.
         </p>
       </Panel>
 
-      <div className="rounded-itera-card border border-itera-error/30 bg-itera-error-soft p-5">
-        <h3 className="text-sm font-semibold text-itera-error">Danger zone</h3>
-        <p className="mt-0.5 text-sm text-itera-error/80">Irreversible and destructive actions.</p>
+      <div className="rounded-fliptap-card border border-fliptap-error/30 bg-fliptap-error-soft p-5">
+        <h3 className="text-sm font-semibold text-fliptap-error">Danger zone</h3>
+        <p className="mt-0.5 text-sm text-fliptap-error/80">Irreversible and destructive actions.</p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <button
             type="button"
             aria-disabled="true"
             onClick={(e) => e.preventDefault()}
-            className="cursor-default rounded-itera-control border border-itera-error/40 bg-itera-surface px-4 py-2 text-sm font-semibold text-itera-error/60"
+            className="cursor-default rounded-fliptap-control border border-fliptap-error/40 bg-fliptap-surface px-4 py-2 text-sm font-semibold text-fliptap-error/60"
           >
             Delete account
           </button>
-          <p className="min-w-[260px] flex-1 text-sm text-itera-muted">
+          <p className="min-w-[260px] flex-1 text-sm text-fliptap-muted">
             There is no account to delete yet. To clear local data, export a backup first, then use
             your browser's site-data controls.
           </p>
@@ -127,15 +127,15 @@ function DisabledField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
         {label}
       </span>
       <input
         disabled
         placeholder={placeholder}
-        className="w-full rounded-itera-control border border-itera-border bg-itera-surface-subtle px-3.5 py-2.5 text-sm text-itera-muted-light placeholder:text-itera-muted-light"
+        className="w-full rounded-fliptap-control border border-fliptap-border bg-fliptap-surface-subtle px-3.5 py-2.5 text-sm text-fliptap-muted-light placeholder:text-fliptap-muted-light"
       />
-      {hint && <span className="mt-1 block text-xs text-itera-muted-light">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-fliptap-muted-light">{hint}</span>}
     </label>
   )
 }
@@ -143,11 +143,11 @@ function DisabledField({
 function Stat({ icon: Icon, label, caption }: { icon: LucideIcon; label: string; caption: string }) {
   return (
     <div className="flex items-start gap-3">
-      <Icon size={18} aria-hidden="true" className="mt-1 flex-none text-itera-muted-light" />
+      <Icon size={18} aria-hidden="true" className="mt-1 flex-none text-fliptap-muted-light" />
       <div>
-        <div className="text-xl font-bold text-itera-muted-light">&mdash;</div>
-        <div className="text-sm text-itera-muted">{label}</div>
-        <div className="text-xs text-itera-muted-light">{caption}</div>
+        <div className="text-xl font-bold text-fliptap-muted-light">&mdash;</div>
+        <div className="text-sm text-fliptap-muted">{label}</div>
+        <div className="text-xs text-fliptap-muted-light">{caption}</div>
       </div>
     </div>
   )

@@ -12,7 +12,7 @@ describe('createLocalSession', () => {
 
   it('mints the demo workspace under its own kind', () => {
     expect(createLocalSession(DEMO_EMAIL, 'demo')).toMatchObject({
-      email: 'demo@itera.local',
+      email: 'demo@fliptap.local',
       kind: 'demo',
     })
   })

@@ -149,7 +149,7 @@ describe('WalkthroughView', () => {
     // One of two steps correct -> partial credit -> suggested rating is Hard (2),
     // shown as a quiet highlight, not auto-selected (learner still chooses).
     const hard = screen.getByRole('button', { name: /Hard/ })
-    expect(hard.className).toMatch(/border-itera-accent/)
+    expect(hard.className).toMatch(/border-fliptap-accent/)
   })
 
   it('aggregates per-step correctness into a fully-correct card result when every step is right', async () => {
@@ -165,7 +165,7 @@ describe('WalkthroughView', () => {
 
     await screen.findByText('Wrap-up explanation text.')
     const good = screen.getByRole('button', { name: /Good/ })
-    expect(good.className).toMatch(/border-itera-accent/)
+    expect(good.className).toMatch(/border-fliptap-accent/)
   })
 
   it('does not steal focus on initial mount, but moves focus to the new step panel after Continue', async () => {

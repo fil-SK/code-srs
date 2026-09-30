@@ -1,4 +1,4 @@
-import { walkthroughBehavior } from '@itera/core'
+import { walkthroughBehavior } from '@fliptap/core'
 import type { WebInteractionDefinition } from '../types'
 import { WalkthroughView } from './WalkthroughView'
 

@@ -1,4 +1,4 @@
-import type { Deck, Millis, MilestoneType } from '@itera/core'
+import type { Deck, Millis, MilestoneType } from '@fliptap/core'
 
 export interface MobileProgressMetricViewModel {
   id: 'learned' | 'due' | 'reviews' | 'retention' | 'streak'

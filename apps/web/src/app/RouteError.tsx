@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, isRouteErrorResponse, useRouteError } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 
 // A dynamic-import failure (usually a stale chunk right after a deploy) surfaces
 // here. Detect it and reload once to pick up the new build.
@@ -44,12 +44,12 @@ export function RouteError() {
   const notFound = isRouteErrorResponse(error) && error.status === 404
 
   return (
-    <IteraSurface className="grid min-h-screen place-items-center px-4">
-      <div className="mx-auto max-w-md rounded-itera-card border border-itera-border bg-itera-surface p-8 text-center">
-        <div className="text-lg font-semibold text-itera-ink-brand">
+    <FlipTapSurface className="grid min-h-screen place-items-center px-4">
+      <div className="mx-auto max-w-md rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-8 text-center">
+        <div className="text-lg font-semibold text-fliptap-ink-brand">
           {notFound ? 'Page not found' : 'Something went wrong'}
         </div>
-        <p className="mt-2 text-sm text-itera-muted">
+        <p className="mt-2 text-sm text-fliptap-muted">
           {notFound
             ? 'This page does not exist. It may have been removed, or the link may be out of date.'
             : 'The app may have just updated. Reloading usually fixes it.'}
@@ -68,6 +68,6 @@ export function RouteError() {
           </Button>
         )}
       </div>
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

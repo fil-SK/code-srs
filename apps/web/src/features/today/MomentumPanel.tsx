@@ -7,7 +7,7 @@ import { formatDayCount } from '@/domain/stats/streak'
 
 function MetricIcon({ icon: Icon }: { icon: LucideIcon }) {
   return (
-    <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-itera-accent-soft text-itera-accent">
+    <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent">
       <Icon size={15} aria-hidden="true" />
     </div>
   )
@@ -18,7 +18,7 @@ function ProgressBar({ label, value }: { label: string; value: number }) {
 
   return (
     <div
-      className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-itera-pill bg-itera-border"
+      className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-fliptap-pill bg-fliptap-border"
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
@@ -26,7 +26,7 @@ function ProgressBar({ label, value }: { label: string; value: number }) {
       aria-valuenow={percentage}
     >
       <div
-        className="h-full rounded-itera-pill bg-itera-accent"
+        className="h-full rounded-fliptap-pill bg-fliptap-accent"
         style={{ width: `${percentage}%` }}
       />
     </div>
@@ -55,9 +55,9 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
   return (
     <section
       aria-labelledby="momentum-heading"
-      className="flex min-h-[345px] flex-col rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]"
+      className="flex min-h-[345px] flex-col rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]"
     >
-      <h2 id="momentum-heading" className="text-base font-semibold text-itera-ink-brand">
+      <h2 id="momentum-heading" className="text-base font-semibold text-fliptap-ink-brand">
         Momentum
       </h2>
 
@@ -65,14 +65,14 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
         <div className="flex items-center gap-3">
           <MetricIcon icon={StreakFlameIcon} />
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-itera-ink-brand">Current streak</div>
-            <div className="mt-0.5 text-xs text-itera-muted">
+            <div className="text-sm font-semibold text-fliptap-ink-brand">Current streak</div>
+            <div className="mt-0.5 text-xs text-fliptap-muted">
               {streak === 0
                 ? 'Review a card to start one'
                 : `${formatDayCount(streak)} in a row`}
             </div>
           </div>
-          <div className="text-2xl leading-none font-semibold text-itera-ink-brand">{streak}</div>
+          <div className="text-2xl leading-none font-semibold text-fliptap-ink-brand">{streak}</div>
         </div>
 
         {/* "Retention", not "Recall rate": this is the shared Progress
@@ -81,14 +81,14 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
         <div className="flex items-center gap-3">
           <MetricIcon icon={Target} />
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-itera-ink-brand">Retention</div>
-            <div className="mt-0.5 text-xs text-itera-muted">
+            <div className="text-sm font-semibold text-fliptap-ink-brand">Retention</div>
+            <div className="mt-0.5 text-xs text-fliptap-muted">
               {retention === null ? 'No mature reviews yet' : 'Last 30 days'}
             </div>
           </div>
           {/* An em dash, never 0%, when there is nothing to measure - 0% would
               read as "you failed every card". */}
-          <div className="text-sm font-bold text-itera-ink-brand">
+          <div className="text-sm font-bold text-fliptap-ink-brand">
             {retention === null ? '—' : `${Math.round(retention * 100)}%`}
           </div>
         </div>
@@ -96,16 +96,16 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
         <div className="flex items-center gap-3">
           <MetricIcon icon={CalendarClock} />
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-itera-ink-brand">Due today</div>
-            <div className="mt-0.5 text-xs text-itera-muted">
+            <div className="text-sm font-semibold text-fliptap-ink-brand">Due today</div>
+            <div className="mt-0.5 text-xs text-fliptap-muted">
               {dueCount === 0 ? 'Nothing waiting' : 'Ready to review'}
             </div>
           </div>
-          <div className="text-sm font-bold text-itera-ink-brand">{dueCount}</div>
+          <div className="text-sm font-bold text-fliptap-ink-brand">{dueCount}</div>
         </div>
 
-        <div className="mt-auto border-t border-itera-border pt-4">
-          <div className="mb-3 text-xs font-semibold text-itera-ink-brand">Next milestone</div>
+        <div className="mt-auto border-t border-fliptap-border pt-4">
+          <div className="mb-3 text-xs font-semibold text-fliptap-ink-brand">Next milestone</div>
           <MilestoneRow milestone={milestone} />
         </div>
       </div>
@@ -122,8 +122,8 @@ function MilestoneRow({ milestone }: { milestone: NextMilestone | null }) {
       <div className="flex items-center gap-3">
         <MetricIcon icon={Flag} />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-itera-ink-brand">All caught up</div>
-          <div className="mt-1 text-xs text-itera-muted">
+          <div className="truncate text-sm font-semibold text-fliptap-ink-brand">All caught up</div>
+          <div className="mt-1 text-xs text-fliptap-muted">
             Every active card has been reviewed at least once.
           </div>
         </div>
@@ -142,10 +142,10 @@ function MilestoneRow({ milestone }: { milestone: NextMilestone | null }) {
     <div className="flex items-center gap-3">
       <MetricIcon icon={Flag} />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-itera-ink-brand">{title}</div>
+        <div className="truncate text-sm font-semibold text-fliptap-ink-brand">{title}</div>
         {milestone.kind === 'finish-deck' ? (
           <div className="mt-1 flex items-center gap-4">
-            <span className="flex-none text-xs text-itera-muted">
+            <span className="flex-none text-xs text-fliptap-muted">
               {milestone.learned} of {milestone.total} cards learned
             </span>
             <ProgressBar
@@ -155,7 +155,7 @@ function MilestoneRow({ milestone }: { milestone: NextMilestone | null }) {
           </div>
         ) : (
           // No bar: a due count has no honest denominator to draw against.
-          <div className="mt-1 text-xs text-itera-muted">
+          <div className="mt-1 text-xs text-fliptap-muted">
             {milestone.dueCount} {milestone.dueCount === 1 ? 'card' : 'cards'} due
           </div>
         )}
@@ -169,7 +169,7 @@ function MilestoneRow({ milestone }: { milestone: NextMilestone | null }) {
   return (
     <Link
       to={milestone.dueCount > 0 ? `/review?deck=${milestone.deckId}` : `/decks/${milestone.deckId}`}
-      className="block rounded-itera-control outline-none focus-visible:ring-2 focus-visible:ring-itera-accent"
+      className="block rounded-fliptap-control outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent"
     >
       {body}
     </Link>

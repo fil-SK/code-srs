@@ -10,7 +10,7 @@ afterEach(async () => {
 
 describe('AppDB review-log clean break', () => {
   it('upgrades version 1 by clearing incompatible ReviewLogs only', async () => {
-    const name = `itera-review-reset-${Date.now()}-${Math.random()}`
+    const name = `fliptap-review-reset-${Date.now()}-${Math.random()}`
     names.push(name)
     const old = new Dexie(name)
     old.version(1).stores({

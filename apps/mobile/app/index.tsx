@@ -1,4 +1,4 @@
-import { useAuth } from '@itera/core'
+import { useAuth } from '@fliptap/core'
 import { Redirect } from 'expo-router'
 
 // The entry URL. Expo Go opens the app at '/', which belongs to neither group,

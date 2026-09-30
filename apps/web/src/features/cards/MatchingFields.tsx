@@ -68,7 +68,7 @@ export function MatchingFields({
       </Field>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Columns to match against
         </span>
         {form.columns.map((column) => (
@@ -93,14 +93,14 @@ export function MatchingFields({
             <Plus size={14} /> Add column
           </Button>
         ) : (
-          <p className="text-xs text-itera-muted">
+          <p className="text-xs text-fliptap-muted">
             A Matching card holds at most {MAX_MATCHING_VALUE_COLUMNS + 1} columns.
           </p>
         )}
       </div>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Rows (relationships)
         </span>
         {form.rows.map((row, i) => (
@@ -127,7 +127,7 @@ export function MatchingFields({
       </div>
 
       {validation.errors.length > 0 && (
-        <ul className="space-y-1 text-xs font-medium text-itera-error">
+        <ul className="space-y-1 text-xs font-medium text-fliptap-error">
           {validation.errors.map((message) => (
             <li key={message}>{message}</li>
           ))}

@@ -14,7 +14,7 @@ export function SettingsNav({ active }: { active: string }) {
       {group1.map((section) => (
         <SettingsNavLink key={section.slug} section={section} active={active} />
       ))}
-      <div className="my-2 border-t border-itera-border" />
+      <div className="my-2 border-t border-fliptap-border" />
       {group2.map((section) => (
         <SettingsNavLink key={section.slug} section={section} active={active} />
       ))}
@@ -37,14 +37,14 @@ function SettingsNavLink({
       className={cn(
         'flex items-center gap-2.5 rounded-r-[9px] border-l-2 py-2 pl-2.5 pr-2 text-sm',
         isActive
-          ? 'border-itera-accent bg-itera-accent-soft font-semibold text-itera-ink-brand'
-          : 'border-transparent text-itera-ink hover:bg-itera-surface-subtle hover:text-itera-ink-brand',
+          ? 'border-fliptap-accent bg-fliptap-accent-soft font-semibold text-fliptap-ink-brand'
+          : 'border-transparent text-fliptap-ink hover:bg-fliptap-surface-subtle hover:text-fliptap-ink-brand',
       )}
     >
       <Icon
         size={16}
         aria-hidden="true"
-        className={cn('flex-none', isActive ? 'text-itera-accent' : 'text-itera-muted')}
+        className={cn('flex-none', isActive ? 'text-fliptap-accent' : 'text-fliptap-muted')}
       />
       <span className="min-w-0 truncate">{section.label}</span>
     </NavLink>

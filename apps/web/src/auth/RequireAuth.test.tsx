@@ -59,7 +59,7 @@ function fakeSession(email: string): Session {
 
 function seedLocalSession(email = 'stale@local.test') {
   window.localStorage.setItem(
-    'itera.session',
+    'fliptap.session',
     JSON.stringify({ id: 'x', email, kind: 'local', createdAt: '' }),
   )
 }
@@ -146,7 +146,7 @@ describe('RequireAuth', () => {
 
   it('lets a signed-in visitor through', () => {
     window.sessionStorage.setItem(
-      'itera.session',
+      'fliptap.session',
       JSON.stringify({ id: 'x', email: 'a@b.com', kind: 'local', createdAt: '' }),
     )
     renderApp('/')
@@ -184,7 +184,7 @@ describe('RequireAuth', () => {
 })
 
 // Audit P1-3: with Supabase configured the repository is SupabaseRepository, so a
-// leftover `itera.session` from a previous local-first build must not authenticate.
+// leftover `fliptap.session` from a previous local-first build must not authenticate.
 describe('RequireAuth - Supabase mode', () => {
   beforeEach(() => {
     sb.configured = true
@@ -217,26 +217,26 @@ describe('RequireAuth - Supabase mode', () => {
 
   it('leaves the learner IndexedDB workspace alone while clearing the session', async () => {
     seedLocalSession()
-    window.localStorage.setItem('itera.unrelated', 'keep me')
+    window.localStorage.setItem('fliptap.unrelated', 'keep me')
 
     await act(async () => {
       renderApp('/')
     })
 
     expect(readLocalSession()).toBeNull()
-    expect(window.localStorage.getItem('itera.unrelated')).toBe('keep me')
+    expect(window.localStorage.getItem('fliptap.unrelated')).toBe('keep me')
   })
 
   it('authenticates a real Supabase session, and its identity wins over a stale local one', async () => {
     seedLocalSession('stale@local.test')
-    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@itera.test') } })
+    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@fliptap.test') } })
 
     await act(async () => {
       renderApp('/')
     })
 
     expect(screen.getByText('Today')).toBeTruthy()
-    expect(screen.getByTestId('identity').textContent).toBe('supabase:cloud@itera.test')
+    expect(screen.getByTestId('identity').textContent).toBe('supabase:cloud@fliptap.test')
   })
 
   it('never renders authenticated while the Supabase bootstrap is still pending', async () => {
@@ -325,7 +325,7 @@ describe('RequireAuth - Supabase mode', () => {
     expect(screen.getByTestId('session-error').textContent).toContain("Couldn't reach")
 
     await act(async () => {
-      sb.listeners.forEach((cb) => cb('SIGNED_IN', fakeSession('cloud@itera.test')))
+      sb.listeners.forEach((cb) => cb('SIGNED_IN', fakeSession('cloud@fliptap.test')))
     })
 
     expect(screen.getByText('Today')).toBeTruthy()
@@ -347,7 +347,7 @@ describe('RequireAuth - Supabase mode', () => {
     // Both outcomes, after the provider is gone. React would warn (and a
     // future StrictMode double-mount would misbehave) if either were applied.
     await act(async () => {
-      settle({ data: { session: fakeSession('cloud@itera.test') } })
+      settle({ data: { session: fakeSession('cloud@fliptap.test') } })
       fail(new Error('too late'))
       await Promise.resolve()
     })
@@ -358,7 +358,7 @@ describe('RequireAuth - Supabase mode', () => {
   it('signs out through Supabase, and no stale local session re-admits the user', async () => {
     const user = userEvent.setup()
     seedLocalSession()
-    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@itera.test') } })
+    sb.getSession.mockResolvedValue({ data: { session: fakeSession('cloud@fliptap.test') } })
 
     await act(async () => {
       renderApp('/')

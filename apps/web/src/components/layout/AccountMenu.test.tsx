@@ -92,7 +92,7 @@ describe('AccountMenu', () => {
       'Keyboard shortcuts',
       'Help & documentation',
       "What's new",
-      'About Itera',
+      'About FlipTap',
       'Sign out',
     ])
 
@@ -119,7 +119,7 @@ describe('AccountMenu', () => {
       'Keyboard shortcuts',
       'Help & documentation',
       "What's new",
-      'About Itera',
+      'About FlipTap',
     ]
     for (const label of placeholders) {
       const item = screen.getByRole('menuitem', { name: new RegExp(label) })

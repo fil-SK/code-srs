@@ -46,7 +46,7 @@ export function RecallEditorShell({
   const editorPane = (
     <>
       <section className="p-5 sm:p-6">
-        <h2 className="mb-4 text-sm font-semibold text-itera-ink-brand">2. Card content</h2>
+        <h2 className="mb-4 text-sm font-semibold text-fliptap-ink-brand">2. Card content</h2>
         <RecallFields form={form} onChange={setForm} />
       </section>
       <CardOrganizeFields

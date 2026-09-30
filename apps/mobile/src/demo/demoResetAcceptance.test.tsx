@@ -1,4 +1,4 @@
-import type { Card, Deck, ReviewLog } from '@itera/core'
+import type { Card, Deck, ReviewLog } from '@fliptap/core'
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 import type { ReactNode } from 'react'

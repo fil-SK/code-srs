@@ -1,4 +1,4 @@
-import { useDeleteCard } from '@itera/core'
+import { useDeleteCard } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 

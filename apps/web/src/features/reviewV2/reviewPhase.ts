@@ -25,10 +25,10 @@
 // `ObjectiveResult` used to be declared here, which made
 // domain/grading/walkthrough.ts import from features/ - a domain module reaching
 // into the UI layer. It is a grading contract, so it now lives with the graders
-// in @itera/core and is re-exported here so every existing
+// in @fliptap/core and is re-exported here so every existing
 // `from '@/features/reviewV2/reviewPhase'` import still resolves to the one
 // definition.
-import type { ObjectiveResult } from '@itera/core'
+import type { ObjectiveResult } from '@fliptap/core'
 
 export type { ObjectiveResult }
 

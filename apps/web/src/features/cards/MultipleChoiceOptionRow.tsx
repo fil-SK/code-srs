@@ -46,8 +46,8 @@ export function MultipleChoiceOptionRow({
           'flex h-6 w-6 flex-none items-center justify-center border transition-colors',
           selectionMode === 'multiple' ? 'rounded-[6px]' : 'rounded-full',
           option.correct
-            ? 'border-itera-accent bg-itera-accent text-white'
-            : 'border-itera-border-strong bg-itera-surface text-transparent hover:border-itera-accent',
+            ? 'border-fliptap-accent bg-fliptap-accent text-white'
+            : 'border-fliptap-border-strong bg-fliptap-surface text-transparent hover:border-fliptap-accent',
         )}
       >
         <Check size={14} strokeWidth={3} />
@@ -67,7 +67,7 @@ export function MultipleChoiceOptionRow({
           aria-disabled={atTop}
           onClick={onMoveUp}
           className={cn(
-            'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+            'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
             atTop && 'pointer-events-none opacity-30',
           )}
         >
@@ -79,7 +79,7 @@ export function MultipleChoiceOptionRow({
           aria-disabled={atBottom}
           onClick={onMoveDown}
           className={cn(
-            'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+            'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
             atBottom && 'pointer-events-none opacity-30',
           )}
         >
@@ -93,8 +93,8 @@ export function MultipleChoiceOptionRow({
         disabled={!canRemove}
         aria-label={`Remove option ${index + 1}`}
         className={cn(
-          'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-          canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+          'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+          canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
         )}
       >
         <X size={15} />

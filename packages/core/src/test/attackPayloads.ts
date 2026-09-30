@@ -8,7 +8,7 @@
 // backendParity.test.ts uses for the fake Supabase client.
 //
 // Every payload here is inert by construction in this app - none of them is an
-// exploit against Itera, they are the shapes an exploit would take if a raw
+// exploit against FlipTap, they are the shapes an exploit would take if a raw
 // HTML sink were ever introduced at the content boundary. The browser harness
 // pairs them with a `window.__iteraXssProbe` sentinel; nothing here executes
 // anything, and none of them is destructive if one somehow did.
@@ -31,7 +31,7 @@ export const XSS_PAYLOADS = [
   '</div><script>alert(1)</script><div>',
   '<object data="data:text/html,<script>alert(1)</script>"></object>',
   '<style>*{background:url("javascript:alert(1)")}</style>',
-  // The same payloads wearing Itera's own syntax, so the parser's emphasis and
+  // The same payloads wearing FlipTap's own syntax, so the parser's emphasis and
   // inline-code branches are exercised rather than only its plain-text branch.
   '**<script>alert(1)</script>**',
   '*<img src=x onerror=alert(1)>*',

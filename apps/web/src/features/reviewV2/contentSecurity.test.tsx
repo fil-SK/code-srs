@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
-import type { Card, CardInteraction, InteractionType } from '@itera/core'
+import type { Card, CardInteraction, InteractionType } from '@fliptap/core'
 import {
   MUST_SURVIVE_LITERALLY,
   REJECTED_IMAGE_SOURCES,
   VALID_PNG_DATA_URL,
   XSS_PAYLOADS,
-} from '@itera/core/src/test/attackPayloads'
+} from '@fliptap/core/src/test/attackPayloads'
 import {
   matchingFixture,
   multipleChoiceFixture,

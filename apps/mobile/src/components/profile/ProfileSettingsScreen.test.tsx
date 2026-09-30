@@ -30,8 +30,8 @@ jest.mock('@/src/config/mobileRuntimeMode', () => ({
   },
 }))
 
-jest.mock('@itera/core', () => ({
-  ...jest.requireActual('@itera/core'),
+jest.mock('@fliptap/core', () => ({
+  ...jest.requireActual('@fliptap/core'),
   useAuth: () => ({
     mode: mockMode === 'demo' ? 'local' : 'supabase',
     session: null,

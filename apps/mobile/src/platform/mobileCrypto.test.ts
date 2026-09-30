@@ -1,4 +1,4 @@
-import { newId } from '@itera/core'
+import { newId } from '@fliptap/core'
 
 import { installMobileCrypto } from './mobileCrypto'
 

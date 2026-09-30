@@ -103,17 +103,17 @@ export function CardCreatePage() {
         <button
           type="button"
           onClick={() => navigate(backTo)}
-          className="inline-flex items-center gap-2 text-sm font-medium text-itera-ink transition-colors hover:text-itera-accent"
+          className="inline-flex items-center gap-2 text-sm font-medium text-fliptap-ink transition-colors hover:text-fliptap-accent"
         >
           <ArrowLeft size={16} aria-hidden="true" />
           Cancel
         </button>
-        <span className="h-8 w-px bg-itera-border" aria-hidden="true" />
-        <h1 className="text-2xl font-semibold tracking-tight text-itera-ink-brand">New card</h1>
+        <span className="h-8 w-px bg-fliptap-border" aria-hidden="true" />
+        <h1 className="text-2xl font-semibold tracking-tight text-fliptap-ink-brand">New card</h1>
       </header>
 
-      <div className="overflow-hidden rounded-itera-card border border-itera-border bg-itera-surface shadow-[0_2px_10px_rgba(23,32,51,0.04)]">
-        <section className="relative p-5 after:absolute after:bottom-0 after:left-5 after:right-5 after:h-px after:bg-itera-border sm:p-6 sm:after:left-6 sm:after:right-6">
+      <div className="overflow-hidden rounded-fliptap-card border border-fliptap-border bg-fliptap-surface shadow-[0_2px_10px_rgba(23,32,51,0.04)]">
+        <section className="relative p-5 after:absolute after:bottom-0 after:left-5 after:right-5 after:h-px after:bg-fliptap-border sm:p-6 sm:after:left-6 sm:after:right-6">
           <CardTypeChooser selected={selectedType} onSelect={setSelectedType} />
         </section>
         <div key={selectedType} className="reveal-in">

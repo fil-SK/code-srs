@@ -22,10 +22,10 @@ export interface BackupData {
   roadmaps?: Roadmap[] // added later; optional so older backups still import
 }
 
-// `app` is a legacy/compatibility format identifier, not the product name. It
-// stays literally 'code-srs' so every backup exported before the Itera rebrand
-// still imports; renaming it would silently invalidate every existing file.
-export const BACKUP_APP_MARKER = 'code-srs'
+// `app` is a compatibility format identifier, not just display text. Renamed
+// to 'fliptap' as part of the Itera -> FlipTap rebrand; backups exported
+// before this change no longer import (a deliberate compatibility break).
+export const BACKUP_APP_MARKER = 'fliptap'
 
 export interface BackupFile {
   app: typeof BACKUP_APP_MARKER
@@ -57,7 +57,7 @@ export function parseBackup(json: string): BackupFile {
   const obj = parsed as Record<string, unknown>
 
   if (obj.app !== BACKUP_APP_MARKER) {
-    throw new Error('This does not look like an Itera backup.')
+    throw new Error('This does not look like a FlipTap backup.')
   }
   if (typeof obj.version !== 'number') {
     throw new Error('Backup is missing a version.')

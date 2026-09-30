@@ -1,4 +1,4 @@
-# Itera MVP QA / dogfooding report
+# FlipTap MVP QA / dogfooding report
 
 **Test date:** 2026-08-21  
 **Virtual Day 1:** 2026-08-21  
@@ -9,7 +9,7 @@
 
 **PASS WITH ISSUES**
 
-Itera is ready for continued real-user dogfooding and has no MVP correctness blocker. The complete Import → Review → FSRS persistence → controlled time advance → due query → Today/Progress/History loop worked.
+FlipTap is ready for continued real-user dogfooding and has no MVP correctness blocker. The complete Import → Review → FSRS persistence → controlled time advance → due query → Today/Progress/History loop worked.
 
 Nothing blocks a polished demo, though two visible polish issues should be addressed during demo-polish work:
 

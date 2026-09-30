@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { summarizeSession } from '@itera/core'
+import { summarizeSession } from '@fliptap/core'
 import type { Card, ID, ReviewLog } from '@/types'
 import type { SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
 import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import {
   reviewWriteGuarantee,
   usePersistReviewResult,
@@ -92,7 +92,7 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
 
   if (isComplete) {
     return (
-      <IteraSurface className="grid min-h-screen place-items-center py-10">
+      <FlipTapSurface className="grid min-h-screen place-items-center py-10">
         <SessionCompleteCard
           summary={summary}
           completedAt={completedAt}
@@ -101,14 +101,14 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
           undoError={undoError}
           onUndo={undoLast}
         />
-      </IteraSurface>
+      </FlipTapSurface>
     )
   }
 
   if (!current) return null
 
   return (
-    <IteraSurface>
+    <FlipTapSurface>
       <ReviewSessionScreen
         key={current.id}
         card={current}
@@ -120,6 +120,6 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
         onGraded={(result) => handleGraded(current, result)}
         persistErrorMessage={describeReviewCommitFailure(reviewWriteGuarantee())}
       />
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

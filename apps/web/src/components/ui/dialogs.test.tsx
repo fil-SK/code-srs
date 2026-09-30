@@ -5,9 +5,9 @@
 // open but never contained Tab and never gave focus back, so a keyboard user
 // tabbed straight out of a modal into the page behind it.
 //
-// happy-dom has no visibility semantics (docs/itera-decisions.md D132), so
+// happy-dom has no visibility semantics (docs/fliptap-decisions.md D132), so
 // these prove the wiring only; the real proof is the browser pass recorded in
-// itera-decisions.md. Nothing here is hidden, so focus() behaves.
+// fliptap-decisions.md. Nothing here is hidden, so focus() behaves.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useState } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'

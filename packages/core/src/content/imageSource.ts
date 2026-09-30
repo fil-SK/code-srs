@@ -15,7 +15,7 @@
 // user agent and confirming they opened that card - in an app whose whole
 // premise is that a local workspace works offline.
 //
-// The rule is an allowlist of exactly the forms Itera's own authoring flow can
+// The rule is an allowlist of exactly the forms FlipTap's own authoring flow can
 // produce: FileReader.readAsDataURL over a raster image file. Nothing else is
 // accepted, so there is no scheme to reason about at the call sites.
 //

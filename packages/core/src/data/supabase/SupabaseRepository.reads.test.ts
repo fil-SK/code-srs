@@ -325,7 +325,7 @@ describe('SupabaseRepository — cards.getDue across pages', () => {
     expect(ids(due)).toEqual(['card-001', 'card-003', 'card-005', 'card-007', 'card-009', 'card-011'])
   })
 
-  // The trap in applying an Itera limit to raw pages: deck-b's cards are one in
+  // The trap in applying an FlipTap limit to raw pages: deck-b's cards are one in
   // every three, so the first page of raw rows contains a single match. A loop
   // that stopped once it had `limit` rows would return one card, or none.
   it('applies limit to the filtered result, not to a page of raw rows', async () => {

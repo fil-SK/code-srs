@@ -3,7 +3,7 @@ import { cn } from '@/lib/cn'
 // Restrained square deck mark: a navy tile with bold initials, plus a small
 // diagonal corner ribbon (drawn, not an image asset) — mirrors
 // ContinueLearningList.tsx's existing badge-chip recipe
-// (rounded-itera-control bg-itera-navy font-mono text-xs font-bold text-white),
+// (rounded-fliptap-control bg-fliptap-navy font-mono text-xs font-bold text-white),
 // scaled up for the deck header.
 const SIZE_CLASS: Record<'sm' | 'md' | 'lg' | 'xl', string> = {
   sm: 'grid h-9 w-9 place-items-center text-xs',
@@ -24,7 +24,7 @@ export function DeckMark({
   return (
     <div
       className={cn(
-        'relative flex-none overflow-hidden rounded-itera-control bg-itera-navy font-mono font-bold text-white',
+        'relative flex-none overflow-hidden rounded-fliptap-control bg-fliptap-navy font-mono font-bold text-white',
         SIZE_CLASS[size],
       )}
     >
@@ -40,7 +40,7 @@ export function DeckMark({
         }}
       />
       <div
-        className="absolute bg-itera-accent"
+        className="absolute bg-fliptap-accent"
         style={{
           bottom: isLarge ? -9 : isMedium ? -4 : -3,
           right: isLarge ? -42 : isMedium ? -18 : -14,
@@ -50,7 +50,7 @@ export function DeckMark({
         }}
       />
       <div
-        className="absolute bg-itera-error"
+        className="absolute bg-fliptap-error"
         style={{
           bottom: isLarge ? 1 : 0,
           right: isLarge ? -51 : isMedium ? -22 : -17,

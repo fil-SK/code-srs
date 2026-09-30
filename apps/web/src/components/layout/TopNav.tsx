@@ -26,12 +26,12 @@ export function TopNav({
   const badges = useNavBadges()
 
   return (
-    <header className="border-b border-itera-border bg-itera-surface px-4 sm:px-6">
+    <header className="border-b border-fliptap-border bg-fliptap-surface px-4 sm:px-6">
       <div className="mx-auto flex h-16 max-w-[1280px] items-stretch gap-8 overflow-x-auto">
         <Link to="/" className="flex shrink-0 items-center gap-2.5">
-          <img src="/itera-logo.png" alt="" className="h-10 w-10" />
-          <span className="text-2xl font-[650] tracking-[-0.025em] text-itera-ink-brand">
-            Itera
+          <img src="/fliptap-logo.png" alt="" className="h-10 w-10" />
+          <span className="text-2xl font-[650] tracking-[-0.025em] text-fliptap-ink-brand">
+            FlipTap
           </span>
         </Link>
 
@@ -45,14 +45,14 @@ export function TopNav({
                 cn(
                   'flex items-center gap-1.5 whitespace-nowrap border-b-2 text-sm font-semibold transition-colors',
                   isActive
-                    ? 'border-itera-accent text-itera-ink-brand'
-                    : 'border-transparent text-itera-muted hover:text-itera-ink',
+                    ? 'border-fliptap-accent text-fliptap-ink-brand'
+                    : 'border-transparent text-fliptap-muted hover:text-fliptap-ink',
                 )
               }
             >
               {link.label}
               {badges[link.to] ? (
-                <span className="rounded-itera-pill bg-itera-accent px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                <span className="rounded-fliptap-pill bg-fliptap-accent px-1.5 py-0.5 text-[10px] font-semibold text-white">
                   {badges[link.to]}
                 </span>
               ) : null}

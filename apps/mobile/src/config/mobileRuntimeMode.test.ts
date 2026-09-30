@@ -4,9 +4,9 @@
 // afterwards.
 
 function modeFor(value: string | undefined): string {
-  const previous = process.env.EXPO_PUBLIC_ITERA_MODE
-  if (value === undefined) delete process.env.EXPO_PUBLIC_ITERA_MODE
-  else process.env.EXPO_PUBLIC_ITERA_MODE = value
+  const previous = process.env.EXPO_PUBLIC_FLIPTAP_MODE
+  if (value === undefined) delete process.env.EXPO_PUBLIC_FLIPTAP_MODE
+  else process.env.EXPO_PUBLIC_FLIPTAP_MODE = value
 
   let mode = ''
   jest.isolateModules(() => {
@@ -14,8 +14,8 @@ function modeFor(value: string | undefined): string {
     mode = require('./mobileRuntimeMode').mobileRuntimeMode
   })
 
-  if (previous === undefined) delete process.env.EXPO_PUBLIC_ITERA_MODE
-  else process.env.EXPO_PUBLIC_ITERA_MODE = previous
+  if (previous === undefined) delete process.env.EXPO_PUBLIC_FLIPTAP_MODE
+  else process.env.EXPO_PUBLIC_FLIPTAP_MODE = previous
 
   return mode
 }

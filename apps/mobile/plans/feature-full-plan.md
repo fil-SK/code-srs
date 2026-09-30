@@ -1,4 +1,4 @@
-# Itera Mobile — Comprehensive Read-Only Audit (2026-08-24)
+# FlipTap Mobile — Comprehensive Read-Only Audit (2026-08-24)
 
 **Scope:** `apps/mobile` @ branch `mvp_demo_cleaning`, HEAD `b8ddc87 feat(mobile): add notifications inbox`.
 **Method:** every mobile route file, every screen component, every fixture and every type module read in full; web router, settings sections, composition root and card-row actions read directly; canonical docs read in the prescribed order. **No file was modified.**
@@ -18,7 +18,7 @@ The first native GUI pass is finished: six surfaces exist and look like a produc
 | Question | Answer |
 |---|---|
 | How complete is it really? | **~18% functionally**, **~70% presentationally** for the six surfaces it covers. |
-| GUI prototype, partial app, or near parity? | **GUI prototype**, with one real exception: the six Review interaction Views correctly call shared `InteractionBehavior` / graders from `@itera/core`. |
+| GUI prototype, partial app, or near parity? | **GUI prototype**, with one real exception: the six Review interaction Views correctly call shared `InteractionBehavior` / graders from `@fliptap/core`. |
 | Biggest blockers? | No repository, no auth, no query client, no native RichText renderer, no Review session machine. |
 | Can it be dogfooded cross-device? | **No.** Not a single byte of user data can be read or written from the phone. |
 
@@ -102,7 +102,7 @@ Statuses: COMPLETE · PARTIAL · VISUAL ONLY · FIXTURE ONLY · MISSING · INTEN
 | Route protection | COMPLETE (`RequireAuth`) | **MISSING** | none | No | Yes | Every route open | Expo Router `(auth)`/`(app)` groups |
 | Session persistence | COMPLETE | **MISSING** | none | No | Yes | Total | SecureStore + chunking adapter (D4) |
 | Native RichText renderer | COMPLETE (web renderer) | **MISSING** | pre-tokenized `parts[]` arrays in fixtures | No | Yes | Cannot render a real `Card` | Write a native renderer over `parseRichText` nodes |
-| Design tokens | COMPLETE | **COMPLETE** | `iteraColors`/`iteraRadii` from core | Yes | Yes | — | Correct as-is |
+| Design tokens | COMPLETE | **COMPLETE** | `fliptapColors`/`fliptapRadii` from core | Yes | Yes | — | Correct as-is |
 | Mobile test suite | n/a | **MISSING** | none | — | Yes | No `jest-expo`, zero test files | Stand up per D10 |
 
 ### Today
@@ -195,7 +195,7 @@ Statuses: COMPLETE · PARTIAL · VISUAL ONLY · FIXTURE ONLY · MISSING · INTEN
 | Undo | COMPLETE (completion-screen only) | **MISSING** | — | No | Yes | Total |
 | Session exit | COMPLETE | PARTIAL | `router.replace('/today')` | Yes | Yes | Always exits to Today, not to the origin |
 | Caught-up / empty state | COMPLETE | MISSING | — | No | Yes | — |
-| Tab bar hidden during Review | n/a | COMPLETE | `IteraTabBar` returns `null` for `review` | Yes | Yes (mobile-specific) | Correct |
+| Tab bar hidden during Review | n/a | COMPLETE | `FlipTapTabBar` returns `null` for `review` | Yes | Yes (mobile-specific) | Correct |
 
 ### Progress
 
@@ -268,7 +268,7 @@ Ten fixture modules plus in-component literals. Every one is currently the sole 
 | `ProgressScreen.tsx` — `(100 - value) / 50` | Retention y-scale | **Latent bug** — clips any retention below 50% | Data-derived axis, as web does |
 | `OrderingPreviewScreen.tsx:58` — `const code = 'size() == capacity()'` | Inline-code styling inside an item | **Fixture-coupled hack** | Native RichText over `item.content` |
 | `MobileHeader.tsx` — `notificationDot` | Bell badge | **Decorative, always on** | Drive from unread count or remove |
-| `IteraTabBar` — no due badge | Today tab | Web has a real `useNavBadges` count | Add once data is real |
+| `FlipTapTabBar` — no due badge | Today tab | Web has a real `useNavBadges` count | Add once data is real |
 | `LibraryDeckScreen` — `interactionVisuals` colors | Card type tiles | Safe presentation constant | Keep (align with web `rowVisuals.ts` if desired) |
 
 ---
@@ -464,7 +464,7 @@ Not real: read state is component-local `useState` seeded from the fixture and r
 | Stale-session behavior | **N/A** — nothing is stored. |
 | Local/demo mode | **MISSING.** Also a product question: master plan D11 states plainly that a learner using web in local mode will see nothing on mobile, and that this must eventually be surfaced in the UI. |
 
-**Compliance with `@itera/core` auth policy:** vacuously clean — nothing is duplicated because nothing exists. When built it must use shared `resolveAuthState` / `createAuthEngine` / `AuthProvider` and supply only a native `LocalSessionStore` + `AuthConfig`. The master plan's "may NOT be stubbed" list names `resolveAuthState` explicitly.
+**Compliance with `@fliptap/core` auth policy:** vacuously clean — nothing is duplicated because nothing exists. When built it must use shared `resolveAuthState` / `createAuthEngine` / `AuthProvider` and supply only a native `LocalSessionStore` + `AuthConfig`. The master plan's "may NOT be stubbed" list names `resolveAuthState` explicitly.
 
 This is the top P0. Without it cross-device use is impossible by construction.
 
@@ -521,7 +521,7 @@ Honest classification of what happens today:
 
 ## 17. Navigation audit
 
-**Working:** the five-item tab bar with a raised center Today control; `initialRouteName="today"`; nested Library stack with back affordances at both depths; nested Review stack; `IteraTabBar` returning `null` on the `review` route (correct immersive-mode hiding); bell → `/notifications` with a `canGoBack()` → `/today` fallback; `/` → `/today` redirect; `?section=` deep-link handling into Profile.
+**Working:** the five-item tab bar with a raised center Today control; `initialRouteName="today"`; nested Library stack with back affordances at both depths; nested Review stack; `FlipTapTabBar` returning `null` on the `review` route (correct immersive-mode hiding); bell → `/notifications` with a `canGoBack()` → `/today` fallback; `/` → `/today` redirect; `?section=` deep-link handling into Profile.
 
 **Problems:**
 
@@ -847,7 +847,7 @@ Create it, seeded from §4 of this report. It should carry, as first-class recor
 - Note that the "Notifications" entry now has a mobile inbox built ahead of it, and that the product question is open.
 - The 2026-08-24 root-`tsconfig`/`.expo` revert item stays as written.
 
-**`docs/itera-decisions.md`** (append-only) — a new dated entry recording that the native GUI pass deliberately preceded the Phase 3/4 architecture gate, and that the gate is now being taken up before further surface work.
+**`docs/fliptap-decisions.md`** (append-only) — a new dated entry recording that the native GUI pass deliberately preceded the Phase 3/4 architecture gate, and that the gate is now being taken up before further surface work.
 
 ---
 

@@ -37,25 +37,25 @@ export function CollectionNavDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-between rounded-itera-control border border-itera-border bg-itera-surface px-3.5 py-2.5 text-sm"
+        className="flex w-full items-center justify-between rounded-fliptap-control border border-fliptap-border bg-fliptap-surface px-3.5 py-2.5 text-sm"
       >
-        <span className="text-itera-muted">
-          Collection: <span className="font-semibold text-itera-ink-brand">{label}</span>
+        <span className="text-fliptap-muted">
+          Collection: <span className="font-semibold text-fliptap-ink-brand">{label}</span>
         </span>
-        <ChevronDown size={15} className="text-itera-muted" />
+        <ChevronDown size={15} className="text-fliptap-muted" />
       </button>
 
       {open && (
         <div className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label="Collections">
           <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[85vw] max-w-[300px] flex-col bg-itera-surface p-4 shadow-[var(--itera-shadow-float)]">
+          <div className="absolute inset-y-0 left-0 flex w-[85vw] max-w-[300px] flex-col bg-fliptap-surface p-4 shadow-[var(--fliptap-shadow-float)]">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-itera-ink-brand">Collections</span>
+              <span className="text-sm font-semibold text-fliptap-ink-brand">Collections</span>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={() => setOpen(false)}
-                className="grid h-7 w-7 place-items-center rounded-itera-control text-itera-muted hover:bg-itera-surface-subtle hover:text-itera-ink"
+                className="grid h-7 w-7 place-items-center rounded-fliptap-control text-fliptap-muted hover:bg-fliptap-surface-subtle hover:text-fliptap-ink"
               >
                 <X size={16} />
               </button>

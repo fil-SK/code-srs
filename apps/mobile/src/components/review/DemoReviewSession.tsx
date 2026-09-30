@@ -6,7 +6,7 @@ import {
   type ID,
   type SchedulingState,
   type SubmitReviewResult,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useState } from 'react'
 
 import { createDemoQueue } from '@/src/demo/demoQueue'

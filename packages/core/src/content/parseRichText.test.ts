@@ -7,7 +7,7 @@ import {
   XSS_PAYLOADS,
 } from '../test/attackPayloads'
 
-// The Itera text syntax had no test file at all before it was extracted here:
+// The FlipTap text syntax had no test file at all before it was extracted here:
 // it was three regexes interleaved with JSX in a web component, and the rules
 // most likely to be lost in a re-implementation (underscores are not emphasis;
 // inline code beats emphasis; bold beats italic) were only ever documented in
@@ -181,7 +181,7 @@ describe('content safety: the parser produces data, never markup', () => {
     for (const payload of XSS_PAYLOADS) {
       const blocks = parseRichText(payload)
       const flattened = blocks.map(paragraphText).join('')
-      // The markers Itera's own syntax owns are consumed; every other
+      // The markers FlipTap's own syntax owns are consumed; every other
       // character of the payload survives untouched.
       expect(flattened.replace(/[`*]/g, '')).toBe(payload.replace(/[`*]/g, ''))
       expect(blocks.every((b) => b.kind === 'paragraph')).toBe(true)

@@ -48,7 +48,7 @@ export function RoadmapsPage() {
           renders its own as ordinary content (same as Progress/Settings). */}
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="font-itera-display text-3xl font-bold text-itera-ink-brand">
+          <h1 className="font-fliptap-display text-3xl font-bold text-fliptap-ink-brand">
             Roadmaps
           </h1>
           <p className="mt-1 text-sm text-muted">

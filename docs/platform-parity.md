@@ -9,7 +9,7 @@ Every non-`implemented` status carries a reason; every `deferred` names the mile
 
 The shared-logic column names a module in `packages/core` or is empty. A wrong entry is a broken link.
 
-**This file owns the table and nothing else.** Why a decision was made → [`itera-decisions.md`](itera-decisions.md). Web implementation status → [`CURRENT_STATE.md`](CURRENT_STATE.md). What the product does → [`features.md`](features.md). How it is built → [`architecture.md`](architecture.md). Future work → `CURRENT_STATE.md` §17 and [`TODO.md`](TODO.md).
+**This file owns the table and nothing else.** Why a decision was made → [`fliptap-decisions.md`](fliptap-decisions.md). Web implementation status → [`CURRENT_STATE.md`](CURRENT_STATE.md). What the product does → [`features.md`](features.md). How it is built → [`architecture.md`](architecture.md). Future work → `CURRENT_STATE.md` §17 and [`TODO.md`](TODO.md).
 
 Update it in the same commit as any change to a listed capability.
 

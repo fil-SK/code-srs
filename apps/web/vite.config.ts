@@ -24,13 +24,13 @@ export default defineConfig({
       },
       // The glob above already matches every manifest icon in dist/, and
       // leaving this on adds a second, byte-identical precache entry for
-      // itera-logo.png.
+      // fliptap-logo.png.
       includeManifestIcons: false,
       manifest: {
-        name: 'Itera',
-        short_name: 'Itera',
+        name: 'FlipTap',
+        short_name: 'FlipTap',
         description: 'Spaced-repetition learning for software, CS, and compilers.',
-        // Itera's canvas (--itera-canvas), not the pre-rebrand dark palette:
+        // FlipTap's canvas (--fliptap-canvas), not the pre-rebrand dark palette:
         // the app is light-only for now, so a dark splash/chrome color would
         // flash the wrong background before first paint.
         theme_color: '#f6f7f9',
@@ -39,7 +39,7 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'itera-logo.png',
+            src: 'fliptap-logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',
@@ -51,7 +51,7 @@ export default defineConfig({
   // .env / .env.local stay at the repository root rather than moving into this
   // workspace, so environment discovery is unchanged by the relocation. Resolved
   // from this config file's own directory, never from process.cwd(), so `npm run
-  // dev` at the root and `npm run dev --workspace @itera/web` load the same files.
+  // dev` at the root and `npm run dev --workspace @fliptap/web` load the same files.
   envDir: path.resolve(__dirname, '../..'),
   resolve: {
     alias: {

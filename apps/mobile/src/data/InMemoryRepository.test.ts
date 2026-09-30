@@ -6,7 +6,7 @@ import {
   type Deck,
   type ReviewLog,
   type WorkspaceSnapshot,
-} from '@itera/core'
+} from '@fliptap/core'
 
 import { createDemoSeed } from '@/src/demo/demoWorkspace'
 import { InMemoryRepository } from './InMemoryRepository'

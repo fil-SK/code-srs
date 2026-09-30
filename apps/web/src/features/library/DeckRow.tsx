@@ -19,7 +19,7 @@ export function DeckTableHeader({ allDecks = false }: { allDecks?: boolean }) {
     <div
       className={cn(
         allDecks ? ALL_DECKS_GRID : GRID,
-        'pb-3 text-xs font-bold uppercase tracking-wide text-itera-muted',
+        'pb-3 text-xs font-bold uppercase tracking-wide text-fliptap-muted',
         !allDecks && 'px-1 pb-2',
       )}
     >
@@ -63,23 +63,23 @@ export function DeckRow({
       }}
       className={cn(
         allDecks ? ALL_DECKS_GRID : GRID,
-        'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-itera-accent',
+        'cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent',
         // The most-clicked row in the app had no pointer feedback at all: the
         // cursor changed and nothing else did. The negative margin lets the
         // highlight reach past the table's own padding without moving any
         // content inside the row.
-        '-mx-2 rounded-itera-control px-2 transition-colors hover:bg-itera-surface-subtle',
+        '-mx-2 rounded-fliptap-control px-2 transition-colors hover:bg-fliptap-surface-subtle',
         allDecks ? 'py-3.5' : 'py-3',
       )}
     >
       <div className="flex min-w-0 items-center gap-3">
         <DeckMark label={markLabelFor(deck.name)} size={allDecks ? 'md' : 'sm'} />
         <div className="min-w-0">
-          <div className={cn('truncate font-semibold text-itera-ink-brand', allDecks ? 'text-[15px]' : 'text-sm')}>
+          <div className={cn('truncate font-semibold text-fliptap-ink-brand', allDecks ? 'text-[15px]' : 'text-sm')}>
             {deck.name}
           </div>
           {deck.description && (
-            <div className={cn('mt-0.5 truncate text-itera-muted', allDecks ? 'text-[13px]' : 'text-xs')}>
+            <div className={cn('mt-0.5 truncate text-fliptap-muted', allDecks ? 'text-[13px]' : 'text-xs')}>
               {deck.description}
             </div>
           )}
@@ -88,7 +88,7 @@ export function DeckRow({
 
       <span
         className={cn(
-          'text-itera-ink',
+          'text-fliptap-ink',
           allDecks ? 'text-sm font-bold leading-5 tabular-nums' : 'text-sm',
         )}
       >
@@ -98,11 +98,11 @@ export function DeckRow({
         className={
           metrics.dueCount > 0
             ? cn(
-                'text-sm text-itera-accent',
+                'text-sm text-fliptap-accent',
                 allDecks ? 'font-bold leading-5 tabular-nums' : 'font-semibold',
               )
             : cn(
-                'text-sm text-itera-muted',
+                'text-sm text-fliptap-muted',
                 allDecks && 'font-bold leading-5 tabular-nums',
               )
         }
@@ -111,7 +111,7 @@ export function DeckRow({
       </span>
       <span
         className={cn(
-          'whitespace-nowrap text-sm text-itera-muted',
+          'whitespace-nowrap text-sm text-fliptap-muted',
           allDecks && 'font-bold leading-5 tabular-nums',
         )}
       >
@@ -124,7 +124,7 @@ export function DeckRow({
         </div>
         <span
           className={cn(
-            'text-itera-ink',
+            'text-fliptap-ink',
             allDecks
               ? 'text-sm font-bold leading-5 tabular-nums'
               : 'text-xs font-semibold',

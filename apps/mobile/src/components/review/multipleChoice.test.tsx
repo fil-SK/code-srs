@@ -1,4 +1,4 @@
-import { stripInlineMarkers } from '@itera/core'
+import { stripInlineMarkers } from '@fliptap/core'
 import { cleanup, fireEvent, screen } from '@testing-library/react-native'
 
 import {

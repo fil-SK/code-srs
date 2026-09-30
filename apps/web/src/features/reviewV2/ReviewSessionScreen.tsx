@@ -80,7 +80,7 @@ export function ReviewSessionScreen<T extends InteractionType>({
   // WalkthroughLivePreview only, whose step-jump authoring preview still
   // needs this shell's real phase/grading machinery (unlike the other five
   // types' simplified InteractionAnswerPreview) but not its session-only
-  // chrome — see docs/itera-decisions.md.
+  // chrome — see docs/fliptap-decisions.md.
   hideTopBar?: boolean
   hideRating?: boolean
   // Deck flip-through adds navigation around the position in the shared
@@ -322,10 +322,10 @@ export function ReviewSessionScreen<T extends InteractionType>({
           leaves each column too narrow to hold a line of text). */}
       <div
         className={cn(
-          'itera-card-enter mx-auto',
-          hasWalkthroughCode(card.interaction) && 'itera-card-enter-crisp-code',
+          'fliptap-card-enter mx-auto',
+          hasWalkthroughCode(card.interaction) && 'fliptap-card-enter-crisp-code',
           definition.widthFor?.(card.interaction) === 'wide' ? 'max-w-4xl' : 'max-w-2xl',
-          entered && 'itera-card-enter-active',
+          entered && 'fliptap-card-enter-active',
         )}
       >
         <div ref={cardRef}>

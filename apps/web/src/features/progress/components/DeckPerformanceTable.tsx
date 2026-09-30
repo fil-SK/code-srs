@@ -7,8 +7,8 @@ import { markLabelFor } from '@/features/library/deckMark'
 import { cn } from '@/lib/cn'
 
 function rateTone(value: number | null): string {
-  if (value === null) return 'text-itera-muted'
-  return value >= 0.8 ? 'text-itera-success' : 'text-itera-warning'
+  if (value === null) return 'text-fliptap-muted'
+  return value >= 0.8 ? 'text-fliptap-success' : 'text-fliptap-warning'
 }
 
 const GRID =
@@ -26,21 +26,21 @@ export function DeckPerformanceTable({
   const visible = rows.slice(0, limit)
 
   return (
-    <div className="overflow-hidden rounded-itera-card border border-itera-border bg-itera-surface shadow-[var(--itera-shadow-card)]">
+    <div className="overflow-hidden rounded-fliptap-card border border-fliptap-border bg-fliptap-surface shadow-[var(--fliptap-shadow-card)]">
       <div className="p-5 pb-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold text-itera-ink-brand">Deck performance</h3>
-          <Info size={14} strokeWidth={1.9} className="text-itera-muted" aria-hidden="true" />
+          <h3 className="text-base font-semibold text-fliptap-ink-brand">Deck performance</h3>
+          <Info size={14} strokeWidth={1.9} className="text-fliptap-muted" aria-hidden="true" />
         </div>
 
         {visible.length === 0 ? (
-          <p className="mt-4 text-sm text-itera-muted">No active cards yet.</p>
+          <p className="mt-4 text-sm text-fliptap-muted">No active cards yet.</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <div
               className={cn(
                 GRID,
-                'px-1 pb-2 text-xs font-bold uppercase tracking-wide text-itera-muted',
+                'px-1 pb-2 text-xs font-bold uppercase tracking-wide text-fliptap-muted',
               )}
             >
               <span>Deck</span>
@@ -49,7 +49,7 @@ export function DeckPerformanceTable({
               <span>Retention</span>
               <span />
             </div>
-            <div className="divide-y divide-itera-border">
+            <div className="divide-y divide-fliptap-border">
               {visible.map(({ deckId, learned, active, due, retention }) => {
                 const deck = decksById.get(deckId)
                 if (!deck) return null
@@ -59,30 +59,30 @@ export function DeckPerformanceTable({
                     to={due > 0 ? `/review?deck=${deckId}` : `/decks/${deckId}`}
                     className={cn(
                       GRID,
-                      '-mx-2 rounded-itera-control px-2 py-3 transition-colors hover:bg-itera-surface-subtle',
+                      '-mx-2 rounded-fliptap-control px-2 py-3 transition-colors hover:bg-fliptap-surface-subtle',
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <DeckMark label={markLabelFor(deck.name)} />
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-itera-ink-brand">
+                        <div className="truncate text-sm font-semibold text-fliptap-ink-brand">
                           {deck.name}
                         </div>
                         {deck.description && (
-                          <div className="mt-0.5 truncate text-xs text-itera-muted">
+                          <div className="mt-0.5 truncate text-xs text-fliptap-muted">
                             {deck.description}
                           </div>
                         )}
                       </div>
                     </div>
-                    <span className="text-sm text-itera-ink">
+                    <span className="text-sm text-fliptap-ink">
                       {learned} / {active}
                     </span>
-                    <span className="text-sm font-semibold text-itera-ink">{due}</span>
+                    <span className="text-sm font-semibold text-fliptap-ink">{due}</span>
                     <span className={cn('text-sm font-semibold', rateTone(retention))}>
                       {retention === null ? '—' : `${Math.round(retention * 100)}%`}
                     </span>
-                    <ChevronRight size={16} className="text-itera-muted" />
+                    <ChevronRight size={16} className="text-fliptap-muted" />
                   </Link>
                 )
               })}
@@ -93,7 +93,7 @@ export function DeckPerformanceTable({
 
       <Link
         to="/decks"
-        className="flex items-center justify-center gap-1 border-t border-itera-border px-5 py-3.5 text-sm font-semibold text-itera-ink-brand hover:bg-itera-surface-subtle"
+        className="flex items-center justify-center gap-1 border-t border-fliptap-border px-5 py-3.5 text-sm font-semibold text-fliptap-ink-brand hover:bg-fliptap-surface-subtle"
       >
         View all decks
         <ChevronRight size={14} />

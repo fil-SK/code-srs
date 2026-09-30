@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Itera",
-    "slug": "itera-mobile",
+    "name": "FlipTap",
+    "slug": "fliptap-mobile",
     "version": "1.0.0",
     "plugins": [
       "expo-router"
@@ -9,13 +9,13 @@
     "experiments": {
       "typedRoutes": true
     },
-    "scheme": "itera",
+    "scheme": "fliptap",
     "ios": {
-      "bundleIdentifier": "com.itera.mobile",
+      "bundleIdentifier": "com.fliptap.mobile",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.itera.mobile"
+      "package": "com.fliptap.mobile"
     }
   }
 }

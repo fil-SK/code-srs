@@ -29,7 +29,7 @@ export interface CollectionNode {
   children: CollectionNode[]
 }
 
-// A "Collection" is UI-only (docs/itera-decisions.md D8): any deck with at
+// A "Collection" is UI-only (docs/fliptap-decisions.md D8): any deck with at
 // least one child deck. Decks with no children are the actual browsable
 // Library decks (see leafDecks below); a leaf deck's collection is its
 // parent. No new type or persisted field — purely derived from the existing

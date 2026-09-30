@@ -1,4 +1,4 @@
--- Itera schema. Run this once in the Supabase SQL editor
+-- FlipTap schema. Run this once in the Supabase SQL editor
 -- (Dashboard -> SQL Editor -> New query -> paste -> Run).
 --
 -- Design: one table per entity. The full entity object lives in `data` (jsonb),

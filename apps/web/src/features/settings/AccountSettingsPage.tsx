@@ -39,17 +39,17 @@ export function AccountSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-itera-display text-3xl font-extrabold tracking-tight text-itera-ink-brand">
+        <h1 className="font-fliptap-display text-3xl font-extrabold tracking-tight text-fliptap-ink-brand">
           Account settings
         </h1>
-        <p className="mt-1 text-sm text-itera-muted">
+        <p className="mt-1 text-sm text-fliptap-muted">
           {subtitle}
         </p>
       </div>
 
       {isWide ? (
         <div className="grid grid-cols-[240px_1fr] items-stretch gap-8">
-          <div className="border-r border-itera-border pr-6">
+          <div className="border-r border-fliptap-border pr-6">
             <SettingsNav active={active} />
           </div>
           <div className="min-w-0">{body}</div>

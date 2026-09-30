@@ -1,4 +1,4 @@
-import { getRepository, type Card, type Deck, type ReviewLog } from '@itera/core'
+import { getRepository, type Card, type Deck, type ReviewLog } from '@fliptap/core'
 import { QueryClient, QueryClientProvider, notifyManager } from '@tanstack/react-query'
 import { act, render } from '@testing-library/react-native'
 import type { ReactNode } from 'react'
@@ -12,7 +12,7 @@ import { useDemoWorkspace, type DemoWorkspaceValue } from '@/src/demo/demoWorksp
  *
  * Not a `*.test.tsx` file, so the runner does not execute it, and under `src/`
  * rather than `app/`, where Expo Router's require.context would pull it into the
- * bundle (itera-decisions D356).
+ * bundle (fliptap-decisions D356).
  *
  * DemoWorkspaceProvider composes a fresh InMemoryRepository on mount and
  * registers it, so each render in each test gets an isolated backend - the

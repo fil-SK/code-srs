@@ -13,8 +13,8 @@ const ROUTES = [
 export function DesignPreviewIndex() {
   return (
     <PreviewShell>
-      <h1 className="text-2xl font-bold text-itera-ink-brand">Design preview</h1>
-      <p className="mt-2 text-sm text-itera-muted">
+      <h1 className="text-2xl font-bold text-fliptap-ink-brand">Design preview</h1>
+      <p className="mt-2 text-sm text-fliptap-muted">
         The six review interactions rendered against fixtures. These use the same
         production ReviewSessionScreen as /review, so they cannot drift from it.
       </p>
@@ -23,7 +23,7 @@ export function DesignPreviewIndex() {
           <li key={r.path}>
             <Link
               to={r.path}
-              className="block rounded-itera-control border border-itera-border bg-itera-surface px-4 py-3 text-sm font-semibold text-itera-ink-brand hover:border-itera-accent"
+              className="block rounded-fliptap-control border border-fliptap-border bg-fliptap-surface px-4 py-3 text-sm font-semibold text-fliptap-ink-brand hover:border-fliptap-accent"
             >
               {r.label}
             </Link>

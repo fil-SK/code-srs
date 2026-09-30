@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { Check, X } from 'lucide-react'
-import { stripInlineMarkers } from '@itera/core'
+import { stripInlineMarkers } from '@fliptap/core'
 import { InlineText } from '@/components/text/RichText'
 import { cn } from '@/lib/cn'
 import type { MatchingColumn, MatchingColumnItem } from '@/types/card'
@@ -58,15 +58,15 @@ interface Pick {
 }
 
 const EDGE_STROKE: Record<BoardEdgeState, string> = {
-  paired: 'var(--itera-border-strong)',
-  correct: 'var(--itera-success)',
-  incorrect: 'var(--itera-error)',
+  paired: 'var(--fliptap-border-strong)',
+  correct: 'var(--fliptap-success)',
+  incorrect: 'var(--fliptap-error)',
 }
 
 const BADGE_CLASS: Record<BoardEdgeState, string> = {
-  paired: 'bg-itera-navy',
-  correct: 'bg-itera-success',
-  incorrect: 'bg-itera-error',
+  paired: 'bg-fliptap-navy',
+  correct: 'bg-fliptap-success',
+  incorrect: 'bg-fliptap-error',
 }
 
 // Fixed columns are a shared option list — usually short labels like Yes/No —
@@ -75,9 +75,9 @@ const FIXED_COLUMN_TRACK = 'minmax(0,0.6fr)'
 const COLUMN_TRACK = 'minmax(0,1fr)'
 const GUTTER_TRACK = 'clamp(2.5rem,6vw,5rem)'
 
-// Itera's inline syntax (`code`, **bold**, *italic*) is markup, not content:
+// FlipTap's inline syntax (`code`, **bold**, *italic*) is markup, not content:
 // the visible label renders it, but an accessible name has to read the words
-// rather than spelling out the markers. The flattening lives in @itera/core
+// rather than spelling out the markers. The flattening lives in @fliptap/core
 // beside the parser, so a native announcer reads labels the same way.
 const plainLabel = stripInlineMarkers
 
@@ -325,12 +325,12 @@ export function MatchingBoard({
 
   const itemClass = (selected: boolean, state: BoardEdgeState | null) =>
     cn(
-      'flex min-h-[3.5rem] w-full items-center rounded-itera-control border px-4 py-3 text-left text-sm text-itera-ink transition-colors',
-      'bg-itera-selection-soft border-itera-border',
-      !locked && 'hover:border-itera-selection-border',
-      selected && 'border-itera-accent bg-itera-accent-soft',
-      state === 'correct' && 'border-itera-success/40',
-      state === 'incorrect' && 'border-itera-error/40',
+      'flex min-h-[3.5rem] w-full items-center rounded-fliptap-control border px-4 py-3 text-left text-sm text-fliptap-ink transition-colors',
+      'bg-fliptap-selection-soft border-fliptap-border',
+      !locked && 'hover:border-fliptap-selection-border',
+      selected && 'border-fliptap-accent bg-fliptap-accent-soft',
+      state === 'correct' && 'border-fliptap-success/40',
+      state === 'incorrect' && 'border-fliptap-error/40',
       locked && 'cursor-default',
     )
 
@@ -338,7 +338,7 @@ export function MatchingBoard({
   // wraps to a second line, so rows stay aligned across the board.
   const columnHeader = (col: MatchingColumn) =>
     showColumnLabels ? (
-      <div className="mb-2 min-h-8 text-xs font-semibold uppercase tracking-wide text-itera-muted">
+      <div className="mb-2 min-h-8 text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
         {col.label ?? ' '}
       </div>
     ) : null
@@ -395,7 +395,7 @@ export function MatchingBoard({
                       const col = otherCols.find((c) => c.id === cell.columnId)
                       if (!col) return null
                       return (
-                        <p key={cell.columnId} className="px-1 text-xs text-itera-error">
+                        <p key={cell.columnId} className="px-1 text-xs text-fliptap-error">
                           {otherCols.length > 1 && `${labelOf(col)}: `}
                           {cell.chosenItemId ? 'Should be ' : 'Not answered — should be '}
                           <InlineText text={itemText(col, cell.correctItemId) ?? ''} />

@@ -1,4 +1,4 @@
-import type { Card, Deck, LibraryCollection } from '@itera/core'
+import type { Card, Deck, LibraryCollection } from '@fliptap/core'
 
 /**
  * The card lifecycle states the mobile deck list presents. A subset of web's

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import type { ComponentProps } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -41,7 +41,7 @@ export function ReviewSessionHeader({
         onPress={onExit}
         style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
       >
-        <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-left" size={29} />
+        <MaterialCommunityIcons color={fliptapColors.inkBrand} name="chevron-left" size={29} />
       </Pressable>
 
       {progress ? (
@@ -70,7 +70,7 @@ export function ReviewSessionHeader({
       ) : null}
 
       <View style={styles.hint}>
-        <MaterialCommunityIcons color={iteraColors.muted} name={hintIcon} size={18} />
+        <MaterialCommunityIcons color={fliptapColors.muted} name={hintIcon} size={18} />
         <Text numberOfLines={2} style={styles.hintText}>
           {hint}
         </Text>
@@ -90,39 +90,39 @@ const styles = StyleSheet.create({
   backButton: {
     width: 46,
     height: 46,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   progressWrap: { position: 'absolute', left: '32%', right: '32%', alignItems: 'center', gap: 8 },
-  progressLabel: { color: iteraColors.inkBrand, fontSize: 18, fontWeight: '700' },
+  progressLabel: { color: fliptapColors.inkBrand, fontSize: 18, fontWeight: '700' },
   progressTrack: {
     width: '100%',
     height: 5,
     overflow: 'hidden',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.border,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.border,
   },
-  progressFill: { height: '100%', borderRadius: iteraRadii.pill, backgroundColor: iteraColors.accent },
+  progressFill: { height: '100%', borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.accent },
   badge: {
     minHeight: 28,
     justifyContent: 'center',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.accentSofter,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.accentSofter,
     paddingHorizontal: 14,
   },
   badgeText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.2,
   },
   hint: { width: 84, alignItems: 'center', gap: 2 },
   hintText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
     lineHeight: 14,
     fontWeight: '600',

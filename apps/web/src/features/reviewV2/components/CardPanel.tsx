@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 // than only Recall. Same border/rounding/background/shadow, no flip.
 export function CardPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-itera-card border border-itera-border bg-itera-surface p-8 shadow-[var(--itera-shadow-card)]">
+    <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-8 shadow-[var(--fliptap-shadow-card)]">
       {children}
     </div>
   )

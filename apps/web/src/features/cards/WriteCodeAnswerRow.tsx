@@ -34,9 +34,9 @@ export function WriteCodeAnswerRow({
   const atBottom = index === total - 1
 
   return (
-    <div className="space-y-1.5 rounded-itera-card border border-itera-border bg-itera-surface p-3">
+    <div className="space-y-1.5 rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Accepted answer {index + 1}
         </span>
         <span className="flex items-center gap-1">
@@ -46,7 +46,7 @@ export function WriteCodeAnswerRow({
             aria-disabled={atTop}
             onClick={onMoveUp}
             className={cn(
-              'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+              'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
               atTop && 'pointer-events-none opacity-30',
             )}
           >
@@ -58,7 +58,7 @@ export function WriteCodeAnswerRow({
             aria-disabled={atBottom}
             onClick={onMoveDown}
             className={cn(
-              'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+              'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
               atBottom && 'pointer-events-none opacity-30',
             )}
           >
@@ -70,8 +70,8 @@ export function WriteCodeAnswerRow({
             disabled={!canRemove}
             aria-label={`Remove accepted answer ${index + 1}`}
             className={cn(
-              'grid h-7 w-7 flex-none place-items-center rounded-[8px] border border-itera-border text-itera-muted',
-              canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+              'grid h-7 w-7 flex-none place-items-center rounded-[8px] border border-fliptap-border text-fliptap-muted',
+              canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
             )}
           >
             <X size={14} />

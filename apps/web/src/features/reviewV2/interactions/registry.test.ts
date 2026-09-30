@@ -2,7 +2,7 @@
 // and a deliberate runtime failure for anything else.
 //
 // Two properties matter here and neither is about rendering. First, the
-// registry must *bind* @itera/core's behavior objects rather than restate
+// registry must *bind* @fliptap/core's behavior objects rather than restate
 // them: a web copy of autoGrade or isResponseReady would keep every test
 // green while giving the two platforms different grading, which is the exact
 // failure the split exists to prevent. Reference equality is the only check
@@ -20,7 +20,7 @@ import {
   walkthroughBehavior,
   writeCodeBehavior,
   type InteractionType,
-} from '@itera/core'
+} from '@fliptap/core'
 import { getInteractionDefinition } from './registry'
 import { RecallView } from './recall/RecallView'
 import { MultipleChoiceView } from './multipleChoice/MultipleChoiceView'

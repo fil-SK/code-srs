@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { getRepository } from '@/data'
 import { DialogProvider } from '@/components/ui/dialogs'
 import type { Deck } from '@/types'
-import { createCard, richText } from '@itera/core'
+import { createCard, richText } from '@fliptap/core'
 import { LibraryBrowserPage } from './LibraryBrowserPage'
 
 function renderPage() {

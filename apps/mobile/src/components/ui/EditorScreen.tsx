@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import type { ReactNode } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -129,12 +129,12 @@ export function EditorScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   header: {
-    borderBottomColor: iteraColors.border,
+    borderBottomColor: fliptapColors.border,
     borderBottomWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingTop: 6,
     paddingBottom: 12,
     paddingHorizontal: 14,
@@ -160,15 +160,15 @@ const styles = StyleSheet.create({
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
     paddingHorizontal: 18,
   },
   saveDisabled: {
     opacity: 0.45,
   },
   saveText: {
-    color: iteraColors.surface,
+    color: fliptapColors.surface,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -177,14 +177,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   headerTitle: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 17,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
   headerSubtitle: {
     marginTop: 2,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   keyboardView: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   errorText: {
-    color: iteraColors.error,
+    color: fliptapColors.error,
     fontSize: 13,
     fontWeight: '600',
   },

@@ -22,6 +22,6 @@ export type {
   WalkthroughStep,
   WalkthroughStepResponse,
   WriteCodeInteraction,
-} from '@itera/core'
+} from '@fliptap/core'
 
-export { CARD_SCHEMA_VERSION, richText } from '@itera/core'
+export { CARD_SCHEMA_VERSION, richText } from '@fliptap/core'

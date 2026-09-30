@@ -23,7 +23,7 @@ export function MasteryRing({ value }: { value: number }) {
         cy={SIZE / 2}
         r={RADIUS}
         fill="none"
-        stroke="var(--itera-border)"
+        stroke="var(--fliptap-border)"
         strokeWidth={STROKE}
       />
       <circle
@@ -31,7 +31,7 @@ export function MasteryRing({ value }: { value: number }) {
         cy={SIZE / 2}
         r={RADIUS}
         fill="none"
-        stroke="var(--itera-accent)"
+        stroke="var(--fliptap-accent)"
         strokeWidth={STROKE}
         strokeLinecap="round"
         strokeDasharray={CIRCUMFERENCE}

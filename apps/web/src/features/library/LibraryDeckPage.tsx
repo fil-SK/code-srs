@@ -135,7 +135,7 @@ function SortableCardTableRow({
     <button
       type="button"
       aria-label="Drag to reorder"
-      className="grid h-8 w-3 cursor-grab touch-none place-items-center rounded text-itera-muted-light hover:text-itera-ink"
+      className="grid h-8 w-3 cursor-grab touch-none place-items-center rounded text-fliptap-muted-light hover:text-fliptap-ink"
       {...attributes}
       {...listeners}
     >
@@ -306,19 +306,19 @@ export function LibraryDeckPage() {
         onCreateDeck={newDeck}
       >
         <LoadingRegion label="Loading deck">
-          <Skeleton className="mb-6 h-4 w-64 max-w-full rounded-itera-pill" />
+          <Skeleton className="mb-6 h-4 w-64 max-w-full rounded-fliptap-pill" />
           <div className="flex flex-wrap items-start gap-6">
-            <Skeleton className="size-[148px] shrink-0 rounded-itera-card" />
+            <Skeleton className="size-[148px] shrink-0 rounded-fliptap-card" />
             <div className="min-w-[240px] flex-1 space-y-3">
-              <Skeleton className="h-7 w-72 max-w-full rounded-itera-pill" />
-              <Skeleton className="h-4 w-full max-w-md rounded-itera-pill" />
-              <Skeleton className="h-4 w-56 max-w-full rounded-itera-pill" />
+              <Skeleton className="h-7 w-72 max-w-full rounded-fliptap-pill" />
+              <Skeleton className="h-4 w-full max-w-md rounded-fliptap-pill" />
+              <Skeleton className="h-4 w-56 max-w-full rounded-fliptap-pill" />
             </div>
           </div>
-          <Skeleton className="mt-8 h-11 w-full rounded-itera-control" />
+          <Skeleton className="mt-8 h-11 w-full rounded-fliptap-control" />
           <div className="mt-4 space-y-2">
             {[0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-[68px] w-full rounded-itera-card" />
+              <Skeleton key={i} className="h-[68px] w-full rounded-fliptap-card" />
             ))}
           </div>
         </LoadingRegion>
@@ -356,8 +356,8 @@ export function LibraryDeckPage() {
       onCreateDeck={newDeck}
     >
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex items-center gap-2 text-sm text-itera-muted">
-          <button type="button" onClick={() => navigate('/decks')} className="hover:text-itera-ink">
+        <nav className="flex items-center gap-2 text-sm text-fliptap-muted">
+          <button type="button" onClick={() => navigate('/decks')} className="hover:text-fliptap-ink">
             Library
           </button>
           {path.map((c) => (
@@ -366,14 +366,14 @@ export function LibraryDeckPage() {
               <button
                 type="button"
                 onClick={() => navigate(`/decks?${selectionToSearchParams({ kind: 'collection', id: c.id })}`)}
-                className="hover:text-itera-ink"
+                className="hover:text-fliptap-ink"
               >
                 {c.name}
               </button>
             </span>
           ))}
           <ChevronRight size={14} strokeWidth={1.8} />
-          <span className="font-bold text-itera-ink-brand">{deck.name}</span>
+          <span className="font-bold text-fliptap-ink-brand">{deck.name}</span>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -393,10 +393,10 @@ export function LibraryDeckPage() {
             onClick={() => setSettingsOpen((o) => !o)}
             aria-expanded={settingsOpen}
             className={cn(
-              'inline-flex h-11 items-center gap-2 rounded-itera-control border px-4 text-sm font-semibold transition-colors',
+              'inline-flex h-11 items-center gap-2 rounded-fliptap-control border px-4 text-sm font-semibold transition-colors',
               settingsOpen
-                ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                : 'border-itera-border-strong text-itera-ink hover:border-itera-accent hover:text-itera-ink-brand',
+                ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                : 'border-fliptap-border-strong text-fliptap-ink hover:border-fliptap-accent hover:text-fliptap-ink-brand',
             )}
           >
             <Settings size={17} strokeWidth={1.8} /> Deck settings
@@ -409,19 +409,19 @@ export function LibraryDeckPage() {
           <DeckMark label={markLabel} size="xl" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="font-itera-display text-2xl font-bold tracking-tight text-itera-ink-brand sm:text-3xl">
+              <h1 className="font-fliptap-display text-2xl font-bold tracking-tight text-fliptap-ink-brand sm:text-3xl">
                 {deck.name}
               </h1>
-              <Star size={20} className="text-itera-muted-light" />
+              <Star size={20} className="text-fliptap-muted-light" />
               {deck.language && (
-                <span className="rounded-full bg-itera-navy-soft px-2 py-0.5 text-[11px] font-semibold text-itera-ink-brand">
+                <span className="rounded-full bg-fliptap-navy-soft px-2 py-0.5 text-[11px] font-semibold text-fliptap-ink-brand">
                   {languageLabel(deck.language)}
                 </span>
               )}
             </div>
-            {deck.description && <p className="mt-2 max-w-md text-sm text-itera-muted">{deck.description}</p>}
+            {deck.description && <p className="mt-2 max-w-md text-sm text-fliptap-muted">{deck.description}</p>}
 
-            <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-y-0 sm:divide-x sm:divide-itera-border">
+            <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-y-0 sm:divide-x sm:divide-fliptap-border">
               <div className="sm:pr-4">
                 <Stat icon={GalleryVerticalEnd} label="cards" value={String(totalCards)} />
               </div>
@@ -439,10 +439,10 @@ export function LibraryDeckPage() {
               <div className="flex items-center gap-3.5 sm:pl-4">
                 <MasteryRing value={metrics.masteryFraction} />
                 <div>
-                  <div className="font-itera-display text-lg font-bold text-itera-ink-brand">
+                  <div className="font-fliptap-display text-lg font-bold text-fliptap-ink-brand">
                     {Math.round(metrics.masteryFraction * 100)}%
                   </div>
-                  <div className="text-xs text-itera-muted">mastery</div>
+                  <div className="text-xs text-fliptap-muted">mastery</div>
                 </div>
               </div>
             </div>
@@ -469,7 +469,7 @@ export function LibraryDeckPage() {
         <DeckSettings deck={deck} decks={decks} onClose={() => setSettingsOpen(false)} />
       )}
 
-      <div className="mb-6 mt-10 flex items-center gap-8 border-b border-itera-border text-base font-semibold">
+      <div className="mb-6 mt-10 flex items-center gap-8 border-b border-fliptap-border text-base font-semibold">
         {(['cards', 'insights'] as const).map((key) => (
           <button
             key={key}
@@ -477,8 +477,8 @@ export function LibraryDeckPage() {
             onClick={() => setTab(key)}
             className={
               tab === key
-                ? 'min-w-24 border-b-2 border-itera-accent px-4 pb-3.5 text-itera-ink-brand'
-                : 'min-w-24 border-b-2 border-transparent px-4 pb-3.5 text-itera-muted hover:text-itera-ink'
+                ? 'min-w-24 border-b-2 border-fliptap-accent px-4 pb-3.5 text-fliptap-ink-brand'
+                : 'min-w-24 border-b-2 border-transparent px-4 pb-3.5 text-fliptap-muted hover:text-fliptap-ink'
             }
           >
             {key === 'cards' ? 'Cards' : 'Insights'}
@@ -495,13 +495,13 @@ export function LibraryDeckPage() {
               <Search
                 size={18}
                 strokeWidth={1.8}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fliptap-muted"
               />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search cards..."
-                className={`${fieldClass} h-11 bg-itera-surface pl-10`}
+                className={`${fieldClass} h-11 bg-fliptap-surface pl-10`}
               />
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -537,7 +537,7 @@ export function LibraryDeckPage() {
                   { value: 'status', label: 'Status' },
                 ]}
               />
-              <div className="flex h-11 items-center gap-0 rounded-itera-control border border-itera-border bg-itera-surface p-1">
+              <div className="flex h-11 items-center gap-0 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface p-1">
                 <button
                   type="button"
                   aria-label="Comfortable rows"
@@ -546,8 +546,8 @@ export function LibraryDeckPage() {
                   className={cn(
                     'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
                     !compact
-                      ? 'bg-itera-accent-soft text-itera-accent'
-                      : 'text-itera-muted hover:text-itera-ink',
+                      ? 'bg-fliptap-accent-soft text-fliptap-accent'
+                      : 'text-fliptap-muted hover:text-fliptap-ink',
                   )}
                 >
                   <LayoutList size={18} />
@@ -560,8 +560,8 @@ export function LibraryDeckPage() {
                   className={cn(
                     'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
                     compact
-                      ? 'bg-itera-accent-soft text-itera-accent'
-                      : 'text-itera-muted hover:text-itera-ink',
+                      ? 'bg-fliptap-accent-soft text-fliptap-accent'
+                      : 'text-fliptap-muted hover:text-fliptap-ink',
                   )}
                 >
                   <Rows3 size={18} />
@@ -594,8 +594,8 @@ export function LibraryDeckPage() {
               <div className="px-2">
                 <CardTableHeader />
               </div>
-              <div className="rounded-itera-card border border-itera-border bg-itera-surface px-2">
-                <div className="divide-y divide-itera-border">
+              <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-2">
+                <div className="divide-y divide-fliptap-border">
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                     <SortableContext
                       items={pageMeta.map((meta) => meta.id)}
@@ -679,16 +679,16 @@ function InsightsTab({ meta }: { meta: RowMeta[] }) {
 
   return (
     <div className="grid gap-6 sm:grid-cols-2">
-      <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5">
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-itera-muted">By status</h2>
+      <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5">
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-fliptap-muted">By status</h2>
         <div className="space-y-3">
           {statusRows.map((row) => (
             <div key={row.label} className="flex items-center gap-3">
-              <span className="w-24 flex-none text-sm text-itera-ink">{row.label}</span>
+              <span className="w-24 flex-none text-sm text-fliptap-ink">{row.label}</span>
               <div className="flex-1">
                 <MeterBar value={total > 0 ? row.count / total : 0} />
               </div>
-              <span className="w-8 flex-none text-right text-sm font-semibold text-itera-ink-brand">
+              <span className="w-8 flex-none text-right text-sm font-semibold text-fliptap-ink-brand">
                 {row.count}
               </span>
             </div>
@@ -696,16 +696,16 @@ function InsightsTab({ meta }: { meta: RowMeta[] }) {
         </div>
       </div>
 
-      <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5">
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-itera-muted">By type</h2>
+      <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5">
+        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-fliptap-muted">By type</h2>
         <div className="space-y-3">
           {typeCounts.map(([label, count]) => (
             <div key={label} className="flex items-center gap-3">
-              <span className="w-24 flex-none truncate text-sm text-itera-ink">{label}</span>
+              <span className="w-24 flex-none truncate text-sm text-fliptap-ink">{label}</span>
               <div className="flex-1">
                 <MeterBar value={total > 0 ? count / total : 0} />
               </div>
-              <span className="w-8 flex-none text-right text-sm font-semibold text-itera-ink-brand">{count}</span>
+              <span className="w-8 flex-none text-right text-sm font-semibold text-fliptap-ink-brand">{count}</span>
             </div>
           ))}
         </div>

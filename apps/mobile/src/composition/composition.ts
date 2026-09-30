@@ -1,4 +1,4 @@
-import { configureRepository, SupabaseRepository } from '@itera/core'
+import { configureRepository, SupabaseRepository } from '@fliptap/core'
 
 import { getMobileSupabase } from '@/src/data/supabaseClient'
 

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -50,7 +50,7 @@ export function LibraryNotFoundScreen({
 
         <View style={styles.card}>
           <MaterialCommunityIcons
-            color={iteraColors.mutedLight}
+            color={fliptapColors.mutedLight}
             name="help-circle-outline"
             size={30}
           />
@@ -65,7 +65,7 @@ export function LibraryNotFoundScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   scrollContent: {
     width: '100%',
@@ -92,21 +92,21 @@ const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
     marginTop: 24,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 24,
   },
   title: {
     marginTop: 9,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 17,
     fontWeight: '700',
   },
   detail: {
     marginTop: 5,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',

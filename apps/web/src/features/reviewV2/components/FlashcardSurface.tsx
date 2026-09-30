@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { FlipCard } from './FlipCard'
 
-// The Itera Recall card face: a literal flashcard that flips between front
+// The FlipTap Recall card face: a literal flashcard that flips between front
 // and back. Built on this package's own, keyboard-accessible FlipCard (not
 // the shared production primitive — see that file for why) so the flip
 // mechanics, height-matching, and reduced-motion handling are inherited, not
@@ -29,7 +29,7 @@ export function FlashcardSurface({
       front={front}
       back={back}
       ariaLabel={ariaLabel}
-      faceClassName="flex min-h-[22rem] flex-col justify-between rounded-itera-card border border-itera-border bg-itera-surface p-8 shadow-[var(--itera-shadow-card)]"
+      faceClassName="flex min-h-[22rem] flex-col justify-between rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-8 shadow-[var(--fliptap-shadow-card)]"
     />
   )
 }

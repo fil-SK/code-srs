@@ -41,28 +41,28 @@ export function FilterMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         className={cn(
-          'inline-flex items-center rounded-itera-control border text-sm font-semibold',
+          'inline-flex items-center rounded-fliptap-control border text-sm font-semibold',
           referenceStyle
-            ? 'h-11 min-w-[136px] justify-between gap-3 bg-itera-surface px-4'
+            ? 'h-11 min-w-[136px] justify-between gap-3 bg-fliptap-surface px-4'
             : 'gap-1.5 px-3 py-2',
           activeCount > 0
-            ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-            : 'border-itera-border text-itera-ink hover:border-itera-border-strong',
+            ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+            : 'border-fliptap-border text-fliptap-ink hover:border-fliptap-border-strong',
         )}
       >
         {referenceStyle ? <Funnel size={17} strokeWidth={1.8} /> : <SlidersHorizontal size={14} />}
         Filter
-        {activeCount > 0 && <span className="text-itera-accent">· {activeCount}</span>}
+        {activeCount > 0 && <span className="text-fliptap-accent">· {activeCount}</span>}
         <ChevronDown size={referenceStyle ? 15 : 14} strokeWidth={referenceStyle ? 1.8 : 2} />
       </button>
       {open && (
-        <div className="absolute left-0 z-10 mt-1 w-48 rounded-itera-control border border-itera-border bg-itera-surface p-2 shadow-[var(--itera-shadow-float)]">
-          <label className="flex items-center gap-2 rounded-itera-control px-2 py-1.5 text-sm text-itera-ink hover:bg-itera-surface-subtle">
+        <div className="absolute left-0 z-10 mt-1 w-48 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface p-2 shadow-[var(--fliptap-shadow-float)]">
+          <label className="flex items-center gap-2 rounded-fliptap-control px-2 py-1.5 text-sm text-fliptap-ink hover:bg-fliptap-surface-subtle">
             <input
               type="checkbox"
               checked={dueOnly}
               onChange={(e) => onDueOnlyChange(e.target.checked)}
-              className="accent-itera-accent"
+              className="accent-fliptap-accent"
             />
             Due only
           </label>

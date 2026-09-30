@@ -6,7 +6,7 @@ export interface PrimaryNavLink {
 
 // Single source of truth for the top nav's primary destinations (locked IA:
 // Today / Library / Progress). Roadmaps is deliberately excluded (see
-// docs/itera-decisions.md D11/D17); Settings is reached from the account menu
+// docs/fliptap-decisions.md D11/D17); Settings is reached from the account menu
 // (AccountMenu/AccountMenuContent), not here. "Progress" points at the real
 // /progress route; the legacy /stats page it briefly aliased to during the
 // label-only rename has since been deleted.

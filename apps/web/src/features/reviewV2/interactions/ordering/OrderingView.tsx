@@ -98,7 +98,7 @@ export function OrderingView({
             <InteractionLabel type="ordering" />
             <CardPrompt text={card.prompt.value} className="mt-2" />
             {!locked && (
-              <p className="text-sm text-itera-muted-light">
+              <p className="text-sm text-fliptap-muted-light">
                 Drag items into the correct sequence.
               </p>
             )}
@@ -135,7 +135,7 @@ export function OrderingView({
                 type="button"
                 onClick={onPrimaryAction}
                 disabled={!responseReady}
-                className="rounded-itera-control bg-itera-accent px-8 py-3 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-fliptap-control bg-fliptap-accent px-8 py-3 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
               >
                 Submit answer
               </button>
@@ -178,10 +178,10 @@ export function OrderingView({
           {grade && (
             <div
               className={cn(
-                'rounded-itera-control px-3.5 py-2.5 text-center text-sm font-semibold',
+                'rounded-fliptap-control px-3.5 py-2.5 text-center text-sm font-semibold',
                 grade.correct
-                  ? 'bg-itera-success-soft text-itera-success'
-                  : 'bg-itera-error-soft text-itera-error',
+                  ? 'bg-fliptap-success-soft text-fliptap-success'
+                  : 'bg-fliptap-error-soft text-fliptap-error',
               )}
             >
               {grade.correct ? 'Correct' : `${Math.round(grade.score * 100)}% in the right position`}
@@ -189,11 +189,11 @@ export function OrderingView({
           )}
 
           {grade && !grade.correct && (
-            <div className="rounded-itera-control border border-dashed border-itera-border px-3.5 py-2.5">
-              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-itera-muted">
+            <div className="rounded-fliptap-control border border-dashed border-fliptap-border px-3.5 py-2.5">
+              <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
                 Correct order
               </div>
-              <ol className="space-y-1 text-sm text-itera-ink">
+              <ol className="space-y-1 text-sm text-fliptap-ink">
                 {interaction.correctOrder.map((id, i) => (
                   <li key={id}>
                     {i + 1}. <InlineText text={itemById.get(id)?.content.value ?? ''} />

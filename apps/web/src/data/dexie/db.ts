@@ -8,7 +8,9 @@ import type { Card, Deck, Draft, ID, ReviewLog, Roadmap } from '@/types'
 // can't be boolean, so suspension is filtered in memory.
 //
 // The database was renamed from 'code-srs' to 'itera' when the card models
-// converged. Version 2 deliberately clears prototype ReviewLogs because rows
+// converged, and again from 'itera' to 'fliptap' for the FlipTap rebrand (no
+// migration either time - prototype data is disposable, see below). Version 2
+// deliberately clears prototype ReviewLogs because rows
 // written before the required stateBefore field cannot support correct mature
 // retention and that history was explicitly declared disposable. Cards,
 // decks, drafts, and roadmaps are left intact.
@@ -19,7 +21,7 @@ export class AppDB extends Dexie {
   reviewLogs!: Table<ReviewLog, ID>
   roadmaps!: Table<Roadmap, ID>
 
-  constructor(name = 'itera') {
+  constructor(name = 'fliptap') {
     super(name)
     this.version(1).stores({
       cards: 'id, deckId, *tags, scheduling.due',
@@ -34,7 +36,8 @@ export class AppDB extends Dexie {
 
 export const db = new AppDB()
 
-// One-time reclamation of the superseded prototype database. Its contents were
+// One-time reclamation of superseded prototype databases. Their contents were
 // deliberately discarded, not migrated; this only frees the storage they held.
-// Fire-and-forget: failing to delete it is harmless, since nothing reads it.
+// Fire-and-forget: failing to delete them is harmless, since nothing reads them.
 void Dexie.delete('code-srs').catch(() => {})
+void Dexie.delete('itera').catch(() => {})

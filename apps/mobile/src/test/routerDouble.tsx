@@ -9,7 +9,7 @@
  *
  * Not a `*.test.ts` file, so the runner does not try to execute it, and it
  * lives under `src/` rather than `app/`, where Expo Router's require.context
- * would pull it into the bundle (itera-decisions D356).
+ * would pull it into the bundle (fliptap-decisions D356).
  */
 
 export interface RouterHref {

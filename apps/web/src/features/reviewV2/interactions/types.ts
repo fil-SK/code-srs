@@ -5,18 +5,18 @@ import type {
   InteractionBehavior,
   InteractionResponse,
   InteractionType,
-} from '@itera/core'
+} from '@fliptap/core'
 import type { ReviewPhase } from '../reviewPhase'
 
 // Re-exported so the existing `from './interactions/types'` imports still
 // resolve to core's one definition rather than a web copy.
 export type { InteractionResponse }
 
-// The web View's prop bag. Deliberately *not* in @itera/core: this is the
+// The web View's prop bag. Deliberately *not* in @fliptap/core: this is the
 // contract between the review shell and a React DOM component, including a
 // web-authoring affordance (`hideActions`), and a native View will want its
 // own event signatures over the same learning state. What is shared is the
-// behavior (@itera/core's InteractionBehavior), not the rendering contract.
+// behavior (@fliptap/core's InteractionBehavior), not the rendering contract.
 export interface InteractionViewProps<T extends InteractionType> {
   card: Card & { interaction: Extract<CardInteraction, { type: T }> }
   phase: ReviewPhase
@@ -29,7 +29,7 @@ export interface InteractionViewProps<T extends InteractionType> {
   onPrimaryAction: () => void
   responseReady: boolean
   // Optional, default false. Set by InteractionAnswerPreview (the card
-  // editor's simplified authoring preview — see docs/itera-decisions.md) so
+  // editor's simplified authoring preview — see docs/fliptap-decisions.md) so
   // an interactive type's own "Submit answer" button doesn't render there:
   // that preview drives `phase` directly from a plain Question/Answer
   // toggle rather than a real attempt, so there is nothing to submit. Real
@@ -39,7 +39,7 @@ export interface InteractionViewProps<T extends InteractionType> {
 }
 
 // The web binding: one shared behavior plus this platform's View. The
-// behavior half is spread in from @itera/core and never restated here, so
+// behavior half is spread in from @fliptap/core and never restated here, so
 // readiness, grading and semantic width exist exactly once for web and for
 // whatever binds the same objects next.
 //

@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import { useFocusEffect } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useCallback, useRef } from 'react'
@@ -209,7 +209,7 @@ export function TodayHero({
             />
             <Metric
               icon="fire"
-              iconColor={iteraColors.accent}
+              iconColor={fliptapColors.accent}
               label="Current streak"
               suffix={streak === 1 ? 'day' : 'days'}
               value={String(streak)}
@@ -244,7 +244,7 @@ export function TodayHero({
             <Text style={styles.ctaText}>
               {caughtUp ? 'Browse your library' : 'Start your next session'}
             </Text>
-            <MaterialCommunityIcons color={iteraColors.accent} name="arrow-right" size={22} />
+            <MaterialCommunityIcons color={fliptapColors.accent} name="arrow-right" size={22} />
           </Pressable>
         </View>
       </Animated.View>
@@ -292,13 +292,13 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
     borderRadius: 22,
     borderWidth: 1,
-    backgroundColor: iteraColors.navy,
+    backgroundColor: fliptapColors.navy,
     paddingHorizontal: 18,
     paddingTop: 24,
     paddingBottom: 8,
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 13 },
         shadowOpacity: 0.18,
         shadowRadius: 19,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }],
   },
   ctaText: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontSize: 15,
     fontWeight: '700',
   },

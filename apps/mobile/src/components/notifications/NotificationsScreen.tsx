@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
@@ -20,10 +20,10 @@ const notificationVisuals: Record<
   Exclude<MobileNotificationItem['kind'], 'deck'>,
   { icon: IconName; color: string; background: string }
 > = {
-  session: { icon: 'calendar-check-outline', color: iteraColors.accent, background: iteraColors.accentSoft },
-  streak: { icon: 'fire', color: iteraColors.accent, background: iteraColors.accentSoft },
-  retention: { icon: 'sync', color: iteraColors.success, background: iteraColors.successSoft },
-  warning: { icon: 'alert-outline', color: iteraColors.accent, background: iteraColors.accentSoft },
+  session: { icon: 'calendar-check-outline', color: fliptapColors.accent, background: fliptapColors.accentSoft },
+  streak: { icon: 'fire', color: fliptapColors.accent, background: fliptapColors.accentSoft },
+  retention: { icon: 'sync', color: fliptapColors.success, background: fliptapColors.successSoft },
+  warning: { icon: 'alert-outline', color: fliptapColors.accent, background: fliptapColors.accentSoft },
   import: { icon: 'clipboard-check-outline', color: '#2563eb', background: '#eff6ff' },
   cards: { icon: 'school-outline', color: '#7c3aed', background: '#f5f3ff' },
 }
@@ -46,11 +46,11 @@ function NotificationMark({ item }: { item: MobileNotificationItem }) {
     <View
       style={[
         styles.iconMark,
-        { backgroundColor: item.unread ? visual.background : iteraColors.surface },
+        { backgroundColor: item.unread ? visual.background : fliptapColors.surface },
       ]}
     >
       <MaterialCommunityIcons
-        color={item.unread ? visual.color : iteraColors.muted}
+        color={item.unread ? visual.color : fliptapColors.muted}
         name={visual.icon}
         size={28}
       />
@@ -135,7 +135,7 @@ function NotificationRow({
             </View>
           ) : (
             <View style={styles.readLabel}>
-              <MaterialCommunityIcons color={iteraColors.muted} name="check" size={12} />
+              <MaterialCommunityIcons color={fliptapColors.muted} name="check" size={12} />
               <Text style={styles.readText}>Read</Text>
             </View>
           )}
@@ -257,13 +257,13 @@ export function NotificationsScreen({
           onPress={goBack}
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
-          <MaterialCommunityIcons color={iteraColors.inkBrand} name="chevron-left" size={28} />
+          <MaterialCommunityIcons color={fliptapColors.inkBrand} name="chevron-left" size={28} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
 
         <View style={styles.headingRow}>
           <View style={styles.headingIcon}>
-            <MaterialCommunityIcons color={iteraColors.inkBrand} name="bell-outline" size={31} />
+            <MaterialCommunityIcons color={fliptapColors.inkBrand} name="bell-outline" size={31} />
           </View>
           <View style={styles.headingCopy}>
             <Text style={styles.title}>{viewModel.title}</Text>
@@ -283,7 +283,7 @@ export function NotificationsScreen({
               onPress={() => router.push('/profile?section=notifications')}
               style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}
             >
-              <MaterialCommunityIcons color={iteraColors.inkBrand} name="cog-outline" size={21} />
+              <MaterialCommunityIcons color={fliptapColors.inkBrand} name="cog-outline" size={21} />
               <Text style={styles.settingsText}>Settings</Text>
             </Pressable>
           )}
@@ -292,7 +292,7 @@ export function NotificationsScreen({
         {visibleItems.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
-              <MaterialCommunityIcons color={iteraColors.success} name="check" size={28} />
+              <MaterialCommunityIcons color={fliptapColors.success} name="check" size={28} />
             </View>
             <Text style={styles.emptyTitle}>You’re all caught up</Text>
             <Text style={styles.emptyText}>There are no unread updates right now.</Text>
@@ -336,7 +336,7 @@ export function NotificationsScreen({
 
 const cardShadow = Platform.select({
   ios: {
-    shadowColor: iteraColors.navy,
+    shadowColor: fliptapColors.navy,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.055,
     shadowRadius: 11,
@@ -346,63 +346,63 @@ const cardShadow = Platform.select({
 })
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   decorativeField: { position: 'absolute', top: 0, right: 0, left: 0, height: 240, overflow: 'hidden', pointerEvents: 'none' },
-  decorativeShapeLarge: { position: 'absolute', top: 14, right: -92, width: 260, height: 135, borderRadius: 78, backgroundColor: iteraColors.accentSofter, transform: [{ rotate: '-12deg' }] },
-  decorativeShapeSmall: { position: 'absolute', top: 65, right: -78, width: 225, height: 91, borderRadius: 56, backgroundColor: iteraColors.accentSoft, opacity: 0.72, transform: [{ rotate: '-7deg' }] },
+  decorativeShapeLarge: { position: 'absolute', top: 14, right: -92, width: 260, height: 135, borderRadius: 78, backgroundColor: fliptapColors.accentSofter, transform: [{ rotate: '-12deg' }] },
+  decorativeShapeSmall: { position: 'absolute', top: 65, right: -78, width: 225, height: 91, borderRadius: 56, backgroundColor: fliptapColors.accentSoft, opacity: 0.72, transform: [{ rotate: '-7deg' }] },
   scrollContent: { width: '100%', maxWidth: 600, alignSelf: 'center', paddingHorizontal: 18, paddingTop: 8, paddingBottom: 38 },
   backButton: { minWidth: 72, minHeight: 44, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', marginLeft: -7 },
-  backText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '600' },
+  backText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '600' },
   headingRow: { flexDirection: 'row', alignItems: 'center', gap: 15, marginTop: 5 },
-  headingIcon: { width: 58, height: 58, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderColor: iteraColors.border, borderRadius: iteraRadii.card, borderWidth: 1, backgroundColor: iteraColors.surface },
+  headingIcon: { width: 58, height: 58, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderColor: fliptapColors.border, borderRadius: fliptapRadii.card, borderWidth: 1, backgroundColor: fliptapColors.surface },
   headingCopy: { minWidth: 0, flex: 1 },
-  title: { color: iteraColors.inkBrand, fontSize: 31, fontWeight: '700', letterSpacing: -0.8, lineHeight: 37 },
-  subtitle: { maxWidth: 340, marginTop: 3, color: iteraColors.muted, fontSize: 15, lineHeight: 21 },
+  title: { color: fliptapColors.inkBrand, fontSize: 31, fontWeight: '700', letterSpacing: -0.8, lineHeight: 37 },
+  subtitle: { maxWidth: 340, marginTop: 3, color: fliptapColors.muted, fontSize: 15, lineHeight: 21 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 28 },
-  segmentedControl: { minWidth: 180, flex: 1, flexDirection: 'row', overflow: 'hidden', borderColor: iteraColors.border, borderRadius: iteraRadii.control, borderWidth: 1, backgroundColor: iteraColors.surfaceSubtle },
+  segmentedControl: { minWidth: 180, flex: 1, flexDirection: 'row', overflow: 'hidden', borderColor: fliptapColors.border, borderRadius: fliptapRadii.control, borderWidth: 1, backgroundColor: fliptapColors.surfaceSubtle },
   segment: { minHeight: 46, flex: 1, alignItems: 'center', justifyContent: 'center' },
-  segmentSelected: { borderColor: iteraColors.accent, borderRadius: iteraRadii.control, borderWidth: 1, backgroundColor: iteraColors.surface },
-  segmentText: { color: iteraColors.muted, fontSize: 15, fontWeight: '600' },
-  segmentTextSelected: { color: iteraColors.accent },
-  settingsButton: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 7, borderColor: iteraColors.borderStrong, borderRadius: iteraRadii.control, borderWidth: 1, backgroundColor: iteraColors.surface, paddingHorizontal: 13 },
-  settingsText: { color: iteraColors.inkBrand, fontSize: 15, fontWeight: '600' },
+  segmentSelected: { borderColor: fliptapColors.accent, borderRadius: fliptapRadii.control, borderWidth: 1, backgroundColor: fliptapColors.surface },
+  segmentText: { color: fliptapColors.muted, fontSize: 15, fontWeight: '600' },
+  segmentTextSelected: { color: fliptapColors.accent },
+  settingsButton: { minHeight: 46, flexDirection: 'row', alignItems: 'center', gap: 7, borderColor: fliptapColors.borderStrong, borderRadius: fliptapRadii.control, borderWidth: 1, backgroundColor: fliptapColors.surface, paddingHorizontal: 13 },
+  settingsText: { color: fliptapColors.inkBrand, fontSize: 15, fontWeight: '600' },
   section: { marginTop: 25 },
   sectionHeading: { minHeight: 34, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { color: iteraColors.inkBrand, fontSize: 18, fontWeight: '700' },
+  sectionTitle: { color: fliptapColors.inkBrand, fontSize: 18, fontWeight: '700' },
   markAll: { minHeight: 44, justifyContent: 'center', paddingLeft: 12 },
-  markAllText: { color: iteraColors.accent, fontSize: 14, fontWeight: '600' },
+  markAllText: { color: fliptapColors.accent, fontSize: 14, fontWeight: '600' },
   notificationList: { gap: 11, marginTop: 6 },
-  notificationCard: { minHeight: 114, flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden', borderColor: iteraColors.border, borderRadius: iteraRadii.card, borderWidth: 1, backgroundColor: iteraColors.surface, padding: 13, ...cardShadow },
+  notificationCard: { minHeight: 114, flexDirection: 'row', alignItems: 'stretch', overflow: 'hidden', borderColor: fliptapColors.border, borderRadius: fliptapRadii.card, borderWidth: 1, backgroundColor: fliptapColors.surface, padding: 13, ...cardShadow },
   notificationCardRead: {
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.navySoft,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.navySoft,
     shadowOpacity: 0.025,
   },
   notificationOpen: { minWidth: 0, flex: 1, flexDirection: 'row', alignItems: 'center' },
   iconMark: { width: 52, height: 52, flexShrink: 0, alignItems: 'center', justifyContent: 'center', borderRadius: 26 },
-  deckMark: { width: 52, height: 52, flexShrink: 0, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 13, backgroundColor: iteraColors.navy },
-  deckMarkText: { zIndex: 2, color: iteraColors.surface, fontSize: 18, fontWeight: '700' },
-  readMark: { backgroundColor: iteraColors.muted, opacity: 0.82 },
-  readMarkText: { color: iteraColors.surface },
+  deckMark: { width: 52, height: 52, flexShrink: 0, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 13, backgroundColor: fliptapColors.navy },
+  deckMarkText: { zIndex: 2, color: fliptapColors.surface, fontSize: 18, fontWeight: '700' },
+  readMark: { backgroundColor: fliptapColors.muted, opacity: 0.82 },
+  readMarkText: { color: fliptapColors.surface },
   deckStripeDark: { position: 'absolute', right: -9, bottom: 0, width: 38, height: 8, backgroundColor: '#344967', transform: [{ rotate: '-34deg' }] },
-  deckStripeAccent: { position: 'absolute', right: -7, bottom: -2, width: 32, height: 7, backgroundColor: iteraColors.accent, transform: [{ rotate: '-34deg' }] },
+  deckStripeAccent: { position: 'absolute', right: -7, bottom: -2, width: 32, height: 7, backgroundColor: fliptapColors.accent, transform: [{ rotate: '-34deg' }] },
   notificationCopy: { minWidth: 0, flex: 1, marginLeft: 13, marginRight: 8 },
-  notificationTitle: { color: iteraColors.inkBrand, fontSize: 15, fontWeight: '700', lineHeight: 20 },
-  notificationTitleRead: { color: iteraColors.muted },
-  notificationBody: { marginTop: 4, color: iteraColors.muted, fontSize: 13, lineHeight: 18 },
-  notificationBodyRead: { color: iteraColors.muted },
+  notificationTitle: { color: fliptapColors.inkBrand, fontSize: 15, fontWeight: '700', lineHeight: 20 },
+  notificationTitleRead: { color: fliptapColors.muted },
+  notificationBody: { marginTop: 4, color: fliptapColors.muted, fontSize: 13, lineHeight: 18 },
+  notificationBodyRead: { color: fliptapColors.muted },
   notificationMeta: { width: 82, alignItems: 'flex-end', justifyContent: 'space-between' },
-  notificationTime: { color: iteraColors.muted, fontSize: 11, lineHeight: 15, textAlign: 'right' },
-  notificationTimeRead: { color: iteraColors.muted },
+  notificationTime: { color: fliptapColors.muted, fontSize: 11, lineHeight: 15, textAlign: 'right' },
+  notificationTimeRead: { color: fliptapColors.muted },
   statusToggle: { minWidth: 72, minHeight: 44, alignItems: 'flex-end', justifyContent: 'flex-end' },
   unreadLabel: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  unreadDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: iteraColors.accent },
-  unreadText: { color: iteraColors.accent, fontSize: 10, fontWeight: '700' },
-  readLabel: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: iteraRadii.pill, backgroundColor: iteraColors.border, paddingHorizontal: 6, paddingVertical: 3 },
-  readText: { color: iteraColors.muted, fontSize: 10, fontWeight: '700' },
-  emptyState: { alignItems: 'center', marginTop: 32, borderColor: iteraColors.border, borderRadius: iteraRadii.dialog, borderWidth: 1, backgroundColor: iteraColors.surface, paddingHorizontal: 20, paddingVertical: 40, ...cardShadow },
-  emptyIcon: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: iteraColors.successSoft },
-  emptyTitle: { marginTop: 14, color: iteraColors.inkBrand, fontSize: 19, fontWeight: '700' },
-  emptyText: { marginTop: 5, color: iteraColors.muted, fontSize: 14, textAlign: 'center' },
+  unreadDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: fliptapColors.accent },
+  unreadText: { color: fliptapColors.accent, fontSize: 10, fontWeight: '700' },
+  readLabel: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.border, paddingHorizontal: 6, paddingVertical: 3 },
+  readText: { color: fliptapColors.muted, fontSize: 10, fontWeight: '700' },
+  emptyState: { alignItems: 'center', marginTop: 32, borderColor: fliptapColors.border, borderRadius: fliptapRadii.dialog, borderWidth: 1, backgroundColor: fliptapColors.surface, paddingHorizontal: 20, paddingVertical: 40, ...cardShadow },
+  emptyIcon: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 26, backgroundColor: fliptapColors.successSoft },
+  emptyTitle: { marginTop: 14, color: fliptapColors.inkBrand, fontSize: 19, fontWeight: '700' },
+  emptyText: { marginTop: 5, color: fliptapColors.muted, fontSize: 14, textAlign: 'center' },
   pressed: { opacity: 0.68 },
 })

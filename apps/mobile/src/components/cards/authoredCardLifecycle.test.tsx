@@ -1,4 +1,4 @@
-import { getRepository, type Card, type Deck, type SchedulingState } from '@itera/core'
+import { getRepository, type Card, type Deck, type SchedulingState } from '@fliptap/core'
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 import type { ReactNode } from 'react'

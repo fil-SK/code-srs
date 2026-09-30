@@ -1,4 +1,4 @@
-# Itera — Product UX & Visual Polish Audit
+# FlipTap — Product UX & Visual Polish Audit
 
 **No code was modified.** Everything below was read from the working tree on branch
 `mvp_demo_cleaning` (2026-08-28), plus `docs/`. Findings are cited by file and line.
@@ -11,7 +11,7 @@ browser-verified. Every claim is grounded in code or docs, not a screenshot. Ite
 
 ## Context
 
-Itera is close to first public exposure. The owner's report: *"it looks good, but it's one
+FlipTap is close to first public exposure. The owner's report: *"it looks good, but it's one
 level below something that feels exceptionally polished, memorable and production-ready —
 and I can't say what's missing."*
 
@@ -51,10 +51,10 @@ So: **stop redesigning, start consolidating.** And ship.
 
 ---
 
-## PASS 1 — What Itera is
+## PASS 1 — What FlipTap is
 
 - Light-only. Two layered token systems: general `:root` tokens re-pointed by
-  `.itera-scope` (`apps/web/src/index.css`). Locked navy `#1e293b` + orange `#ff6902`.
+  `.fliptap-scope` (`apps/web/src/index.css`). Locked navy `#1e293b` + orange `#ff6902`.
   Inter + JetBrains Mono, self-hosted variable fonts.
 - Three primary destinations: **Today · Library · Progress**. Review is a chrome-free
   top-level route. No global search or create — both deliberately removed.
@@ -112,7 +112,7 @@ lands on the deadest screen in the product. **[verify]**
 
 This is not an oversight — it is a documented pattern (`design-system.md` §10). But **you
 already overruled it for exactly this situation, on mobile.** D409
-(`itera-decisions.md:1506`):
+(`fliptap-decisions.md:1506`):
 
 > *"a greyed New Deck said 'this is known, it is not built yet'. In front of a prospective
 > user the same control says something else — that the product is unfinished — and eleven
@@ -169,18 +169,18 @@ There *are* three contrast defects, and they are contrast, not palette:
 
 | Color | Usage | On white | AA |
 |---|---|---|---|
-| `--itera-muted-light` `#94a3b8` | instructional copy — `OrderingView.tsx:101` ("Drag items into the correct sequence."), `ProgressNav.tsx:95`, ~32 usages | **2.56:1** | ✗ badly |
-| `--itera-accent` `#ff6902` | orange **text** in ~39 places incl. the deck Due count (`DeckRow.tsx:96`) and `Stat.tsx:25` at 18px bold | **2.89:1** | ✗ |
-| `--itera-muted` `#64748b` | all secondary text | 4.76:1 on white but **4.44:1 on the canvas `#f6f7f9`** | ✗ marginal |
+| `--fliptap-muted-light` `#94a3b8` | instructional copy — `OrderingView.tsx:101` ("Drag items into the correct sequence."), `ProgressNav.tsx:95`, ~32 usages | **2.56:1** | ✗ badly |
+| `--fliptap-accent` `#ff6902` | orange **text** in ~39 places incl. the deck Due count (`DeckRow.tsx:96`) and `Stat.tsx:25` at 18px bold | **2.89:1** | ✗ |
+| `--fliptap-muted` `#64748b` | all secondary text | 4.76:1 on white but **4.44:1 on the canvas `#f6f7f9`** | ✗ marginal |
 
-Plus `ProfileSection.tsx:69` — `bg-itera-accent/40` with `text-white`.
+Plus `ProfileSection.tsx:69` — `bg-fliptap-accent/40` with `text-white`.
 
 **And then the drift.** This is the finding that explains the feeling:
 
 - **Primary buttons — 7 paddings, 4 hover strategies.** `Button` primary is
   `hover:brightness-110` (**lightens**); Library's New Deck is `hover:brightness-95`
-  (**darkens**); MC Submit is `hover:bg-itera-accent-hover`; the hero is a literal
-  `hover:bg-[#F66200]` — which is **not** the `--itera-accent-hover` token `#ea5f00`.
+  (**darkens**); MC Submit is `hover:bg-fliptap-accent-hover`; the hero is a literal
+  `hover:bg-[#F66200]` — which is **not** the `--fliptap-accent-hover` token `#ea5f00`.
   Paddings: `px-4 py-2`, `px-7 h-[52px]`, `h-11 px-5`, `px-6 py-3`, `px-8 py-3`,
   `px-5 py-2.5`, `px-4 py-2.5`, `px-3.5 py-2`.
 - **`Button.tsx` has no `transition` at all** — the base primitive snaps on hover, while
@@ -200,17 +200,17 @@ Plus `ProfileSection.tsx:69` — `bg-itera-accent/40` with `text-white`.
   inconsistently; and `CollectionNav`, `CardListFooter`, `RowFilterDropdown`, `FilterMenu`,
   `OverflowMenu` and `CardTableRow` have **no focus treatment at all**.
 - **Five page `<h1>` treatments.** Today `text-3xl font-bold tracking-tight` (no display
-  face) · Library `font-itera-display text-3xl font-bold tracking-tight` · Progress
-  `font-itera-display text-3xl font-bold` (no tracking) · Settings
-  `font-itera-display text-3xl font-extrabold tracking-tight` · New card
-  `text-2xl font-semibold`. And `--font-itera-display` resolves to Inter
+  face) · Library `font-fliptap-display text-3xl font-bold tracking-tight` · Progress
+  `font-fliptap-display text-3xl font-bold` (no tracking) · Settings
+  `font-fliptap-display text-3xl font-extrabold tracking-tight` · New card
+  `text-2xl font-semibold`. And `--font-fliptap-display` resolves to Inter
   (`index.css:108`) — **it is a no-op class, applied inconsistently.**
 - **Four metric type scales**: `text-[30px] font-medium` (KpiTile) · `text-2xl
   font-semibold` (Momentum streak) · `text-xl font-bold` (Profile stats) · `text-base
   font-bold` (StreakBadge) · `text-sm font-bold` (Momentum retention/due — in the *same
   panel* as the `text-2xl` one).
 - **Three card shadow depths.** Progress cards and Today panels take
-  `--itera-shadow-card`; `KpiTile` dark, Settings `Panel`, `RouteError`, `EmptyState` and
+  `--fliptap-shadow-card`; `KpiTile` dark, Settings `Panel`, `RouteError`, `EmptyState` and
   Deck Insights cards take **none**; and two surfaces invent literals
   (`shadow-[0_2px_10px_...]`, `shadow-[0_1px_3px_...]`). Meanwhile
   `SegmentedToggle` puts the **full card shadow** (`0 12px 30px`) on a 26px pill.
@@ -222,7 +222,7 @@ Plus `ProfileSection.tsx:69` — `bg-itera-accent/40` with `text-white`.
   sheet), `bg-black/30` (Library drawer).
 - **`Button.tsx` and `Field.tsx` — the two most-used primitives — are still on legacy
   tokens** (`bg-accent`, `border-border`, `bg-code-bg`, `text-text`) while 60+ feature
-  components use `itera-*`.
+  components use `fliptap-*`.
 - **`EmptyState` is the least designed component in the app.** Its own comment says
   *"Generic **icon-free** empty-state block."* A dashed box with a **14px** semibold title
   — smaller than the body copy of the panels it replaces — reused for seven states
@@ -252,12 +252,12 @@ Measured across `apps/web/src` (140 non-test `.tsx` files):
 | Animation libraries | **0** |
 | `transition-*` in `features/progress`, `features/settings`, `components/ui`, `RouteError` | **0** |
 
-**~80% of all motion in Itera is a hover color fade**, and Progress, Settings and every UI
+**~80% of all motion in FlipTap is a hover color fade**, and Progress, Settings and every UI
 primitive have none at all. The app feels like two products: an animated Today and a static
 everything-else.
 
 Three places have real, designed motion, and all three are good: the hero's stack reveal,
-`.itera-flip` (Recall flip), `.itera-card-enter` (next-card settle). **Keep all three.**
+`.fliptap-flip` (Recall flip), `.fliptap-card-enter` (next-card settle). **Keep all three.**
 
 What is missing is specific:
 
@@ -286,7 +286,7 @@ Two rule violations to know before touching motion:
 And documentation drift: **`.card-editor-shell` is a dead class.** Applied at
 `CardEditorShell.tsx:60`; `design-system.md:339` and D85 both describe it as animating
 `max-width` with a reduced-motion override. **No such rule exists in `index.css`.**
-Likewise **`itera-card-prompt`** (`CardPrompt.tsx:23`) is defined nowhere.
+Likewise **`fliptap-card-prompt`** (`CardPrompt.tsx:23`) is defined nowhere.
 
 ### E. Emotional design / personality
 
@@ -298,7 +298,7 @@ time-of-day buckets, and they are genuinely good and precisely on-target:
 > *"Morning. Let's see what survived the night."*
 > *"One session. No dramatic montage required."*
 > *"Still compiling?" / "Maybe one more concept will finish the build."*
-> *"The sun is offline. Itera is not."*
+> *"The sun is offline. FlipTap is not."*
 > *"Everyone else logged off. Nerd."*
 
 That is exactly your target voice: professional, intelligent, warm, slightly playful.
@@ -348,7 +348,7 @@ currency, levels, leaderboards, arbitrary achievements — invents a second scor
 that competes with FSRS, needs entities and settings behind it, and is the thing to refuse
 before validation. **Motivational design** — streak feedback, mastery moments, session
 summaries, progress celebration, daily-consistency signals, a satisfying end to a review —
-is light gamification, it is in scope, and Itera currently has almost none of it.
+is light gamification, it is in scope, and FlipTap currently has almost none of it.
 
 **The raw material already exists and is honest.** A canonical streak (one definition,
 shared by nav/Today/Progress), real retention, a real heat map, a derived Next milestone,
@@ -526,7 +526,7 @@ The completion screen · the un-animated reveal · **every motivational mechanic
 undesigned empty states · bare `Loading…` · the voice trapped in one file · `Incorrect` as
 the only affective word · no voice section in the design system.
 
-Note that this bucket and P1-10 are the same bucket. Itera's loop is *correct* and not yet
+Note that this bucket and P1-10 are the same bucket. FlipTap's loop is *correct* and not yet
 *rewarding*, and closing that needs no new subsystem — only feedback on numbers the product
 already computes.
 
@@ -543,7 +543,7 @@ milestone entity, only if validation asks for it.
 
 Each item: **problem · where · why · change · impact · scope · category.**
 
-### P0 — Fix before showing Itera publicly
+### P0 — Fix before showing FlipTap publicly
 
 **P0-1 · The early-access form discards every submission**
 `apps/marketing/src/earlyAccess.ts:15`; UI at `App.tsx:107,118`. This is the single
@@ -588,7 +588,7 @@ a viewer sees and is the most-repeated prototype tell. **Scope:** small–medium
 **Visual polish + UX.**
 
 **P0-4 · The completion screen is mispositioned**
-`ReviewSessionV2.tsx:76` calls `<IteraSurface>` with **no `className`**, while the loading
+`ReviewSessionV2.tsx:76` calls `<FlipTapSurface>` with **no `className`**, while the loading
 branch uses `grid min-h-screen place-items-center`, the empty branch adds `px-4`, and the
 live session uses `min-h-screen`. The completion card therefore sits **flush against the
 top of the viewport on a canvas that does not fill the screen** — the last thing a learner
@@ -635,12 +635,12 @@ seeing the demo content. **Scope:** small. **UX.**
 `Button.tsx`, `Field.tsx`, and the ~40 ad-hoc buttons that ignore them. Seven primary
 paddings, four hover strategies (two in opposite brightness directions), six stray radii,
 five `<h1>` styles. **Change, in one pass:** (a) give `Button` a `transition-colors`, move
-it to `itera-*` tokens, `rounded-itera-control`, and **one** hover rule
-(`hover:bg-itera-accent-hover`); (b) replace the ad-hoc primaries with it, allowing a
+it to `fliptap-*` tokens, `rounded-fliptap-control`, and **one** hover rule
+(`hover:bg-fliptap-accent-hover`); (b) replace the ad-hoc primaries with it, allowing a
 documented `size` prop instead of eight paddings; (c) fix the 8 broken
 `transition-opacity hover:brightness-105` pairs; (d) delete the six one-off radii in favour
 of tokens; (e) pick **one** `<h1>` recipe and apply it everywhere (note
-`font-itera-display` is a no-op — either give it a real role or remove it); (f) change the
+`font-fliptap-display` is a no-op — either give it a real role or remove it); (f) change the
 focus ring's `border-radius: 6px` to `9px`. Consider a small `tokenDrift`-style test that
 fails on a raw `bg-blue-*`/`bg-emerald-*`/`shadow-lg`/hex literal in feature code, so this
 cannot re-accumulate. **Impact:** this is the item that most directly answers "why does it
@@ -660,13 +660,13 @@ no data. **Impact:** high; one file upgrades seven screens plus the worst zero-d
 **Scope:** small–medium. **Visual polish + UX.**
 
 **P1-6 · Three contrast failures, one on a semantic value**
-`--itera-accent` as text (≈2.89:1) in ~39 places incl. `DeckRow.tsx:96` and `Stat.tsx:25`;
-`--itera-muted-light` (≈2.56:1) as instructional copy in ~32 places; `--itera-muted` at
-4.44:1 on the canvas; plus `ProfileSection.tsx:69`'s `bg-itera-accent/40` + white.
-**Change:** **do not change the brand orange.** Add one darker `--itera-accent-text`
+`--fliptap-accent` as text (≈2.89:1) in ~39 places incl. `DeckRow.tsx:96` and `Stat.tsx:25`;
+`--fliptap-muted-light` (≈2.56:1) as instructional copy in ~32 places; `--fliptap-muted` at
+4.44:1 on the canvas; plus `ProfileSection.tsx:69`'s `bg-fliptap-accent/40` + white.
+**Change:** **do not change the brand orange.** Add one darker `--fliptap-accent-text`
 (~`#c2510a`, ≈4.6:1 on white) for orange used as *text*, keeping `#ff6902` for fills,
-borders, icons and the active marker. Darken `--itera-muted` slightly. Stop using
-`--itera-muted-light` for instructional copy — reserve it for placeholders and decorative
+borders, icons and the active marker. Darken `--fliptap-muted` slightly. Stop using
+`--fliptap-muted-light` for instructional copy — reserve it for placeholders and decorative
 marks. `tokenDrift.test.ts` requires the matching entry in `packages/core/src/design/tokens.ts`
 in the same pass. **Impact:** medium visually, high for perceived quality — thin
 low-contrast text is a reliable "template UI" tell. **Scope:** small.
@@ -676,7 +676,7 @@ low-contrast text is a reliable "template UI" tell. **Scope:** small.
 `DeckRow.tsx:64-68` (the primary Library action), `CardTable` rows,
 `ContinueLearningList` rows, `OrderingRow`, `DeckPerformanceTable` rows. Plus 22 components
 that change on `hover:` with no transition. **Change:** add
-`hover:bg-itera-surface-subtle transition-colors` to the clickable rows, and sweep
+`hover:bg-fliptap-surface-subtle transition-colors` to the clickable rows, and sweep
 `transition-colors` onto the 22 snapping files. **Impact:** medium, felt on every Library
 interaction. **Scope:** tiny. **UX + visual polish.**
 
@@ -701,14 +701,14 @@ The permanently highlighted `All Decks` row (`CollectionNav.tsx:103` never reads
 (`CardListFooter.tsx:137`); `MeterBar`'s `role="progressbar"` with no accessible name;
 `StreakBadge` reading `1 day streak` and having no accessible name below `sm`; the dead
 `Coming soon` branch (`CardTypeChooser.tsx:56`); the two dead classes
-(`itera-card-prompt`, `.card-editor-shell` — restore or remove, and correct
+(`fliptap-card-prompt`, `.card-editor-shell` — restore or remove, and correct
 `design-system.md:339` and D85); the unwired `<Star>` (`LibraryDeckPage.tsx:379`); the three
 tooltip-less `Info` icons; `CardListFooter` rendering every page number; the malformed CSS
 comment openers. **Impact:** individually small, collectively the difference between
 "finished" and "nearly." **Scope:** small. **Multiple.**
 
 **P1-10 · Motivational design: mark the moments the product already computes**
-Every real mechanic in Itera is unmarked. The streak increments silently. `StreakBadge`
+Every real mechanic in FlipTap is unmarked. The streak increments silently. `StreakBadge`
 shows `0 / day streak` to every new user and never pluralises. A deck crossing full mastery
 produces nothing. The heat map gains a cell in silence. Returning after a gap — the moment
 retention is actually won or lost — is unacknowledged.
@@ -797,7 +797,7 @@ a cross-platform icon set (see the caution below).
 
 ## PASS 5 — Strongest recommendations
 
-### The five changes most likely to make Itera feel dramatically more polished
+### The five changes most likely to make FlipTap feel dramatically more polished
 
 *Separate from the five: **connect the early-access form** (P0-1). It is not a polish item
 and it does not compete with them — it is simply the one thing that must be true before the
@@ -851,7 +851,7 @@ snapping hovers (P1-7). Recall validation (P1-3).
 
 **Day 6 — Consolidate and govern.** The primitive pass: one Button, one hover rule, one
 `<h1>`, token radii, the 6px→9px focus ring, the 8 broken transition pairs (P1-4). Add
-`--itera-accent-text`, darken `--itera-muted`, update `tokens.ts` in the same pass (P1-6).
+`--fliptap-accent-text`, darken `--fliptap-muted`, update `tokens.ts` in the same pass (P1-6).
 Write the §Voice and tone section and sweep the copy, including the defect list in P1-9
 (P1-8, P1-9).
 
@@ -877,7 +877,7 @@ feedback, not with more solo polish time.
   add any of them. (A slim session progress bar in the top strip is the one arguable
   addition, and it is P2 at best.)
 - **The two-card crossfade on card advance.** D100 considered and rejected it.
-  `.itera-card-enter` is the settled answer.
+  `.fliptap-card-enter` is the settled answer.
 - **Confetti, spring physics, floating decoration, bounce easing.** Forbidden by
   `design-system.md:322`, and wrong for this audience regardless.
 - **A gamification *subsystem*: XP, currency, levels, leaderboards, arbitrary achievements,

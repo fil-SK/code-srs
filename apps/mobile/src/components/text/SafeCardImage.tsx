@@ -1,4 +1,4 @@
-import { isSafeImageSource, iteraColors, iteraRadii } from '@itera/core'
+import { isSafeImageSource, fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Image, StyleSheet } from 'react-native'
 
 // The one image sink in the card model, gated by the one shared policy.
@@ -38,9 +38,9 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 190,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surfaceSubtle,
   },
 })

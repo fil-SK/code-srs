@@ -7,7 +7,7 @@ import type { LocalSession, LocalSessionKind } from './types'
 
 /** The demo workspace's fixed identity. `.local` is reserved, so it can never
  *  collide with a real address someone signs in with. */
-export const DEMO_EMAIL = 'demo@itera.local'
+export const DEMO_EMAIL = 'demo@fliptap.local'
 
 export function createLocalSession(
   email: string,

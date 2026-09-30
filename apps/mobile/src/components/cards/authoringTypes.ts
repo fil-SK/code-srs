@@ -1,4 +1,4 @@
-import type { InteractionType } from '@itera/core'
+import type { InteractionType } from '@fliptap/core'
 
 // The interaction types this platform can currently author.
 //

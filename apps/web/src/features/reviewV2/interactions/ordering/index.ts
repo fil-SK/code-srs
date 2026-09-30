@@ -1,4 +1,4 @@
-import { orderingBehavior } from '@itera/core'
+import { orderingBehavior } from '@fliptap/core'
 import type { WebInteractionDefinition } from '../types'
 import { OrderingView } from './OrderingView'
 

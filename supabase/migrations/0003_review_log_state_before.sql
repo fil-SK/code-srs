@@ -1,4 +1,4 @@
--- Progress correctness clean break (docs/itera-decisions.md, 2026-08-21).
+-- Progress correctness clean break (docs/fliptap-decisions.md, 2026-08-21).
 -- ReviewLogs written before this milestone do not record the card's scheduling
 -- state before grading, so mature retention cannot be reconstructed honestly.
 -- The prototype history is explicitly disposable: clear it instead of mixing

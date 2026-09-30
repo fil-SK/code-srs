@@ -2,15 +2,15 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
   cardRecordToMultipleChoiceForm,
   emptyMultipleChoiceForm,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   newId,
   useSaveMultipleChoiceCard,
   validateMultipleChoiceForm,
   type Card,
   type MultipleChoiceFormState,
   type SaveMultipleChoiceCardTarget,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -167,7 +167,7 @@ export function MultipleChoiceEditorScreen({
             style={({ pressed }) => [styles.addOption, pressed && styles.pressed]}
             testID="mc-add-option"
           >
-            <MaterialCommunityIcons color={iteraColors.accent} name="plus" size={19} />
+            <MaterialCommunityIcons color={fliptapColors.accent} name="plus" size={19} />
             <Text style={styles.addOptionText}>Add option</Text>
           </Pressable>
         </View>
@@ -202,7 +202,7 @@ function ToggleRow({
     >
       <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
         {checked ? (
-          <MaterialCommunityIcons color={iteraColors.surface} name="check" size={15} />
+          <MaterialCommunityIcons color={fliptapColors.surface} name="check" size={15} />
         ) : null}
       </View>
       <Text style={styles.toggleLabel}>{label}</Text>
@@ -223,19 +223,19 @@ const styles = StyleSheet.create({
     height: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.borderStrong,
+    borderColor: fliptapColors.borderStrong,
     borderRadius: 6,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
   checkboxChecked: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accent,
   },
   toggleLabel: {
     minWidth: 0,
     flex: 1,
-    color: iteraColors.ink,
+    color: fliptapColors.ink,
     fontSize: 14,
   },
   addOption: {
@@ -245,14 +245,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
     marginTop: 11,
-    borderColor: iteraColors.accent,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.accent,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     paddingHorizontal: 14,
   },
   addOptionText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 14,
     fontWeight: '700',
   },

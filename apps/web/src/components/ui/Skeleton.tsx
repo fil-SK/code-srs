@@ -23,7 +23,7 @@ export function Skeleton({
     <div
       aria-hidden="true"
       style={style}
-      className={cn('itera-skeleton bg-itera-navy-soft', className)}
+      className={cn('fliptap-skeleton bg-fliptap-navy-soft', className)}
     />
   )
 }

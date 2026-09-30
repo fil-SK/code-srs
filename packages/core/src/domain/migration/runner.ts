@@ -1,5 +1,5 @@
 // Shared contract every data migration must conform to — see
-// docs/itera-migration-plan.md §0. Anything that changes storage location or
+// docs/fliptap-migration-plan.md §0. Anything that changes storage location or
 // entity identity (e.g. the Collection/Deck split) goes through this:
 // dry-run-able, idempotent, deterministic, and reportable.
 //

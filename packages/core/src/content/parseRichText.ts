@@ -1,6 +1,6 @@
 import type { RichBlock, RichInline } from './richTextNodes'
 
-// The one interpretation of Itera's card-text syntax.
+// The one interpretation of FlipTap's card-text syntax.
 //
 // A deliberately small, hand-written markdown subset - not a full parser, and
 // no markdown dependency (see the hand-built rule in docs/architecture.md).

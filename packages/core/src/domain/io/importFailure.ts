@@ -45,7 +45,7 @@ function isQuotaFailure(error: unknown): boolean {
   return false
 }
 
-const OUT_OF_SPACE = 'Your browser is out of storage space for Itera.'
+const OUT_OF_SPACE = 'Your browser is out of storage space for FlipTap.'
 
 // Entity validation names the offending field but does not say what that meant
 // for the user's data. Every refusal happens before the first write, so say so

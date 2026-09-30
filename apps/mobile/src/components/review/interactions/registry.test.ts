@@ -6,7 +6,7 @@ import {
   walkthroughBehavior,
   writeCodeBehavior,
   type InteractionType,
-} from '@itera/core'
+} from '@fliptap/core'
 
 import { nativeInteractionFor, nativeInteractionRegistry } from './registry'
 

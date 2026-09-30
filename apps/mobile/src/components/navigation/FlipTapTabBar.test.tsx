@@ -2,7 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react-native'
 import type { ComponentProps, ReactElement } from 'react'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
-import { IteraTabBar } from './IteraTabBar'
+import { FlipTapTabBar } from './FlipTapTabBar'
 
 // The bar reads the safe-area inset, which needs a provider with real metrics
 // under the test renderer.
@@ -21,7 +21,7 @@ function renderBar(element: ReactElement) {
 
 afterEach(cleanup)
 
-type TabBarProps = ComponentProps<typeof IteraTabBar>
+type TabBarProps = ComponentProps<typeof FlipTapTabBar>
 
 const TAB_NAMES = ['library', 'review', 'today', 'progress', 'profile']
 
@@ -49,23 +49,23 @@ function tabBarProps(focusedTab: string, nestedRoute?: string): TabBarProps {
 
 describe('the persistent tab bar', () => {
   it('is visible on an ordinary section', () => {
-    renderBar(<IteraTabBar {...tabBarProps('today')} />)
+    renderBar(<FlipTapTabBar {...tabBarProps('today')} />)
     expect(screen.getByLabelText('Today')).toBeTruthy()
   })
 
   it('is visible on the Review tab s start screen', () => {
-    renderBar(<IteraTabBar {...tabBarProps('review', 'index')} />)
+    renderBar(<FlipTapTabBar {...tabBarProps('review', 'index')} />)
     expect(screen.getByLabelText('Review')).toBeTruthy()
   })
 
   it('is visible on the Review tab before its nested navigator has mounted', () => {
     // No nested state yet means the tab's initial route - the start screen.
-    renderBar(<IteraTabBar {...tabBarProps('review')} />)
+    renderBar(<FlipTapTabBar {...tabBarProps('review')} />)
     expect(screen.getByLabelText('Review')).toBeTruthy()
   })
 
   it('is hidden during an active card session', () => {
-    renderBar(<IteraTabBar {...tabBarProps('review', 'session')} />)
+    renderBar(<FlipTapTabBar {...tabBarProps('review', 'session')} />)
     for (const tab of ['Library', 'Review', 'Today', 'Progress', 'Profile']) {
       expect(screen.queryByLabelText(tab)).toBeNull()
     }

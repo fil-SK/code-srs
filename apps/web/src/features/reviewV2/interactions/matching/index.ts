@@ -1,4 +1,4 @@
-import { matchingBehavior } from '@itera/core'
+import { matchingBehavior } from '@fliptap/core'
 import type { WebInteractionDefinition } from '../types'
 import { MatchingView } from './MatchingView'
 

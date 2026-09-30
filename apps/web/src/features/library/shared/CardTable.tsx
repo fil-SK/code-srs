@@ -23,7 +23,7 @@ function gridClass() {
 
 export function CardTableHeader() {
   return (
-    <div className={cn(gridClass(), 'pb-3 text-xs font-bold uppercase tracking-wider text-itera-muted')}>
+    <div className={cn(gridClass(), 'pb-3 text-xs font-bold uppercase tracking-wider text-fliptap-muted')}>
       <span>Card</span>
       <span>Type</span>
       <span>Status</span>
@@ -37,7 +37,7 @@ function TypeCell({ type }: { type: Card['interaction']['type'] }) {
   const visual = rowVisualFor(type)
   const Icon = visual.icon
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm text-itera-ink">
+    <span className="inline-flex items-center gap-1.5 text-sm text-fliptap-ink">
       <span className={cn('grid h-5 w-5 flex-none place-items-center rounded text-white', visual.tileClass)}>
         <Icon size={12} />
       </span>
@@ -66,9 +66,9 @@ function MovePopover({
 
   return (
     <FloatingPanel anchor={anchor} onClose={onClose} ariaLabel="Move to deck" className="w-56">
-      <div className="px-3 py-1.5 text-xs font-semibold text-itera-muted">Move to deck…</div>
+      <div className="px-3 py-1.5 text-xs font-semibold text-fliptap-muted">Move to deck…</div>
       {others.length === 0 ? (
-        <div className="px-3 py-1.5 text-sm text-itera-muted">No other decks.</div>
+        <div className="px-3 py-1.5 text-sm text-fliptap-muted">No other decks.</div>
       ) : (
         <ul className="max-h-64 overflow-auto">
           {others.map((d) => (
@@ -76,7 +76,7 @@ function MovePopover({
               <button
                 type="button"
                 onClick={() => onMove(d.deck.id)}
-                className="block w-full truncate px-3 py-1.5 text-left text-sm text-itera-ink hover:bg-itera-surface-subtle"
+                className="block w-full truncate px-3 py-1.5 text-left text-sm text-fliptap-ink hover:bg-fliptap-surface-subtle"
               >
                 {d.path}
               </button>
@@ -179,16 +179,16 @@ export function CardTableRow({
       )}
       <Link
         to={`/cards/${card.id}/study`}
-        className="flex min-w-0 items-center gap-3 transition-colors hover:text-itera-accent"
+        className="flex min-w-0 items-center gap-3 transition-colors hover:text-fliptap-accent"
       >
-        <div className={cn('grid h-8 w-8 flex-none place-items-center rounded-itera-control text-white', visual.tileClass)}>
+        <div className={cn('grid h-8 w-8 flex-none place-items-center rounded-fliptap-control text-white', visual.tileClass)}>
           <Icon size={15} />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-itera-ink-brand">
+          <div className="truncate text-sm font-semibold text-fliptap-ink-brand">
             {title}
             {card.suspended && (
-              <span className="ml-2 rounded bg-itera-surface-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase text-itera-muted">
+              <span className="ml-2 rounded bg-fliptap-surface-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase text-fliptap-muted">
                 Suspended
               </span>
             )}
@@ -196,7 +196,7 @@ export function CardTableRow({
           {!compact && card.tags.length > 0 && (
             <div className="mt-0.5 flex gap-1.5">
               {card.tags.slice(0, 2).map((tag) => (
-                <span key={tag} className="rounded-itera-control bg-itera-surface-subtle px-1.5 py-0.5 text-[11px] text-itera-muted">
+                <span key={tag} className="rounded-fliptap-control bg-fliptap-surface-subtle px-1.5 py-0.5 text-[11px] text-fliptap-muted">
                   {tag}
                 </span>
               ))}
@@ -206,7 +206,7 @@ export function CardTableRow({
       </Link>
       <TypeCell type={card.interaction.type} />
       <StatusBadge state={card.scheduling.state} suspended={card.suspended} />
-      <span className="text-sm text-itera-muted">{formatDue(card.scheduling.due, now)}</span>
+      <span className="text-sm text-fliptap-muted">{formatDue(card.scheduling.due, now)}</span>
       <div ref={moveAnchorRef} className="relative flex-none justify-self-end">
         <OverflowMenu items={items} ariaLabel="Card actions" />
         {showMove && (

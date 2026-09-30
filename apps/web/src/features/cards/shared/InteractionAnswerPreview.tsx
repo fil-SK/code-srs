@@ -7,7 +7,7 @@ import type {
 import type { ReviewPhase } from '@/features/reviewV2/reviewPhase'
 import { TipPanel } from '@/features/reviewV2/components/TipPanel'
 import { ExplanationPanel } from '@/features/reviewV2/components/ExplanationPanel'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import { cn } from '@/lib/cn'
 
 // A deliberately simpler stand-in for ReviewSessionScreen, used only by the
@@ -19,7 +19,7 @@ import { cn } from '@/lib/cn'
 // hint/the interactive types' own "Submit answer" button are all Review-
 // session mechanics that don't belong in an authoring preview — "the only
 // thing that should be shown is the flashcard itself... a toggleable
-// question/answer" (see docs/itera-decisions.md). So this renders the real
+// question/answer" (see docs/fliptap-decisions.md). So this renders the real
 // `definition.View` (same fidelity D71 established matters), but drives its
 // `phase` from one local boolean instead of ReviewSessionScreen's full
 // reducer/grading/rating machinery, and hides each interactive view's own
@@ -38,8 +38,8 @@ export function InteractionAnswerPreview<T extends InteractionType>({
   const View = definition.View
 
   return (
-    <IteraSurface>
-      <div className="mb-3 flex gap-1 rounded-itera-control border border-itera-border p-1">
+    <FlipTapSurface>
+      <div className="mb-3 flex gap-1 rounded-fliptap-control border border-fliptap-border p-1">
         {([false, true] as const).map((value) => (
           <button
             key={String(value)}
@@ -47,7 +47,7 @@ export function InteractionAnswerPreview<T extends InteractionType>({
             onClick={() => setRevealed(value)}
             className={cn(
               'flex-1 rounded-[7px] py-1.5 text-sm font-semibold transition-colors',
-              revealed === value ? 'bg-itera-accent-soft text-itera-ink-brand' : 'text-itera-muted',
+              revealed === value ? 'bg-fliptap-accent-soft text-fliptap-ink-brand' : 'text-fliptap-muted',
             )}
           >
             {value ? 'Answer' : 'Question'}
@@ -67,6 +67,6 @@ export function InteractionAnswerPreview<T extends InteractionType>({
 
       {phase.kind === 'presenting' && <TipPanel text={card.tip?.value} />}
       {phase.kind !== 'presenting' && <ExplanationPanel text={card.explanation?.value} />}
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

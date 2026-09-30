@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 import { App } from './App'
 
-describe('Itera marketing page', () => {
+describe('FlipTap marketing page', () => {
   it('renders the product positioning and primary CTA', () => {
     render(<App />)
     expect(screen.getByRole('heading', { name: 'Technical knowledge takes more than a flashcard.' })).toBeTruthy()

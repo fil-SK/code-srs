@@ -1,4 +1,4 @@
-import { stripInlineMarkers, type Card, type InteractionType } from '@itera/core'
+import { stripInlineMarkers, type Card, type InteractionType } from '@fliptap/core'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react-native'
 import { QueryClientProvider } from '@tanstack/react-query'
 

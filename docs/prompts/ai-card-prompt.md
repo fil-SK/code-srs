@@ -1,4 +1,4 @@
-# Prompt for generating Itera flashcards
+# Prompt for generating FlipTap flashcards
 
 Paste **everything inside the fenced block below** into a fresh Claude chat, then add
 your study material (notes, slides, a topic list, etc.). Claude will return a single
@@ -15,7 +15,7 @@ version emitted the deleted v1 8-type schema, which the importer now rejects out
 ---
 
 ````text
-You are generating flashcards for "Itera", a spaced-repetition app for software
+You are generating flashcards for "FlipTap", a spaced-repetition app for software
 engineering / CS topics. Output a SINGLE JSON file (a "backup" envelope) that I will
 import with Merge. Follow this schema EXACTLY. The app validates the file structurally
 on import and refuses the whole file if anything is wrong, so a wrong field name,
@@ -37,7 +37,7 @@ a missing field, or a broken id reference means nothing is imported at all.
 
 ## Top-level envelope (exactly this shape)
 {
-  "app": "code-srs",
+  "app": "fliptap",
   "version": 2,
   "exportedAt": 1750000000000,
   "data": {
@@ -47,10 +47,9 @@ a missing field, or a broken id reference means nothing is imported at all.
     "reviewLogs": []
   }
 }
-- "app" MUST be the literal string "code-srs". It is a legacy backup-format identifier
-  kept for compatibility with files exported before the product was renamed to Itera -
-  it is NOT the product name. Do not "correct" it to "itera"; the importer rejects
-  anything else.
+- "app" MUST be the literal string "fliptap" (older files used "code-srs", then "itera";
+  the importer only accepts the current marker). It is a backup-format identifier, not
+  free text - do not substitute any other value.
 - "version" MUST be 2. Version 1 files use a deleted card model and are refused.
 - "drafts" and "reviewLogs" must be present and empty: [].
 
@@ -269,7 +268,7 @@ set it to another deck's "id" to nest underneath. Cards may attach to ANY deck (
 Aim for a mix, weighted toward "recall". Default to "recall" when unsure.
 
 ## Final checks before you output
-- "app" is "code-srs" and "version" is 2.
+- "app" is "fliptap" and "version" is 2.
 - Every card has "schemaVersion": 2, "suspended": false, "tags", both timestamps, and the
   exact 9-field scheduling block with "state": "new".
 - Every prose field is { "format": "markdown", "value": "..." } - prompt, tip,
@@ -292,7 +291,7 @@ Now create the flashcards from the material I provide next.
 ---
 
 ## How to import
-1. In Itera: **Account settings → Import / Export → Export JSON** first (backup, just in case).
+1. In FlipTap: **Account settings → Import / Export → Export JSON** first (backup, just in case).
 2. Save the model's output as e.g. `os-cards.json`.
 3. **Import JSON**, select **Merge**, choose the file.
 4. New deck(s) + cards appear; they're due immediately in Review.

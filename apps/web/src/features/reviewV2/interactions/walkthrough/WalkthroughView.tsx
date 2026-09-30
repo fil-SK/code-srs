@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { initialWalkthroughState, isSafeImageSource, walkthroughBehavior } from '@itera/core'
-import type { WalkthroughState } from '@itera/core'
+import { initialWalkthroughState, isSafeImageSource, walkthroughBehavior } from '@fliptap/core'
+import type { WalkthroughState } from '@fliptap/core'
 import { RichText } from '@/components/text/RichText'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 import { cn } from '@/lib/cn'
@@ -19,7 +19,7 @@ import { StepResponse } from './StepResponse'
 // 'presenting' - only the last step's Continue button (relabeled "Finish")
 // calls the shell's onPrimaryAction, which is what actually submits the
 // whole card and reveals the Explanation/rating. The "every step answered"
-// rule is walkthroughBehavior.isResponseReady in @itera/core, called by this
+// rule is walkthroughBehavior.isResponseReady in @fliptap/core, called by this
 // View and by the shell, so an early Enter press (shell-level) can't finish
 // the card before that.
 export function WalkthroughView({
@@ -94,7 +94,7 @@ export function WalkthroughView({
       </div>
       <RichText
         text={interaction.scenario.value}
-        className="mt-3 text-center text-sm leading-relaxed text-itera-ink"
+        className="mt-3 text-center text-sm leading-relaxed text-fliptap-ink"
       />
 
       {interaction.code && (
@@ -115,12 +115,12 @@ export function WalkthroughView({
         <img
           src={interaction.image}
           alt=""
-          className="mt-3 max-w-full rounded-itera-control border border-itera-border"
+          className="mt-3 max-w-full rounded-fliptap-control border border-fliptap-border"
         />
       )}
 
       <div className="mt-5 flex items-center justify-between">
-        <div className="text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <div className="text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Step {state.stepIndex + 1} of {interaction.steps.length}
         </div>
         <div className="flex gap-1" aria-hidden="true">
@@ -130,10 +130,10 @@ export function WalkthroughView({
               className={cn(
                 'h-1.5 w-5 rounded-full',
                 i === state.stepIndex
-                  ? 'bg-itera-accent'
+                  ? 'bg-fliptap-accent'
                   : s.id in state.answers
-                    ? 'bg-itera-success/60'
-                    : 'bg-itera-border',
+                    ? 'bg-fliptap-success/60'
+                    : 'bg-fliptap-border',
               )}
             />
           ))}
@@ -144,11 +144,11 @@ export function WalkthroughView({
         <div
           ref={stepPanelRef}
           tabIndex={-1}
-          className="mt-3 rounded-itera-control border border-itera-border bg-itera-surface p-4 outline-none focus-visible:ring-2 focus-visible:ring-itera-accent"
+          className="mt-3 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface p-4 outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent"
         >
           <RichText
             text={step.prompt.value}
-            className="text-sm font-semibold leading-snug text-itera-ink-brand"
+            className="text-sm font-semibold leading-snug text-fliptap-ink-brand"
           />
           <div className="mt-3">
             <StepResponse
@@ -177,7 +177,7 @@ export function WalkthroughView({
           type="button"
           onClick={() => goTo(state.stepIndex - 1)}
           disabled={state.stepIndex === 0}
-          className="rounded-itera-control px-3 py-2 text-sm font-medium text-itera-muted transition-colors hover:text-itera-ink disabled:pointer-events-none disabled:opacity-30"
+          className="rounded-fliptap-control px-3 py-2 text-sm font-medium text-fliptap-muted transition-colors hover:text-fliptap-ink disabled:pointer-events-none disabled:opacity-30"
         >
           Previous
         </button>
@@ -186,7 +186,7 @@ export function WalkthroughView({
             type="button"
             onClick={continueOrFinish}
             disabled={isLastStep && !allAnswered}
-            className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+            className="rounded-fliptap-control bg-fliptap-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
           >
             {isLastStep ? 'Finish' : 'Continue'}
           </button>

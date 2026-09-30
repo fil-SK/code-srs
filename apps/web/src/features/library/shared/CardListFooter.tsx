@@ -34,14 +34,14 @@ function ShortcutsPopover({ onClose }: { onClose: () => void }) {
       ref={ref}
       role="dialog"
       aria-label="Keyboard shortcuts"
-      className="absolute bottom-full right-0 z-20 mb-2 w-64 rounded-itera-control border border-itera-border bg-itera-surface p-3 shadow-[var(--itera-shadow-float)]"
+      className="absolute bottom-full right-0 z-20 mb-2 w-64 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface p-3 shadow-[var(--fliptap-shadow-float)]"
     >
-      <div className="mb-2 text-sm font-semibold text-itera-ink-brand">Keyboard shortcuts</div>
+      <div className="mb-2 text-sm font-semibold text-fliptap-ink-brand">Keyboard shortcuts</div>
       <div className="space-y-1.5">
         {rows.map((row) => (
           <div key={row.keys} className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-itera-muted">{row.description}</span>
-            <kbd className="rounded border border-itera-border bg-itera-surface-subtle px-1.5 py-0.5 font-mono text-xs text-itera-ink-brand">
+            <span className="text-fliptap-muted">{row.description}</span>
+            <kbd className="rounded border border-fliptap-border bg-fliptap-surface-subtle px-1.5 py-0.5 font-mono text-xs text-fliptap-ink-brand">
               {row.keys}
             </kbd>
           </div>
@@ -83,7 +83,7 @@ export function CardListFooter({
   return (
     <div className="mt-5 space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <span className="text-sm text-itera-muted">
+        <span className="text-sm text-fliptap-muted">
           {totalPages > 1 && pageSize
             ? `Showing ${rangeStart}-${rangeEnd} of ${count} ${itemLabel}s`
             : `${count} ${itemLabel}${count === 1 ? '' : 's'}`}
@@ -95,7 +95,7 @@ export function CardListFooter({
               type="button"
               disabled={page === 1}
               onClick={() => onPageChange(Math.max(1, page - 1))}
-              className="grid h-8 w-8 place-items-center rounded-itera-control border border-itera-border text-itera-muted disabled:pointer-events-none disabled:opacity-40 hover:text-itera-ink"
+              className="grid h-8 w-8 place-items-center rounded-fliptap-control border border-fliptap-border text-fliptap-muted disabled:pointer-events-none disabled:opacity-40 hover:text-fliptap-ink"
             >
               <ChevronLeft size={15} />
             </button>
@@ -105,10 +105,10 @@ export function CardListFooter({
                 type="button"
                 onClick={() => onPageChange(p)}
                 className={cn(
-                  'grid h-8 w-8 place-items-center rounded-itera-control border text-sm font-semibold',
+                  'grid h-8 w-8 place-items-center rounded-fliptap-control border text-sm font-semibold',
                   p === page
-                    ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                    : 'border-itera-border text-itera-muted hover:text-itera-ink',
+                    ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                    : 'border-fliptap-border text-fliptap-muted hover:text-fliptap-ink',
                 )}
               >
                 {p}
@@ -118,7 +118,7 @@ export function CardListFooter({
               type="button"
               disabled={page === totalPages}
               onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-              className="grid h-8 w-8 place-items-center rounded-itera-control border border-itera-border text-itera-muted disabled:pointer-events-none disabled:opacity-40 hover:text-itera-ink"
+              className="grid h-8 w-8 place-items-center rounded-fliptap-control border border-fliptap-border text-fliptap-muted disabled:pointer-events-none disabled:opacity-40 hover:text-fliptap-ink"
             >
               <ChevronRight size={15} />
             </button>
@@ -127,11 +127,11 @@ export function CardListFooter({
       </div>
 
       {showTip && (
-        <div className="flex flex-wrap items-center gap-2.5 rounded-itera-card border border-itera-border bg-itera-surface px-5 py-4 text-sm text-itera-muted">
-          <Keyboard size={21} className="text-itera-muted" />
-          <span className="font-semibold text-itera-ink-brand">Tip:</span>
+        <div className="flex flex-wrap items-center gap-2.5 rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-5 py-4 text-sm text-fliptap-muted">
+          <Keyboard size={21} className="text-fliptap-muted" />
+          <span className="font-semibold text-fliptap-ink-brand">Tip:</span>
           <span>Press</span>
-          <kbd className="rounded border border-itera-border bg-itera-surface px-1.5 py-0.5 font-mono text-xs font-semibold text-itera-ink-brand">
+          <kbd className="rounded border border-fliptap-border bg-fliptap-surface px-1.5 py-0.5 font-mono text-xs font-semibold text-fliptap-ink-brand">
             Space
           </kbd>
           <span>to reveal answer during review</span>
@@ -139,7 +139,7 @@ export function CardListFooter({
             <button
               type="button"
               onClick={() => setShowShortcuts((v) => !v)}
-              className="inline-flex items-center gap-0.5 font-semibold text-itera-accent hover:brightness-90"
+              className="inline-flex items-center gap-0.5 font-semibold text-fliptap-accent hover:brightness-90"
             >
               View keyboard shortcuts
               <ChevronRight size={13} />

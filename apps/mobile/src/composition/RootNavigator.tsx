@@ -1,4 +1,4 @@
-import { useAuth } from '@itera/core'
+import { useAuth } from '@fliptap/core'
 import { Stack } from 'expo-router'
 
 import { StatusScreen } from '@/src/components/system/StatusScreen'

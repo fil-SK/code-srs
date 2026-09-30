@@ -10,7 +10,7 @@ import {
   localDayIndex,
   metricsFor,
   type ReviewLog,
-} from '@itera/core'
+} from '@fliptap/core'
 
 import { createDemoSeed, type DemoSeed } from './demoWorkspace'
 import { demoDeckMetrics, demoProgressViewModel, demoTodayViewModel } from './demoSelectors'

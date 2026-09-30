@@ -12,7 +12,7 @@ import type { LocalSession, LocalSessionStore } from './types'
 type AuthListener = (event: string, session: Session | null) => void
 type SessionResult = { data: { session: Session | null }; error: unknown }
 
-function session(email: string | undefined = 'cloud@itera.test'): Session {
+function session(email: string | undefined = 'cloud@fliptap.test'): Session {
   return { access_token: 't', user: { id: 'u1', email } } as unknown as Session
 }
 
@@ -163,7 +163,7 @@ describe('createAuthEngine - local mode', () => {
 
     expect(record.writes[0].remember).toBe(false)
     expect(engine.getSnapshot().identity).toEqual({
-      email: 'demo@itera.local',
+      email: 'demo@fliptap.local',
       kind: 'demo',
     })
   })
@@ -243,7 +243,7 @@ describe('createAuthEngine - Supabase mode', () => {
     expect(engine.getSnapshot()).toMatchObject({
       loading: false,
       isAuthenticated: true,
-      identity: { email: 'cloud@itera.test', kind: 'supabase' },
+      identity: { email: 'cloud@fliptap.test', kind: 'supabase' },
       sessionError: null,
     })
   })
@@ -335,7 +335,7 @@ describe('createAuthEngine - Supabase mode', () => {
     await flush()
 
     expect(engine.getSnapshot().identity).toEqual({
-      email: 'cloud@itera.test',
+      email: 'cloud@fliptap.test',
       kind: 'supabase',
     })
   })
@@ -362,7 +362,7 @@ describe('createAuthEngine - Supabase mode', () => {
 
     expect(engine.getSnapshot()).toMatchObject({
       isAuthenticated: true,
-      identity: { email: 'cloud@itera.test', kind: 'supabase' },
+      identity: { email: 'cloud@fliptap.test', kind: 'supabase' },
       sessionError: null,
     })
   })

@@ -15,7 +15,7 @@ function languageLabel(id: string): string {
 
 // No partial read-only region: the current CodeEditor is fully editable with
 // no support for mixed editable/read-only content in one instance (see
-// docs/itera-decisions.md). The whole starter block is the editable region —
+// docs/fliptap-decisions.md). The whole starter block is the editable region —
 // "visibly distinct" is satisfied by the editor's own bordered/mono/focus-
 // ring chrome against surrounding prose, plus the language badge, rather than
 // an in-editor read-only boundary that isn't supported yet.
@@ -51,7 +51,7 @@ export function WriteCodeView({
       <div className="mt-2 flex w-full items-center justify-center gap-2">
         <CardPrompt text={card.prompt.value} face={size} />
       </div>
-      <span className="rounded-itera-pill bg-itera-navy-soft px-2.5 py-1 font-mono text-xs font-semibold text-itera-ink-brand">
+      <span className="rounded-fliptap-pill bg-fliptap-navy-soft px-2.5 py-1 font-mono text-xs font-semibold text-fliptap-ink-brand">
         {languageLabel(interaction.language)}
       </span>
     </div>
@@ -78,7 +78,7 @@ export function WriteCodeView({
               type="button"
               onClick={onPrimaryAction}
               disabled={!responseReady}
-              className="rounded-itera-control bg-itera-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+              className="rounded-fliptap-control bg-fliptap-accent px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
             >
               Submit answer
             </button>
@@ -95,10 +95,10 @@ export function WriteCodeView({
 
             <div
               className={cn(
-                'rounded-itera-control px-3.5 py-2.5 text-center text-sm font-semibold',
+                'rounded-fliptap-control px-3.5 py-2.5 text-center text-sm font-semibold',
                 correct
-                  ? 'bg-itera-success-soft text-itera-success'
-                  : 'bg-itera-error-soft text-itera-error',
+                  ? 'bg-fliptap-success-soft text-fliptap-success'
+                  : 'bg-fliptap-error-soft text-fliptap-error',
               )}
             >
               {correct ? 'Correct' : 'Incorrect'}
@@ -106,7 +106,7 @@ export function WriteCodeView({
 
             {!correct && (
               <div>
-                <div className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-itera-muted">
+                <div className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
                   Expected answer
                 </div>
                 <LazyCodeView

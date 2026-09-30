@@ -41,8 +41,8 @@ function AcceptedAnswerRow({
         disabled={!canRemove}
         aria-label="Remove accepted answer"
         className={cn(
-          'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-          canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+          'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+          canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
         )}
       >
         <X size={15} />
@@ -71,7 +71,7 @@ function RangeRow({
         placeholder="Start"
         aria-label="Start line"
       />
-      <span className="text-xs text-itera-muted">to</span>
+      <span className="text-xs text-fliptap-muted">to</span>
       <input
         type="number"
         min={1}
@@ -85,7 +85,7 @@ function RangeRow({
         type="button"
         onClick={onRemove}
         aria-label="Remove highlighted range"
-        className="grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted hover:border-itera-error hover:text-itera-error"
+        className="grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted hover:border-fliptap-error hover:text-fliptap-error"
       >
         <X size={15} />
       </button>
@@ -158,7 +158,7 @@ export function WalkthroughStepEditor({
   const atBottom = index === total - 1
 
   return (
-    <div className="space-y-3 rounded-itera-control border border-itera-border p-3.5">
+    <div className="space-y-3 rounded-fliptap-control border border-fliptap-border p-3.5">
       <div className="flex items-start gap-2.5">
         <span className="mt-2 flex flex-none items-center gap-1">
           <button
@@ -167,7 +167,7 @@ export function WalkthroughStepEditor({
             aria-disabled={atTop}
             onClick={onMoveUp}
             className={cn(
-              'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+              'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
               atTop && 'pointer-events-none opacity-30',
             )}
           >
@@ -179,7 +179,7 @@ export function WalkthroughStepEditor({
             aria-disabled={atBottom}
             onClick={onMoveDown}
             className={cn(
-              'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+              'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
               atBottom && 'pointer-events-none opacity-30',
             )}
           >
@@ -189,7 +189,7 @@ export function WalkthroughStepEditor({
 
         <div className="flex-1 space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-itera-muted">
+            <span className="text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
               Step {index + 1}
             </span>
             <button
@@ -198,8 +198,8 @@ export function WalkthroughStepEditor({
               disabled={!canRemove}
               aria-label={`Remove step ${index + 1}`}
               className={cn(
-                'grid h-8 w-8 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-                canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+                'grid h-8 w-8 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+                canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
               )}
             >
               <X size={14} />
@@ -215,7 +215,7 @@ export function WalkthroughStepEditor({
           />
 
           <div className="space-y-1.5">
-            <span className="block text-xs text-itera-muted">
+            <span className="block text-xs text-fliptap-muted">
               Highlighted lines in the shared code (optional)
             </span>
             {step.ranges.map((range) => (
@@ -231,7 +231,7 @@ export function WalkthroughStepEditor({
             </Button>
           </div>
 
-          <div className="flex gap-1 rounded-itera-control border border-itera-border p-1">
+          <div className="flex gap-1 rounded-fliptap-control border border-fliptap-border p-1">
             {(Object.keys(RESPONSE_TYPE_LABEL) as WalkthroughStepResponseType[]).map((t) => (
               <button
                 key={t}
@@ -240,8 +240,8 @@ export function WalkthroughStepEditor({
                 className={cn(
                   'flex-1 rounded-[7px] py-1.5 text-xs font-semibold transition-colors',
                   step.responseType === t
-                    ? 'bg-itera-accent-soft text-itera-ink-brand'
-                    : 'text-itera-muted',
+                    ? 'bg-fliptap-accent-soft text-fliptap-ink-brand'
+                    : 'text-fliptap-muted',
                 )}
               >
                 {RESPONSE_TYPE_LABEL[t]}
@@ -261,7 +261,7 @@ export function WalkthroughStepEditor({
 
           {step.responseType === 'multiple_choice' && (
             <div className="space-y-2">
-              <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+              <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
                 <button
                   type="button"
                   role="checkbox"
@@ -272,8 +272,8 @@ export function WalkthroughStepEditor({
                   className={cn(
                     'flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border transition-colors',
                     step.mcSelectionMode === 'multiple'
-                      ? 'border-itera-accent bg-itera-accent'
-                      : 'border-itera-border-strong bg-itera-surface',
+                      ? 'border-fliptap-accent bg-fliptap-accent'
+                      : 'border-fliptap-border-strong bg-fliptap-surface',
                   )}
                 >
                   {step.mcSelectionMode === 'multiple' && (
@@ -322,7 +322,7 @@ export function WalkthroughStepEditor({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5">
-              <span className="block text-xs text-itera-muted">Tip for this step (optional)</span>
+              <span className="block text-xs text-fliptap-muted">Tip for this step (optional)</span>
               <textarea
                 className={fieldClass}
                 rows={2}
@@ -332,7 +332,7 @@ export function WalkthroughStepEditor({
               />
             </label>
             <label className="space-y-1.5">
-              <span className="block text-xs text-itera-muted">
+              <span className="block text-xs text-fliptap-muted">
                 Explanation for this step (optional)
               </span>
               <textarea

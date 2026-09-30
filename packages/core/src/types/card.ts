@@ -4,7 +4,7 @@ import type { SchedulingState } from './review'
 // The card model. One shape for every card in the app: content plus its own
 // embedded FSRS scheduling. The v1 8-type union and the Card/Card
 // content-vs-record split it required were deleted when the two models
-// converged (see docs/itera-decisions.md) - there is no second card type and
+// converged (see docs/fliptap-decisions.md) - there is no second card type and
 // no on-read migration.
 //
 // Deliberately uses Millis (not ISO strings) and the existing SchedulingState
@@ -87,7 +87,7 @@ export interface MatchingColumn {
   // A fixed column shares one value list across rows, graded by value equality —
   // this codebase's existing matching feature already goes beyond the spec's
   // two-column MVP (3-part matching, fixed-option columns); extended here rather
-  // than downgraded. See docs/itera-migration-plan.md §5.
+  // than downgraded. See docs/fliptap-migration-plan.md §5.
   fixed?: boolean
 }
 

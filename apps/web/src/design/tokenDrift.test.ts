@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { ITERA_SHADOW_INTENTS, iteraColors, iteraRadii } from '@itera/core'
+import { FLIPTAP_SHADOW_INTENTS, fliptapColors, fliptapRadii } from '@fliptap/core'
 
 // The seam between two representations of one brand.
 //
@@ -17,7 +17,7 @@ import { ITERA_SHADOW_INTENTS, iteraColors, iteraRadii } from '@itera/core'
 // instead of shipping.
 //
 // Bidirectional matters. A one-way check (every token appears in CSS) would let
-// a new --itera-* variable be added with no shared counterpart, which is
+// a new --fliptap-* variable be added with no shared counterpart, which is
 // exactly how the native side would end up missing a color it needs.
 
 // Resolved from this file, not from process.cwd(): the web app lives under
@@ -29,8 +29,8 @@ const CSS = fs.readFileSync(fileURLToPath(new URL('../index.css', import.meta.ur
 // Values that are deliberately NOT shared, because the platforms model them
 // differently rather than spelling them differently: a box-shadow string has no
 // meaning in React Native, which uses elevation/shadowOpacity. The intent names
-// are shared instead (ITERA_SHADOW_INTENTS). Asserted as an exact set below, so
-// a newly added --itera-* variable cannot quietly land in this exemption.
+// are shared instead (FLIPTAP_SHADOW_INTENTS). Asserted as an exact set below, so
+// a newly added --fliptap-* variable cannot quietly land in this exemption.
 const NOT_SHARED_AS_VALUES = ['shadow-card', 'shadow-float']
 
 function block(selector: string): string {
@@ -40,8 +40,8 @@ function block(selector: string): string {
   return CSS.slice(start, end)
 }
 
-// `--itera-foo: #bar;` declarations inside a block, excluding the scoped
-// re-point of the legacy semantic names (`--bg: var(--itera-canvas)`), which is
+// `--fliptap-foo: #bar;` declarations inside a block, excluding the scoped
+// re-point of the legacy semantic names (`--bg: var(--fliptap-canvas)`), which is
 // a web compatibility mechanism rather than a token.
 function declarations(source: string, prefix: string): Map<string, string> {
   const out = new Map<string, string>()
@@ -55,10 +55,10 @@ function camel(kebab: string): string {
   return kebab.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
 }
 
-const cssColors = declarations(block('.itera-scope'), 'itera-')
-const cssRadii = declarations(block('@theme inline'), 'radius-itera-')
+const cssColors = declarations(block('.fliptap-scope'), 'fliptap-')
+const cssRadii = declarations(block('@theme inline'), 'radius-fliptap-')
 
-describe('the Itera palette has one truth in two representations', () => {
+describe('the FlipTap palette has one truth in two representations', () => {
   it('reads a plausible number of declarations out of index.css', () => {
     // Guards against a parse that silently matched nothing, which would make
     // every assertion below vacuously true.
@@ -67,12 +67,12 @@ describe('the Itera palette has one truth in two representations', () => {
   })
 
   it('exempts exactly the two shadow values, and nothing else', () => {
-    const exempt = [...cssColors.keys()].filter((k) => !(camel(k) in iteraColors))
+    const exempt = [...cssColors.keys()].filter((k) => !(camel(k) in fliptapColors))
     expect(exempt.sort()).toEqual([...NOT_SHARED_AS_VALUES].sort())
   })
 
   it('shares the shadow intents by name even though the values differ', () => {
-    expect([...ITERA_SHADOW_INTENTS].sort()).toEqual(
+    expect([...FLIPTAP_SHADOW_INTENTS].sort()).toEqual(
       NOT_SHARED_AS_VALUES.map((k) => k.replace('shadow-', '')).sort(),
     )
   })
@@ -80,31 +80,31 @@ describe('the Itera palette has one truth in two representations', () => {
   it('gives every CSS color variable the same value in the shared module', () => {
     for (const [name, value] of cssColors) {
       if (NOT_SHARED_AS_VALUES.includes(name)) continue
-      const key = camel(name) as keyof typeof iteraColors
-      expect(iteraColors[key], `--itera-${name}`).toBe(value)
+      const key = camel(name) as keyof typeof fliptapColors
+      expect(fliptapColors[key], `--fliptap-${name}`).toBe(value)
     }
   })
 
   it('gives every shared color a CSS variable, so neither side has an orphan', () => {
     const fromCss = new Set([...cssColors.keys()].map(camel))
-    for (const key of Object.keys(iteraColors)) {
-      expect(fromCss.has(key), `iteraColors.${key} has no --itera-* variable`).toBe(true)
+    for (const key of Object.keys(fliptapColors)) {
+      expect(fromCss.has(key), `fliptapColors.${key} has no --fliptap-* variable`).toBe(true)
     }
   })
 
   it('gives every radius the same value, as a unitless number', () => {
     for (const [name, value] of cssRadii) {
-      const key = camel(name) as keyof typeof iteraRadii
-      expect(iteraRadii[key], `--radius-itera-${name}`).toBe(Number(value.replace('px', '')))
+      const key = camel(name) as keyof typeof fliptapRadii
+      expect(fliptapRadii[key], `--radius-fliptap-${name}`).toBe(Number(value.replace('px', '')))
     }
-    expect(Object.keys(iteraRadii).sort()).toEqual([...cssRadii.keys()].map(camel).sort())
+    expect(Object.keys(fliptapRadii).sort()).toEqual([...cssRadii.keys()].map(camel).sort())
   })
 
   it('shares no layout mechanics: the module carries identity only', () => {
     // A page width, a breakpoint or a nav height here would be the start of
     // pixel-parity between web and native, which the convergence plan rejects.
     const forbidden = /width|height|breakpoint|margin|padding|gap|sidebar|navbar|navigation|inset|offset|zindex/i
-    for (const key of [...Object.keys(iteraColors), ...Object.keys(iteraRadii)]) {
+    for (const key of [...Object.keys(fliptapColors), ...Object.keys(fliptapRadii)]) {
       expect(forbidden.test(key), key).toBe(false)
     }
   })

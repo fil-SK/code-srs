@@ -1,6 +1,6 @@
 # Documentation index
 
-Shared, **agent-neutral** documentation for Itera (the app still named `code-srs` in `package.json` and its deployment). Claude Code reads [`../CLAUDE.md`](../CLAUDE.md) and Codex reads [`../AGENTS.md`](../AGENTS.md); both are thin entry points that point **here**. Product, design, architecture and migration truth lives in this folder and is never duplicated into an agent instruction file.
+Shared, **agent-neutral** documentation for FlipTap (the app still named `code-srs` in `package.json` and its deployment). Claude Code reads [`../CLAUDE.md`](../CLAUDE.md) and Codex reads [`../AGENTS.md`](../AGENTS.md); both are thin entry points that point **here**. Product, design, architecture and migration truth lives in this folder and is never duplicated into an agent instruction file.
 
 ## Start here
 
@@ -16,18 +16,18 @@ Each owns one concern. If two of them say different things about the same thing,
 | [`architecture.md`](architecture.md) | How the system is structured: storage seam, hooks, both card registries, auth boundary, scheduling/`ReviewService`, routing, backup, data-safety constraints | What shipped when |
 | [`design-system.md`](design-system.md) | How it looks and behaves: brand and logo rules, tokens, typography, spacing, shape, navigation, surfaces, tables/lists, popovers, motion, reduced motion, accessibility, responsive, orange restraint, the Review-shell exception, visual-reference tiers | Component-by-component status |
 | [`features.md`](features.md) | What the product does route by route, cross-cutting behavior (interactions, grading, Tip vs Explanation, sessions, login), plus **planned** and **explicitly out of scope** | Why a call was made |
-| [`itera-decisions.md`](itera-decisions.md) | **Append-only** material decision log: decision, rationale, date, supersession. Read the newest relevant entries first | Implementation status |
-| [`itera-migration-plan.md`](itera-migration-plan.md) | The data-migration and data-safety contract, with every phase marked completed / partial / not started | Anything unrelated to persisted data |
+| [`fliptap-decisions.md`](fliptap-decisions.md) | **Append-only** material decision log: decision, rationale, date, supersession. Read the newest relevant entries first | Implementation status |
+| [`fliptap-migration-plan.md`](fliptap-migration-plan.md) | The data-migration and data-safety contract, with every phase marked completed / partial / not started | Anything unrelated to persisted data |
 | [`platform-parity.md`](platform-parity.md) | The per-capability web/native status table, one row per learner-visible capability | *Why* a decision was made, implementation detail, roadmaps or phases |
 
 ## Other current material
 
-- **[`TODO.md`](TODO.md)** — the holding pen for work deliberately **not** built, so it is not re-derived from scratch each time: advanced Adjust-session controls, Weekly Goal, a real milestone/achievement system, deck identity. It is a scratch list, **not** a source of truth — anything a milestone has actually decided is recorded properly in [`itera-decisions.md`](itera-decisions.md), and `features.md` owns the planned/out-of-scope tables.
-- **[`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)** — a copy-paste prompt for generating flashcard-import JSON via an external LLM chat, loaded through **Account settings → Import / Export → Import JSON → Merge**. Active and user-facing. Rewritten on 2026-08-18 against the **current** contract: `BACKUP_VERSION` is `2`, cards are the single `Card` model with `schemaVersion: 2`, embedded `scheduling` and one of the six `CardInteraction` types, and every prose field is a `RichContent` object. It must be updated in the same pass as any change to `packages/core/src/types/card.ts` or `packages/core/src/domain/io/backup.ts`. The envelope's `"app": "code-srs"` marker is a **legacy backup-format identifier, not the product name** — renaming it would invalidate every previously exported file.
+- **[`TODO.md`](TODO.md)** — the holding pen for work deliberately **not** built, so it is not re-derived from scratch each time: advanced Adjust-session controls, Weekly Goal, a real milestone/achievement system, deck identity. It is a scratch list, **not** a source of truth — anything a milestone has actually decided is recorded properly in [`fliptap-decisions.md`](fliptap-decisions.md), and `features.md` owns the planned/out-of-scope tables.
+- **[`prompts/ai-card-prompt.md`](prompts/ai-card-prompt.md)** — a copy-paste prompt for generating flashcard-import JSON via an external LLM chat, loaded through **Account settings → Import / Export → Import JSON → Merge**. Active and user-facing. Rewritten on 2026-08-18 against the **current** contract: `BACKUP_VERSION` is `2`, cards are the single `Card` model with `schemaVersion: 2`, embedded `scheduling` and one of the six `CardInteraction` types, and every prose field is a `RichContent` object. It must be updated in the same pass as any change to `packages/core/src/types/card.ts` or `packages/core/src/domain/io/backup.ts`. The envelope's `"app": "fliptap"` (`BACKUP_APP_MARKER`) marker is a backup-format identifier, not free text — it was `"code-srs"`, kept unchanged through the Itera rebrand, then renamed again for the FlipTap rebrand (a deliberate, one-time compatibility break — see `docs/fliptap-decisions.md` D460).
 
 ## Visual references
 
-Reference mockups are **not tracked in this repository** — there is deliberately no `docs/references/` directory, because inventing one would create paths that resolve to nothing. They live at `C:\Users\SK\Desktop\itera-mockups\` (`webapp/`, `inspo-icons/`, `inspiration/`, `mobile/`). [`design-system.md`](design-system.md) §14 defines the **LOCKED / DIRECTION / CONCEPT** tiers and how each is treated; [`itera-decisions.md`](itera-decisions.md) cites individual files by name.
+Reference mockups are **not tracked in this repository** — there is deliberately no `docs/references/` directory, because inventing one would create paths that resolve to nothing. They live at `C:\Users\SK\Desktop\fliptap-mockups\` (`webapp/`, `inspo-icons/`, `inspiration/`, `mobile/`). [`design-system.md`](design-system.md) §14 defines the **LOCKED / DIRECTION / CONCEPT** tiers and how each is treated; [`fliptap-decisions.md`](fliptap-decisions.md) cites individual files by name.
 
 ## Historical documents — [`archive/`](archive/)
 
@@ -35,9 +35,9 @@ Preserved for project history. Each opens with a visible warning. **None of them
 
 | File | What it was |
 |---|---|
-| [`archive/itera-repository-audit-2026-07-22.md`](archive/itera-repository-audit-2026-07-22.md) | The Phase A audit: a snapshot of the repository **before** the redesign, its spec-conflict table and Retain/Migrate/Rewrite/Delete map. Most conflicts are long resolved. |
-| [`archive/itera-redesign-plan.md`](archive/itera-redesign-plan.md) | The phased A–M implementation sequence. Reality deviated from it (the Library/shell rebuild shipped without the Collection/Deck migration; Today shipped early). `CURRENT_STATE.md` defines the next milestone instead. |
-| [`archive/itera-claude-master-spec.md`](archive/itera-claude-master-spec.md) | The original Claude-addressed master specification everything derives from. Its durable rules were moved into the canonical docs above; it is kept whole and unedited because the decision log cites it **by section number** (e.g. "spec §4.4"). |
+| [`archive/fliptap-repository-audit-2026-07-22.md`](archive/fliptap-repository-audit-2026-07-22.md) | The Phase A audit: a snapshot of the repository **before** the redesign, its spec-conflict table and Retain/Migrate/Rewrite/Delete map. Most conflicts are long resolved. |
+| [`archive/fliptap-redesign-plan.md`](archive/fliptap-redesign-plan.md) | The phased A–M implementation sequence. Reality deviated from it (the Library/shell rebuild shipped without the Collection/Deck migration; Today shipped early). `CURRENT_STATE.md` defines the next milestone instead. |
+| [`archive/fliptap-claude-master-spec.md`](archive/fliptap-claude-master-spec.md) | The original Claude-addressed master specification everything derives from. Its durable rules were moved into the canonical docs above; it is kept whole and unedited because the decision log cites it **by section number** (e.g. "spec §4.4"). |
 
 ## Source-of-truth hierarchy
 
@@ -52,22 +52,22 @@ When two sources disagree, resolve in this order. Never resolve a conflict in fa
 **Design**
 1. A visual reference explicitly marked **LOCKED** for that surface
 2. [`design-system.md`](design-system.md)
-3. The relevant entries in [`itera-decisions.md`](itera-decisions.md)
+3. The relevant entries in [`fliptap-decisions.md`](fliptap-decisions.md)
 4. [`archive/`](archive/)
 
 **Architecture**
 1. The current repository implementation
 2. [`architecture.md`](architecture.md)
-3. [`itera-decisions.md`](itera-decisions.md)
-4. [`itera-migration-plan.md`](itera-migration-plan.md), where persisted data is involved
+3. [`fliptap-decisions.md`](fliptap-decisions.md)
+4. [`fliptap-migration-plan.md`](fliptap-migration-plan.md), where persisted data is involved
 
 **Future migration work**
-1. [`itera-decisions.md`](itera-decisions.md) — a later decision supersedes an earlier plan
-2. [`itera-migration-plan.md`](itera-migration-plan.md) — the contract itself
+1. [`fliptap-decisions.md`](fliptap-decisions.md) — a later decision supersedes an earlier plan
+2. [`fliptap-migration-plan.md`](fliptap-migration-plan.md) — the contract itself
 3. [`CURRENT_STATE.md`](CURRENT_STATE.md) §13 — which stage each migration is actually at
 
-Two standing rules: **the repository wins over any document** on questions of what exists, and `itera-decisions.md` is **append-only** — supersede an entry with a new dated one, never edit its substance in place.
+Two standing rules: **the repository wins over any document** on questions of what exists, and `fliptap-decisions.md` is **append-only** — supersede an entry with a new dated one, never edit its substance in place.
 
 ## Keeping this accurate
 
-When a change reaches finalized state (a feature implemented, a design or behavior settled — not a WIP edit), update documentation **in the same pass**: `CURRENT_STATE.md` whenever status changes, the canonical doc that owns the topic, [`../README.md`](../README.md) for user-facing changes, and a new appended entry in `itera-decisions.md` for anything material.
+When a change reaches finalized state (a feature implemented, a design or behavior settled — not a WIP edit), update documentation **in the same pass**: `CURRENT_STATE.md` whenever status changes, the canonical doc that owns the topic, [`../README.md`](../README.md) for user-facing changes, and a new appended entry in `fliptap-decisions.md` for anything material.

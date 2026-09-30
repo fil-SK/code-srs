@@ -34,7 +34,7 @@ export function OrderingItemRow({
 
   return (
     <div className="flex items-start gap-2.5">
-      <span className="mt-2 w-5 flex-none font-mono text-xs text-itera-muted">{index + 1}.</span>
+      <span className="mt-2 w-5 flex-none font-mono text-xs text-fliptap-muted">{index + 1}.</span>
 
       <textarea
         className={cn(fieldClass, 'resize-none')}
@@ -51,7 +51,7 @@ export function OrderingItemRow({
           aria-disabled={atTop}
           onClick={onMoveUp}
           className={cn(
-            'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+            'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
             atTop && 'pointer-events-none opacity-30',
           )}
         >
@@ -63,7 +63,7 @@ export function OrderingItemRow({
           aria-disabled={atBottom}
           onClick={onMoveDown}
           className={cn(
-            'rounded-itera-control p-1 text-itera-muted hover:text-itera-ink',
+            'rounded-fliptap-control p-1 text-fliptap-muted hover:text-fliptap-ink',
             atBottom && 'pointer-events-none opacity-30',
           )}
         >
@@ -77,8 +77,8 @@ export function OrderingItemRow({
         disabled={!canRemove}
         aria-label={`Remove item ${index + 1}`}
         className={cn(
-          'mt-1 grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-          canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+          'mt-1 grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+          canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
         )}
       >
         <X size={15} />

@@ -1,13 +1,13 @@
-import { parseRichInline, parseRichText, iteraColors, type RichInline } from '@itera/core'
+import { parseRichInline, parseRichText, fliptapColors, type RichInline } from '@fliptap/core'
 import { Fragment } from 'react'
 import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native'
 
 import { NativeCodeBlock } from './NativeCodeBlock'
 import { monoFamily } from './monoFamily'
 
-// The native renderer for Itera's card-text syntax.
+// The native renderer for FlipTap's card-text syntax.
 //
-// It maps the semantic nodes @itera/core produces onto React Native elements
+// It maps the semantic nodes @fliptap/core produces onto React Native elements
 // and does no parsing of its own: what `**bold**`, `*italic*`, `` `code` `` and
 // a fenced block mean is decided once, in
 // packages/core/src/content/parseRichText.ts. The web renderer
@@ -103,5 +103,5 @@ const styles = StyleSheet.create({
   blocks: { width: '100%', gap: 14 },
   strong: { fontWeight: '700' },
   em: { fontStyle: 'italic' },
-  inlineCode: { color: iteraColors.accent, fontFamily: monoFamily, fontWeight: '700' },
+  inlineCode: { color: fliptapColors.accent, fontFamily: monoFamily, fontWeight: '700' },
 })

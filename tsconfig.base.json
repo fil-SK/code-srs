@@ -1,6 +1,6 @@
 {
   /* Options shared by every project in the workspace (web app, node tooling,
-     @itera/core). Anything that legitimately differs per target - lib, module,
+     @fliptap/core). Anything that legitimately differs per target - lib, module,
      moduleResolution, ambient `types`, jsx, paths, tsBuildInfoFile, include -
      stays in the extending config, so this file cannot quietly change what a
      particular target compiles against.

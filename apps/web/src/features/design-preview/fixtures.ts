@@ -18,7 +18,7 @@ import { initialSchedulingState } from '@/domain/scheduling/state'
 // assignable to a single narrowed member, so passing an unnarrowed fixture
 // only ever typechecked by accident of tsc -b's incremental cache never
 // re-checking these call sites - `npm run build` from a clean state catches
-// it. See docs/itera-decisions.md.
+// it. See docs/fliptap-decisions.md.
 
 // Representative Recall content for /design-preview/review/recall: real
 // Markdown (bold/italic/inline code) plus a formatted C++ fenced code block,
@@ -173,7 +173,7 @@ export const orderingFixture: Card & { interaction: OrderingInteraction } = {
 // Representative Matching content for /design-preview/review/matching.
 // Deliberately three-part with a fixed shared-value column (not the
 // two-column MVP case) so the preview actually exercises the richer schema
-// the V2 model preserves, per docs/itera-decisions.md.
+// the V2 model preserves, per docs/fliptap-decisions.md.
 const containerVector = newId()
 const containerList = newId()
 const containerDeque = newId()

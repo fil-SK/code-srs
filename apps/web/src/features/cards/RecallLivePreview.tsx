@@ -6,7 +6,7 @@ import { InteractionAnswerPreview } from './shared/InteractionAnswerPreview'
 // component (spec §22.1/§22.6/§35.3), not a fake mockup — rendered through
 // InteractionAnswerPreview, a simplified stand-in for ReviewSessionScreen
 // with no session chrome (Exit/counter/hint/rating), just a Question/Answer
-// toggle (see docs/itera-decisions.md and that component's own doc comment).
+// toggle (see docs/fliptap-decisions.md and that component's own doc comment).
 //
 // Keyed on the authoring preset (not on every keystroke of `form`) so typing
 // in the editor updates the preview's content live without resetting an

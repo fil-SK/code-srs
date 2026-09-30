@@ -67,7 +67,7 @@ export function MatchingView({
       <InteractionLabel type="matching" />
       <CardPrompt text={card.prompt.value} face={size} className="mt-2" />
       {size === 'front' && !locked && (
-        <p className="text-xs font-medium text-itera-muted">
+        <p className="text-xs font-medium text-fliptap-muted">
           Tap a term, then tap the value it pairs with.
         </p>
       )}
@@ -103,7 +103,7 @@ export function MatchingView({
                   type="button"
                   onClick={onPrimaryAction}
                   disabled={!responseReady}
-                  className="rounded-itera-control bg-itera-accent px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+                  className="rounded-fliptap-control bg-fliptap-accent px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
                 >
                   Submit answer
                 </button>
@@ -129,10 +129,10 @@ export function MatchingView({
             {grade && (
               <div
                 className={cn(
-                  'rounded-itera-control px-3.5 py-2.5 text-center text-sm font-semibold',
+                  'rounded-fliptap-control px-3.5 py-2.5 text-center text-sm font-semibold',
                   grade.correct
-                    ? 'bg-itera-success-soft text-itera-success'
-                    : 'bg-itera-error-soft text-itera-error',
+                    ? 'bg-fliptap-success-soft text-fliptap-success'
+                    : 'bg-fliptap-error-soft text-fliptap-error',
                 )}
               >
                 {grade.correct

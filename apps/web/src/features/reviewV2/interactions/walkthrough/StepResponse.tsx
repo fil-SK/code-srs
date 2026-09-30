@@ -12,7 +12,7 @@ function ResultNote({ result }: { result: ObjectiveResult | null | undefined }) 
     <div
       className={cn(
         'mt-3 text-xs font-semibold',
-        result.correct ? 'text-itera-success' : 'text-itera-error',
+        result.correct ? 'text-fliptap-success' : 'text-fliptap-error',
       )}
     >
       {result.correct ? 'Correct' : 'Incorrect'}
@@ -66,11 +66,11 @@ function StepMultipleChoice({
                 }
               }}
               className={cn(
-                'cursor-pointer rounded-itera-control border px-3 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-itera-accent',
+                'cursor-pointer rounded-fliptap-control border px-3 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-fliptap-accent',
                 readOnly && 'cursor-default',
                 isSelected
-                  ? 'border-itera-accent bg-itera-accent-soft'
-                  : 'border-itera-border bg-itera-surface hover:border-itera-border-strong',
+                  ? 'border-fliptap-accent bg-fliptap-accent-soft'
+                  : 'border-fliptap-border bg-fliptap-surface hover:border-fliptap-border-strong',
               )}
             >
               <InlineText text={opt.content.value} />
@@ -83,7 +83,7 @@ function StepMultipleChoice({
           type="button"
           onClick={() => onSubmit(choice)}
           disabled={choice.length === 0}
-          className="mt-3 rounded-itera-control bg-itera-accent px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+          className="mt-3 rounded-fliptap-control bg-fliptap-accent px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
         >
           Submit
         </button>
@@ -119,14 +119,14 @@ function StepExactInput({
           }
         }}
         placeholder="Type your answer"
-        className="w-full rounded-itera-control border border-itera-border bg-itera-surface px-3 py-2 text-sm text-itera-ink outline-none focus-visible:ring-2 focus-visible:ring-itera-accent"
+        className="w-full rounded-fliptap-control border border-fliptap-border bg-fliptap-surface px-3 py-2 text-sm text-fliptap-ink outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent"
       />
       {!readOnly && (
         <button
           type="button"
           onClick={() => onSubmit(value)}
           disabled={!value.trim()}
-          className="mt-3 rounded-itera-control bg-itera-accent px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+          className="mt-3 rounded-fliptap-control bg-fliptap-accent px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
         >
           Submit
         </button>
@@ -161,14 +161,14 @@ export function StepResponse({
         {revealed && (
           <RichText
             text={step.response.answer.value}
-            className="text-sm leading-relaxed text-itera-ink"
+            className="text-sm leading-relaxed text-fliptap-ink"
           />
         )}
         {!revealed && (
           <button
             type="button"
             onClick={() => onSubmit({ type: 'recall', revealed: true })}
-            className="rounded-itera-control border border-itera-border bg-itera-surface px-3.5 py-2 text-sm font-medium text-itera-ink transition-colors hover:border-itera-accent"
+            className="rounded-fliptap-control border border-fliptap-border bg-fliptap-surface px-3.5 py-2 text-sm font-medium text-fliptap-ink transition-colors hover:border-fliptap-accent"
           >
             Reveal answer
           </button>

@@ -6,7 +6,7 @@ import {
   type CardQuery,
   type Deck,
   type ReviewLog,
-} from '@itera/core'
+} from '@fliptap/core'
 
 // The entity read model every demo screen derives from, and the one place they
 // obtain it.

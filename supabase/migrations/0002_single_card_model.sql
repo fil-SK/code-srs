@@ -1,4 +1,4 @@
--- Single card model (docs/itera-decisions.md, 2026-08-18). The v1/v2 card
+-- Single card model (docs/fliptap-decisions.md, 2026-08-18). The v1/v2 card
 -- split is gone: one `cards` table holds every card as content plus its own
 -- embedded FSRS scheduling. `cards_v2` and `card_states` are dropped.
 --
@@ -12,7 +12,7 @@
 -- dropping `cards` would cascade into `card_states` mid-migration.
 --
 -- Unverified against a live database: written while this project's Supabase
--- instance was deleted (see itera-decisions.md D42). Apply and check
+-- instance was deleted (see fliptap-decisions.md D42). Apply and check
 -- RLS/grants before relying on it against a real project.
 
 -- 1. Remove the dependent table first (its FK points at `cards`).

@@ -17,14 +17,14 @@ export function CardOrganizeFields({
   onTagsChange: (tags: string) => void
 }) {
   return (
-    <section className="relative p-5 before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-itera-border sm:p-6 sm:before:left-6 sm:before:right-6">
-      <h2 className="mb-4 text-sm font-semibold text-itera-ink-brand">3. Organize</h2>
+    <section className="relative p-5 before:absolute before:left-5 before:right-5 before:top-0 before:h-px before:bg-fliptap-border sm:p-6 sm:before:left-6 sm:before:right-6">
+      <h2 className="mb-4 text-sm font-semibold text-fliptap-ink-brand">3. Organize</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Deck">
           <div className="relative">
             <LibraryBig
               size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-itera-muted"
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fliptap-muted"
               aria-hidden="true"
             />
             <select
@@ -39,14 +39,14 @@ export function CardOrganizeFields({
               ))}
             </select>
           </div>
-          <p className="mt-1.5 text-xs text-itera-muted">Choose where this card lives.</p>
+          <p className="mt-1.5 text-xs text-fliptap-muted">Choose where this card lives.</p>
         </Field>
 
         <Field label="Tags">
           <div className="relative">
             <Tags
               size={16}
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-itera-muted"
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-fliptap-muted"
               aria-hidden="true"
             />
             <input
@@ -56,7 +56,7 @@ export function CardOrganizeFields({
               placeholder="ssa, compilers"
             />
           </div>
-          <p className="mt-1.5 text-xs text-itera-muted">Use tags to find and filter cards later.</p>
+          <p className="mt-1.5 text-xs text-fliptap-muted">Use tags to find and filter cards later.</p>
         </Field>
       </div>
     </section>

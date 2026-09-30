@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, Clock, Play, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import iteraSymbolMask from '@/assets/itera-symbol-mask.png'
+import fliptapSymbolMask from '@/assets/fliptap-symbol-mask.png'
 
 // Every value on this card is real (Milestone 2). The due count and the deck
 // line come from the same repository due query /review runs, and the duration
@@ -47,8 +47,8 @@ import iteraSymbolMask from '@/assets/itera-symbol-mask.png'
 //        it — only a narrow accent at the far right. Position matches the
 //        original placement; only the color was darkened from #F1F3F6 (it
 //        blended almost invisibly into the page canvas) to a visible gray.
-// itera-symbol-mask.png (src/assets) is a real alpha-channel silhouette
-// derived from the actual Itera logo artwork (itera-mockups/logo.png, not
+// fliptap-symbol-mask.png (src/assets) is a real alpha-channel silhouette
+// derived from the actual FlipTap logo artwork (fliptap-mockups/logo.png, not
 // in this repo — background thresholded to alpha, not an approximation
 // built from CSS shapes), used as a CSS mask so its color/opacity are
 // controlled here directly.
@@ -101,7 +101,7 @@ function BracketMark({ variant, className }: { variant: 'top-right' | 'bottom-ri
   )
 }
 
-function IteraSymbolWatermark() {
+function FlipTapSymbolWatermark() {
   return (
     <div
       aria-hidden="true"
@@ -109,11 +109,11 @@ function IteraSymbolWatermark() {
       style={{
         opacity: 0.055,
         background: 'rgba(255,255,255,0.95)',
-        maskImage: `url(${iteraSymbolMask})`,
+        maskImage: `url(${fliptapSymbolMask})`,
         maskRepeat: 'no-repeat',
         maskPosition: 'center',
         maskSize: 'contain',
-        WebkitMaskImage: `url(${iteraSymbolMask})`,
+        WebkitMaskImage: `url(${fliptapSymbolMask})`,
         WebkitMaskRepeat: 'no-repeat',
         WebkitMaskPosition: 'center',
         WebkitMaskSize: 'contain',
@@ -317,12 +317,12 @@ export function SuggestedSessionHero({
           transitionTimingFunction: revealEasing,
         }}
       >
-        <IteraSymbolWatermark />
+        <FlipTapSymbolWatermark />
         <BracketMark variant="top-right" className="absolute top-5 right-[22px]" />
         <BracketMark variant="bottom-right" className="absolute right-[22px] bottom-[22px]" />
 
         <div className="relative max-w-md">
-          <div className="text-[13px] font-semibold tracking-[0.06em] text-itera-accent uppercase">
+          <div className="text-[13px] font-semibold tracking-[0.06em] text-fliptap-accent uppercase">
             {hasDue ? <>Today&rsquo;s session</> : 'All caught up'}
           </div>
           <div className="mt-4 text-[40px] leading-[0.95] font-bold tracking-tight text-white sm:text-[56px]">

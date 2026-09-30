@@ -13,7 +13,7 @@ import { MultipleChoiceOptionRow } from './MultipleChoiceOptionRow'
 // editor (add/remove/reorder/mark-correct) as the centerpiece plus the
 // selection-mode and randomize-order controls. No native
 // <input type="radio"/checkbox"> anywhere in this file, per spec — every
-// toggle is a small custom role="radio"|"checkbox" button styled with itera
+// toggle is a small custom role="radio"|"checkbox" button styled with fliptap
 // tokens, matching the non-color-reliant indicator introduced into
 // MultipleChoiceView.tsx for Review.
 export function MultipleChoiceFields({
@@ -98,7 +98,7 @@ export function MultipleChoiceFields({
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+        <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
           <button
             type="button"
             role="checkbox"
@@ -109,8 +109,8 @@ export function MultipleChoiceFields({
             className={cn(
               'flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border transition-colors',
               form.selectionMode === 'multiple'
-                ? 'border-itera-accent bg-itera-accent'
-                : 'border-itera-border-strong bg-itera-surface',
+                ? 'border-fliptap-accent bg-fliptap-accent'
+                : 'border-fliptap-border-strong bg-fliptap-surface',
             )}
           >
             {form.selectionMode === 'multiple' && (
@@ -120,7 +120,7 @@ export function MultipleChoiceFields({
           Allow multiple correct answers
         </label>
 
-        <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+        <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
           <button
             type="button"
             role="checkbox"
@@ -129,8 +129,8 @@ export function MultipleChoiceFields({
             className={cn(
               'flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border transition-colors',
               form.randomizeOptions
-                ? 'border-itera-accent bg-itera-accent'
-                : 'border-itera-border-strong bg-itera-surface',
+                ? 'border-fliptap-accent bg-fliptap-accent'
+                : 'border-fliptap-border-strong bg-fliptap-surface',
             )}
           >
             {form.randomizeOptions && <span className="h-2 w-2 rounded-[1px] bg-white" />}
@@ -140,7 +140,7 @@ export function MultipleChoiceFields({
       </div>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Options (mark the correct one{form.selectionMode === 'multiple' ? 's' : ''})
         </span>
         {form.options.map((opt, i) => (
@@ -164,7 +164,7 @@ export function MultipleChoiceFields({
       </div>
 
       {validation.errors.length > 0 && (
-        <ul className="space-y-1 text-xs font-medium text-itera-error">
+        <ul className="space-y-1 text-xs font-medium text-fliptap-error">
           {validation.errors.map((message) => (
             <li key={message}>{message}</li>
           ))}

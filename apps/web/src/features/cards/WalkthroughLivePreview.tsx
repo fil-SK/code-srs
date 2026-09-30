@@ -5,10 +5,10 @@ import { initialSchedulingState } from '@/domain/scheduling/state'
 import { walkthroughFormToPreviewCard, type WalkthroughFormState } from '@/domain/cards/walkthroughForm'
 import type { WalkthroughStepAnswer } from '@/domain/grading/walkthrough'
 import type { WalkthroughInteraction } from '@/types/card'
-import type { WalkthroughState } from '@itera/core'
+import type { WalkthroughState } from '@fliptap/core'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
 import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 
 // Seeds every step before `index` as already answered with a neutral
 // placeholder (author-inspection only — no objective result is attached, so
@@ -59,7 +59,7 @@ export function WalkthroughLivePreview({ form }: { form: WalkthroughFormState })
     jumpStep !== null ? seedResponseForStep(card.interaction, jumpStep) : undefined
 
   return (
-    <IteraSurface>
+    <FlipTapSurface>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1">
           {card.interaction.steps.map((step, i) => (
@@ -68,10 +68,10 @@ export function WalkthroughLivePreview({ form }: { form: WalkthroughFormState })
               type="button"
               onClick={() => jumpTo(i)}
               className={cn(
-                'rounded-itera-control border px-2.5 py-1 text-xs font-medium transition-colors',
+                'rounded-fliptap-control border px-2.5 py-1 text-xs font-medium transition-colors',
                 jumpStep === i
-                  ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                  : 'border-itera-border text-itera-muted hover:text-itera-ink',
+                  ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                  : 'border-fliptap-border text-fliptap-muted hover:text-fliptap-ink',
               )}
             >
               Step {i + 1}
@@ -94,6 +94,6 @@ export function WalkthroughLivePreview({ form }: { form: WalkthroughFormState })
         hideTopBar
         hideRating
       />
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

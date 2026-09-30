@@ -1,4 +1,4 @@
-// The semantic node types for Itera's card-text syntax.
+// The semantic node types for FlipTap's card-text syntax.
 //
 // This is the whole contract between the one shared parser and any renderer.
 // A renderer maps these nodes onto its platform's elements; it never sees the
@@ -11,7 +11,7 @@
 // markup: there is no `html` node, no `raw` node and no `url` node, so no
 // renderer can be handed a string it is expected to execute or navigate to.
 // Adding a member here is a product decision about the syntax, not a rendering
-// detail - see docs/design-system.md and the Itera markdown subset it locks.
+// detail - see docs/design-system.md and the FlipTap markdown subset it locks.
 
 export type RichInline =
   | { kind: 'text'; value: string }

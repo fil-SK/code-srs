@@ -6,7 +6,7 @@ import { findDemoDeck } from '@/src/demo/demoSelectors'
 import { useDemoScreen } from '@/src/demo/useDemoScreen'
 
 // The immersive session. The tab bar hides while this route is focused; see
-// IteraTabBar.
+// FlipTapTabBar.
 //
 // `deckId` carries the same scoping semantics web puts behind `?deck=`: that
 // deck and its subtree. A deckId that names no deck is refused here rather than

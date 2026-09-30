@@ -10,8 +10,8 @@ const variants: Record<Variant, string> = {
   primary: 'bg-accent text-white hover:brightness-110',
   secondary: 'border border-border bg-panel-2 text-text hover:border-accent',
   ghost: 'text-muted hover:bg-panel hover:text-text',
-  // --red re-points to --itera-error inside .itera-scope, so this reads as the
-  // Itera error color everywhere the app is scoped and still works outside it.
+  // --red re-points to --fliptap-error inside .fliptap-scope, so this reads as the
+  // FlipTap error color everywhere the app is scoped and still works outside it.
   danger: 'bg-red text-white hover:brightness-110',
 }
 

@@ -1,4 +1,4 @@
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useState } from 'react'
 import { StyleSheet, TextInput, type ReturnKeyTypeOptions } from 'react-native'
 
@@ -45,7 +45,7 @@ export function FormTextInput({
       onFocus={() => setFocused(true)}
       onSubmitEditing={onSubmitEditing}
       placeholder={placeholder}
-      placeholderTextColor={iteraColors.mutedLight}
+      placeholderTextColor={fliptapColors.mutedLight}
       returnKeyType={returnKeyType ?? (multiline ? 'default' : 'done')}
       spellCheck={false}
       style={[
@@ -65,11 +65,11 @@ export function FormTextInput({
 const styles = StyleSheet.create({
   input: {
     minHeight: 50,
-    color: iteraColors.ink,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    color: fliptapColors.ink,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     fontSize: 15,
     lineHeight: 21,
     paddingHorizontal: 13,
@@ -79,6 +79,6 @@ const styles = StyleSheet.create({
     minHeight: 92,
   },
   focused: {
-    borderColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
   },
 })

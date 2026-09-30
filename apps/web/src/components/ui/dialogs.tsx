@@ -222,11 +222,11 @@ function DialogHost({
     (request.kind === 'confirm' ? (danger ? 'Delete' : 'Confirm') : request.kind === 'prompt' ? 'Save' : 'OK')
 
   return createPortal(
-    // Same reason as FloatingPanel: document.body is outside `.itera-scope`,
+    // Same reason as FloatingPanel: document.body is outside `.fliptap-scope`,
     // so the portal re-establishes the token scope and cancels the canvas
     // background the class would otherwise paint over the whole viewport.
     <div
-      className="itera-scope"
+      className="fliptap-scope"
       style={{ position: 'fixed', inset: 0, background: 'transparent', zIndex: 80 }}
       role="dialog"
       aria-modal="true"
@@ -244,19 +244,19 @@ function DialogHost({
             e.preventDefault()
             submit()
           }}
-          className="relative w-full max-w-[420px] rounded-itera-dialog border border-itera-border bg-itera-surface p-6 shadow-[var(--itera-shadow-float)]"
+          className="relative w-full max-w-[420px] rounded-fliptap-dialog border border-fliptap-border bg-fliptap-surface p-6 shadow-[var(--fliptap-shadow-float)]"
         >
-          <h2 className="font-itera-display text-lg font-bold tracking-tight text-itera-ink-brand">
+          <h2 className="font-fliptap-display text-lg font-bold tracking-tight text-fliptap-ink-brand">
             {options.title}
           </h2>
           {options.description && (
-            <div className="mt-2 text-sm leading-relaxed text-itera-muted">{options.description}</div>
+            <div className="mt-2 text-sm leading-relaxed text-fliptap-muted">{options.description}</div>
           )}
 
           {request.kind === 'prompt' && (
             <label className="mt-4 block">
               {request.options.label && (
-                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+                <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
                   {request.options.label}
                 </span>
               )}

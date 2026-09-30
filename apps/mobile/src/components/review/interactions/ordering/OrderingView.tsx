@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { gradeOrdering, iteraColors, iteraRadii, stripInlineMarkers, type ID } from '@itera/core'
+import { gradeOrdering, fliptapColors, fliptapRadii, stripInlineMarkers, type ID } from '@fliptap/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -25,7 +25,7 @@ function OrderingBadge({ results = false }: { results?: boolean }) {
   return (
     <View style={[styles.badge, results && styles.badgeResults]}>
       <MaterialCommunityIcons
-        color={results ? iteraColors.accent : iteraColors.inkBrand}
+        color={results ? fliptapColors.accent : fliptapColors.inkBrand}
         name={results ? 'check-decagram-outline' : 'format-list-numbered'}
         size={21}
       />
@@ -180,7 +180,7 @@ function OrderingRow({
       {feedback ? (
         <View style={styles.feedbackState}>
           <MaterialCommunityIcons
-            color={feedback.correct ? iteraColors.success : iteraColors.error}
+            color={feedback.correct ? fliptapColors.success : fliptapColors.error}
             name={feedback.correct ? 'check' : 'close'}
             size={16}
           />
@@ -210,7 +210,7 @@ function OrderingRow({
               ]}
             >
               <MaterialCommunityIcons
-                color={iteraColors.inkBrand}
+                color={fliptapColors.inkBrand}
                 name="chevron-up"
                 size={22}
               />
@@ -229,7 +229,7 @@ function OrderingRow({
               ]}
             >
               <MaterialCommunityIcons
-                color={iteraColors.inkBrand}
+                color={fliptapColors.inkBrand}
                 name="chevron-down"
                 size={22}
               />
@@ -434,7 +434,7 @@ export function OrderingView({
             ]}
           >
             <MaterialCommunityIcons
-              color={grade?.correct ? iteraColors.success : iteraColors.error}
+              color={grade?.correct ? fliptapColors.success : fliptapColors.error}
               name={grade?.correct ? 'check-circle-outline' : 'alert-circle-outline'}
               size={20}
             />
@@ -460,13 +460,13 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     padding: 18,
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 7 },
         shadowOpacity: 0.08,
         shadowRadius: 18,
@@ -478,18 +478,18 @@ const styles = StyleSheet.create({
   badge: {
     minHeight: 42,
     paddingHorizontal: 16,
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.surfaceSubtle,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  badgeResults: { backgroundColor: iteraColors.accentSofter },
-  badgeText: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
-  badgeTextResults: { color: iteraColors.accentActive },
+  badgeResults: { backgroundColor: fliptapColors.accentSofter },
+  badgeText: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  badgeTextResults: { color: fliptapColors.accentActive },
   prompt: {
     marginTop: 22,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 23,
     lineHeight: 33,
     fontWeight: '700',
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
   },
   instruction: {
     marginTop: 9,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -506,14 +506,14 @@ const styles = StyleSheet.create({
   items: { width: '100%', marginTop: 22, gap: ROW_GAP },
   itemRow: {
     minHeight: FALLBACK_ROW_HEIGHT,
-    borderRadius: iteraRadii.card,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     paddingLeft: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: iteraColors.ink,
+    shadowColor: fliptapColors.ink,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -525,25 +525,25 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 10,
     elevation: 8,
-    borderColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
     shadowOpacity: 0.15,
     shadowRadius: 10,
   },
   dropSlot: {
     minHeight: 64,
-    borderRadius: iteraRadii.card,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accentSofter,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accentSofter,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dropSlotText: { color: iteraColors.accentActive, fontSize: 12, fontWeight: '700' },
-  itemRowCorrect: { borderColor: '#86c99b', backgroundColor: iteraColors.successSoft },
-  itemRowIncorrect: { borderColor: '#e1a29e', backgroundColor: iteraColors.errorSoft },
+  dropSlotText: { color: fliptapColors.accentActive, fontSize: 12, fontWeight: '700' },
+  itemRowCorrect: { borderColor: '#86c99b', backgroundColor: fliptapColors.successSoft },
+  itemRowIncorrect: { borderColor: '#e1a29e', backgroundColor: fliptapColors.errorSoft },
   itemCopy: { flex: 1, paddingVertical: 13, paddingRight: 6 },
-  itemText: { color: iteraColors.inkBrand, fontSize: 15, lineHeight: 21, fontWeight: '500' },
+  itemText: { color: fliptapColors.inkBrand, fontSize: 15, lineHeight: 21, fontWeight: '500' },
   controls: { flexDirection: 'row', alignItems: 'center' },
   arrows: { width: 38, alignItems: 'center', justifyContent: 'center' },
   arrowButton: {
@@ -556,53 +556,53 @@ const styles = StyleSheet.create({
   arrowDisabled: { opacity: 0.25 },
   grip: { width: 46, minHeight: 70, alignItems: 'center', justifyContent: 'center' },
   gripDots: { width: 23, flexDirection: 'row', flexWrap: 'wrap', gap: 3 },
-  gripDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: iteraColors.mutedLight },
+  gripDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: fliptapColors.mutedLight },
   positionNumber: {
     width: 24,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   feedbackState: { width: 65, paddingRight: 10, alignItems: 'center', gap: 2 },
   feedbackText: { fontSize: 10, fontWeight: '700', textAlign: 'center' },
-  correctText: { color: iteraColors.success },
-  incorrectText: { color: iteraColors.error },
+  correctText: { color: fliptapColors.success },
+  incorrectText: { color: fliptapColors.error },
   submit: {
     width: '100%',
     minHeight: 54,
     marginTop: 20,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitText: { color: iteraColors.surface, fontSize: 17, fontWeight: '700' },
+  submitText: { color: fliptapColors.surface, fontSize: 17, fontWeight: '700' },
   summary: {
     width: '100%',
     minHeight: 48,
     marginTop: 18,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  summaryCorrect: { backgroundColor: iteraColors.successSoft },
-  summaryIncorrect: { backgroundColor: iteraColors.errorSoft },
+  summaryCorrect: { backgroundColor: fliptapColors.successSoft },
+  summaryIncorrect: { backgroundColor: fliptapColors.errorSoft },
   summaryText: { fontSize: 14, fontWeight: '700' },
   correctOrder: {
     width: '100%',
     marginTop: 12,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: iteraColors.borderStrong,
+    borderColor: fliptapColors.borderStrong,
     padding: 14,
     gap: 8,
   },
-  correctOrderLabel: { color: iteraColors.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.7 },
+  correctOrderLabel: { color: fliptapColors.muted, fontSize: 11, fontWeight: '700', letterSpacing: 0.7 },
   correctOrderRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
-  correctOrderNumber: { width: 20, color: iteraColors.accent, fontSize: 12, fontWeight: '700' },
-  correctOrderText: { flex: 1, color: iteraColors.inkBrand, fontSize: 13, lineHeight: 18 },
+  correctOrderNumber: { width: 20, color: fliptapColors.accent, fontSize: 12, fontWeight: '700' },
+  correctOrderText: { flex: 1, color: fliptapColors.inkBrand, fontSize: 13, lineHeight: 18 },
   srOnly: { position: 'absolute', width: 1, height: 1, opacity: 0 },
   pressed: { opacity: 0.72 },
 })

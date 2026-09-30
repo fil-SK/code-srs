@@ -56,7 +56,7 @@ export function MultipleChoiceView({
             <InteractionLabel type="multiple_choice" />
             <CardPrompt text={card.prompt.value} className="mt-2" />
             {interaction.selectionMode === 'multiple' && (
-              <p className="text-xs font-medium text-itera-muted">Select all that apply.</p>
+              <p className="text-xs font-medium text-fliptap-muted">Select all that apply.</p>
             )}
           </div>
 
@@ -78,11 +78,11 @@ export function MultipleChoiceView({
                     }
                   }}
                   className={cn(
-                    'flex min-h-14 cursor-pointer items-center gap-4 rounded-itera-control border px-4 py-3 text-left text-sm outline-none transition-[border-color,background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2',
+                    'flex min-h-14 cursor-pointer items-center gap-4 rounded-fliptap-control border px-4 py-3 text-left text-sm outline-none transition-[border-color,background-color,box-shadow] focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2',
                     locked && 'cursor-default',
                     isSelected
-                      ? 'border-itera-selection-border bg-itera-selection-soft text-itera-ink-brand shadow-[inset_0_0_0_1px_rgba(30,41,59,0.03)]'
-                      : 'border-itera-border bg-itera-surface text-itera-ink hover:border-itera-border-strong hover:bg-itera-surface-subtle',
+                      ? 'border-fliptap-selection-border bg-fliptap-selection-soft text-fliptap-ink-brand shadow-[inset_0_0_0_1px_rgba(30,41,59,0.03)]'
+                      : 'border-fliptap-border bg-fliptap-surface text-fliptap-ink hover:border-fliptap-border-strong hover:bg-fliptap-surface-subtle',
                   )}
                 >
                   <span
@@ -90,8 +90,8 @@ export function MultipleChoiceView({
                     className={cn(
                       'flex size-8 shrink-0 items-center justify-center rounded-full border transition-[border-color,background-color,box-shadow]',
                       isSelected
-                        ? 'border-itera-navy bg-itera-navy text-white shadow-[0_0_0_4px_var(--itera-navy-soft)]'
-                        : 'border-itera-border-strong bg-itera-surface',
+                        ? 'border-fliptap-navy bg-fliptap-navy text-white shadow-[0_0_0_4px_var(--fliptap-navy-soft)]'
+                        : 'border-fliptap-border-strong bg-fliptap-surface',
                     )}
                   >
                     {isSelected && <Check size={18} strokeWidth={2.5} />}
@@ -106,8 +106,8 @@ export function MultipleChoiceView({
 
           {!hideActions && (
             <div className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2.5 text-sm text-itera-muted">
-                <Info aria-hidden="true" size={20} className="shrink-0 text-itera-accent" />
+              <div className="flex items-center gap-2.5 text-sm text-fliptap-muted">
+                <Info aria-hidden="true" size={20} className="shrink-0 text-fliptap-accent" />
                 <span>
                   {interaction.selectionMode === 'multiple'
                     ? 'Choose one or more options'
@@ -118,7 +118,7 @@ export function MultipleChoiceView({
                 type="button"
                 onClick={onPrimaryAction}
                 disabled={!responseReady}
-                className="min-h-12 w-full rounded-itera-control bg-itera-accent px-6 py-3 text-sm font-semibold text-white transition-[background-color,opacity] hover:bg-itera-accent-hover disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:min-w-44"
+                className="min-h-12 w-full rounded-fliptap-control bg-fliptap-accent px-6 py-3 text-sm font-semibold text-white transition-[background-color,opacity] hover:bg-fliptap-accent-hover disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:min-w-44"
               >
                 Submit answer
               </button>
@@ -142,28 +142,28 @@ export function MultipleChoiceView({
               const isSelectedIncorrect = grade?.selectedIncorrect.includes(opt.id)
               const isMissed = grade?.missedCorrect.includes(opt.id)
               const stateClass = isSelectedCorrect
-                ? 'border-itera-success bg-itera-success-soft'
+                ? 'border-fliptap-success bg-fliptap-success-soft'
                 : isSelectedIncorrect
-                  ? 'border-itera-error bg-itera-error-soft'
+                  ? 'border-fliptap-error bg-fliptap-error-soft'
                   : isMissed
-                    ? 'border-itera-success/50 bg-itera-surface'
-                    : 'border-itera-border bg-itera-surface opacity-60'
+                    ? 'border-fliptap-success/50 bg-fliptap-surface'
+                    : 'border-fliptap-border bg-fliptap-surface opacity-60'
 
               return (
                 <div
                   key={opt.id}
                   className={cn(
-                    'flex items-center gap-3 rounded-itera-control border px-3.5 py-3 text-center text-sm',
+                    'flex items-center gap-3 rounded-fliptap-control border px-3.5 py-3 text-center text-sm',
                     stateClass,
                   )}
                 >
-                  <span className="flex-1 text-itera-ink">
+                  <span className="flex-1 text-fliptap-ink">
                     <InlineText text={opt.content.value} />
                   </span>
-                  {isSelectedCorrect && <Check size={16} className="shrink-0 text-itera-success" />}
-                  {isSelectedIncorrect && <X size={16} className="shrink-0 text-itera-error" />}
+                  {isSelectedCorrect && <Check size={16} className="shrink-0 text-fliptap-success" />}
+                  {isSelectedIncorrect && <X size={16} className="shrink-0 text-fliptap-error" />}
                   {isMissed && (
-                    <span className="shrink-0 text-xs font-medium text-itera-success">
+                    <span className="shrink-0 text-xs font-medium text-fliptap-success">
                       Correct answer
                     </span>
                   )}
@@ -176,10 +176,10 @@ export function MultipleChoiceView({
           {grade && (
             <div
               className={cn(
-                'rounded-itera-control px-3.5 py-2.5 text-center text-sm font-semibold',
+                'rounded-fliptap-control px-3.5 py-2.5 text-center text-sm font-semibold',
                 grade.correct
-                  ? 'bg-itera-success-soft text-itera-success'
-                  : 'bg-itera-error-soft text-itera-error',
+                  ? 'bg-fliptap-success-soft text-fliptap-success'
+                  : 'bg-fliptap-error-soft text-fliptap-error',
               )}
             >
               {grade.correct ? 'Correct' : 'Incorrect'}

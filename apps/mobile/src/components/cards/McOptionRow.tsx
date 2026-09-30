@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, type McOptionFormState } from '@itera/core'
+import { fliptapColors, type McOptionFormState } from '@fliptap/core'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { FormTextInput } from '@/src/components/ui/FormTextInput'
@@ -56,7 +56,7 @@ export function McOptionRow({
         ]}
       >
         {option.correct ? (
-          <MaterialCommunityIcons color={iteraColors.surface} name="check" size={16} />
+          <MaterialCommunityIcons color={fliptapColors.surface} name="check" size={16} />
         ) : null}
       </Pressable>
 
@@ -87,7 +87,7 @@ export function McOptionRow({
         ]}
         testID={`mc-option-remove-${index}`}
       >
-        <MaterialCommunityIcons color={iteraColors.muted} name="close" size={20} />
+        <MaterialCommunityIcons color={fliptapColors.muted} name="close" size={20} />
       </Pressable>
     </View>
   )
@@ -106,9 +106,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.borderStrong,
+    borderColor: fliptapColors.borderStrong,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
   markerRound: {
     borderRadius: 15,
@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   markerChecked: {
-    borderColor: iteraColors.accent,
-    backgroundColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
+    backgroundColor: fliptapColors.accent,
   },
   inputWrap: {
     minWidth: 0,

@@ -51,14 +51,14 @@ function MenuItem({ row, onNavigate }: { row: MenuRow; onNavigate: () => void })
     to !== undefined &&
     (to === '/settings' ? pathname === to : pathname === to || pathname.startsWith(`${to}/`))
 
-  const shared = 'flex w-full items-center gap-3 px-3 py-2 text-left text-sm rounded-itera-control'
+  const shared = 'flex w-full items-center gap-3 px-3 py-2 text-left text-sm rounded-fliptap-control'
   const tone = disabled
-    ? 'text-itera-muted-light cursor-default'
+    ? 'text-fliptap-muted-light cursor-default'
     : accent
-      ? 'font-medium text-itera-accent hover:bg-itera-accent-soft'
+      ? 'font-medium text-fliptap-accent hover:bg-fliptap-accent-soft'
       : cn(
-          'text-itera-ink hover:bg-itera-surface-subtle hover:text-itera-ink-brand',
-          active && 'bg-itera-accent-soft font-semibold text-itera-ink-brand',
+          'text-fliptap-ink hover:bg-fliptap-surface-subtle hover:text-fliptap-ink-brand',
+          active && 'bg-fliptap-accent-soft font-semibold text-fliptap-ink-brand',
         )
 
   const body = (
@@ -69,17 +69,17 @@ function MenuItem({ row, onNavigate }: { row: MenuRow; onNavigate: () => void })
         className={cn(
           'flex-none',
           disabled
-            ? 'text-itera-muted-light'
+            ? 'text-fliptap-muted-light'
             : accent
-              ? 'text-itera-accent'
+              ? 'text-fliptap-accent'
               : active
-                ? 'text-itera-accent'
-                : 'text-itera-navy',
+                ? 'text-fliptap-accent'
+                : 'text-fliptap-navy',
         )}
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {disabled && (
-        <span className="flex-none rounded-itera-pill bg-itera-navy-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="flex-none rounded-fliptap-pill bg-fliptap-navy-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fliptap-muted">
           Soon
         </span>
       )}
@@ -126,7 +126,7 @@ function MenuItem({ row, onNavigate }: { row: MenuRow; onNavigate: () => void })
 }
 
 function Divider() {
-  return <div role="separator" className="my-1.5 border-t border-itera-border" />
+  return <div role="separator" className="my-1.5 border-t border-fliptap-border" />
 }
 
 export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
@@ -167,7 +167,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
     ],
     [
       { label: "What's new", icon: Gift },
-      { label: 'About Itera', icon: Info },
+      { label: 'About FlipTap', icon: Info },
     ],
     [
       {
@@ -184,7 +184,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
       <div className="flex items-center gap-3 px-2 pb-2 pt-1.5">
         <span
           aria-hidden="true"
-          className="grid h-11 w-11 flex-none place-items-center rounded-full bg-itera-navy text-lg font-semibold text-white"
+          className="grid h-11 w-11 flex-none place-items-center rounded-full bg-fliptap-navy text-lg font-semibold text-white"
         >
           {initial ?? <User size={20} />}
         </span>
@@ -192,7 +192,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
           <div
             className={cn(
               'truncate text-[15px] font-semibold',
-              identity ? 'text-itera-ink-brand' : 'text-itera-muted-light',
+              identity ? 'text-fliptap-ink-brand' : 'text-fliptap-muted-light',
             )}
           >
             {title}
@@ -200,7 +200,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
           <div
             className={cn(
               'truncate text-[13px]',
-              identity ? 'text-itera-muted' : 'text-itera-muted-light',
+              identity ? 'text-fliptap-muted' : 'text-fliptap-muted-light',
             )}
           >
             {detail}

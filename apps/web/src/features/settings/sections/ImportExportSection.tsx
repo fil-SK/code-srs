@@ -16,7 +16,7 @@ import { Panel, SectionShell } from './SectionShell'
 // A real, working section — this is the app's only backup/restore path and it
 // predates the redesign; it moved here from the old SettingsPage unchanged
 // except for the confirm dialog, which now goes through useDialogs like the
-// rest of the app instead of window.confirm (docs/itera-decisions.md D114).
+// rest of the app instead of window.confirm (docs/fliptap-decisions.md D114).
 export function ImportExportSection() {
   const dialogs = useDialogs()
   const importBackup = useImportBackup()
@@ -30,9 +30,7 @@ export function ImportExportSection() {
   async function handleExport() {
     const backup = await exportConfiguredBackup()
     const date = new Date().toISOString().slice(0, 10)
-    // Filename only. The `app` marker *inside* the file stays 'code-srs' so
-    // every backup exported before the rebrand still imports (backup.ts).
-    downloadText(`itera-backup-${date}.json`, serializeBackup(backup))
+    downloadText(`fliptap-backup-${date}.json`, serializeBackup(backup))
   }
 
   async function handleFile(file: File) {
@@ -76,7 +74,7 @@ export function ImportExportSection() {
       description="Your backup, and the way to move data between devices."
     >
       <Panel>
-        <p className="mb-4 text-sm text-itera-muted">
+        <p className="mb-4 text-sm text-fliptap-muted">
           Everything is stored locally in your browser (IndexedDB). Export writes a single JSON
           file containing your cards, decks, drafts, review history and roadmaps.
         </p>
@@ -105,7 +103,7 @@ export function ImportExportSection() {
             {importBackup.isPending ? 'Importing…' : 'Import JSON'}
           </Button>
 
-          <label className="flex items-center gap-1.5 text-sm text-itera-muted">
+          <label className="flex items-center gap-1.5 text-sm text-fliptap-muted">
             <input
               type="radio"
               name="import-mode"
@@ -119,7 +117,7 @@ export function ImportExportSection() {
               rather than the option silently vanishing. */}
           <label
             className={`flex items-center gap-1.5 text-sm ${
-              replaceAvailable ? 'text-itera-muted' : 'text-itera-muted/50'
+              replaceAvailable ? 'text-fliptap-muted' : 'text-fliptap-muted/50'
             }`}
           >
             <input
@@ -136,7 +134,7 @@ export function ImportExportSection() {
         </div>
 
         {!replaceAvailable && (
-          <p className="mt-3 text-sm text-itera-muted">
+          <p className="mt-3 text-sm text-fliptap-muted">
             Replace is unavailable while your data is synced to the cloud: the existing data
             could not be restored if the upload failed partway through. Merge is unaffected.
           </p>
@@ -144,7 +142,7 @@ export function ImportExportSection() {
 
         {status && (
           <p
-            className={`mt-3 text-sm ${status.kind === 'ok' ? 'text-itera-success' : 'text-itera-error'}`}
+            className={`mt-3 text-sm ${status.kind === 'ok' ? 'text-fliptap-success' : 'text-fliptap-error'}`}
           >
             {status.text}
           </p>

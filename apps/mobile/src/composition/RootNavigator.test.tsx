@@ -1,4 +1,4 @@
-import type { AuthValue } from '@itera/core'
+import type { AuthValue } from '@fliptap/core'
 import { render, screen } from '@testing-library/react-native'
 
 import { RootNavigator } from './RootNavigator'
@@ -30,8 +30,8 @@ jest.mock('expo-router', () => {
 // `mock`-prefixed so Jest's hoisting guard permits the reference inside the
 // factory below.
 const mockUseAuth = jest.fn()
-jest.mock('@itera/core', () => ({
-  ...jest.requireActual('@itera/core'),
+jest.mock('@fliptap/core', () => ({
+  ...jest.requireActual('@fliptap/core'),
   useAuth: () => mockUseAuth(),
 }))
 

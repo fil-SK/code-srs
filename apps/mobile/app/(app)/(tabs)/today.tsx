@@ -1,4 +1,4 @@
-import { pickDashboardMessage } from '@itera/core'
+import { pickDashboardMessage } from '@fliptap/core'
 import { useMemo, useState } from 'react'
 
 import { TodayScreen } from '@/src/components/today/TodayScreen'

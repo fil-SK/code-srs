@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, type Rating } from '@itera/core'
+import { fliptapColors, fliptapRadii, type Rating } from '@fliptap/core'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -50,7 +50,7 @@ export function SessionCompleteScreen({
         <View style={styles.card}>
           <View style={styles.mark}>
             <MaterialCommunityIcons
-              color={iteraColors.accent}
+              color={fliptapColors.accent}
               name={caughtUp ? 'coffee-outline' : 'check-decagram-outline'}
               size={40}
             />
@@ -91,7 +91,7 @@ export function SessionCompleteScreen({
               style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
             >
               <MaterialCommunityIcons
-                color={iteraColors.inkBrand}
+                color={fliptapColors.inkBrand}
                 name="undo-variant"
                 size={18}
               />
@@ -105,19 +105,19 @@ export function SessionCompleteScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   content: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 32, gap: 16 },
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 22,
     paddingVertical: 30,
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 7 },
         shadowOpacity: 0.08,
         shadowRadius: 18,
@@ -130,13 +130,13 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: 24,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     marginTop: 18,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.5,
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 8,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
@@ -152,10 +152,10 @@ const styles = StyleSheet.create({
   breakdown: {
     alignSelf: 'stretch',
     marginTop: 22,
-    borderRadius: iteraRadii.card,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surfaceSubtle,
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
@@ -165,30 +165,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  breakdownLabel: { color: iteraColors.muted, fontSize: 14, fontWeight: '600' },
-  breakdownCount: { color: iteraColors.inkBrand, fontSize: 15, fontWeight: '800' },
+  breakdownLabel: { color: fliptapColors.muted, fontSize: 14, fontWeight: '600' },
+  breakdownCount: { color: fliptapColors.inkBrand, fontSize: 15, fontWeight: '800' },
   primary: {
     alignSelf: 'stretch',
     minHeight: 54,
     marginTop: 24,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryText: { color: iteraColors.surface, fontSize: 17, fontWeight: '700' },
+  primaryText: { color: fliptapColors.surface, fontSize: 17, fontWeight: '700' },
   secondary: {
     alignSelf: 'stretch',
     minHeight: 50,
     marginTop: 10,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    borderColor: iteraColors.border,
+    borderColor: fliptapColors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  secondaryText: { color: iteraColors.inkBrand, fontSize: 15, fontWeight: '700' },
+  secondaryText: { color: fliptapColors.inkBrand, fontSize: 15, fontWeight: '700' },
   pressed: { opacity: 0.72 },
 })

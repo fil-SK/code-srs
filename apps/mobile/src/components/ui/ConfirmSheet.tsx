@@ -1,7 +1,7 @@
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
-import { IteraButton } from './IteraButton'
+import { FlipTapButton } from './FlipTapButton'
 
 // Two shapes of the same surface, because destructive work needs both.
 //
@@ -46,7 +46,7 @@ export function ConfirmSheet({
 
           {kind === 'confirm' ? (
             <View style={styles.actions}>
-              <IteraButton
+              <FlipTapButton
                 label={confirmLabel ?? 'Delete'}
                 onPress={() => {
                   onClose()
@@ -54,11 +54,11 @@ export function ConfirmSheet({
                 }}
                 variant="destructive"
               />
-              <IteraButton label="Cancel" onPress={onClose} variant="secondary" />
+              <FlipTapButton label="Cancel" onPress={onClose} variant="secondary" />
             </View>
           ) : (
             <View style={styles.actions}>
-              <IteraButton label="OK" onPress={onClose} variant="secondary" />
+              <FlipTapButton label="OK" onPress={onClose} variant="secondary" />
             </View>
           )}
         </View>
@@ -81,19 +81,19 @@ const styles = StyleSheet.create({
   dialog: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: iteraRadii.dialog,
-    backgroundColor: iteraColors.surface,
+    borderRadius: fliptapRadii.dialog,
+    backgroundColor: fliptapColors.surface,
     padding: 20,
   },
   title: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
   description: {
     marginTop: 8,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 14,
     lineHeight: 20,
   },

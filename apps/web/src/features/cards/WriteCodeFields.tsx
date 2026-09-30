@@ -95,7 +95,7 @@ export function WriteCodeFields({
       </Field>
 
       <div className="space-y-1.5">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Starter code (optional)
         </span>
         <LazyCodeEditor
@@ -103,14 +103,14 @@ export function WriteCodeFields({
           language={form.language}
           onChange={(value) => set('starterCode', value)}
         />
-        <p className="text-xs text-itera-muted">
+        <p className="text-xs text-fliptap-muted">
           The full starter code above is editable during Review — per-line
           editable/read-only regions aren&apos;t supported yet.
         </p>
       </div>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Accepted answers
         </span>
         {form.acceptedAnswers.map((answer, i) => (
@@ -133,20 +133,20 @@ export function WriteCodeFields({
       </div>
 
       {validation.errors.length > 0 && (
-        <ul className="space-y-1 text-xs font-medium text-itera-error">
+        <ul className="space-y-1 text-xs font-medium text-fliptap-error">
           {validation.errors.map((message) => (
             <li key={message}>{message}</li>
           ))}
         </ul>
       )}
 
-      <details className="rounded-itera-card border border-itera-border bg-itera-surface px-3.5 py-2.5">
-        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-itera-muted">
+      <details className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-3.5 py-2.5">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Advanced comparison settings
         </summary>
         <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
           {COMPARISON_TOGGLES.map(({ key, label }) => (
-            <label key={key} className="flex items-center gap-2.5 text-sm text-itera-ink">
+            <label key={key} className="flex items-center gap-2.5 text-sm text-fliptap-ink">
               <button
                 type="button"
                 role="checkbox"
@@ -155,8 +155,8 @@ export function WriteCodeFields({
                 className={cn(
                   'flex h-5 w-5 flex-none items-center justify-center rounded-[5px] border transition-colors',
                   form.comparison[key]
-                    ? 'border-itera-accent bg-itera-accent'
-                    : 'border-itera-border-strong bg-itera-surface',
+                    ? 'border-fliptap-accent bg-fliptap-accent'
+                    : 'border-fliptap-border-strong bg-fliptap-surface',
                 )}
               >
                 {form.comparison[key] && <span className="h-2 w-2 rounded-[1px] bg-white" />}

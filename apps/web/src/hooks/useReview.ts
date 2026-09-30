@@ -1,14 +1,14 @@
 // Compatibility shim - defines nothing. The canonical implementation lives in
-// packages/core/src/hooks/ and is published as @itera/core.
+// packages/core/src/hooks/ and is published as @fliptap/core.
 //
 // It exists so moving the data hooks into the shared package did not have to be
 // the same commit as rewriting every feature's imports. New code should import
-// from '@itera/core' directly; this layer is transitional.
+// from '@fliptap/core' directly; this layer is transitional.
 
 export {
   reviewWriteGuarantee,
   usePersistReviewResult,
   useReviewLogs,
   useUndoGrade,
-} from '@itera/core'
-export type { PersistReviewResultInput, UndoInput } from '@itera/core'
+} from '@fliptap/core'
+export type { PersistReviewResultInput, UndoInput } from '@fliptap/core'

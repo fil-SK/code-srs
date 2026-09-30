@@ -5,7 +5,7 @@ import { initialSchedulingState } from '@/domain/scheduling/state'
 import { subtreeIds } from '@/domain/decks/tree'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
 import { ReviewSessionScreen } from '@/features/reviewV2/ReviewSessionScreen'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import { useSearchCards } from '@/hooks/useCards'
 import { useDecks } from '@/hooks/useDecks'
 
@@ -104,16 +104,16 @@ export function PreviewPage() {
   }, [cardParam, cards.length, go])
 
   if (allCards.isLoading || (deckParam && decks.isLoading)) {
-    return <p className="text-sm text-itera-muted">Loading…</p>
+    return <p className="text-sm text-fliptap-muted">Loading…</p>
   }
 
   if (cards.length === 0 || !current || !card) {
     return (
-      <div className="mx-auto max-w-md rounded-itera-card border border-dashed border-itera-border bg-itera-surface p-10 text-center">
-        <div className="text-lg font-semibold text-itera-ink-brand">
+      <div className="mx-auto max-w-md rounded-fliptap-card border border-dashed border-fliptap-border bg-fliptap-surface p-10 text-center">
+        <div className="text-lg font-semibold text-fliptap-ink-brand">
           {cardParam ? 'Card not found' : 'No cards here'}
         </div>
-        <p className="mt-2 text-sm text-itera-muted">
+        <p className="mt-2 text-sm text-fliptap-muted">
           {cardParam
             ? 'That card could not be loaded.'
             : scope
@@ -131,7 +131,7 @@ export function PreviewPage() {
 
   return (
     <div>
-      <IteraSurface>
+      <FlipTapSurface>
         <ReviewSessionScreen
           key={current.id}
           card={card}
@@ -146,7 +146,7 @@ export function PreviewPage() {
           previousDisabled={safeIndex === 0}
           nextDisabled={safeIndex === cards.length - 1}
         />
-      </IteraSurface>
+      </FlipTapSurface>
     </div>
   )
 }

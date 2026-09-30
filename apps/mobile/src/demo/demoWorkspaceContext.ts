@@ -1,4 +1,4 @@
-import type { Millis } from '@itera/core'
+import type { Millis } from '@fliptap/core'
 import { createContext, useContext } from 'react'
 
 import type { DemoNotification } from './demoWorkspace'

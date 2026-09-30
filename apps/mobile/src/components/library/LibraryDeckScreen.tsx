@@ -1,11 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
   checkDeckDeletion,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   markLabelFor,
   useDeleteDeck,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
@@ -19,7 +19,7 @@ import {
 } from '@/src/components/cards/authoringTypes'
 import { ActionSheet, type ActionSheetItem } from '@/src/components/ui/ActionSheet'
 import { ConfirmSheet } from '@/src/components/ui/ConfirmSheet'
-import { IteraButton } from '@/src/components/ui/IteraButton'
+import { FlipTapButton } from '@/src/components/ui/FlipTapButton'
 import { SearchField } from '@/src/components/ui/SearchField'
 import type { MobileDeckCardViewModel, MobileDeckViewModel } from '@/src/types/library'
 import { CardActions } from './CardActions'
@@ -42,7 +42,7 @@ function DeckMetric({
   return (
     <View style={styles.metric}>
       <View style={styles.metricTop}>
-        <MaterialCommunityIcons color={iteraColors.inkBrand} name={icon} size={21} />
+        <MaterialCommunityIcons color={fliptapColors.inkBrand} name={icon} size={21} />
         <Text style={styles.metricValue}>{value}</Text>
       </View>
       <Text style={styles.metricLabel}>{label}</Text>
@@ -205,7 +205,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
                 state in this component alone, and had no product equivalent on
                 web - no Deck field, hook, filter or sort key exists for it, and
                 no decision approved one. It was removed rather than kept as an
-                invented feature; see itera-decisions.md.
+                invented feature; see fliptap-decisions.md.
 
                 What sits here now is a real control: every item behind it
                 works.
@@ -219,7 +219,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
                 style={({ pressed }) => [styles.deckActions, pressed && styles.pressed]}
               >
                 <MaterialCommunityIcons
-                  color={iteraColors.muted}
+                  color={fliptapColors.muted}
                   name="dots-vertical"
                   size={22}
                 />
@@ -243,7 +243,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
             </View>
 
             <View style={styles.lastStudiedRow}>
-              <MaterialCommunityIcons color={iteraColors.inkBrand} name="clock-outline" size={18} />
+              <MaterialCommunityIcons color={fliptapColors.inkBrand} name="clock-outline" size={18} />
               <Text style={styles.lastStudiedText}>
                 Last studied: {viewModel.lastStudiedLabel}
               </Text>
@@ -262,7 +262,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
             }
             style={({ pressed }) => [styles.studyButton, pressed && styles.pressed]}
           >
-            <MaterialCommunityIcons color={iteraColors.surface} name="play-outline" size={25} />
+            <MaterialCommunityIcons color={fliptapColors.surface} name="play-outline" size={25} />
             <Text style={styles.studyButtonText}>Study Now</Text>
           </Pressable>
         ) : (
@@ -274,7 +274,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           */
           <View accessible accessibilityLabel={caughtUpText} style={styles.caughtUp}>
             <MaterialCommunityIcons
-              color={iteraColors.accent}
+              color={fliptapColors.accent}
               name={viewModel.cardCount === 0 ? 'cards-outline' : 'coffee-outline'}
               size={22}
             />
@@ -288,7 +288,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           is the first authoring decision. The chooser lists only what this
           platform can author today.
         */}
-        <IteraButton
+        <FlipTapButton
           accessibilityHint="Choose a card type to author"
           label="Add Card"
           onPress={() => setTypeChooserOpen(true)}
@@ -315,7 +315,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
               onPress={() => setFilterOpen(true)}
               style={({ pressed }) => [styles.filterButton, pressed && styles.pressed]}
             >
-              <MaterialCommunityIcons color={iteraColors.inkBrand} name="tune-variant" size={23} />
+              <MaterialCommunityIcons color={fliptapColors.inkBrand} name="tune-variant" size={23} />
             </Pressable>
           </View>
 
@@ -330,7 +330,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
                 onPress={() => setStatusFilter('all')}
                 style={({ pressed }) => pressed && styles.pressed}
               >
-                <MaterialCommunityIcons color={iteraColors.muted} name="close" size={18} />
+                <MaterialCommunityIcons color={fliptapColors.muted} name="close" size={18} />
               </Pressable>
             </View>
           ) : null}
@@ -414,7 +414,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   scroll: {
     zIndex: 1,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     width: 280,
     height: 155,
     borderRadius: 84,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     transform: [{ rotate: '-13deg' }],
   },
   decorativeShapeSmall: {
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     width: 230,
     height: 102,
     borderRadius: 62,
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     opacity: 0.7,
     transform: [{ rotate: '-8deg' }],
   },
@@ -490,12 +490,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    borderRadius: iteraRadii.card,
-    backgroundColor: iteraColors.navy,
+    borderRadius: fliptapRadii.card,
+    backgroundColor: fliptapColors.navy,
   },
   deckMarkText: {
     zIndex: 2,
-    color: iteraColors.surface,
+    color: fliptapColors.surface,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 28,
     fontWeight: '700',
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     bottom: 7,
     width: 86,
     height: 7,
-    backgroundColor: iteraColors.accent,
+    backgroundColor: fliptapColors.accent,
     transform: [{ rotate: '-34deg' }],
   },
   identityContent: {
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   },
   collectionCaption: {
     marginBottom: 3,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.2,
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
   title: {
     minWidth: 0,
     flex: 1,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 24,
     fontWeight: '700',
     letterSpacing: -0.7,
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   },
   description: {
     marginTop: 5,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     lineHeight: 19,
   },
@@ -565,14 +565,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   metricValue: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 18,
     fontVariant: ['tabular-nums'],
     fontWeight: '700',
   },
   metricLabel: {
     marginTop: 3,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
   },
   lastStudiedRow: {
@@ -592,11 +592,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 9,
     marginTop: 20,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
   },
   studyButtonText: {
-    color: iteraColors.surface,
+    color: fliptapColors.surface,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -607,25 +607,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 9,
     marginTop: 20,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     paddingHorizontal: 16,
   },
   caughtUpText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 15,
     fontWeight: '600',
   },
   cardsSection: {
     marginTop: 22,
-    borderTopColor: iteraColors.border,
+    borderTopColor: fliptapColors.border,
     borderTopWidth: 1,
     paddingTop: 18,
   },
   cardsHeading: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: -0.3,
@@ -644,10 +644,10 @@ const styles = StyleSheet.create({
     minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
   filterChip: {
     minHeight: 36,
@@ -656,10 +656,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
     marginTop: 9,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.pill,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.pill,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingLeft: 10,
     paddingRight: 8,
   },
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   filterChipText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 12,
   },
   cardList: {
@@ -689,20 +689,20 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     marginTop: 14,
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     padding: 24,
   },
   emptyTitle: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 16,
     fontWeight: '700',
   },
   emptyText: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
     textAlign: 'center',
   },

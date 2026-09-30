@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import type { ComponentProps } from 'react'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -70,7 +70,7 @@ export function ActionSheet({
             style={({ pressed }) => [styles.option, pressed && styles.pressed]}
           >
             <MaterialCommunityIcons
-              color={item.danger ? iteraColors.error : iteraColors.inkBrand}
+              color={item.danger ? fliptapColors.error : fliptapColors.inkBrand}
               name={item.icon}
               size={21}
             />
@@ -99,9 +99,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,23,42,0.35)',
   },
   sheet: {
-    borderTopLeftRadius: iteraRadii.card,
-    borderTopRightRadius: iteraRadii.card,
-    backgroundColor: iteraColors.surface,
+    borderTopLeftRadius: fliptapRadii.card,
+    borderTopRightRadius: fliptapRadii.card,
+    backgroundColor: fliptapColors.surface,
     paddingTop: 10,
     paddingBottom: 34,
     paddingHorizontal: 18,
@@ -110,19 +110,19 @@ const styles = StyleSheet.create({
     width: 38,
     height: 4,
     alignSelf: 'center',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.border,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.border,
   },
   title: {
     marginTop: 14,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 17,
     fontWeight: '700',
   },
   subtitle: {
     marginTop: 3,
     marginBottom: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 13,
   },
   option: {
@@ -132,23 +132,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 16,
     fontWeight: '600',
   },
   optionTextDanger: {
-    color: iteraColors.error,
+    color: fliptapColors.error,
   },
   cancel: {
     minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 6,
-    borderTopColor: iteraColors.border,
+    borderTopColor: fliptapColors.border,
     borderTopWidth: 1,
   },
   cancelText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     fontWeight: '600',
   },

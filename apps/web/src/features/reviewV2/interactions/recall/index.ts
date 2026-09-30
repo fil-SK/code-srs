@@ -1,4 +1,4 @@
-import { recallBehavior } from '@itera/core'
+import { recallBehavior } from '@fliptap/core'
 import type { WebInteractionDefinition } from '../types'
 import { RecallView } from './RecallView'
 

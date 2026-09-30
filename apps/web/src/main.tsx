@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
-import { configureRepository, SupabaseRepository } from '@itera/core'
+import { configureRepository, SupabaseRepository } from '@fliptap/core'
 import './index.css'
 import { Providers } from '@/app/providers'
 import { router } from '@/app/router'
@@ -13,7 +13,7 @@ import { getSupabase, isSupabaseConfigured } from '@/data/supabase/client'
 // The web app's composition, and the only place it is made. Reading the
 // configuration and building the browser client is this layer's job:
 // SupabaseRepository and the shared auth layer each take what they need and
-// never look at the environment, and @itera/core has no default backend and no
+// never look at the environment, and @fliptap/core has no default backend and no
 // default auth mode at all.
 //
 // One platform decision, two configured shared systems. `cloudEnabled` is read

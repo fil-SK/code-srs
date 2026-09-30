@@ -1,4 +1,4 @@
-import { useAuth } from '@itera/core'
+import { useAuth } from '@fliptap/core'
 
 import { SignInScreen } from '@/src/components/auth/SignInScreen'
 import { getMobileSupabase } from '@/src/data/supabaseClient'

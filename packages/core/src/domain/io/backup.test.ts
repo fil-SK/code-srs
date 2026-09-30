@@ -43,7 +43,7 @@ describe('backup build/serialize/parse', () => {
     }
     const json = serializeBackup(buildBackup(data))
     const parsed = parseBackup(json)
-    expect(parsed.app).toBe('code-srs')
+    expect(parsed.app).toBe('fliptap')
     expect(parsed.version).toBe(BACKUP_VERSION)
     expect(parsed.data.decks).toHaveLength(1)
   })
@@ -71,22 +71,22 @@ describe('backup build/serialize/parse', () => {
 
   it('rejects files from another app', () => {
     expect(() => parseBackup(JSON.stringify({ app: 'anki', version: 1 }))).toThrow(
-      /Itera backup/,
+      /FlipTap backup/,
     )
   })
 
   it('rejects a newer version', () => {
-    const future = JSON.stringify({ app: 'code-srs', version: 999, data: empty })
+    const future = JSON.stringify({ app: 'fliptap', version: 999, data: empty })
     expect(() => parseBackup(future)).toThrow(/newer/)
   })
 
   it('rejects a prototype-era version 1 backup', () => {
-    const old = JSON.stringify({ app: 'code-srs', version: 1, data: {} })
+    const old = JSON.stringify({ app: 'fliptap', version: 1, data: {} })
     expect(() => parseBackup(old)).toThrow(/unsupported prototype data format/)
   })
 
   it('rejects missing data lists', () => {
-    const bad = JSON.stringify({ app: 'code-srs', version: 2, data: { cards: [] } })
+    const bad = JSON.stringify({ app: 'fliptap', version: 2, data: { cards: [] } })
     expect(() => parseBackup(bad)).toThrow(/decks/)
   })
 
@@ -148,13 +148,13 @@ describe('backup build/serialize/parse', () => {
   // roadmaps is optional (added after v2 shipped), but present-and-not-a-list
   // used to reach bulkPut unchecked.
   it('accepts a v2 backup with no roadmaps key at all', () => {
-    const json = JSON.stringify({ app: 'code-srs', version: 2, data: empty })
+    const json = JSON.stringify({ app: 'fliptap', version: 2, data: empty })
     expect(() => parseBackup(json)).not.toThrow()
   })
 
   it('rejects a roadmaps value that is not a list', () => {
     const json = JSON.stringify({
-      app: 'code-srs',
+      app: 'fliptap',
       version: 2,
       data: { ...empty, roadmaps: { id: 'r1' } },
     })

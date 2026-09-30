@@ -2,7 +2,7 @@
 
 Scratch list of things deliberately **not** built, kept so they are not
 re-derived from scratch each time. Anything here that a milestone has since
-decided on is recorded properly in `itera-decisions.md`; this file is the
+decided on is recorded properly in `fliptap-decisions.md`; this file is the
 holding pen, not a source of truth.
 
 ## Early-access capture is not connected (found 2026-08-28)
@@ -136,7 +136,7 @@ touching any database**, because this repository has no Supabase project: the
 previous one was deleted mid-development (`CURRENT_STATE.md` §15) and there is no
 `.env.local` anywhere in the tree. Everything below needs a project to exist.
 
-**Create a fresh, dedicated Itera development project** rather than reusing one
+**Create a fresh, dedicated FlipTap development project** rather than reusing one
 with data worth keeping. Two of the migrations are destructive by design.
 
 Bootstrap, in order:
@@ -353,7 +353,7 @@ Before the next public deployment, confirm the Vercel dashboard still uses repos
 
 ## Gamify
 
-How to improve Itera with better UX, using famification? For both web and mobile or just mobile?
+How to improve FlipTap with better UX, using famification? For both web and mobile or just mobile?
 
 **Answered 2026-08-28 (owner).** The distinction that governs this, and the two halves must
 not be conflated:
@@ -367,7 +367,7 @@ fabricate goal and achievement entities, and were right).
 
 **In scope, and treated as real product work:** streak feedback, mastery moments, session
 summaries, progress celebration, daily-consistency signals, and a satisfying end to a
-review. These are light gamification and Itera currently has almost none of them — every
+review. These are light gamification and FlipTap currently has almost none of them — every
 mechanic it already computes is unmarked. The four moments worth designing, in order:
 session completion, the streak increment, deck mastery, and returning after a gap. All are
 feedback on numbers that are already true, so nothing is fabricated, and the form stays
@@ -377,7 +377,7 @@ Specified as P1-10 in [`pre-publish-plan.md`](pre-publish-plan.md).
 
 ## LeetCode usage
 
-How to use Itera for SRS in regards to LeetCode? How to market it in that regards as well
+How to use FlipTap for SRS in regards to LeetCode? How to market it in that regards as well
 
 ## Shareable results
 

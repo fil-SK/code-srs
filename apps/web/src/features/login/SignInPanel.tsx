@@ -25,8 +25,8 @@ import { cn } from '@/lib/cn'
 // the subtle fill the editors use.
 const inputClass = cn(
   fieldClass,
-  'h-11 rounded-itera-control border-itera-border bg-itera-surface pl-10 text-[14px] placeholder:text-itera-muted-light',
-  'focus:border-itera-accent focus-visible:ring-2 focus-visible:ring-itera-accent/25',
+  'h-11 rounded-fliptap-control border-fliptap-border bg-fliptap-surface pl-10 text-[14px] placeholder:text-fliptap-muted-light',
+  'focus:border-fliptap-accent focus-visible:ring-2 focus-visible:ring-fliptap-accent/25',
 )
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -35,7 +35,7 @@ function Label({ htmlFor, children }: { htmlFor: string; children: ReactNode }) 
   return (
     <label
       htmlFor={htmlFor}
-      className="mb-2 block text-[13px] font-semibold text-itera-ink-brand"
+      className="mb-2 block text-[13px] font-semibold text-fliptap-ink-brand"
     >
       {children}
     </label>
@@ -47,7 +47,7 @@ function LeadingIcon({ icon: Icon }: { icon: typeof Mail }) {
     <Icon
       size={17}
       aria-hidden="true"
-      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-itera-muted-light"
+      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fliptap-muted-light"
     />
   )
 }
@@ -121,16 +121,16 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <div className="w-full rounded-[15px] border border-itera-border bg-itera-surface p-6 shadow-[0_1px_3px_rgba(23,32,51,0.04)] sm:p-7">
-      <h2 className="text-[27px] font-[650] leading-[1.15] tracking-[-0.02em] text-itera-ink-brand">
+    <div className="w-full rounded-[15px] border border-fliptap-border bg-fliptap-surface p-6 shadow-[0_1px_3px_rgba(23,32,51,0.04)] sm:p-7">
+      <h2 className="text-[27px] font-[650] leading-[1.15] tracking-[-0.02em] text-fliptap-ink-brand">
         Sign in
       </h2>
-      <p className="mt-1 text-[14px] font-normal leading-[1.5] text-itera-muted">
-        Access your Itera workspace
+      <p className="mt-1 text-[14px] font-normal leading-[1.5] text-fliptap-muted">
+        Access your FlipTap workspace
       </p>
 
       {magicLink === 'sent' ? (
-        <div className="mt-7 rounded-itera-control border border-itera-success/30 bg-itera-success-soft p-4 text-sm text-itera-ink">
+        <div className="mt-7 rounded-fliptap-control border border-fliptap-success/30 bg-fliptap-success-soft p-4 text-sm text-fliptap-ink">
           Check <span className="font-semibold">{email.trim()}</span> for a sign-in link.
           You can close this tab once you have clicked it.
         </div>
@@ -154,7 +154,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
               />
             </div>
             {errors.email && (
-              <p id={`${emailId}-error`} role="alert" className="mt-1.5 text-[13px] text-itera-error">
+              <p id={`${emailId}-error`} role="alert" className="mt-1.5 text-[13px] text-fliptap-error">
                 {errors.email}
               </p>
             )}
@@ -183,7 +183,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
                   aria-pressed={showPassword}
                   aria-controls={passwordId}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-itera-control text-itera-muted-light hover:text-itera-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-itera-accent"
+                  className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-fliptap-control text-fliptap-muted-light hover:text-fliptap-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-fliptap-accent"
                 >
                   {showPassword ? <Eye size={17} /> : <EyeOff size={17} />}
                 </button>
@@ -192,7 +192,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
                 <p
                   id={`${passwordId}-error`}
                   role="alert"
-                  className="mt-1.5 text-[13px] text-itera-error"
+                  className="mt-1.5 text-[13px] text-fliptap-error"
                 >
                   {errors.password}
                 </p>
@@ -209,9 +209,9 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
                     type="checkbox"
                     checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
-                    className="h-4 w-4 rounded-[4px] border-itera-border-strong accent-[var(--itera-accent)]"
+                    className="h-4 w-4 rounded-[4px] border-fliptap-border-strong accent-[var(--fliptap-accent)]"
                   />
-                  <label htmlFor={rememberId} className="text-[14px] text-itera-ink">
+                  <label htmlFor={rememberId} className="text-[14px] text-fliptap-ink">
                     Remember me
                   </label>
                 </div>
@@ -225,14 +225,14 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
                   aria-disabled="true"
                   aria-expanded={showResetNote}
                   onClick={() => setShowResetNote((v) => !v)}
-                  className="rounded-itera-control text-[14px] font-semibold text-itera-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-itera-accent"
+                  className="rounded-fliptap-control text-[14px] font-semibold text-fliptap-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fliptap-accent"
                 >
                   Forgot password?
                 </button>
               </div>
               {showResetNote && (
-                <p className="mt-2 text-[13px] text-itera-muted">
-                  Password reset is not available yet. Itera stores everything locally, so
+                <p className="mt-2 text-[13px] text-fliptap-muted">
+                  Password reset is not available yet. FlipTap stores everything locally, so
                   use Continue with demo workspace to get back in.
                 </p>
               )}
@@ -244,7 +244,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
               The bootstrap message is why the visitor is on this screen at all, so
               a live form error from this session takes precedence over it. */}
           {(errors.form ?? sessionError) && (
-            <p role="alert" className="mt-4 text-[13px] text-itera-error">
+            <p role="alert" className="mt-4 text-[13px] text-fliptap-error">
               {errors.form ?? sessionError}
             </p>
           )}
@@ -253,7 +253,7 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
             type="submit"
             variant="primary"
             disabled={magicLink === 'sending'}
-            className="mt-5 h-11 w-full rounded-itera-control text-[14px]"
+            className="mt-5 h-11 w-full rounded-fliptap-control text-[14px]"
           >
             {cloudAuth
               ? magicLink === 'sending'
@@ -267,24 +267,24 @@ export function SignInPanel({ redirectTo }: { redirectTo: string }) {
       {!cloudAuth && magicLink !== 'sent' && (
         <>
           <div className="my-4 flex items-center gap-4">
-            <span aria-hidden="true" className="h-px flex-1 bg-itera-border" />
-            <span className="text-[13px] text-itera-muted">or</span>
-            <span aria-hidden="true" className="h-px flex-1 bg-itera-border" />
+            <span aria-hidden="true" className="h-px flex-1 bg-fliptap-border" />
+            <span className="text-[13px] text-fliptap-muted">or</span>
+            <span aria-hidden="true" className="h-px flex-1 bg-fliptap-border" />
           </div>
 
           <Button
             type="button"
             variant="secondary"
             onClick={handleDemo}
-            className="h-11 w-full rounded-itera-control border-itera-border bg-itera-surface text-[14px] font-semibold text-itera-ink-brand hover:border-itera-border-strong"
+            className="h-11 w-full rounded-fliptap-control border-fliptap-border bg-fliptap-surface text-[14px] font-semibold text-fliptap-ink-brand hover:border-fliptap-border-strong"
           >
-            <FlaskConical size={17} aria-hidden="true" className="text-itera-muted" />
+            <FlaskConical size={17} aria-hidden="true" className="text-fliptap-muted" />
             Continue with demo workspace
           </Button>
         </>
       )}
 
-      <p className="mt-5 flex items-center gap-2 text-[12px] text-itera-muted">
+      <p className="mt-5 flex items-center gap-2 text-[12px] text-fliptap-muted">
         <Lock size={14} aria-hidden="true" className="flex-none" />
         Local-first by design. Your learning stays with you.
       </p>

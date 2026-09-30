@@ -48,7 +48,7 @@ export interface StudySessionSpan {
 
 const DEFAULT_SESSION_GAP_MS = 30 * 60_000
 
-// No session boundary is persisted anywhere (see docs/itera-decisions.md) —
+// No session boundary is persisted anywhere (see docs/fliptap-decisions.md) —
 // this reconstructs session spans by grouping consecutive reviews that are no
 // more than `gapMs` apart. Approximate by construction; real product/data-
 // model work to track sessions explicitly is a separate, larger change.
@@ -364,7 +364,7 @@ const REVIEW_THRESHOLDS = [100, 500, 1000, 2500, 5000, 10000]
 const RETENTION_THRESHOLDS = [0.7, 0.8, 0.9]
 
 // Derives milestone-like events purely from ReviewLog history — no
-// milestone/achievement entity exists (see docs/itera-decisions.md), so this
+// milestone/achievement entity exists (see docs/fliptap-decisions.md), so this
 // is entirely recomputed each time rather than tracked incrementally. Three
 // families: cumulative review-count thresholds, streak-length thresholds, and
 // trailing-30-day retention thresholds, each dated at the first log/day that

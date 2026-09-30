@@ -22,7 +22,7 @@ export function CardTypeChooser({
 }) {
   return (
     <div>
-      <div className="mb-3 text-sm font-semibold text-itera-ink-brand">
+      <div className="mb-3 text-sm font-semibold text-fliptap-ink-brand">
         1. Choose interaction
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
@@ -39,21 +39,21 @@ export function CardTypeChooser({
               onClick={() => onSelect(type)}
               aria-pressed={isSelected}
               className={cn(
-                'flex min-h-[90px] flex-col items-center justify-center gap-2 rounded-itera-control border bg-itera-surface px-2 py-3 text-center transition-colors',
+                'flex min-h-[90px] flex-col items-center justify-center gap-2 rounded-fliptap-control border bg-fliptap-surface px-2 py-3 text-center transition-colors',
                 enabled
                   ? isSelected
-                    ? 'border-itera-accent text-itera-ink-brand shadow-[0_0_0_1px_var(--itera-accent)]'
-                    : 'border-itera-border text-itera-ink-brand hover:border-itera-border-strong hover:bg-itera-surface-subtle'
-                  : 'cursor-not-allowed border-itera-border bg-itera-surface text-itera-muted opacity-60',
+                    ? 'border-fliptap-accent text-fliptap-ink-brand shadow-[0_0_0_1px_var(--fliptap-accent)]'
+                    : 'border-fliptap-border text-fliptap-ink-brand hover:border-fliptap-border-strong hover:bg-fliptap-surface-subtle'
+                  : 'cursor-not-allowed border-fliptap-border bg-fliptap-surface text-fliptap-muted opacity-60',
               )}
             >
               <Icon
                 size={20}
-                className={isSelected ? 'text-itera-accent' : enabled ? 'text-itera-navy' : 'text-itera-muted'}
+                className={isSelected ? 'text-fliptap-accent' : enabled ? 'text-fliptap-navy' : 'text-fliptap-muted'}
                 aria-hidden="true"
               />
               <span className="text-xs font-semibold">{meta.label}</span>
-              {!enabled && <span className="text-[11px] text-itera-muted">Coming soon</span>}
+              {!enabled && <span className="text-[11px] text-fliptap-muted">Coming soon</span>}
             </button>
           )
         })}

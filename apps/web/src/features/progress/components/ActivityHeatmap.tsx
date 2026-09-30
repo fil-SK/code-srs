@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Info } from 'lucide-react'
-import { heatmapMonthLabels, toHeatmapWeeks } from '@itera/core'
+import { heatmapMonthLabels, toHeatmapWeeks } from '@fliptap/core'
 import {
   HEATMAP_RANGE_OPTIONS,
   type HeatmapDay,
@@ -11,11 +11,11 @@ import { SegmentedToggle } from './SegmentedToggle'
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const LEVEL_BG: Record<HeatmapDay['level'], string> = {
-  0: 'var(--itera-surface-subtle)',
-  1: 'var(--itera-accent-softer)',
-  2: 'var(--itera-accent-soft)',
+  0: 'var(--fliptap-surface-subtle)',
+  1: 'var(--fliptap-accent-softer)',
+  2: 'var(--fliptap-accent-soft)',
   3: '#ffb37a', // mid step between accent-soft and the full accent
-  4: 'var(--itera-accent)',
+  4: 'var(--fliptap-accent)',
 }
 
 export function ActivityHeatmap({
@@ -33,14 +33,14 @@ export function ActivityHeatmap({
   const gap = 3
 
   return (
-    <div className="rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]">
+    <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-itera-ink-brand">Activity heat map</h3>
-            <Info size={14} strokeWidth={1.9} className="text-itera-muted" aria-hidden="true" />
+            <h3 className="text-base font-semibold text-fliptap-ink-brand">Activity heat map</h3>
+            <Info size={14} strokeWidth={1.9} className="text-fliptap-muted" aria-hidden="true" />
           </div>
-          <p className="text-xs text-itera-muted">Daily cards reviewed</p>
+          <p className="text-xs text-fliptap-muted">Daily cards reviewed</p>
         </div>
         <SegmentedToggle
           options={HEATMAP_RANGE_OPTIONS.map(({ value, label }) => ({ value, label }))}
@@ -50,12 +50,12 @@ export function ActivityHeatmap({
       </div>
 
       {days.length === 0 ? (
-        <p className="mt-6 text-sm text-itera-muted">No review activity yet.</p>
+        <p className="mt-6 text-sm text-fliptap-muted">No review activity yet.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
           <div className="inline-flex gap-2">
             <div
-              className="grid flex-none text-[10px] text-itera-muted"
+              className="grid flex-none text-[10px] text-fliptap-muted"
               style={{ gridTemplateRows: `14px repeat(7, ${cell}px)`, rowGap: gap }}
             >
               <span />
@@ -77,7 +77,7 @@ export function ActivityHeatmap({
               {months.map((label, i) => (
                 <span
                   key={`month-${i}`}
-                  className="text-[10px] text-itera-muted"
+                  className="text-[10px] text-fliptap-muted"
                   style={{ gridColumn: i + 1, gridRow: 1 }}
                 >
                   {label}
@@ -102,7 +102,7 @@ export function ActivityHeatmap({
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-itera-muted">
+          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-fliptap-muted">
             Less
             {([0, 1, 2, 3, 4] as const).map((level) => (
               <span

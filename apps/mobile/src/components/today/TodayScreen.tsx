@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -51,7 +51,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
             style={({ pressed }) => [styles.seeAll, pressed && styles.pressed]}
           >
             <Text style={styles.seeAllText}>See all</Text>
-            <MaterialCommunityIcons color={iteraColors.accent} name="chevron-right" size={17} />
+            <MaterialCommunityIcons color={fliptapColors.accent} name="chevron-right" size={17} />
           </Pressable>
         </View>
 
@@ -84,7 +84,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: iteraColors.canvas,
+    backgroundColor: fliptapColors.canvas,
   },
   scroll: {
     zIndex: 1,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 170,
     borderRadius: 90,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     transform: [{ rotate: '-12deg' }],
   },
   decorativeShapeSmall: {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     width: 250,
     height: 116,
     borderRadius: 70,
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     opacity: 0.68,
     transform: [{ rotate: '-8deg' }],
   },
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   greetingTitle: {
     maxWidth: 350,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 30,
     fontWeight: '700',
     letterSpacing: -0.8,
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   greetingSubtitle: {
     maxWidth: 330,
     marginTop: 7,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   sectionTitle: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 19,
     fontWeight: '700',
     letterSpacing: -0.3,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
   },
   seeAllText: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   emptyDecks: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 14,
     lineHeight: 21,
     paddingHorizontal: 2,

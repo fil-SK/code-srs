@@ -1,9 +1,9 @@
 import { Fragment, type ReactNode } from 'react'
-import { parseRichInline, parseRichText, type RichInline } from '@itera/core'
+import { parseRichInline, parseRichText, type RichInline } from '@fliptap/core'
 import { LazyCodeView } from '@/components/code/LazyCodeView'
 
-// The web renderer for Itera's card-text syntax. It maps the semantic nodes
-// @itera/core produces onto DOM elements and does no parsing of its own -
+// The web renderer for FlipTap's card-text syntax. It maps the semantic nodes
+// @fliptap/core produces onto DOM elements and does no parsing of its own -
 // what `**bold**`, `*italic*`, `` `code` `` and a fenced block mean is decided
 // once, in packages/core/src/content/parseRichText.ts, so a future native
 // renderer maps the same tree rather than re-implementing the rules. This file

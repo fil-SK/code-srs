@@ -28,7 +28,7 @@ export function RecallFields({
   return (
     <div className="space-y-4">
       <div>
-        <div className="mb-2 text-xs font-medium text-itera-muted">
+        <div className="mb-2 text-xs font-medium text-fliptap-muted">
           Recall presets
         </div>
         <div className="flex flex-wrap gap-2">
@@ -38,10 +38,10 @@ export function RecallFields({
               type="button"
               onClick={() => set('authoringPreset', p.value)}
               className={cn(
-                'rounded-itera-control border px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-fliptap-control border px-3 py-1.5 text-xs font-medium transition-colors',
                 form.authoringPreset === p.value
-                  ? 'border-itera-accent bg-itera-surface text-itera-ink-brand shadow-[0_0_0_1px_var(--itera-accent)]'
-                  : 'border-itera-border bg-itera-surface-subtle text-itera-ink hover:border-itera-border-strong',
+                  ? 'border-fliptap-accent bg-fliptap-surface text-fliptap-ink-brand shadow-[0_0_0_1px_var(--fliptap-accent)]'
+                  : 'border-fliptap-border bg-fliptap-surface-subtle text-fliptap-ink hover:border-fliptap-border-strong',
               )}
             >
               {p.label}

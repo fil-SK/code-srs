@@ -9,7 +9,7 @@ import {
   type ID,
   type Millis,
   type ReviewLog,
-} from '@itera/core'
+} from '@fliptap/core'
 
 import { DEMO_CARD_SEEDS } from './demoCardContent'
 import { createDemoReviewHistory, demoTodayRetention } from './demoReviewHistory'
@@ -43,7 +43,7 @@ import type { MobileCardStatus } from '@/src/types/library'
 // an id refers to one entity and every screen reads the same record.
 //
 // Every learning metric is derived from canonical Cards + ReviewLogs through
-// @itera/core. Authored values in this file are seed inputs only.
+// @fliptap/core. Authored values in this file are seed inputs only.
 
 // One definition, shared with the presentation contract the deck list renders.
 export type DemoCardStatus = MobileCardStatus
@@ -51,7 +51,7 @@ export type DemoInteractionType = Card['interaction']['type']
 
 // There is no demo Collection type, and no demo Deck or Card type.
 //
-// A Collection is not an entity anywhere in Itera: core derives it from the
+// A Collection is not an entity anywhere in FlipTap: core derives it from the
 // `Deck.parentId` tree (`library/collectionTree.ts` - any deck with at least
 // one child deck is a Collection, and a collection id *is* a deck id). This
 // file used to carry a parallel `DemoCollection[]` plus `DemoDeck.collectionId`,

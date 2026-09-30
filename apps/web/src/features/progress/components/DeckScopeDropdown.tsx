@@ -41,15 +41,15 @@ export function DeckScopeDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-itera-control border border-itera-border px-3 py-1.5 text-sm font-medium text-itera-ink hover:border-itera-border-strong"
+        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-fliptap-control border border-fliptap-border px-3 py-1.5 text-sm font-medium text-fliptap-ink hover:border-fliptap-border-strong"
       >
         {current?.label ?? 'All decks'}
-        <ChevronDown size={14} className="text-itera-muted" />
+        <ChevronDown size={14} className="text-fliptap-muted" />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 z-20 mt-1 max-h-64 w-56 overflow-y-auto rounded-itera-control border border-itera-border bg-itera-surface py-1 shadow-[var(--itera-shadow-float)]"
+          className="absolute right-0 z-20 mt-1 max-h-64 w-56 overflow-y-auto rounded-fliptap-control border border-fliptap-border bg-fliptap-surface py-1 shadow-[var(--fliptap-shadow-float)]"
         >
           {options.map((option) => (
             <button
@@ -61,10 +61,10 @@ export function DeckScopeDropdown({
                 onChange(option.value)
                 setOpen(false)
               }}
-              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-itera-ink hover:bg-itera-surface-subtle"
+              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-fliptap-ink hover:bg-fliptap-surface-subtle"
             >
               <span className="truncate">{option.label}</span>
-              {option.value === value && <Check size={14} className="flex-none text-itera-accent" />}
+              {option.value === value && <Check size={14} className="flex-none text-fliptap-accent" />}
             </button>
           ))}
         </div>

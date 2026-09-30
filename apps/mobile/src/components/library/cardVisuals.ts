@@ -1,5 +1,5 @@
 import type MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import type { ComponentProps } from 'react'
 
 import type { MobileCardStatus, MobileDeckCardViewModel } from '@/src/types/library'
@@ -15,16 +15,16 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 // introducing one: New is neutral, Learning is the accent already used for
 // "due", and Review is the success green the progress bars use.
 export const statusColors: Record<MobileCardStatus, string> = {
-  New: iteraColors.mutedLight,
-  Learning: iteraColors.accent,
-  Review: iteraColors.success,
+  New: fliptapColors.mutedLight,
+  Learning: fliptapColors.accent,
+  Review: fliptapColors.success,
 }
 
 export const interactionVisuals: Record<
   MobileDeckCardViewModel['interactionType'],
   { icon: IconName; backgroundColor: string }
 > = {
-  recall: { icon: 'code-braces', backgroundColor: iteraColors.navy },
+  recall: { icon: 'code-braces', backgroundColor: fliptapColors.navy },
   walkthrough: { icon: 'source-branch', backgroundColor: '#0d9488' },
   multiple_choice: { icon: 'format-list-checks', backgroundColor: '#f59e0b' },
   write_code: { icon: 'code-tags', backgroundColor: '#2563eb' },

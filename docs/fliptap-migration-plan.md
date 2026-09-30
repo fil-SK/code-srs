@@ -1,8 +1,8 @@
-# Itera — Migration Plan
+# FlipTap — Migration Plan
 
 **Canonical, living document.** The data-migration and data-safety contract for this project. Covers both storage backends (Dexie in every user's browser; Supabase in production) — they must move in lockstep or they will silently diverge.
 
-**Most of this plan is now history.** The card-model half of it is finished, but not the way it was designed: on 2026-08-18 the v1/v2 split was resolved by **converging on one `Card` model and resetting the prototype card data**, rather than by migrating it (see `itera-decisions.md` D190-D196). §1 (lazy card-payload adaptation) and §4 (CardState extraction) describe code and entities that no longer exist. What remains live is §0's contract, §6's Collection/Deck split, and the §7/§8 conventions.
+**Most of this plan is now history.** The card-model half of it is finished, but not the way it was designed: on 2026-08-18 the v1/v2 split was resolved by **converging on one `Card` model and resetting the prototype card data**, rather than by migrating it (see `fliptap-decisions.md` D190-D196). §1 (lazy card-payload adaptation) and §4 (CardState extraction) describe code and entities that no longer exist. What remains live is §0's contract, §6's Collection/Deck split, and the §7/§8 conventions.
 
 **No migration may run lazily on read.** That exemption existed solely for `migrateCard`, which is deleted.
 
@@ -11,7 +11,7 @@
 | Migration | Status |
 |---|---|
 | §1 — Card payload 8 → 6 (lazy on read) | **Void.** Superseded by the single-card-model convergence: there is no v1 payload left to adapt, and `migrateCard` is deleted. |
-| §2 — Schema versioning / `BACKUP_VERSION` bump | **Done, differently.** `BACKUP_VERSION` is `2`, and `parseBackup` also enforces a `MIN_SUPPORTED_BACKUP_VERSION` of 2 — version-1 files are refused outright rather than auto-migrated, because their card shape no longer exists. `Card.schemaVersion` is on every card, and since 2026-08-18 an imported card's `schemaVersion` is checked against `CARD_SCHEMA_VERSION` rather than merely being present, so a card written for another model is refused at the entity level too (`apps/web/src/domain/io/validateBackupEntities.ts`; see `itera-decisions.md` D198-D201). |
+| §2 — Schema versioning / `BACKUP_VERSION` bump | **Done, differently.** `BACKUP_VERSION` is `2`, and `parseBackup` also enforces a `MIN_SUPPORTED_BACKUP_VERSION` of 2 — version-1 files are refused outright rather than auto-migrated, because their card shape no longer exists. `Card.schemaVersion` is on every card, and since 2026-08-18 an imported card's `schemaVersion` is checked against `CARD_SCHEMA_VERSION` rather than merely being present, so a card written for another model is refused at the entity level too (`apps/web/src/domain/io/validateBackupEntities.ts`; see `fliptap-decisions.md` D198-D201). |
 | §4 — CardState extraction | **Void.** The `cardStates` store, its backfill runner and its Settings UI were removed with the convergence; nothing had ever read from them. Scheduling lives on `Card.scheduling`. Re-separating content from learning state is still a legitimate future goal (`architecture.md` principle 4) but would be designed fresh, against real data. |
 | §5 — Preserve richer Matching/Walkthrough capability | **Completed and honored** in the shipped types, editors and graders. |
 | §6 — Deck → Collection + Deck split | **Not started.** Even the read-only preflight report (§6.1) has never been run. The Library ships against a UI-only `parentId` derivation instead. **This is the only live migration left in this plan.** |
@@ -67,7 +67,7 @@ Mapping (spec §33.2, applied to this codebase's actual type names in `apps/web/
 | `mcq` | `multiple_choice` | — | `options`/`correct`/`multiple` map directly to `options[].correct`/`selectionMode` |
 | `codeCompletion` | `write_code` | — | `scaffold` → `starterCode`; `solutions` → `acceptedAnswers`; `validation.{ignoreWhitespace,caseSensitive}` map directly to `comparison.*` |
 | `ordering` | `ordering` | — | `items` map directly; already stored in correct order, matches `correctOrder` |
-| `matching` | `matching` | — | `pairs`/`triple`/`options` map to `columns`/`relationships`, preserving 3-part and fixed-option-column capability — see §5, locked per `itera-decisions.md` D13 |
+| `matching` | `matching` | — | `pairs`/`triple`/`options` map to `columns`/`relationships`, preserving 3-part and fixed-option-column capability — see §5, locked per `fliptap-decisions.md` D13 |
 | `story` | `walkthrough` | — | `intro`+`code`+`image` → `scenario`+`code`+`image`; `steps[]` map to `steps[]`; `highlight` (line spec string) → `focus: Array<{startLine, endLine}>` (multiple ranges, preserved — see §5, locked per D13) |
 
 Every old type's optional `explanation` field maps to the new `explanation` field (post-answer) — **not** to `tip`. Tip is a genuinely new, currently-unpopulated field; no existing content is auto-assigned into it (per spec §33.4 — `bugFinding.bugHint` is the one exception, since it already is a pre-answer hint).
@@ -90,7 +90,7 @@ Every old type's optional `explanation` field maps to the new `explanation` fiel
 
 ## 4. Card/CardState separation
 
-**Status: steps 1-3 completed (2026-07-23); steps 4-6 not started.** Additive Dexie (`version(3)`, `cardStates`) and Supabase (`supabase/migrations/0001_card_states.sql`) schema, a tested backfill (`apps/web/src/domain/migration/cardStateBackfill.ts`) exposed as a dry-run/apply UI in **Account settings → Card scheduling**, and dual-write from every write path are live — see `itera-decisions.md` D38-D44 for exactly what shipped. The steps below are the original plan and remain accurate as written; only the status has changed, not the design.
+**Status: steps 1-3 completed (2026-07-23); steps 4-6 not started.** Additive Dexie (`version(3)`, `cardStates`) and Supabase (`supabase/migrations/0001_card_states.sql`) schema, a tested backfill (`apps/web/src/domain/migration/cardStateBackfill.ts`) exposed as a dry-run/apply UI in **Account settings → Card scheduling**, and dual-write from every write path are live — see `fliptap-decisions.md` D38-D44 for exactly what shipped. The steps below are the original plan and remain accurate as written; only the status has changed, not the design.
 
 Currently `Card.scheduling: SchedulingState` (see `apps/web/src/types/card.ts`, `CardBase`). Steps (each independently deployable and reversible):
 
@@ -105,7 +105,7 @@ Rollback at any point before step 5 ships: stop before that step: `card_states` 
 
 ## 5. Locked: richer functionality is preserved, not downgraded
 
-Per `itera-decisions.md` D13, explicitly locked by the product owner (not a default-absent-objection):
+Per `fliptap-decisions.md` D13, explicitly locked by the product owner (not a default-absent-objection):
 
 - **Walkthrough supports multiple highlighted line ranges** (`WalkthroughStep.focus: Array<{startLine, endLine}>` in `apps/web/src/types/cardV2.ts`), not the spec's illustrative single-range shape. A highlight spec like `"26-34, 40"` converts to `[{startLine:26,endLine:34},{startLine:40,endLine:40}]` with no loss.
 - **Walkthrough supports optional guidance at both scopes.** `CardV2.tip`/`explanation` remain card-wide, while each `WalkthroughStep` may additionally carry optional `tip`/`explanation`. The step fields are additive properties inside the existing opaque JSON blob: older records and v1 Story migrations may omit them, so no storage migration or eager rewrite is required.
@@ -117,7 +117,7 @@ Per `itera-decisions.md` D13, explicitly locked by the product owner (not a defa
 
 **Status: not started.** Neither the preflight report nor any migration code exists; there is no `Collection` type, no `collections` table, and no `apps/web/src/domain/collections/tree.ts`. The Library UI ships against a **UI-only** derivation (`apps/web/src/features/library/collectionTree.ts`: any deck with children is treated as a Collection node) which moves and transforms no data at all. That derivation is not a substitute for this migration, and shipping it did not advance it.
 
-**No remedy for any ambiguous case is designed before the preflight report proves it occurs** (`itera-decisions.md` D15) — this corrects the previous version of this document, which proposed auto-creating a "General" deck speculatively.
+**No remedy for any ambiguous case is designed before the preflight report proves it occurs** (`fliptap-decisions.md` D15) — this corrects the previous version of this document, which proposed auto-creating a "General" deck speculatively.
 
 ### 6.1 Preflight report (required, reviewed by a human, before any migration code runs)
 
@@ -128,7 +128,7 @@ Read-only queries against real data (Supabase `decks`/`cards` tables, or the Dex
 3. **Broken parent references** — a deck's `parentId` points at a deck that doesn't exist.
 4. **Cycles** — a deck is its own ancestor through some chain of `parentId`s. (`apps/web/src/domain/decks/tree.ts` already treats these as roots rather than looping; the report should surface them explicitly rather than silently absorbing them.)
 5. **Cards referencing a missing Deck** — `card.deckId` doesn't resolve to any existing deck.
-6. **Roadmap nodes whose Deck would change identity** — every `RoadmapNode.deckId` where that deck is about to become a Collection (case 1), meaning the roadmap node's reference becomes semantically invalid post-split. This is the trigger for hiding/retiring the affected Roadmap UI per `itera-decisions.md` D11 — it does not trigger any change to Roadmap data itself.
+6. **Roadmap nodes whose Deck would change identity** — every `RoadmapNode.deckId` where that deck is about to become a Collection (case 1), meaning the roadmap node's reference becomes semantically invalid post-split. This is the trigger for hiding/retiring the affected Roadmap UI per `fliptap-decisions.md` D11 — it does not trigger any change to Roadmap data itself.
 
 Only after this report is produced and reviewed does a remedy for case 2 get designed — and only if case 2's count is nonzero. Whatever the remedy (an explicitly-named holding deck, manual reassignment prompted to the user, or something else decided at that point), **it is not optional to preserve every card** — zero cards may be lost or duplicated, full stop.
 
@@ -142,7 +142,7 @@ Only after this report is produced and reviewed does a remedy for case 2 get des
 
 ### 6.3 Roadmaps
 
-Per `itera-decisions.md` D11: Roadmap data (the `Roadmap` type, both backends' repo methods, the Supabase `roadmaps` table, backup inclusion) is **not touched** by this migration. Only the UI route may be hidden, and only for roadmaps the preflight report (§6.1 item 6) actually flags as affected.
+Per `fliptap-decisions.md` D11: Roadmap data (the `Roadmap` type, both backends' repo methods, the Supabase `roadmaps` table, backup inclusion) is **not touched** by this migration. Only the UI route may be hidden, and only for roadmaps the preflight report (§6.1 item 6) actually flags as affected.
 
 ## 7. Backward compatibility / rollback strategy
 
@@ -153,7 +153,7 @@ Per `itera-decisions.md` D11: Roadmap data (the `Roadmap` type, both backends' r
 
 ## 8. Supabase-specific process — versioned migration files, not ad hoc dashboard edits
 
-Per `itera-decisions.md` D16. Every schema change ships as a new file under `supabase/migrations/`, e.g. `0001_card_states.sql`, `0002_collections.sql` — sequential, self-contained, checked into the repo. Each file includes:
+Per `fliptap-decisions.md` D16. Every schema change ships as a new file under `supabase/migrations/`, e.g. `0001_card_states.sql`, `0002_collections.sql` — sequential, self-contained, checked into the repo. Each file includes:
 
 ```sql
 -- 0001_card_states.sql
@@ -174,7 +174,7 @@ Missing the final `grant` is the exact bug that caused a production 403 earlier 
 
 **Status: partially implemented, with one known gap.** `supabase/migrations/0001_card_states.sql` exists and follows the shape above. The later `cards_v2` table, however, was added **only** to `supabase/schema.sql` with no corresponding migration file — so a Supabase project created from `schema.sql` gets it, while one migrated file-by-file does not. Closing that gap (a `0002_cards_v2.sql` mirroring what `schema.sql` already declares) is the next action here.
 
-Separately: both `card_states` and `cards_v2` are **unverified against a live database** — the project owner's Supabase project was deleted mid-development. They are written to the same standard as the rest of the schema, but flagged rather than assumed correct (`itera-decisions.md` D42).
+Separately: both `card_states` and `cards_v2` are **unverified against a live database** — the project owner's Supabase project was deleted mid-development. They are written to the same standard as the rest of the schema, but flagged rather than assumed correct (`fliptap-decisions.md` D42).
 
 ## 9. Required test coverage
 

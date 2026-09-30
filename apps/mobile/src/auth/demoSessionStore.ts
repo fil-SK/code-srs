@@ -1,4 +1,4 @@
-import type { LocalSession, LocalSessionStore } from '@itera/core'
+import type { LocalSession, LocalSessionStore } from '@fliptap/core'
 
 // The demo workspace's session record, as core's LocalSessionStore.
 //
@@ -19,7 +19,7 @@ import type { LocalSession, LocalSessionStore } from '@itera/core'
 
 export const DEMO_SESSION: LocalSession = {
   id: 'demo-workspace',
-  email: 'demo@itera.app',
+  email: 'demo@fliptap.app',
   kind: 'demo',
   createdAt: '2026-08-24T00:00:00.000Z',
 }

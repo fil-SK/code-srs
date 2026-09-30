@@ -49,12 +49,12 @@ export function RatingControls({
               disabled={disabled}
               onClick={() => onRate(b.rating)}
               className={cn(
-                'flex min-h-[116px] flex-col items-center justify-center rounded-itera-control border bg-itera-surface px-2 py-4 text-center outline-none shadow-[0_1px_4px_rgba(23,32,51,0.08)] transition-[border-color,background-color,box-shadow] hover:border-itera-border-strong hover:shadow-[0_3px_10px_rgba(23,32,51,0.10)] focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60',
+                'flex min-h-[116px] flex-col items-center justify-center rounded-fliptap-control border bg-fliptap-surface px-2 py-4 text-center outline-none shadow-[0_1px_4px_rgba(23,32,51,0.08)] transition-[border-color,background-color,box-shadow] hover:border-fliptap-border-strong hover:shadow-[0_3px_10px_rgba(23,32,51,0.10)] focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60',
                 isSelected
-                  ? 'border-itera-accent bg-itera-accent-softer'
+                  ? 'border-fliptap-accent bg-fliptap-accent-softer'
                   : isSuggested
-                    ? 'border-itera-accent'
-                    : 'border-itera-border',
+                    ? 'border-fliptap-accent'
+                    : 'border-fliptap-border',
               )}
             >
               <b.Icon
@@ -62,20 +62,20 @@ export function RatingControls({
                 strokeWidth={2}
                 className={cn(
                   'mb-2.5 size-6',
-                  emphasized ? 'text-itera-accent' : 'text-itera-muted',
+                  emphasized ? 'text-fliptap-accent' : 'text-fliptap-muted',
                 )}
               />
-              <span className="text-base font-semibold leading-5 text-itera-ink-brand">
+              <span className="text-base font-semibold leading-5 text-fliptap-ink-brand">
                 {b.label}
               </span>
-              <span className="mt-1.5 text-sm leading-5 text-itera-muted">
+              <span className="mt-1.5 text-sm leading-5 text-fliptap-muted">
                 {b.rating} <span aria-hidden="true">•</span> {intervals[b.rating]}
               </span>
             </button>
           )
         })}
       </div>
-      {note && <p className="mt-2 text-xs text-itera-muted">{note}</p>}
+      {note && <p className="mt-2 text-xs text-fliptap-muted">{note}</p>}
     </div>
   )
 }

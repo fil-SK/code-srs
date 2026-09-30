@@ -118,10 +118,10 @@ export function ProgressPage() {
         <div className="space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="font-itera-display text-3xl font-bold text-itera-ink-brand">
+              <h1 className="font-fliptap-display text-3xl font-bold text-fliptap-ink-brand">
                 Your progress
               </h1>
-              <p className="mt-1 text-sm text-itera-muted">
+              <p className="mt-1 text-sm text-fliptap-muted">
                 Track your learning. Build lasting knowledge.
               </p>
             </div>
@@ -130,14 +130,14 @@ export function ProgressPage() {
           <LoadingRegion label="Loading your progress" className="space-y-6">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {[0, 1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-[148px] rounded-itera-card" />
+                <Skeleton key={i} className="h-[148px] rounded-fliptap-card" />
               ))}
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <Skeleton className="h-[246px] rounded-itera-card" />
-              <Skeleton className="h-[246px] rounded-itera-card" />
-              <Skeleton className="h-[386px] rounded-itera-card" />
-              <Skeleton className="h-[386px] rounded-itera-card" />
+              <Skeleton className="h-[246px] rounded-fliptap-card" />
+              <Skeleton className="h-[246px] rounded-fliptap-card" />
+              <Skeleton className="h-[386px] rounded-fliptap-card" />
+              <Skeleton className="h-[386px] rounded-fliptap-card" />
             </div>
           </LoadingRegion>
         </div>
@@ -150,8 +150,8 @@ export function ProgressPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-itera-display text-3xl font-bold text-itera-ink-brand">Your progress</h1>
-            <p className="mt-1 text-sm text-itera-muted">Track your learning. Build lasting knowledge.</p>
+            <h1 className="font-fliptap-display text-3xl font-bold text-fliptap-ink-brand">Your progress</h1>
+            <p className="mt-1 text-sm text-fliptap-muted">Track your learning. Build lasting knowledge.</p>
           </div>
           <DateRangePicker preset={preset} range={range} onChange={setPreset} />
         </div>
@@ -174,7 +174,7 @@ export function ProgressPage() {
                 label="Due"
                 value={kpis.due.toLocaleString()}
                 iconTone="navy"
-                footer={<span className="text-itera-muted">Due now</span>}
+                footer={<span className="text-fliptap-muted">Due now</span>}
               />
               <KpiTile
                 icon={CopyCheck}
@@ -203,7 +203,7 @@ export function ProgressPage() {
                 value={formatDayCount(kpis.streak)}
                 iconTone="accent"
                 footer={
-                  <span className="text-itera-muted">{`Best: ${formatDayCount(kpis.bestStreak)}`}</span>
+                  <span className="text-fliptap-muted">{`Best: ${formatDayCount(kpis.bestStreak)}`}</span>
                 }
               />
             </div>

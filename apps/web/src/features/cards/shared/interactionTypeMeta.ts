@@ -5,11 +5,11 @@ import type { InteractionType } from '@/types/card'
 // One consistent, distinguishing tint per interaction type (icon + solid
 // tile color), modeled after cardTypeMeta.ts's shape but for the new 6-type
 // Card union. Promoted into production once the real Deck page needed it too
-// (see docs/itera-decisions.md). Also the single
+// (see docs/fliptap-decisions.md). Also the single
 // source of truth for reviewV2's per-card pill icon (InteractionLabel), so
 // the flashcard and the "Choose interaction" tile always agree.
 export const INTERACTION_META: Record<InteractionType, { label: string; icon: LucideIcon; tileClass: string }> = {
-  recall: { label: 'Recall', icon: Brain, tileClass: 'bg-itera-navy' },
+  recall: { label: 'Recall', icon: Brain, tileClass: 'bg-fliptap-navy' },
   multiple_choice: { label: 'Multiple Choice', icon: ListChecks, tileClass: 'bg-amber-500' },
   write_code: { label: 'Write Code', icon: CodeXml, tileClass: 'bg-blue-600' },
   ordering: { label: 'Ordering', icon: ListOrdered, tileClass: 'bg-emerald-600' },

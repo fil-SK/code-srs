@@ -18,6 +18,6 @@
 export type MobileRuntimeMode = 'demo' | 'cloud'
 
 export const mobileRuntimeMode: MobileRuntimeMode =
-  process.env.EXPO_PUBLIC_ITERA_MODE === 'cloud' ? 'cloud' : 'demo'
+  process.env.EXPO_PUBLIC_FLIPTAP_MODE === 'cloud' ? 'cloud' : 'demo'
 
 export const isDemoMode = mobileRuntimeMode === 'demo'

@@ -5,7 +5,7 @@ import {
   IMAGE_FILE_ACCEPT,
   isAllowedImageFileType,
   isSafeImageSource,
-} from '@itera/core'
+} from '@fliptap/core'
 import { Button } from '@/components/ui/Button'
 import { Field, fieldClass, selectClass } from '@/components/ui/Field'
 import { LazyCodeEditor } from '@/components/code/LazyCodeEditor'
@@ -130,7 +130,7 @@ export function WalkthroughFields({
       </Field>
 
       <div className="space-y-1.5">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Shared code (optional)
         </span>
         <LazyCodeEditor
@@ -142,7 +142,7 @@ export function WalkthroughFields({
 
       <Field label="Shared image (optional)">
         <div
-          className="rounded-itera-control border border-dashed border-itera-border p-3"
+          className="rounded-fliptap-control border border-dashed border-fliptap-border p-3"
           onPaste={(e) => {
             const file = Array.from(e.clipboardData.files).find((f) => isAllowedImageFileType(f.type))
             if (file) readImage(file)
@@ -155,7 +155,7 @@ export function WalkthroughFields({
               <img
                 src={form.image}
                 alt=""
-                className="max-h-56 w-auto rounded-itera-control border border-itera-border"
+                className="max-h-56 w-auto rounded-fliptap-control border border-fliptap-border"
               />
               <button
                 type="button"
@@ -163,13 +163,13 @@ export function WalkthroughFields({
                   set('image', undefined)
                   setImgWarning('')
                 }}
-                className="inline-flex items-center gap-1 text-xs text-itera-muted hover:text-itera-error"
+                className="inline-flex items-center gap-1 text-xs text-fliptap-muted hover:text-fliptap-error"
               >
                 <X size={13} /> Remove image
               </button>
             </div>
           ) : (
-            <div className="text-xs text-itera-muted">
+            <div className="text-xs text-fliptap-muted">
               <input
                 type="file"
                 accept={IMAGE_FILE_ACCEPT}
@@ -177,17 +177,17 @@ export function WalkthroughFields({
                   const file = e.target.files?.[0]
                   if (file) readImage(file)
                 }}
-                className="block text-itera-ink"
+                className="block text-fliptap-ink"
               />
               <span className="mt-1 block">or click here and paste an image</span>
             </div>
           )}
-          {imgWarning && <p className="mt-2 text-xs text-itera-warning">{imgWarning}</p>}
+          {imgWarning && <p className="mt-2 text-xs text-fliptap-warning">{imgWarning}</p>}
         </div>
       </Field>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold uppercase tracking-wide text-itera-muted">
+        <span className="block text-xs font-semibold uppercase tracking-wide text-fliptap-muted">
           Steps
         </span>
         {form.steps.map((step, i) => (
@@ -250,7 +250,7 @@ export function WalkthroughFields({
       </div>
 
       {validation.errors.length > 0 && (
-        <ul className="space-y-1 text-xs font-medium text-itera-error">
+        <ul className="space-y-1 text-xs font-medium text-fliptap-error">
           {validation.errors.map((message) => (
             <li key={message}>{message}</li>
           ))}

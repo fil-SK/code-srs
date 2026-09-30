@@ -5,11 +5,11 @@ import {
   MUST_SURVIVE_LITERALLY,
   XSS_CODE_BLOCK,
   XSS_PAYLOADS,
-} from '@itera/core/src/test/attackPayloads'
+} from '@fliptap/core/src/test/attackPayloads'
 import { InlineText, RichText } from './RichText'
 
 // Two jobs. First, that the renderer still produces the DOM it produced before
-// the parser moved into @itera/core - the class strings and element choices
+// the parser moved into @fliptap/core - the class strings and element choices
 // are the visual contract every card surface inherits. Second, the actual
 // content-security assertions: real DOM inspection with hostile input, not a
 // snapshot and not "React escapes strings".

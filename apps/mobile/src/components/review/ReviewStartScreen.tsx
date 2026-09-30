@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -51,7 +51,7 @@ export function ReviewStartScreen({
             <>
               <View style={styles.mark}>
                 <MaterialCommunityIcons
-                  color={iteraColors.accent}
+                  color={fliptapColors.accent}
                   name="coffee-outline"
                   size={34}
                 />
@@ -89,11 +89,11 @@ export function ReviewStartScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 142, gap: 16 },
   intro: { marginTop: 10 },
   heading: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 34,
     fontWeight: '700',
     letterSpacing: -1,
@@ -101,14 +101,14 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 22,
     paddingVertical: 30,
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: 7 },
         shadowOpacity: 0.08,
         shadowRadius: 18,
@@ -118,15 +118,15 @@ const styles = StyleSheet.create({
     }),
   },
   count: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 56,
     fontWeight: '700',
     letterSpacing: -1.5,
   },
-  countLabel: { marginTop: 2, color: iteraColors.muted, fontSize: 15, fontWeight: '600' },
+  countLabel: { marginTop: 2, color: fliptapColors.muted, fontSize: 15, fontWeight: '600' },
   scope: {
     marginTop: 14,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
@@ -135,30 +135,30 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     minHeight: 54,
     marginTop: 26,
-    borderRadius: iteraRadii.control,
-    backgroundColor: iteraColors.accent,
+    borderRadius: fliptapRadii.control,
+    backgroundColor: fliptapColors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  startText: { color: iteraColors.surface, fontSize: 17, fontWeight: '700' },
+  startText: { color: fliptapColors.surface, fontSize: 17, fontWeight: '700' },
   mark: {
     width: 68,
     height: 68,
     borderRadius: 22,
-    backgroundColor: iteraColors.accentSofter,
+    backgroundColor: fliptapColors.accentSofter,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
     marginTop: 16,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 22,
     fontWeight: '700',
     letterSpacing: -0.4,
   },
   subtitle: {
     marginTop: 8,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',

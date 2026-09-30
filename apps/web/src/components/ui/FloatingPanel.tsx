@@ -175,12 +175,12 @@ export function FloatingPanel({
   }
 
   return createPortal(
-    // document.body sits outside `.itera-scope`, so the portal has to
+    // document.body sits outside `.fliptap-scope`, so the portal has to
     // re-establish the token scope itself. The class also paints a canvas
     // background, which a transparent overlay must not — hence the inline
     // override.
     <div
-      className="itera-scope"
+      className="fliptap-scope"
       style={{ position: 'fixed', inset: 0, background: 'transparent', pointerEvents: 'none', zIndex: 60 }}
     >
       <div
@@ -200,7 +200,7 @@ export function FloatingPanel({
         }}
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          'rounded-itera-control border border-itera-border bg-itera-surface py-1 shadow-[var(--itera-shadow-float)]',
+          'rounded-fliptap-control border border-fliptap-border bg-fliptap-surface py-1 shadow-[var(--fliptap-shadow-float)]',
           className,
         )}
       >

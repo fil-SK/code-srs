@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthProvider'
-import { IteraSurface } from '@/features/reviewV2/components/IteraSurface'
+import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import { LoginBrandPanel } from './LoginBrandPanel'
 import { SignInPanel } from './SignInPanel'
 
@@ -8,7 +8,7 @@ import { SignInPanel } from './SignInPanel'
 // construction (the same structural pattern Review and design-preview use), and
 // outside RequireAuth for the obvious reason.
 //
-// Layout: one restrained surface on the Itera canvas, split into the larger
+// Layout: one restrained surface on the FlipTap canvas, split into the larger
 // product half and the quieter sign-in half. Below `lg` the two stack with a
 // compact brand introduction before the form.
 export function LoginPage() {
@@ -22,18 +22,18 @@ export function LoginPage() {
   if (isAuthenticated) return <Navigate to={redirectTo} replace />
 
   return (
-    <IteraSurface className="min-h-dvh">
+    <FlipTapSurface className="min-h-dvh">
       <main className="flex min-h-dvh items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-[1080px] overflow-hidden rounded-[18px] border border-itera-border bg-itera-surface-subtle shadow-[var(--itera-shadow-card)] lg:grid lg:grid-cols-[1.4fr_1fr]">
+        <div className="w-full max-w-[1080px] overflow-hidden rounded-[18px] border border-fliptap-border bg-fliptap-surface-subtle shadow-[var(--fliptap-shadow-card)] lg:grid lg:grid-cols-[1.4fr_1fr]">
           <LoginBrandPanel />
           {/* Stacked below lg, where the brand block above it collapses to just
               the mark and the headline (the illustration and principles drop
               out) so the form still lands within the first screen. */}
-          <div className="p-4 sm:p-5 lg:flex lg:items-center lg:border-l lg:border-itera-border lg:p-5">
+          <div className="p-4 sm:p-5 lg:flex lg:items-center lg:border-l lg:border-fliptap-border lg:p-5">
             <SignInPanel redirectTo={redirectTo} />
           </div>
         </div>
       </main>
-    </IteraSurface>
+    </FlipTapSurface>
   )
 }

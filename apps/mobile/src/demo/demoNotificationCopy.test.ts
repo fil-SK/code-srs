@@ -1,4 +1,4 @@
-import { startOfDay } from '@itera/core'
+import { startOfDay } from '@fliptap/core'
 
 import { createDemoSeed } from './demoWorkspace'
 

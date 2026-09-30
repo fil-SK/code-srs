@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import type { MobileDeckCardViewModel } from '@/src/types/library'
@@ -35,7 +35,7 @@ export function CardRow({
         style={({ pressed }) => [styles.cardRow, pressed && styles.pressed]}
       >
         <View style={[styles.interactionMark, { backgroundColor: visual.backgroundColor }]}>
-          <MaterialCommunityIcons color={iteraColors.surface} name={visual.icon} size={25} />
+          <MaterialCommunityIcons color={fliptapColors.surface} name={visual.icon} size={25} />
         </View>
         <View style={styles.cardCopy}>
           <Text numberOfLines={1} style={styles.cardPrompt}>
@@ -59,7 +59,7 @@ export function CardRow({
         onPress={onActions}
         style={({ pressed }) => [styles.cardActions, pressed && styles.pressed]}
       >
-        <MaterialCommunityIcons color={iteraColors.muted} name="dots-vertical" size={22} />
+        <MaterialCommunityIcons color={fliptapColors.muted} name="dots-vertical" size={22} />
       </Pressable>
     </View>
   )
@@ -67,7 +67,7 @@ export function CardRow({
 
 const cardShadow = Platform.select({
   ios: {
-    shadowColor: iteraColors.navy,
+    shadowColor: fliptapColors.navy,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -80,10 +80,10 @@ const styles = StyleSheet.create({
   cardRowWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: iteraColors.border,
-    borderRadius: iteraRadii.card,
+    borderColor: fliptapColors.border,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingRight: 2,
     ...cardShadow,
   },
@@ -111,20 +111,20 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
   },
   cardCopy: {
     minWidth: 0,
     flex: 1,
   },
   cardPrompt: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 13,
     fontWeight: '700',
   },
   cardMeta: {
     marginTop: 4,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
   },
   cardStatus: {
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusText: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
   },
   pressed: {

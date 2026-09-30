@@ -13,7 +13,7 @@ import { editorSubtitle } from './shared/editorSubtitle'
 
 // The Create/Edit shell for Multiple Choice, built on the shared
 // CardEditorShell (header/Organize/layout block previously duplicated per
-// type — see docs/itera-decisions.md D71/D74/D75/D76/D78 for why that
+// type — see docs/fliptap-decisions.md D71/D74/D75/D76/D78 for why that
 // extraction was deferred until now).
 export function MultipleChoiceEditorShell({
   mode,
@@ -44,7 +44,7 @@ export function MultipleChoiceEditorShell({
   const editorPane = (
     <>
       <section className="p-5 sm:p-6">
-        <h2 className="mb-4 text-sm font-semibold text-itera-ink-brand">2. Card content</h2>
+        <h2 className="mb-4 text-sm font-semibold text-fliptap-ink-brand">2. Card content</h2>
         <MultipleChoiceFields form={form} onChange={setForm} />
       </section>
       <CardOrganizeFields

@@ -1,4 +1,4 @@
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -17,7 +17,7 @@ export function StatusScreen({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.content}>
-        {busy ? <ActivityIndicator color={iteraColors.accent} size="large" /> : null}
+        {busy ? <ActivityIndicator color={fliptapColors.accent} size="large" /> : null}
         <Text style={styles.title}>{title}</Text>
         {detail ? <Text style={styles.detail}>{detail}</Text> : null}
       </View>
@@ -26,7 +26,7 @@ export function StatusScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   content: {
     flex: 1,
     alignItems: 'center',
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   title: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 19,
     fontWeight: '700',
     letterSpacing: -0.3,
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   },
   detail: {
     maxWidth: 320,
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',

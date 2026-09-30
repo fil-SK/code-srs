@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, type RichContent } from '@itera/core'
+import { fliptapColors, fliptapRadii, type RichContent } from '@fliptap/core'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { RichTextNative } from '@/src/components/text/RichTextNative'
@@ -17,7 +17,7 @@ export function TipPanel({ tip }: { tip: RichContent | undefined }) {
   return (
     <View style={styles.panel}>
       <View style={styles.icon}>
-        <MaterialCommunityIcons color={iteraColors.accent} name="lightbulb-outline" size={24} />
+        <MaterialCommunityIcons color={fliptapColors.accent} name="lightbulb-outline" size={24} />
       </View>
       <View style={styles.copy}>
         <Text style={styles.title}>Tip (optional)</Text>
@@ -34,7 +34,7 @@ export function ExplanationPanel({ explanation }: { explanation: RichContent | u
     <View style={styles.panel}>
       <View style={[styles.icon, styles.iconExplanation]}>
         <MaterialCommunityIcons
-          color={iteraColors.accentActive}
+          color={fliptapColors.accentActive}
           name="book-open-variant"
           size={22}
         />
@@ -49,10 +49,10 @@ export function ExplanationPanel({ explanation }: { explanation: RichContent | u
 
 const styles = StyleSheet.create({
   panel: {
-    borderRadius: iteraRadii.card,
+    borderRadius: fliptapRadii.card,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surface,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surface,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -62,12 +62,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: iteraColors.accentSoft,
+    backgroundColor: fliptapColors.accentSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconExplanation: { backgroundColor: iteraColors.accentSofter },
+  iconExplanation: { backgroundColor: fliptapColors.accentSofter },
   copy: { flex: 1, gap: 5 },
-  title: { color: iteraColors.inkBrand, fontSize: 16, fontWeight: '700' },
-  body: { color: iteraColors.muted, fontSize: 15, lineHeight: 23 },
+  title: { color: fliptapColors.inkBrand, fontSize: 16, fontWeight: '700' },
+  body: { color: fliptapColors.muted, fontSize: 15, lineHeight: 23 },
 })

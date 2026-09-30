@@ -1,6 +1,6 @@
-import { parseLocalSession, type LocalSession, type LocalSessionStore } from '@itera/core'
+import { parseLocalSession, type LocalSession, type LocalSessionStore } from '@fliptap/core'
 
-// The browser's implementation of @itera/core's LocalSessionStore, and the one
+// The browser's implementation of @fliptap/core's LocalSessionStore, and the one
 // and only file in this app that may touch auth storage. Nothing else reads or
 // writes a session key, so "am I signed in?" has exactly one answer and one
 // place to change when a real local account system arrives.
@@ -15,12 +15,12 @@ import { parseLocalSession, type LocalSession, type LocalSessionStore } from '@i
 // boundary (sign in -> app -> sign out -> login) while the app remains
 // local-first with no backend.
 
-export { createLocalSession, DEMO_EMAIL } from '@itera/core'
-export type { LocalSession, LocalSessionKind } from '@itera/core'
+export { createLocalSession, DEMO_EMAIL } from '@fliptap/core'
+export type { LocalSession, LocalSessionKind } from '@fliptap/core'
 
 // Platform-owned on purpose: core never learns the key, and a native app is free
 // to name its own.
-const KEY = 'itera.session'
+const KEY = 'fliptap.session'
 
 // Storage access throws outright in some privacy modes, so every entry point
 // is guarded rather than assumed to work.

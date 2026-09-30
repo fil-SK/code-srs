@@ -233,7 +233,7 @@ export const DASHBOARD_MESSAGES: Record<TimeBucket, DashboardMessage[]> = {
       subtext: 'See which ideas make more sense after dark.',
     },
     {
-      mainText: 'The sun is offline. Itera is not.',
+      mainText: 'The sun is offline. FlipTap is not.',
       subtext: 'Your session can be as short as you like.',
     },
     {

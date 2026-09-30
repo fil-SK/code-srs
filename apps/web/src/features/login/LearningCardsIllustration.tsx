@@ -1,6 +1,6 @@
 import { Code2, Database, Network, type LucideIcon } from 'lucide-react'
 
-// The login page's product illustration: three Itera learning cards laid out
+// The login page's product illustration: three FlipTap learning cards laid out
 // as a restrained, editorial overlap. Real DOM, no raster art, no 3D
 // perspective — each card is a plain rounded box with one 2D rotation.
 //
@@ -109,7 +109,7 @@ function Card({ card }: { card: IllustrationCard }) {
 
   return (
     <div
-      className="absolute overflow-hidden rounded-itera-card border border-itera-border/80 bg-itera-surface"
+      className="absolute overflow-hidden rounded-fliptap-card border border-fliptap-border/80 bg-fliptap-surface"
       style={{
         left: card.left,
         top: card.top,
@@ -125,9 +125,9 @@ function Card({ card }: { card: IllustrationCard }) {
         style={{
           background:
             header === 'navy'
-              ? 'var(--itera-navy)'
+              ? 'var(--fliptap-navy)'
               : header === 'orange'
-                ? 'var(--itera-accent)'
+                ? 'var(--fliptap-accent)'
                 : 'transparent',
         }}
       >
@@ -137,41 +137,41 @@ function Card({ card }: { card: IllustrationCard }) {
           style={{
             color:
               header === 'navy'
-                ? 'var(--itera-accent)'
+                ? 'var(--fliptap-accent)'
                 : header === 'orange'
                   ? '#ffffff'
-                  : 'var(--itera-navy)',
+                  : 'var(--fliptap-navy)',
           }}
         />
         <div
           className="mt-5 whitespace-nowrap text-[13.5px] font-semibold leading-[1.2] tracking-[-0.02em]"
-          style={{ color: banded ? '#ffffff' : 'var(--itera-ink-brand)' }}
+          style={{ color: banded ? '#ffffff' : 'var(--fliptap-ink-brand)' }}
         >
           {card.title}
         </div>
       </div>
 
       <div className="px-4 pt-3">
-        <p className="text-[11px] font-normal leading-[1.5] text-itera-muted">{card.body}</p>
+        <p className="text-[11px] font-normal leading-[1.5] text-fliptap-muted">{card.body}</p>
       </div>
 
       <div className="absolute inset-x-4 bottom-4 flex items-center justify-between">
         <span
-          className="rounded-itera-pill px-2 py-1 text-[10.5px] font-medium"
+          className="rounded-fliptap-pill px-2 py-1 text-[10.5px] font-medium"
           style={
             header === 'orange'
-              ? { background: 'var(--itera-accent-soft)', color: 'var(--itera-accent)' }
-              : { background: 'var(--itera-navy-soft)', color: 'var(--itera-ink-brand)' }
+              ? { background: 'var(--fliptap-accent-soft)', color: 'var(--fliptap-accent)' }
+              : { background: 'var(--fliptap-navy-soft)', color: 'var(--fliptap-ink-brand)' }
           }
         >
           {card.tag}
         </span>
         {/* Drawn rather than typed: a "•••" string sets its own tracking and
-            renders far looser than the tight overflow affordance real Itera
+            renders far looser than the tight overflow affordance real FlipTap
             card rows use. */}
         <span className="flex items-center gap-[3px]">
           {[0, 1, 2].map((i) => (
-            <span key={i} className="h-[3px] w-[3px] rounded-full bg-itera-muted-light" />
+            <span key={i} className="h-[3px] w-[3px] rounded-full bg-fliptap-muted-light" />
           ))}
         </span>
       </div>

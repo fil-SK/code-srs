@@ -7,7 +7,7 @@ import {
   fixtureReviewLog,
   fixtureRoadmap,
 } from '@/domain/io/backupFixtures'
-import { canReplaceImport, exportBackup, importBackup } from '@itera/core'
+import { canReplaceImport, exportBackup, importBackup } from '@fliptap/core'
 import { getRepository } from './index'
 
 // Backup orchestration against the *local* backend. Core's own backup.test.ts

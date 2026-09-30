@@ -61,12 +61,12 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
   return (
     <section
       aria-labelledby="pace-heading"
-      className="rounded-itera-card border border-itera-border bg-itera-surface p-5 shadow-[var(--itera-shadow-card)]"
+      className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]"
     >
-      <h2 id="pace-heading" className="text-base font-semibold text-itera-ink-brand">
+      <h2 id="pace-heading" className="text-base font-semibold text-fliptap-ink-brand">
         Today&rsquo;s pace
       </h2>
-      <p className="mt-1 text-xs font-medium text-itera-muted">
+      <p className="mt-1 text-xs font-medium text-fliptap-muted">
         {total === 0 ? 'No reviews in the last 7 days' : 'Reviews completed per day'}
       </p>
 
@@ -78,8 +78,8 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
       >
         <defs>
           <linearGradient id="pace-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--itera-accent)" stopOpacity="0.14" />
-            <stop offset="100%" stopColor="var(--itera-accent)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--fliptap-accent)" stopOpacity="0.14" />
+            <stop offset="100%" stopColor="var(--fliptap-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -92,15 +92,15 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
                 x2={WIDTH - RIGHT}
                 y1={y}
                 y2={y}
-                stroke="var(--itera-border)"
+                stroke="var(--fliptap-border)"
                 strokeWidth="1"
               />
               <text
                 x={0}
                 y={y + 4}
-                fill="var(--itera-muted)"
+                fill="var(--fliptap-muted)"
                 fontSize="11"
-                fontFamily="var(--font-itera-sans)"
+                fontFamily="var(--font-fliptap-sans)"
               >
                 {tick}
               </text>
@@ -116,9 +116,9 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
               x={x}
               y={HEIGHT - 5}
               textAnchor="middle"
-              fill="var(--itera-muted)"
+              fill="var(--fliptap-muted)"
               fontSize="11"
-              fontFamily="var(--font-itera-sans)"
+              fontFamily="var(--font-fliptap-sans)"
             >
               {day.label}
             </text>
@@ -129,25 +129,25 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
         <path
           d={linePath}
           fill="none"
-          stroke="var(--itera-accent)"
+          stroke="var(--fliptap-accent)"
           strokeWidth="2.25"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx={last[0]} cy={last[1]} r="3.5" fill="var(--itera-accent)" />
+        <circle cx={last[0]} cy={last[1]} r="3.5" fill="var(--fliptap-accent)" />
 
         {/* Shifted left of the end point so the callout cannot clip the SVG's
             right edge (found in an earlier browser pass). */}
         <g transform={`translate(${last[0] - 66} ${last[1] - 34})`}>
-          <rect width="60" height="24" rx="6" fill="var(--itera-navy-soft)" />
+          <rect width="60" height="24" rx="6" fill="var(--fliptap-navy-soft)" />
           <text
             x="30"
             y="16"
             textAnchor="middle"
-            fill="var(--itera-ink-brand)"
+            fill="var(--fliptap-ink-brand)"
             fontSize="11"
             fontWeight="600"
-            fontFamily="var(--font-itera-sans)"
+            fontFamily="var(--font-fliptap-sans)"
           >
             Today
           </text>

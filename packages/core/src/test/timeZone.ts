@@ -1,6 +1,6 @@
 // Deterministic timezone for the date-sensitive tests.
 //
-// The local-calendar-day rules Itera depends on (streaks, activity, ranges)
+// The local-calendar-day rules FlipTap depends on (streaks, activity, ranges)
 // only misbehave in a DST-observing zone, so those tests must not run under
 // whatever zone the developer's machine or CI happens to be set to. Node reads
 // `process.env.TZ` on assignment and re-resolves the zone for every Date built

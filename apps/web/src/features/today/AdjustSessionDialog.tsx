@@ -20,7 +20,7 @@ import { cn } from '@/lib/cn'
 // Its own dialog rather than a shared primitive: useDialogs() is
 // confirm/prompt/alert and FloatingPanel carries role="menu" semantics, and
 // neither fits a small form with validation. The structure (portal into
-// document.body re-establishing .itera-scope, scrim, Escape, focus in and
+// document.body re-establishing .fliptap-scope, scrim, Escape, focus in and
 // focus returned to the trigger) is copied from DialogHost and
 // AccountMenuSheet so it behaves like every other overlay in the app -
 // centered modal on desktop, bottom sheet below 480px.
@@ -120,37 +120,37 @@ export function AdjustSessionDialog({
       }}
       className="p-6"
     >
-      <h2 className="font-itera-display text-lg font-bold tracking-tight text-itera-ink-brand">
+      <h2 className="font-fliptap-display text-lg font-bold tracking-tight text-fliptap-ink-brand">
         Adjust session
       </h2>
-      <p className="mt-1 text-sm text-itera-muted">
+      <p className="mt-1 text-sm text-fliptap-muted">
         Just for this session — nothing here is saved.
       </p>
 
       <fieldset className="mt-5">
-        <legend className="mb-2 block text-xs font-semibold tracking-wide text-itera-muted uppercase">
+        <legend className="mb-2 block text-xs font-semibold tracking-wide text-fliptap-muted uppercase">
           Scope
         </legend>
         <div className="space-y-2">
-          <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+          <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
             <input
               type="radio"
               name={`${scopeId}-scope`}
               checked={deckId === 'all'}
               onChange={() => setDeckId('all')}
-              className="accent-itera-accent"
+              className="accent-fliptap-accent"
             />
             <span>All due cards</span>
-            <span className="text-itera-muted">({dueCards.length})</span>
+            <span className="text-fliptap-muted">({dueCards.length})</span>
           </label>
-          <label className="flex items-center gap-2.5 text-sm text-itera-ink">
+          <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
             <input
               type="radio"
               name={`${scopeId}-scope`}
               checked={deckId !== 'all'}
               onChange={() => setDeckId(selectableDecks[0]?.deck.id ?? 'all')}
               disabled={selectableDecks.length === 0}
-              className="accent-itera-accent"
+              className="accent-fliptap-accent"
             />
             <span>One deck</span>
           </label>
@@ -172,7 +172,7 @@ export function AdjustSessionDialog({
       </fieldset>
 
       <fieldset className="mt-5">
-        <legend className="mb-2 block text-xs font-semibold tracking-wide text-itera-muted uppercase">
+        <legend className="mb-2 block text-xs font-semibold tracking-wide text-fliptap-muted uppercase">
           Session size
         </legend>
         <div className="flex flex-wrap gap-2">
@@ -183,10 +183,10 @@ export function AdjustSessionDialog({
               aria-pressed={size === preset.value}
               onClick={() => setSize(preset.value)}
               className={cn(
-                'cursor-pointer rounded-itera-control border px-3 py-1.5 text-sm font-medium transition-colors',
+                'cursor-pointer rounded-fliptap-control border px-3 py-1.5 text-sm font-medium transition-colors',
                 size === preset.value
-                  ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                  : 'border-itera-border text-itera-ink hover:border-itera-border-strong',
+                  ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                  : 'border-fliptap-border text-fliptap-ink hover:border-fliptap-border-strong',
               )}
             >
               {preset.label}
@@ -197,7 +197,7 @@ export function AdjustSessionDialog({
           <div className="mt-3">
             <label
               htmlFor={`${scopeId}-custom`}
-              className="mb-1.5 block text-xs font-medium text-itera-muted"
+              className="mb-1.5 block text-xs font-medium text-fliptap-muted"
             >
               Number of cards
             </label>
@@ -214,12 +214,12 @@ export function AdjustSessionDialog({
               className={cn(
                 'w-28 rounded-[9px] border bg-code-bg px-3.5 py-2.5 text-sm text-text outline-none',
                 customInvalid
-                  ? 'border-itera-error focus:border-itera-error'
+                  ? 'border-fliptap-error focus:border-fliptap-error'
                   : 'border-border focus:border-accent',
               )}
             />
             {customInvalid && (
-              <p id={`${scopeId}-custom-error`} className="mt-1.5 text-xs text-itera-error">
+              <p id={`${scopeId}-custom-error`} className="mt-1.5 text-xs text-fliptap-error">
                 Enter a whole number of cards, 1 or more.
               </p>
             )}
@@ -230,7 +230,7 @@ export function AdjustSessionDialog({
       {/* Never states a count the Start button will not honor: an unusable
           custom value asks for one instead of quietly falling back to the
           whole queue. */}
-      <p className="mt-5 text-sm text-itera-muted" role="status">
+      <p className="mt-5 text-sm text-fliptap-muted" role="status">
         {dueInScope === 0
           ? 'Nothing is due in this scope.'
           : customEmpty || customInvalid
@@ -252,10 +252,10 @@ export function AdjustSessionDialog({
   )
 
   return createPortal(
-    // document.body is outside `.itera-scope`, so the portal re-establishes the
+    // document.body is outside `.fliptap-scope`, so the portal re-establishes the
     // token scope and cancels the canvas background that class paints.
     <div
-      className="itera-scope"
+      className="fliptap-scope"
       style={{ position: 'fixed', inset: 0, background: 'transparent', zIndex: 80 }}
       role="dialog"
       aria-modal="true"
@@ -269,11 +269,11 @@ export function AdjustSessionDialog({
       {isNarrow ? (
         <div
           ref={panelRef}
-          className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-itera-dialog border-t border-itera-border bg-itera-surface shadow-[var(--itera-shadow-float)]"
+          className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-fliptap-dialog border-t border-fliptap-border bg-fliptap-surface shadow-[var(--fliptap-shadow-float)]"
         >
           <div
             aria-hidden="true"
-            className="mx-auto mt-2 h-1 w-9 rounded-itera-pill bg-itera-border-strong"
+            className="mx-auto mt-2 h-1 w-9 rounded-fliptap-pill bg-fliptap-border-strong"
           />
           {form}
         </div>
@@ -281,7 +281,7 @@ export function AdjustSessionDialog({
         <div className="absolute inset-0 grid place-items-center overflow-auto p-4">
           <div
             ref={panelRef}
-            className="relative w-full max-w-[440px] rounded-itera-dialog border border-itera-border bg-itera-surface shadow-[var(--itera-shadow-float)]"
+            className="relative w-full max-w-[440px] rounded-fliptap-dialog border border-fliptap-border bg-fliptap-surface shadow-[var(--fliptap-shadow-float)]"
           >
             {form}
           </div>

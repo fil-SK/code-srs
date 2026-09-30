@@ -117,7 +117,7 @@ export function ReviewHistoryPage() {
   ) {
     return (
       <ProgressShell>
-        <p className="text-sm text-itera-muted">Loading…</p>
+        <p className="text-sm text-fliptap-muted">Loading…</p>
       </ProgressShell>
     )
   }
@@ -128,10 +128,10 @@ export function ReviewHistoryPage() {
     <ProgressShell>
       <div className="space-y-6">
         <div>
-          <h1 className="font-itera-display text-3xl font-bold text-itera-ink-brand">
+          <h1 className="font-fliptap-display text-3xl font-bold text-fliptap-ink-brand">
             Review history
           </h1>
-          <p className="mt-1 text-sm text-itera-muted">
+          <p className="mt-1 text-sm text-fliptap-muted">
             Every review you've logged, newest first.
           </p>
         </div>
@@ -143,7 +143,7 @@ export function ReviewHistoryPage() {
             action={
               <Link
                 to="/review"
-                className="inline-flex items-center justify-center rounded-[9px] bg-itera-accent px-4 py-2 text-sm font-semibold text-white hover:bg-itera-accent-hover"
+                className="inline-flex items-center justify-center rounded-[9px] bg-fliptap-accent px-4 py-2 text-sm font-semibold text-white hover:bg-fliptap-accent-hover"
               >
                 Start reviewing
               </Link>
@@ -184,7 +184,7 @@ export function ReviewHistoryPage() {
                     <div
                       className={cn(
                         gridClass(),
-                        'pb-3 text-xs font-bold uppercase tracking-wider text-itera-muted',
+                        'pb-3 text-xs font-bold uppercase tracking-wider text-fliptap-muted',
                       )}
                     >
                       <span>Card</span>
@@ -194,8 +194,8 @@ export function ReviewHistoryPage() {
                       <span>Reviewed</span>
                     </div>
                   </div>
-                  <div className="rounded-itera-card border border-itera-border bg-itera-surface px-2">
-                    <div className="divide-y divide-itera-border">
+                  <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-2">
+                    <div className="divide-y divide-fliptap-border">
                       {pageRows.map((row) => {
                         const label = cardLabels.get(row.cardId)
                         const visual = label ? rowVisualFor(label.type) : null
@@ -203,7 +203,7 @@ export function ReviewHistoryPage() {
                         return (
                           <div
                             key={row.id}
-                            className={cn(gridClass(), 'py-2.5 hover:bg-itera-surface-subtle')}
+                            className={cn(gridClass(), 'py-2.5 hover:bg-fliptap-surface-subtle')}
                           >
                             <span className="flex min-w-0 items-center gap-2">
                               {visual && Icon ? (
@@ -217,23 +217,23 @@ export function ReviewHistoryPage() {
                                   <Icon size={12} />
                                 </span>
                               ) : (
-                                <span className="h-5 w-5 flex-none rounded border border-dashed border-itera-border" />
+                                <span className="h-5 w-5 flex-none rounded border border-dashed border-fliptap-border" />
                               )}
                               {label ? (
                                 <Link
                                   to={`/cards/${row.cardId}/study`}
-                                  className="truncate text-sm text-itera-ink hover:text-itera-ink-brand hover:underline"
+                                  className="truncate text-sm text-fliptap-ink hover:text-fliptap-ink-brand hover:underline"
                                 >
                                   {label.title}
                                 </Link>
                               ) : (
-                                <span className="truncate text-sm italic text-itera-muted-light">
+                                <span className="truncate text-sm italic text-fliptap-muted-light">
                                   (deleted card)
                                 </span>
                               )}
                             </span>
 
-                            <span className="truncate text-sm text-itera-muted">
+                            <span className="truncate text-sm text-fliptap-muted">
                               {(row.deckId && deckNames.get(row.deckId)) || '—'}
                             </span>
 
@@ -241,13 +241,13 @@ export function ReviewHistoryPage() {
                               <RatingPill rating={row.rating} />
                             </span>
 
-                            <span className="text-sm tabular-nums text-itera-muted">
+                            <span className="text-sm tabular-nums text-fliptap-muted">
                               {row.dueAfter
                                 ? formatInterval(row.reviewedAt, row.dueAfter)
                                 : '—'}
                             </span>
 
-                            <span className="text-sm text-itera-muted">
+                            <span className="text-sm text-fliptap-muted">
                               {formatEventDate(row.reviewedAt, now)} ·{' '}
                               {formatTimeOfDay(row.reviewedAt)}
                             </span>

@@ -2,11 +2,11 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import {
   DATE_RANGE_PRESETS,
   heatmapMonthLabels,
-  iteraColors,
-  iteraRadii,
+  fliptapColors,
+  fliptapRadii,
   toHeatmapWeeks,
   type DateRangePreset,
-} from '@itera/core'
+} from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useRef, useState } from 'react'
@@ -24,13 +24,13 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
 const metricPresentation: Record<MobileProgressMetricViewModel['id'], { icon: IconName; color: string; soft: string }> = {
   learned: { icon: 'school-outline', color: '#7c5ce7', soft: '#f1edff' },
-  due: { icon: 'calendar-clock-outline', color: iteraColors.accent, soft: iteraColors.accentSoft },
+  due: { icon: 'calendar-clock-outline', color: fliptapColors.accent, soft: fliptapColors.accentSoft },
   reviews: { icon: 'file-document-outline', color: '#2876e8', soft: '#eaf2ff' },
   retention: { icon: 'sync', color: '#17a05d', soft: '#e9f9f0' },
-  streak: { icon: 'fire', color: iteraColors.accent, soft: iteraColors.accentSoft },
+  streak: { icon: 'fire', color: fliptapColors.accent, soft: fliptapColors.accentSoft },
 }
 
-const heatColors = ['#fff5ed', '#ffd9bf', '#ffb27c', '#ff8740', iteraColors.accent]
+const heatColors = ['#fff5ed', '#ffd9bf', '#ffb27c', '#ff8740', fliptapColors.accent]
 
 function MetricCard({ metric }: { metric: MobileProgressMetricViewModel }) {
   const presentation = metricPresentation[metric.id]
@@ -354,8 +354,8 @@ function Milestones({ milestones }: { milestones: MobileProgressViewModel['miles
           const streak = milestone.type === 'streak'
           return (
             <View key={milestone.id} style={[styles.milestoneRow, index > 0 && styles.rowBorder]}>
-              <View style={[styles.milestoneIcon, { backgroundColor: streak ? iteraColors.accentSoft : iteraColors.successSoft }]}>
-                <MaterialCommunityIcons color={streak ? iteraColors.accent : iteraColors.success} name={streak ? 'fire' : 'trophy-outline'} size={21} />
+              <View style={[styles.milestoneIcon, { backgroundColor: streak ? fliptapColors.accentSoft : fliptapColors.successSoft }]}>
+                <MaterialCommunityIcons color={streak ? fliptapColors.accent : fliptapColors.success} name={streak ? 'fire' : 'trophy-outline'} size={21} />
               </View>
               <View style={styles.deckCopy}>
                 <Text style={styles.rowTitle}>{milestone.title}</Text>
@@ -397,7 +397,7 @@ export function ProgressScreen({
         */}
         <View style={styles.rangeRow}>
           <View accessibilityLabel={`Reporting ${viewModel.rangeLabel}`} style={styles.dateControl}>
-            <MaterialCommunityIcons color={iteraColors.muted} name="calendar-blank-outline" size={19} />
+            <MaterialCommunityIcons color={fliptapColors.muted} name="calendar-blank-outline" size={19} />
             <Text numberOfLines={1} style={styles.dateText}>{viewModel.rangeLabel}</Text>
           </View>
           <RangeControl onChange={onRangePresetChange} preset={rangePreset} />
@@ -425,68 +425,68 @@ export function ProgressScreen({
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: iteraColors.canvas },
+  safeArea: { flex: 1, backgroundColor: fliptapColors.canvas },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 142, gap: 16 },
   intro: { gap: 4, marginTop: 10 },
-  title: { color: iteraColors.inkBrand, fontSize: 34, fontWeight: '700', letterSpacing: -1 },
-  subtitle: { color: iteraColors.muted, fontSize: 16, lineHeight: 23 },
+  title: { color: fliptapColors.inkBrand, fontSize: 34, fontWeight: '700', letterSpacing: -1 },
+  subtitle: { color: fliptapColors.muted, fontSize: 16, lineHeight: 23 },
   rangeRow: { gap: 10 },
-  dateControl: { flex: 1, minHeight: 48, paddingHorizontal: 12, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.borderStrong, backgroundColor: iteraColors.surface, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dateText: { flex: 1, color: iteraColors.inkBrand, fontSize: 14, fontWeight: '600' },
-  metricsSection: { borderRadius: iteraRadii.card, backgroundColor: iteraColors.surface, borderWidth: 1, borderColor: iteraColors.border, padding: 16, gap: 13, shadowColor: iteraColors.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
+  dateControl: { flex: 1, minHeight: 48, paddingHorizontal: 12, borderRadius: fliptapRadii.control, borderWidth: 1, borderColor: fliptapColors.borderStrong, backgroundColor: fliptapColors.surface, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dateText: { flex: 1, color: fliptapColors.inkBrand, fontSize: 14, fontWeight: '600' },
+  metricsSection: { borderRadius: fliptapRadii.card, backgroundColor: fliptapColors.surface, borderWidth: 1, borderColor: fliptapColors.border, padding: 16, gap: 13, shadowColor: fliptapColors.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  metricCard: { width: '48%', minHeight: 104, flexGrow: 1, borderRadius: iteraRadii.control, backgroundColor: iteraColors.surfaceSubtle, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  metricCard: { width: '48%', minHeight: 104, flexGrow: 1, borderRadius: fliptapRadii.control, backgroundColor: fliptapColors.surfaceSubtle, padding: 12, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   metricIcon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   metricCopy: { flex: 1, minWidth: 0 },
-  metricLabel: { color: iteraColors.muted, fontSize: 13, lineHeight: 17, fontWeight: '600', flexShrink: 1 },
-  metricValue: { color: iteraColors.inkBrand, fontSize: 25, lineHeight: 31, fontWeight: '700', letterSpacing: -0.5, flexShrink: 1 },
-  metricSupporting: { color: iteraColors.muted, fontSize: 12, lineHeight: 17, flexShrink: 1 },
-  sectionCard: { borderRadius: iteraRadii.card, backgroundColor: iteraColors.surface, borderWidth: 1, borderColor: iteraColors.border, padding: 16, shadowColor: iteraColors.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
-  sectionTitle: { color: iteraColors.inkBrand, fontSize: 19, fontWeight: '700', letterSpacing: -0.2 },
-  sectionSubtitle: { color: iteraColors.muted, fontSize: 13, marginTop: 3 },
+  metricLabel: { color: fliptapColors.muted, fontSize: 13, lineHeight: 17, fontWeight: '600', flexShrink: 1 },
+  metricValue: { color: fliptapColors.inkBrand, fontSize: 25, lineHeight: 31, fontWeight: '700', letterSpacing: -0.5, flexShrink: 1 },
+  metricSupporting: { color: fliptapColors.muted, fontSize: 12, lineHeight: 17, flexShrink: 1 },
+  sectionCard: { borderRadius: fliptapRadii.card, backgroundColor: fliptapColors.surface, borderWidth: 1, borderColor: fliptapColors.border, padding: 16, shadowColor: fliptapColors.ink, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 1 },
+  sectionTitle: { color: fliptapColors.inkBrand, fontSize: 19, fontWeight: '700', letterSpacing: -0.2 },
+  sectionSubtitle: { color: fliptapColors.muted, fontSize: 13, marginTop: 3 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  segmented: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: iteraRadii.control, borderWidth: 1, borderColor: iteraColors.borderStrong, backgroundColor: iteraColors.surfaceSubtle },
-  segment: { flex: 1, minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: iteraRadii.control - 4, borderWidth: 1, borderColor: 'transparent' },
-  segmentSelected: { borderColor: iteraColors.accent, backgroundColor: iteraColors.surface },
-  segmentText: { color: iteraColors.muted, fontSize: 14, fontWeight: '600' },
-  segmentTextSelected: { color: iteraColors.accent, fontWeight: '700' },
+  segmented: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: fliptapRadii.control, borderWidth: 1, borderColor: fliptapColors.borderStrong, backgroundColor: fliptapColors.surfaceSubtle },
+  segment: { flex: 1, minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: fliptapRadii.control - 4, borderWidth: 1, borderColor: 'transparent' },
+  segmentSelected: { borderColor: fliptapColors.accent, backgroundColor: fliptapColors.surface },
+  segmentText: { color: fliptapColors.muted, fontSize: 14, fontWeight: '600' },
+  segmentTextSelected: { color: fliptapColors.accent, fontWeight: '700' },
   // A range narrow enough to fit is centred rather than left in a half-empty
   // card; one too wide to fit takes the whole width and scrolls inside it.
   heatmap: { marginTop: 16, flexDirection: 'row', justifyContent: 'center' },
   heatmapScroll: { flexGrow: 0, flexShrink: 1 },
   heatGrid: { flexDirection: 'row' },
   weekdayGutter: { width: WEEKDAY_GUTTER, position: 'relative' },
-  weekdayLabel: { position: 'absolute', left: 0, height: 14, color: iteraColors.muted, fontSize: 10, lineHeight: 14 },
-  monthLabel: { position: 'absolute', top: 0, color: iteraColors.muted, fontSize: 10, lineHeight: 13 },
+  weekdayLabel: { position: 'absolute', left: 0, height: 14, color: fliptapColors.muted, fontSize: 10, lineHeight: 14 },
+  monthLabel: { position: 'absolute', top: 0, color: fliptapColors.muted, fontSize: 10, lineHeight: 13 },
   legend: { marginTop: 13, flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendCell: { width: 13, height: 13, borderRadius: 3 },
-  legendText: { color: iteraColors.muted, fontSize: 11 },
-  percentPill: { borderRadius: iteraRadii.pill, backgroundColor: iteraColors.accent, paddingHorizontal: 10, paddingVertical: 5 },
-  percentPillText: { color: iteraColors.surface, fontSize: 13, fontWeight: '700' },
+  legendText: { color: fliptapColors.muted, fontSize: 11 },
+  percentPill: { borderRadius: fliptapRadii.pill, backgroundColor: fliptapColors.accent, paddingHorizontal: 10, paddingVertical: 5 },
+  percentPillText: { color: fliptapColors.surface, fontSize: 13, fontWeight: '700' },
   chart: { marginTop: 12, position: 'relative', overflow: 'hidden' },
-  chartGrid: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: iteraColors.border },
-  chartSegment: { position: 'absolute', height: 3, borderRadius: 2, backgroundColor: iteraColors.accent, transformOrigin: 'left center' },
-  chartPoint: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: iteraColors.accent },
+  chartGrid: { position: 'absolute', left: 0, right: 0, height: 1, backgroundColor: fliptapColors.border },
+  chartSegment: { position: 'absolute', height: 3, borderRadius: 2, backgroundColor: fliptapColors.accent, transformOrigin: 'left center' },
+  chartPoint: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: fliptapColors.accent },
   chartLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  chartLabel: { color: iteraColors.muted, fontSize: 11 },
-  unavailableLabel: { color: iteraColors.muted, fontSize: 12, fontWeight: '600' },
+  chartLabel: { color: fliptapColors.muted, fontSize: 11 },
+  unavailableLabel: { color: fliptapColors.muted, fontSize: 12, fontWeight: '600' },
   list: { marginTop: 9 },
   deckRow: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  rowBorder: { borderTopWidth: 1, borderTopColor: iteraColors.border },
-  deckMark: { width: 45, height: 45, overflow: 'hidden', borderRadius: 10, backgroundColor: iteraColors.navy, alignItems: 'center', justifyContent: 'center' },
-  deckMarkText: { color: iteraColors.surface, fontSize: 15, fontWeight: '700' },
-  deckMarkAccent: { position: 'absolute', right: -5, bottom: -9, width: 28, height: 15, backgroundColor: iteraColors.accent, transform: [{ rotateZ: '-35deg' }] },
+  rowBorder: { borderTopWidth: 1, borderTopColor: fliptapColors.border },
+  deckMark: { width: 45, height: 45, overflow: 'hidden', borderRadius: 10, backgroundColor: fliptapColors.navy, alignItems: 'center', justifyContent: 'center' },
+  deckMarkText: { color: fliptapColors.surface, fontSize: 15, fontWeight: '700' },
+  deckMarkAccent: { position: 'absolute', right: -5, bottom: -9, width: 28, height: 15, backgroundColor: fliptapColors.accent, transform: [{ rotateZ: '-35deg' }] },
   deckCopy: { flex: 1, minWidth: 0 },
-  rowTitle: { color: iteraColors.inkBrand, fontSize: 15, lineHeight: 21, fontWeight: '700' },
-  rowSubtitle: { color: iteraColors.muted, fontSize: 13, lineHeight: 18 },
+  rowTitle: { color: fliptapColors.inkBrand, fontSize: 15, lineHeight: 21, fontWeight: '700' },
+  rowSubtitle: { color: fliptapColors.muted, fontSize: 13, lineHeight: 18 },
   deckMeta: { marginTop: 2, flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaSeparator: { color: iteraColors.mutedLight, fontSize: 12 },
-  successText: { color: iteraColors.success, fontSize: 13, fontWeight: '600' },
-  dueText: { color: iteraColors.accent, fontSize: 13, fontWeight: '600' },
+  metaSeparator: { color: fliptapColors.mutedLight, fontSize: 12 },
+  successText: { color: fliptapColors.success, fontSize: 13, fontWeight: '600' },
+  dueText: { color: fliptapColors.accent, fontSize: 13, fontWeight: '600' },
   milestoneRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 12 },
   milestoneIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   pressed: {
     opacity: 0.65,
   },
-  milestoneDate: { color: iteraColors.muted, fontSize: 12 },
+  milestoneDate: { color: fliptapColors.muted, fontSize: 12 },
 })

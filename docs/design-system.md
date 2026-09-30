@@ -1,6 +1,6 @@
 # Design system reference
 
-The canonical Itera visual and interaction design system: brand rules, tokens, typography, spacing, shape, navigation, surfaces, motion, responsive behavior and accessibility. This is the practical answer to "how do I make a new piece of UI match" — whether that's a new icon, a new panel, or a new page.
+The canonical FlipTap visual and interaction design system: brand rules, tokens, typography, spacing, shape, navigation, surfaces, motion, responsive behavior and accessibility. This is the practical answer to "how do I make a new piece of UI match" — whether that's a new icon, a new panel, or a new page.
 
 **How to read the labels.** Design rules and shipped code are not the same thing, and this doc marks the difference wherever it matters:
 
@@ -8,7 +8,7 @@ The canonical Itera visual and interaction design system: brand rules, tokens, t
 - **IMPLEMENTED** — what the code actually does today, including where it deliberately diverges from the rule above it.
 - **FUTURE** — intended direction that nothing implements yet. Never build against these as though they exist.
 
-This document owns *how it should look and behave*. It does not track *what is built* — that is [`CURRENT_STATE.md`](CURRENT_STATE.md) — or *why a call was made*, which is [`itera-decisions.md`](itera-decisions.md).
+This document owns *how it should look and behave*. It does not track *what is built* — that is [`CURRENT_STATE.md`](CURRENT_STATE.md) — or *why a call was made*, which is [`fliptap-decisions.md`](fliptap-decisions.md).
 
 There are **two token systems** layered on top of each other. Understanding the split is the key to everything else in this doc.
 
@@ -39,49 +39,49 @@ There are **two token systems** layered on top of each other. Understanding the 
 
 `--radius-card: 12px` (`rounded-card`). Fonts: `--font-sans` (Inter stack), `--font-mono` (JetBrains Mono stack) — same names in both themes.
 
-These are exposed to Tailwind via `@theme inline` in `apps/web/src/index.css`, which makes utilities emit `var(--…)` directly — which is what lets `.itera-scope` re-point them at runtime (below) rather than needing a rebuild. Mappings whose utilities had no consumers left (`bg-bg`, `bg-bg-elev`, `bg-itera-canvas`, `font-itera-mono`, `rounded-itera-code`) have been removed.
+These are exposed to Tailwind via `@theme inline` in `apps/web/src/index.css`, which makes utilities emit `var(--…)` directly — which is what lets `.fliptap-scope` re-point them at runtime (below) rather than needing a rebuild. Mappings whose utilities had no consumers left (`bg-bg`, `bg-bg-elev`, `bg-fliptap-canvas`, `font-fliptap-mono`, `rounded-fliptap-code`) have been removed.
 
-**Itera-scope tokens** — an additive, **light-only** namespace (`.itera-scope` in `apps/web/src/index.css`), applied via `IteraSurface`. It does two things at once:
+**FlipTap-scope tokens** — an additive, **light-only** namespace (`.fliptap-scope` in `apps/web/src/index.css`), applied via `FlipTapSurface`. It does two things at once:
 
-1. Defines the actual `--itera-*` custom properties (the locked brand palette).
-2. **Re-points the general tokens above** (`--bg`, `--panel`, `--text`, `--accent`, `--green`, `--amber`, `--red`, `--blue`, `--shadow`, `--code-bg`, ...) to the Itera values, scoped to `.itera-scope` and its descendants only.
+1. Defines the actual `--fliptap-*` custom properties (the locked brand palette).
+2. **Re-points the general tokens above** (`--bg`, `--panel`, `--text`, `--accent`, `--green`, `--amber`, `--red`, `--blue`, `--shadow`, `--code-bg`, ...) to the FlipTap values, scoped to `.fliptap-scope` and its descendants only.
 
-This re-pointing is the whole trick: every pre-redesign component already used `bg-panel`/`text-muted`/`bg-accent`-style utilities. Wrapping a subtree in `.itera-scope` reskins it completely with **zero edits to any component inside it** — the global `:root` rules outside the scope are untouched. Note the corollary: **on-brand colors are not evidence that a surface was redesigned.** Roadmaps still has pre-redesign layout and density while looking broadly correct.
+This re-pointing is the whole trick: every pre-redesign component already used `bg-panel`/`text-muted`/`bg-accent`-style utilities. Wrapping a subtree in `.fliptap-scope` reskins it completely with **zero edits to any component inside it** — the global `:root` rules outside the scope are untouched. Note the corollary: **on-brand colors are not evidence that a surface was redesigned.** Roadmaps still has pre-redesign layout and density while looking broadly correct.
 
-### Itera token table (all light-only)
+### FlipTap token table (all light-only)
 
 | Token | Hex | Notes |
 |---|---|---|
-| `--itera-navy` | `#1e293b` | Locked brand color — "foundation" |
-| `--itera-orange` | `#ff6902` | Locked brand color — "energy," see §4 below |
-| `--itera-canvas` | `#f6f7f9` | Page background |
-| `--itera-surface` | `#ffffff` | Card/panel background |
-| `--itera-surface-subtle` | `#f9fafb` | Secondary surface (e.g. search pill background) |
-| `--itera-ink` | `#172033` | Primary text |
-| `--itera-ink-brand` | `#1e293b` | Emphasized text (titles, values) |
-| `--itera-muted` | `#64748b` | Secondary text |
-| `--itera-muted-light` | `#94a3b8` | Tertiary text |
-| `--itera-border` | `#e3e7ed` | Default border |
-| `--itera-border-strong` | `#cbd3de` | Emphasized border |
-| `--itera-accent` / `-hover` / `-active` | `#ff6902` / `#ea5f00` / `#d95700` | Primary orange + interaction states |
-| `--itera-accent-soft` / `-softer` | `#fff2e8` / `#fff8f3` | Tinted orange backgrounds |
-| `--itera-navy-soft` | `#eef2f7` | Tinted navy background |
-| `--itera-selection-soft` / `-border` | `#f2f6fc` / `#9cb4db` | Selected-state background/border |
-| `--itera-success` / `-soft` | `#15803d` / `#ecfdf3` | Maps from `--green` |
-| `--itera-error` / `-soft` | `#c2413a` / `#fef2f2` | Maps from `--red` |
-| `--itera-warning` / `-soft` | `#b45309` / `#fff7ed` | Maps from `--amber` |
-| `--itera-shadow-card` | `0 12px 30px rgba(23,32,51,.08), 0 2px 6px rgba(23,32,51,.05)` | Sparingly — main Review cards, not every row |
-| `--itera-shadow-float` | `0 18px 50px rgba(23,32,51,.12)` | Elevated/floating elements |
+| `--fliptap-navy` | `#1e293b` | Locked brand color — "foundation" |
+| `--fliptap-orange` | `#ff6902` | Locked brand color — "energy," see §4 below |
+| `--fliptap-canvas` | `#f6f7f9` | Page background |
+| `--fliptap-surface` | `#ffffff` | Card/panel background |
+| `--fliptap-surface-subtle` | `#f9fafb` | Secondary surface (e.g. search pill background) |
+| `--fliptap-ink` | `#172033` | Primary text |
+| `--fliptap-ink-brand` | `#1e293b` | Emphasized text (titles, values) |
+| `--fliptap-muted` | `#64748b` | Secondary text |
+| `--fliptap-muted-light` | `#94a3b8` | Tertiary text |
+| `--fliptap-border` | `#e3e7ed` | Default border |
+| `--fliptap-border-strong` | `#cbd3de` | Emphasized border |
+| `--fliptap-accent` / `-hover` / `-active` | `#ff6902` / `#ea5f00` / `#d95700` | Primary orange + interaction states |
+| `--fliptap-accent-soft` / `-softer` | `#fff2e8` / `#fff8f3` | Tinted orange backgrounds |
+| `--fliptap-navy-soft` | `#eef2f7` | Tinted navy background |
+| `--fliptap-selection-soft` / `-border` | `#f2f6fc` / `#9cb4db` | Selected-state background/border |
+| `--fliptap-success` / `-soft` | `#15803d` / `#ecfdf3` | Maps from `--green` |
+| `--fliptap-error` / `-soft` | `#c2413a` / `#fef2f2` | Maps from `--red` |
+| `--fliptap-warning` / `-soft` | `#b45309` / `#fff7ed` | Maps from `--amber` |
+| `--fliptap-shadow-card` | `0 12px 30px rgba(23,32,51,.08), 0 2px 6px rgba(23,32,51,.05)` | Sparingly — main Review cards, not every row |
+| `--fliptap-shadow-float` | `0 18px 50px rgba(23,32,51,.12)` | Elevated/floating elements |
 
-`--blue` has no dedicated Itera token (informational, not success/warning/error) — it re-points to `--itera-accent-active` instead.
+`--blue` has no dedicated FlipTap token (informational, not success/warning/error) — it re-points to `--fliptap-accent-active` instead.
 
-**The same palette exists as platform-neutral values, and drift is mechanically impossible.** `apps/web/src/index.css` stays the source that paints the browser — nothing is generated, injected or built from TypeScript. `packages/core/src/design/tokens.ts` carries the same identity as values a React Native app can read (`iteraColors`, `iteraRadii`, `iteraFonts`, `iteraFontWeights`, and `ITERA_SHADOW_INTENTS`), because a native app cannot resolve a CSS custom property. `apps/web/src/design/tokenDrift.test.ts` parses the `.itera-scope` block and the `--radius-itera-*` declarations and asserts the two agree **in both directions**, so neither an edited hex nor a newly added `--itera-*` variable can land without its shared counterpart. The two shadow values are the only exemption — `box-shadow` and React Native's elevation model are different models, not different syntaxes, so only the intent *names* are shared — and the test asserts that exemption set is exactly those two.
+**The same palette exists as platform-neutral values, and drift is mechanically impossible.** `apps/web/src/index.css` stays the source that paints the browser — nothing is generated, injected or built from TypeScript. `packages/core/src/design/tokens.ts` carries the same identity as values a React Native app can read (`fliptapColors`, `fliptapRadii`, `fliptapFonts`, `fliptapFontWeights`, and `FLIPTAP_SHADOW_INTENTS`), because a native app cannot resolve a CSS custom property. `apps/web/src/design/tokenDrift.test.ts` parses the `.fliptap-scope` block and the `--radius-fliptap-*` declarations and asserts the two agree **in both directions**, so neither an edited hex nor a newly added `--fliptap-*` variable can land without its shared counterpart. The two shadow values are the only exemption — `box-shadow` and React Native's elevation model are different models, not different syntaxes, so only the intent *names* are shared — and the test asserts that exemption set is exactly those two.
 
 **What is deliberately not in that module:** the type/spacing scale (below — it is a design rule, not a token), page widths, breakpoints, nav heights and sidebar widths. Those are layout mechanics, and web and native are meant to differ in layout while sharing identity.
 
-Radii: `--radius-itera-control: 9px`, `--radius-itera-card: 14px`, `--radius-itera-dialog: 16px`, `--radius-itera-pill: 999px` (pills/tags/small labels only — don't round everything equally). There is no longer a `--radius-itera-code`: its `rounded-itera-code` utility lost its last consumer and both were deleted, so code surfaces take their corners from the container they sit in.
+Radii: `--radius-fliptap-control: 9px`, `--radius-fliptap-card: 14px`, `--radius-fliptap-dialog: 16px`, `--radius-fliptap-pill: 999px` (pills/tags/small labels only — don't round everything equally). There is no longer a `--radius-fliptap-code`: its `rounded-fliptap-code` utility lost its last consumer and both were deleted, so code surfaces take their corners from the container they sit in.
 
-Fonts: `font-itera-sans` (Inter) for everything non-code, and `font-mono` (JetBrains Mono) on code surfaces — the `font-itera-mono` alias was deleted once it had no consumers, so there is one utility per family rather than two names for the same stack. The legacy `font-itera-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
+Fonts: `font-fliptap-sans` (Inter) for everything non-code, and `font-mono` (JetBrains Mono) on code surfaces — the `font-fliptap-mono` alias was deleted once it had no consumers, so there is one utility per family rather than two names for the same stack. The legacy `font-fliptap-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
 
 ### Typography rules — DESIGN RULE (locked)
 
@@ -90,9 +90,9 @@ Two families, no more. **Do not add another family or mix decorative fonts.**
 - **Inter** — all UI, body, headings, wordmarks, and expressive display text. Weight, size, tracking, and composition create hierarchy without a second sans-serif family.
 - **JetBrains Mono** — code, keyboard shortcuts, and selected technical metadata. Nothing else.
 
-**Login implementation:** `/login` inherits Inter Variable from `.itera-scope`, including its `Welcome back` and `Sign in` headings at weight 650. The family was finalized after a controlled comparison against Manrope and Plus Jakarta Sans; those temporary font faces and the selector were removed.
+**Login implementation:** `/login` inherits Inter Variable from `.fliptap-scope`, including its `Welcome back` and `Sign in` headings at weight 650. The family was finalized after a controlled comparison against Manrope and Plus Jakarta Sans; those temporary font faces and the selector were removed.
 
-**App-wide implementation:** `.itera-scope` inherits Inter Variable by default. `/` therefore uses it for the greeting and large session-card count without page-specific font classes, while the shared navigation wordmark inherits it at the login wordmark's weight 650. `font-itera-display` also resolves to Inter, covering existing explicit display usages without a page-by-page cleanup dependency.
+**App-wide implementation:** `.fliptap-scope` inherits Inter Variable by default. `/` therefore uses it for the greeting and large session-card count without page-specific font classes, while the shared navigation wordmark inherits it at the login wordmark's weight 650. `font-fliptap-display` also resolves to Inter, covering existing explicit display usages without a page-by-page cleanup dependency.
 
 **Login illustration implementation:** the locked fan is three real DOM cards, each 176px wide, inside a 580x330 decorative canvas. Dynamic Programming is left 52/top 50/−9°; SQL Joins is left 226/top 40/+5°; System Design is left 396/top 30/+9°. Heights remain slightly different, so the equal-width cards still form an intentional asymmetrical stack. Keep every title unobstructed and preserve the literal inline transforms when adjusting this composition.
 
@@ -118,27 +118,27 @@ These describe the *intended* scale. **IMPLEMENTED:** components use literal Tai
 | Editor + preview | 1440px | **880px at rest**, expanding to **1120px only while the 420px desktop preview is open**. The create route is one bordered panel with three numbered sections, inset separator rules and a bottom action row. Below the wide-editor breakpoint, Editor/Preview tabs replace the drawer — see D168/D169 |
 | Text-heavy panel | 760–840px | Followed by eye; no token |
 
-Top bars — **DESIGN RULE:** global nav 68–72px desktop; the immersive Review bar is an 80px full-width white strip at every width, following `recall-card.png`. "Full-width" means the available layout width, never `100vw`/`100dvw`, so a vertical scrollbar cannot create horizontal page overflow. Its background/border stay full-bleed, while its control grid uses the same centered 1280px frame as `TopNav`: Exit aligns with the Itera logo edge and the right hint aligns with the profile-control edge. Exit and the right-side action/status label share the same UI typography; only the keyboard keycap keeps its smaller semibold treatment. Deck flip-through may add bordered Prev/Next controls directly around the centered position; below `sm`, its redundant right shortcut hint hides so those controls never collide. The Exit button uses `cursor: pointer` across its complete text target. **IMPLEMENTED:** `TopNav` is a white `h-16` (64px) surface with a hairline bottom border, while `ReviewTopBar` is `min-h-20` (80px).
+Top bars — **DESIGN RULE:** global nav 68–72px desktop; the immersive Review bar is an 80px full-width white strip at every width, following `recall-card.png`. "Full-width" means the available layout width, never `100vw`/`100dvw`, so a vertical scrollbar cannot create horizontal page overflow. Its background/border stay full-bleed, while its control grid uses the same centered 1280px frame as `TopNav`: Exit aligns with the FlipTap logo edge and the right hint aligns with the profile-control edge. Exit and the right-side action/status label share the same UI typography; only the keyboard keycap keeps its smaller semibold treatment. Deck flip-through may add bordered Prev/Next controls directly around the centered position; below `sm`, its redundant right shortcut hint hides so those controls never collide. The Exit button uses `cursor: pointer` across its complete text target. **IMPLEMENTED:** `TopNav` is a white `h-16` (64px) surface with a hairline bottom border, while `ReviewTopBar` is `min-h-20` (80px).
 
 ---
 
-## 2. `IteraSurface` / `ForceLightTheme`
+## 2. `FlipTapSurface` / `ForceLightTheme`
 
-`apps/web/src/features/reviewV2/components/IteraSurface.tsx`:
+`apps/web/src/features/reviewV2/components/FlipTapSurface.tsx`:
 
 ```tsx
-export function IteraSurface({ children, className }) {
+export function FlipTapSurface({ children, className }) {
   return (
     <ForceLightTheme>
-      <div className={cn('itera-scope', className)}>{children}</div>
+      <div className={cn('fliptap-scope', className)}>{children}</div>
     </ForceLightTheme>
   )
 }
 ```
 
-Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `RouteError` and `PreviewShell` (design-preview) — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the Itera visual system needs to be wrapped in `IteraSurface`** (or already be a descendant of one of the above).
+Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `RouteError` and `PreviewShell` (design-preview) — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the FlipTap visual system needs to be wrapped in `FlipTapSurface`** (or already be a descendant of one of the above).
 
-`ForceLightTheme` locally overrides `ThemeContext` (from `apps/web/src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light Itera code background paired with a dark syntax palette. Only light values are defined in `.itera-scope` (spec §36 defers dark mode), so the app is light-only. `ThemeToggle.tsx` has been deleted and there is no theme toggle anywhere, but `Theme` keeps its `'dark'` member precisely because `CodeView`/`CodeEditor` select the `oneDark` palette from it.
+`ForceLightTheme` locally overrides `ThemeContext` (from `apps/web/src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light FlipTap code background paired with a dark syntax palette. Only light values are defined in `.fliptap-scope` (spec §36 defers dark mode), so the app is light-only. `ThemeToggle.tsx` has been deleted and there is no theme toggle anywhere, but `Theme` keeps its `'dark'` member precisely because `CodeView`/`CodeEditor` select the `oneDark` palette from it.
 
 ---
 
@@ -146,12 +146,12 @@ Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `Ro
 
 | Component | Purpose | Variants/props |
 |---|---|---|
-| `Button.tsx` | Base button | `variant?: 'primary' \| 'secondary' \| 'ghost' \| 'danger'` (default `secondary`). `primary`: `bg-accent text-white hover:brightness-110`. `secondary`: `border border-border bg-panel-2 hover:border-accent`. `ghost`: `text-muted hover:bg-panel`. `danger`: `bg-red text-white hover:brightness-110` (`--red` re-points to `--itera-error` inside `.itera-scope`, so it reads as the Itera error color without needing an itera-only token). Base radius `rounded-[9px]`, disabled → `opacity-50 pointer-events-none`. Props are `ComponentPropsWithRef<'button'>`, so `ref` passes through (React 19 ref-as-prop). |
+| `Button.tsx` | Base button | `variant?: 'primary' \| 'secondary' \| 'ghost' \| 'danger'` (default `secondary`). `primary`: `bg-accent text-white hover:brightness-110`. `secondary`: `border border-border bg-panel-2 hover:border-accent`. `ghost`: `text-muted hover:bg-panel`. `danger`: `bg-red text-white hover:brightness-110` (`--red` re-points to `--fliptap-error` inside `.fliptap-scope`, so it reads as the FlipTap error color without needing an fliptap-only token). Base radius `rounded-[9px]`, disabled → `opacity-50 pointer-events-none`. Props are `ComponentPropsWithRef<'button'>`, so `ref` passes through (React 19 ref-as-prop). |
 | `Field.tsx` | Labeled form field + shared input classes | Exports `fieldClass`/`selectClass` strings (`rounded-[9px] border border-border bg-code-bg ... focus:border-accent`) used across every card-type editor. `<Field label>` renders an uppercase, tracked-out `text-xs font-semibold text-muted` caption above its children. |
 | `FloatingPanel.tsx` | Portaled, viewport-aware popover panel anchored to a trigger | `anchor: HTMLElement \| null`, `onClose`, `align?: 'start' \| 'end'` (default `end`), `className?`, `role?`, `ariaLabel?`, `manageFocus?`, `returnFocusTo?`. Positions itself `fixed` against the anchor's rect, flips **above** the anchor when it would not fit below, clamps to 8px from every viewport edge, re-places on scroll (capture) / resize, and closes on outside `mousedown` or Escape. `manageFocus` (default **off**, so the pointer-driven row kebab menus are unchanged) adds real menu keyboard semantics: focus moves to the first non-`aria-disabled` `role="menuitem"` once the panel has been *measured* (focusing it earlier is a silent no-op — the panel is `visibility: hidden` until then), Arrow/Home/End walk the items with wrapping, Tab closes, and on unmount focus returns to `returnFocusTo` unless the user has already moved it elsewhere. |
-| `dialogs.tsx` | In-app replacements for `window.confirm` / `window.prompt` / `window.alert` | `<DialogProvider>` (mounted in `apps/web/src/app/providers.tsx`) + `useDialogs()` → `{ confirm, prompt, alert }`, all promise-based so call sites read like the blocking builtins: `if (await dialogs.confirm({ title, description, danger }))`. `prompt` resolves the trimmed value or `null`; its submit button is disabled while empty. Rendered as a portaled modal with a `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape/scrim-click to dismiss. **Focus is contained and returned:** on open it moves to the prompt input, else the confirm button — except a `danger` confirm, which opens on **Cancel** so Enter on an unexpected delete dialog dismisses rather than deletes. Tab/Shift+Tab wrap within the dialog's own controls and pull focus back in if it has escaped, handled on a `document` keydown (the same listener that owns Escape) so containment holds even when focus is already behind the modal. On close, focus returns to whatever was focused when the dialog opened, when that element is still connected and the user has not moved focus themselves — the same two-part guard `FloatingPanel` uses. |
+| `dialogs.tsx` | In-app replacements for `window.confirm` / `window.prompt` / `window.alert` | `<DialogProvider>` (mounted in `apps/web/src/app/providers.tsx`) + `useDialogs()` → `{ confirm, prompt, alert }`, all promise-based so call sites read like the blocking builtins: `if (await dialogs.confirm({ title, description, danger }))`. `prompt` resolves the trimmed value or `null`; its submit button is disabled while empty. Rendered as a portaled modal with a `rgba(23,32,51,0.45)` scrim, `rounded-fliptap-dialog` surface, Escape/scrim-click to dismiss. **Focus is contained and returned:** on open it moves to the prompt input, else the confirm button — except a `danger` confirm, which opens on **Cancel** so Enter on an unexpected delete dialog dismisses rather than deletes. Tab/Shift+Tab wrap within the dialog's own controls and pull focus back in if it has escaped, handled on a `document` keydown (the same listener that owns Escape) so containment holds even when focus is already behind the modal. On close, focus returns to whatever was focused when the dialog opened, when that element is still connected and the user has not moved focus themselves — the same two-part guard `FloatingPanel` uses. |
 
-Both `FloatingPanel` and `dialogs` portal into `document.body`, which sits **outside** `.itera-scope` — so each portal re-applies the `itera-scope` class on its own root and cancels that class's canvas `background` with an inline `background: transparent` (an overlay must not paint the page ground). Any future portal has to do the same or its `itera-*` tokens resolve to nothing.
+Both `FloatingPanel` and `dialogs` portal into `document.body`, which sits **outside** `.fliptap-scope` — so each portal re-applies the `fliptap-scope` class on its own root and cancels that class's canvas `background` with an inline `background: transparent` (an overlay must not paint the page ground). Any future portal has to do the same or its `fliptap-*` tokens resolve to nothing.
 
 `apps/web/src/lib/cn.ts` — `cn(...inputs) = twMerge(clsx(inputs))`. Standard clsx (resolves conditional/falsy args) + tailwind-merge (resolves conflicting Tailwind classes on the same CSS property, so a trailing `className` prop can safely override earlier classes) combo. Use this for all conditional/merged class strings.
 
@@ -166,20 +166,20 @@ Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lu
 **The circular badge pattern** (`apps/web/src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
 
 ```tsx
-<div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-itera-accent-soft text-itera-accent">
+<div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent">
   <Icon size={15} />
 </div>
 ```
 
-A 32px soft-orange circle with an orange glyph, used for the compact grouped metrics in Momentum — lucide icons inherit `currentColor`, so the wrapper's `text-itera-accent` is what colors the icon, not a prop on the icon itself.
+A 32px soft-orange circle with an orange glyph, used for the compact grouped metrics in Momentum — lucide icons inherit `currentColor`, so the wrapper's `text-fliptap-accent` is what colors the icon, not a prop on the icon itself.
 
 Other conventions seen across `apps/web/src/features/today/*.tsx`:
 - **Sizes**: 14–17px for ordinary inline/list icons and 15px for most nav/action chrome. The branded streak flame is 24px in the top nav, and Progress KPI badges use 17px glyphs inside 36px circles because those are compact data-visualization marks rather than inline controls.
 - **Inline chrome icons** (nav search, "Create" button) sit at `gap-1.5`–`gap-2` next to text, not inside a circular badge — badges are reserved for list-row icons, not nav/action chrome.
-- **Trailing affordance**: `ChevronRight` at 14–16px, colored `text-itera-muted` (decorative) or `text-itera-accent` (a clickable "Continue"/"View more" link).
-- **Non-icon badges**: `ContinueLearningList.tsx` uses short text/glyph badges (`'C++'`, `'⚙'`, `'IR'`) inside a square `rounded-itera-control` navy tile with white mono text — a variant of the same wrapper idea for content that isn't a lucide icon.
+- **Trailing affordance**: `ChevronRight` at 14–16px, colored `text-fliptap-muted` (decorative) or `text-fliptap-accent` (a clickable "Continue"/"View more" link).
+- **Non-icon badges**: `ContinueLearningList.tsx` uses short text/glyph badges (`'C++'`, `'⚙'`, `'IR'`) inside a square `rounded-fliptap-control` navy tile with white mono text — a variant of the same wrapper idea for content that isn't a lucide icon.
 
-**The orange-usage rule (locked, spec §4.4):** orange is a *signal*, not theme paint. Reserved for: primary actions, the active-nav marker, the current important metric, session-progress accents, small branded focus details. **Not** meant to color every icon/progress-bar/tag/row simultaneously. Rule of thumb: **one primary orange action + at most two or three minor orange accents per screen.** (This is why the sidebar's active-item treatment is a left accent bar + light tint, not a solid orange pill — see `itera-decisions.md` D48.) When adding a new icon, default to `text-itera-muted` or `text-itera-ink-brand` unless it's genuinely one of the few orange-worthy elements on that screen.
+**The orange-usage rule (locked, spec §4.4):** orange is a *signal*, not theme paint. Reserved for: primary actions, the active-nav marker, the current important metric, session-progress accents, small branded focus details. **Not** meant to color every icon/progress-bar/tag/row simultaneously. Rule of thumb: **one primary orange action + at most two or three minor orange accents per screen.** (This is why the sidebar's active-item treatment is a left accent bar + light tint, not a solid orange pill — see `fliptap-decisions.md` D48.) When adding a new icon, default to `text-fliptap-muted` or `text-fliptap-ink-brand` unless it's genuinely one of the few orange-worthy elements on that screen.
 
 ---
 
@@ -208,7 +208,7 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 ## 6. Code display (`apps/web/src/components/code/`)
 
-`CodeView.tsx` — a read-only CodeMirror 6 view: line numbers, non-editable, line wrapping, transparent background (so the wrapping container's `--code-bg` shows through), JetBrains Mono at 13px. Syntax palette is chosen from live `useTheme()` (`oneDarkHighlightStyle` vs `defaultHighlightStyle`) — this is exactly why `ForceLightTheme` (§2) has to exist wherever `.itera-scope` is used.
+`CodeView.tsx` — a read-only CodeMirror 6 view: line numbers, non-editable, line wrapping, transparent background (so the wrapping container's `--code-bg` shows through), JetBrains Mono at 13px. Syntax palette is chosen from live `useTheme()` (`oneDarkHighlightStyle` vs `defaultHighlightStyle`) — this is exactly why `ForceLightTheme` (§2) has to exist wherever `.fliptap-scope` is used.
 
 `highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. The array comes from `apps/web/src/features/reviewV2/interactions/walkthrough/focusLines.ts`'s `focusToHighlightLines`, which expands a step's authored `focus` ranges (`Array<{startLine, endLine}>`). The old `apps/web/src/components/code/lineRanges.ts` (`parseLineRanges`, which parsed a typed string like `"26-34, 40, 42-45"`) was deleted with the v1 surface and has no successor: focus ranges are structured card data now, not a string a person types.
 
@@ -223,11 +223,11 @@ The shape language is **structured softness**.
 - **Don't round every object equally.** Radius is a signal that something is an interactive or semantic object. Code surfaces stay more rectangular than cards; pills are reserved for true pills, tags and small labels.
 - **Don't nest decorative containers.** A code block inside a flashcard is fine. A metric card inside a stat card inside a dashboard panel is not. If you are on your third border, delete two of them.
 - **Tables and lists use open rows + separators**, not one bordered container per row.
-- **Shadows are sparing.** A main Review card may carry `--itera-shadow-card`; most Library rows carry none. `--itera-shadow-float` is for genuinely floating elements (popovers, sheets, dialogs).
+- **Shadows are sparing.** A main Review card may carry `--fliptap-shadow-card`; most Library rows carry none. `--fliptap-shadow-float` is for genuinely floating elements (popovers, sheets, dialogs).
 
 **The logo / stacked-card motif is locked to sanctioned spots:** main navigation, onboarding and launch, the Today session hero, and completion or branded transition moments. It is explicitly **forbidden** as general decoration — not on every deck cover, not behind every card, never inside Review content, never as repeated filler. The failure mode named in the brand rules is *"look, here are more stacked cards because the logo has stacked cards."* The motif appears only where it carries meaning.
 
-**IMPLEMENTED:** `SuggestedSessionHero.tsx`'s 4-layer stacked treatment is the one sanctioned reuse of the motif outside the logo itself, and its own file comments say so. Do not lift that pattern into new components. `apps/web/src/features/reviewV2/ReviewSessionScreen.tsx`'s `.itera-card-enter` next-card entrance is a second, narrower echo of it (the incoming card settles out of an off-stack rotated pose) and is likewise not a general-purpose animation.
+**IMPLEMENTED:** `SuggestedSessionHero.tsx`'s 4-layer stacked treatment is the one sanctioned reuse of the motif outside the logo itself, and its own file comments say so. Do not lift that pattern into new components. `apps/web/src/features/reviewV2/ReviewSessionScreen.tsx`'s `.fliptap-card-enter` next-card entrance is a second, narrower echo of it (the incoming card settles out of an off-stack rotated pose) and is likewise not a general-purpose animation.
 
 ---
 
@@ -244,7 +244,7 @@ The shape language is **structured softness**.
 - Settings is reached through the account menu, never as a top-level destination. That part of the locked IA holds.
 - **Local (page-level) sidebars are the convention for section navigation**, and they are what replaced the deleted global sidebar: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`.
 
-**MOBILE IMPLEMENTED, DEVICE REVIEW PENDING:** `apps/mobile` has its separately-designed native shell, not a responsive copy of `TopNav`. Ordinary app sections use a persistent five-item bottom bar in the exact order **Library · Review · Today · Progress · Profile**. Today is the raised center control, carrying the Itera symbol on a light surface with a restrained orange selected treatment; every tab keeps a visible label and normal accessible tab semantics. Review in this bar is an entry point only: the interaction previews it opens are nested routes outside the tab group, so the bar disappears while recall is in progress, and Notifications behaves the same way. Every tab destination now has its own separately approved design, so none of them is a neutral placeholder any more.
+**MOBILE IMPLEMENTED, DEVICE REVIEW PENDING:** `apps/mobile` has its separately-designed native shell, not a responsive copy of `TopNav`. Ordinary app sections use a persistent five-item bottom bar in the exact order **Library · Review · Today · Progress · Profile**. Today is the raised center control, carrying the FlipTap symbol on a light surface with a restrained orange selected treatment; every tab keeps a visible label and normal accessible tab semantics. Review in this bar is an entry point only: the interaction previews it opens are nested routes outside the tab group, so the bar disappears while recall is in progress, and Notifications behaves the same way. Every tab destination now has its own separately approved design, so none of them is a neutral placeholder any more.
 
 Primary mobile tab pages place `MobileHeader` inside the same horizontally padded
 scrolling frame as their page content. Their page titles use the prominent tab
@@ -262,7 +262,7 @@ Read badge together rather than by making the content look disabled.
 
 **Review renders none of the above.** It is immersive by construction: a full-width white top strip carrying only a literal **< Exit session** control (not an arrow icon), a bold position ("7 of 23") and a right-aligned shortcut whose key is drawn as a bordered `<kbd>`, then the narrow card column, tip, explanation and rating controls on open space. The same strip renders on the real study-preview routes; those routes receive a full-width, zero-top-padding `AppShell` main so the strip stays full-bleed and sits flush beneath `TopNav`. Deck flip-through is the one additive variant: Prev and Next flank the position in the strip and advertise `ArrowLeft`/`ArrowRight` through `aria-keyshortcuts`; the page listener ignores held keys and events originating in interactive card controls/editors. The strip's inner controls share the nav's centered 1280px frame. Session-backed surfaces use a symmetric 56px vertical frame: 56px from the strip to the card and 56px from the final rendered content (normally rating controls) to the surface bottom. Editor live previews deliberately keep their Question/Answer toggle instead because they have no deck/session position. Revealed preview-only cards say **Answer revealed**; when ratings are present, the hint becomes **Rate your answer** without repeating the numeric shortcuts already visible on the buttons.
 
-Never add to Review: global navigation, the Itera logo, a left sidebar, the upcoming queue, a card-information panel, a session-statistics panel, an explanation of spaced repetition, or persistent deck metadata. Those were tested and rejected because they distract from recall.
+Never add to Review: global navigation, the FlipTap logo, a left sidebar, the upcoming queue, a card-information panel, a session-statistics panel, an explanation of spaced repetition, or persistent deck metadata. Those were tested and rejected because they distract from recall.
 
 **IMPLEMENTED:** `/review` is a **structurally separate top-level route with no `AppShell` ancestor** (`apps/web/src/app/router.tsx`), so it is chrome-free by construction rather than by hiding the shell with CSS. `/login` and `/design-preview/*` use the same pattern. `ReviewTopBar.tsx` carries exit + counter + shortcut hint and nothing else. Because `AccountMenu` mounts from `AppShell`, Review has no account menu automatically.
 
@@ -276,9 +276,9 @@ Never add to Review: global navigation, the Itera logo, a left sidebar, the upco
 
 **DESIGN RULE.** Three levels, and rarely more on one screen:
 
-1. **Canvas** (`--itera-canvas`) — the page ground. Set by `.itera-scope`; a page should not paint its own background.
-2. **Surface** (`--itera-surface`) — cards, panels, popovers. One border (`--itera-border`), `--radius-itera-card`, shadow only when genuinely elevated.
-3. **Subtle surface** (`--itera-surface-subtle`) — secondary fills inside a surface (search pills, inset areas). Not a third card layer.
+1. **Canvas** (`--fliptap-canvas`) — the page ground. Set by `.fliptap-scope`; a page should not paint its own background.
+2. **Surface** (`--fliptap-surface`) — cards, panels, popovers. One border (`--fliptap-border`), `--radius-fliptap-card`, shadow only when genuinely elevated.
+3. **Subtle surface** (`--fliptap-surface-subtle`) — secondary fills inside a surface (search pills, inset areas). Not a third card layer.
 
 **Cards and panels.** A panel earns its border by grouping something semantically. Section headings and spacing are the preferred grouping device; reach for a container second.
 
@@ -286,7 +286,7 @@ Never add to Review: global navigation, the Itera logo, a left sidebar, the upco
 
 **IMPLEMENTED:**
 
-- Deck rows (`apps/web/src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-itera-accent`.
+- Deck rows (`apps/web/src/features/library/DeckRow.tsx`) show a restrained square deck mark, title, card count, last studied, a mastery rail and a due count, plus an overflow menu — as a **grid row**, keyboard-focusable with `focus-visible:ring-2 focus-visible:ring-fliptap-accent`.
 - Card rows (`apps/web/src/features/library/shared/CardTable.tsx`) render every card through one `RowMeta` projection, and clicking the row **opens the card in study preview** rather than a detail page. Edit/Duplicate/Move/Suspend/Delete live in the row's kebab menu.
 - Shared row furniture: `MasteryRing`, `MeterBar`, `Stat`, `DeckMark`, `EmptyState`, `StatusBadge`, `OverflowMenu`.
 - **Deck marks are restrained, never rainbow icon art.** A designed deck-cover system is **FUTURE**, not something to improvise per deck.
@@ -303,15 +303,15 @@ Sidebar styling: quiet text hierarchy, indentation and subtle branches, **no yel
 
 ## 10. Menus, popovers and the account menu
 
-**DESIGN RULE.** Overlays float above the canvas with `--itera-shadow-float`, close on Escape and outside click, and never trap the user. A disabled destination is shown as a **focusable `aria-disabled` row with a "Soon" pill** — never a `disabled` control (unreachable by keyboard, invisible to screen readers) and never silently hidden. This is how the product states its intended IA without fabricating features.
+**DESIGN RULE.** Overlays float above the canvas with `--fliptap-shadow-float`, close on Escape and outside click, and never trap the user. A disabled destination is shown as a **focusable `aria-disabled` row with a "Soon" pill** — never a `disabled` control (unreachable by keyboard, invisible to screen readers) and never silently hidden. This is how the product states its intended IA without fabricating features.
 
 **IMPLEMENTED:**
 
 - `FloatingPanel.tsx` is the one popover primitive (§3): portaled, viewport-aware, flips above the anchor when it will not fit below, clamps 8px from every edge, re-places on scroll/resize. Opt into real menu keyboard semantics with `manageFocus`.
-- `AccountMenu.tsx` / `AccountMenuContent.tsx` — the avatar popover: a 300px anchored, viewport-height-capped `FloatingPanel` with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger), collapsing below 480px (`useIsNarrowShell`) into a bottom sheet with identical content. Its divider groups follow `profile-menu.png`: Account settings + Preferences; Study settings + Spaced repetition (FSRS) + Import / Export; Keyboard shortcuts + Help; What's new + About Itera; Sign out. **Account settings, Import / Export and Sign out are live**; every unbuilt destination, Spaced repetition (FSRS) included, stays an `aria-disabled` "Soon" row. Its header block carries the session's real identity — the email, or "Demo workspace" for the demo session — over a line saying where the data lives; there is no profile record, so it shows no display name.
-- `AdjustSessionDialog.tsx` (`apps/web/src/features/today/`) — **the settled treatment for a small form overlay**, and the pattern to copy for the next one. `useDialogs()` only covers confirm/prompt/alert, and `FloatingPanel` carries `role="menu"` semantics, so neither fits a form with validation. It is a `role="dialog" aria-modal="true"` portal that mirrors `DialogHost`'s structure — `rgba(23,32,51,0.45)` scrim, `rounded-itera-dialog` surface, Escape and scrim-click to dismiss, focus into the first control on open, focus returned to the trigger on close — as a **centered modal on desktop and a bottom sheet below 480px** (`useIsNarrowShell`), exactly the split `AccountMenu` established. Content stays lightweight: a radio scope group, segmented `aria-pressed` size presets, one conditional number field, and a `role="status"` line that always states what Start will actually do. **The summary never advertises a count the Start button will not honor** — an unusable custom value asks for a number instead of silently falling back to the whole queue.
+- `AccountMenu.tsx` / `AccountMenuContent.tsx` — the avatar popover: a 300px anchored, viewport-height-capped `FloatingPanel` with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger), collapsing below 480px (`useIsNarrowShell`) into a bottom sheet with identical content. Its divider groups follow `profile-menu.png`: Account settings + Preferences; Study settings + Spaced repetition (FSRS) + Import / Export; Keyboard shortcuts + Help; What's new + About FlipTap; Sign out. **Account settings, Import / Export and Sign out are live**; every unbuilt destination, Spaced repetition (FSRS) included, stays an `aria-disabled` "Soon" row. Its header block carries the session's real identity — the email, or "Demo workspace" for the demo session — over a line saying where the data lives; there is no profile record, so it shows no display name.
+- `AdjustSessionDialog.tsx` (`apps/web/src/features/today/`) — **the settled treatment for a small form overlay**, and the pattern to copy for the next one. `useDialogs()` only covers confirm/prompt/alert, and `FloatingPanel` carries `role="menu"` semantics, so neither fits a form with validation. It is a `role="dialog" aria-modal="true"` portal that mirrors `DialogHost`'s structure — `rgba(23,32,51,0.45)` scrim, `rounded-fliptap-dialog` surface, Escape and scrim-click to dismiss, focus into the first control on open, focus returned to the trigger on close — as a **centered modal on desktop and a bottom sheet below 480px** (`useIsNarrowShell`), exactly the split `AccountMenu` established. Content stays lightweight: a radio scope group, segmented `aria-pressed` size presets, one conditional number field, and a `role="status"` line that always states what Start will actually do. **The summary never advertises a count the Start button will not honor** — an unusable custom value asks for a number instead of silently falling back to the whole queue.
 - **The account menu is quick navigation only.** The requested study/backup shortcuts are the exception that proves the rule; do not mirror the full settings sidebar. New settings belong in `apps/web/src/features/settings/`.
-- Portals sit outside `.itera-scope` and must re-apply the class plus cancel its canvas background (§3).
+- Portals sit outside `.fliptap-scope` and must re-apply the class plus cancel its canvas background (§3).
 
 ---
 
@@ -332,15 +332,15 @@ Timing guidance, with easing near `cubic-bezier(0.2, 0.8, 0.2, 1)`:
 | Card-to-card transition | 180–280ms |
 | Completion transition | 350–600ms |
 
-**IMPLEMENTED:** the flip lives in `.itera-flip*` (`apps/web/src/index.css`), the next-card entrance in `.itera-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), the Today hero's mount-in stacking reveal in `SuggestedSessionHero.tsx` (four layers dropping onto the pile back-to-front, 460ms each on a 110ms stagger; D170), and the editor/preview width sync in `.card-editor-shell`.
+**IMPLEMENTED:** the flip lives in `.fliptap-flip*` (`apps/web/src/index.css`), the next-card entrance in `.fliptap-card-enter` / `-active` (a 0.5s transform + 0.35s opacity settle out of an off-stack pose), the Today hero's mount-in stacking reveal in `SuggestedSessionHero.tsx` (four layers dropping onto the pile back-to-front, 460ms each on a 110ms stagger; D170), and the editor/preview width sync in `.card-editor-shell`.
 
-**IMPLEMENTED (the review loop's own motion, D454/D456).** The **reveal** is one step, not a cascade: the feedback banner, explanation panel and rating controls arrive together on `.reveal-in` (250ms), while `ReviewSessionScreen` animates the card's own height across the presenting-to-revealed transition (320ms, `cubic-bezier(0.2, 0.8, 0.2, 1)`, skipped below an 8px delta) so the panels underneath travel instead of jumping. The **completion transition** is `.itera-complete-in` / `-delayed` (420ms on the same easing, with a 120ms second step for the summary's numbers) - the slow end of the Completion row above, and the only sanctioned decorative use of the layered-card mark outside the logo, nav and Today hero.
+**IMPLEMENTED (the review loop's own motion, D454/D456).** The **reveal** is one step, not a cascade: the feedback banner, explanation panel and rating controls arrive together on `.reveal-in` (250ms), while `ReviewSessionScreen` animates the card's own height across the presenting-to-revealed transition (320ms, `cubic-bezier(0.2, 0.8, 0.2, 1)`, skipped below an 8px delta) so the panels underneath travel instead of jumping. The **completion transition** is `.fliptap-complete-in` / `-delayed` (420ms on the same easing, with a 120ms second step for the summary's numbers) - the slow end of the Completion row above, and the only sanctioned decorative use of the layered-card mark outside the logo, nav and Today hero.
 
 **IMPLEMENTED (loading, D455).** One convention, not a per-route decision: **the page frame always renders and only its data regions become placeholders.** Headings, local sidebars, toolbars, the page grid and the Review strip paint immediately; `Skeleton` / `LoadingRegion` (`apps/web/src/components/ui/Skeleton.tsx`) fill the data regions with a 1.6s opacity pulse and its own reduced-motion rule. A route must never replace itself with a loading word, must never render a false empty state before its query resolves, and must never render nothing. `LoadingRegion` carries `aria-busy` plus one visually hidden `role="status"` sentence, so a region is announced once rather than once per placeholder. This changes only what is painted during a block, never whether a surface blocks: a page that refuses to render against half-loaded data still refuses.
 
 **Two mechanics you must know before animating anything:**
 
-1. **Reduced motion is honored in CSS, per effect.** `@media (prefers-reduced-motion: reduce)` blocks in `apps/web/src/index.css` neutralize `.itera-flip-face`, `.itera-card-enter`, `.flip-face`, `.reveal-in`, `.preview-drawer`, `.preview-shell-row` and `.card-editor-shell`. **Any new animated class must add its own reduced-motion rule** — there is no blanket `*` override doing it for you. JS-driven motion checks `window.matchMedia('(prefers-reduced-motion: reduce)')` directly (`AccountMenu.tsx`, `SuggestedSessionHero.tsx`). Reduced motion must never gate *content*: reveal happens synchronously regardless of motion settings, and there is a test asserting exactly that.
+1. **Reduced motion is honored in CSS, per effect.** `@media (prefers-reduced-motion: reduce)` blocks in `apps/web/src/index.css` neutralize `.fliptap-flip-face`, `.fliptap-card-enter`, `.flip-face`, `.reveal-in`, `.preview-drawer`, `.preview-shell-row` and `.card-editor-shell`. **Any new animated class must add its own reduced-motion rule** — there is no blanket `*` override doing it for you. JS-driven motion checks `window.matchMedia('(prefers-reduced-motion: reduce)')` directly (`AccountMenu.tsx`, `SuggestedSessionHero.tsx`). Reduced motion must never gate *content*: reveal happens synchronously regardless of motion settings, and there is a test asserting exactly that.
 2. **A CSS `transition` on a Tailwind-composed `transform` does not reliably animate.** `scale-*`/`rotate-*`/`translate-*` (including `group-hover:` variants) each write a separate custom property that a shared rule composes; transitioning the composed value was measured snapping instantly in Chromium despite a correct duration. Compute such transforms as **one literal `style.transform` string in JS**.
 
 ---
@@ -348,7 +348,7 @@ Timing guidance, with easing near `cubic-bezier(0.2, 0.8, 0.2, 1)`:
 ## 12. Accessibility — DESIGN RULE
 
 - **WCAG AA** contrast for text and controls.
-- **Visible focus rings.** The convention is `focus-visible:ring-2 focus-visible:ring-itera-accent` (with `ring-offset-2` on card-sized targets) or `focus-visible:outline-2 focus-visible:outline-itera-accent`. Never remove an outline without replacing it.
+- **Visible focus rings.** The convention is `focus-visible:ring-2 focus-visible:ring-fliptap-accent` (with `ring-offset-2` on card-sized targets) or `focus-visible:outline-2 focus-visible:outline-fliptap-accent`. Never remove an outline without replacing it.
 - **Every card interaction is keyboard-operable**, not drag-only.
 - **No color-only correctness indicators** — pair color with a glyph, label or text.
 - Screen-reader labels for card type and state; reduced-motion support (§11); touch targets ≥44×44px where practical.
@@ -391,8 +391,8 @@ Intended Review shortcuts: `Escape` exit/pause with confirmation, `Space` flip a
 The project is **mockup-driven**. Reference images are **not tracked in this repository** — there is no `docs/references/` directory, and inventing one would create paths that resolve to nothing. They live on the product owner's machine:
 
 ```
-C:\Users\SK\Desktop\itera-mockups\
-    webapp\        # product mockups cited by filename throughout itera-decisions.md:
+C:\Users\SK\Desktop\fliptap-mockups\
+    webapp\        # product mockups cited by filename throughout fliptap-decisions.md:
                    #   login-v3.png, login-icons.png, profile.png, profile-menu.png, progress.png,
                    #   library.png, all-decks.png, library-use.png, add-new-card.png,
                    #   recall-card.png, recall-card-revealed.png, mcq-card.png,
@@ -403,7 +403,7 @@ C:\Users\SK\Desktop\itera-mockups\
     mobile\        # mobile-specific references
 ```
 
-**How to treat a reference.** Every reference sits in one of three tiers, and the tier is stated in the decision entry that cites it — check [`itera-decisions.md`](itera-decisions.md) before implementing against any image:
+**How to treat a reference.** Every reference sits in one of three tiers, and the tier is stated in the decision entry that cites it — check [`fliptap-decisions.md`](fliptap-decisions.md) before implementing against any image:
 
 | Tier | Meaning | How to use it |
 |---|---|---|
@@ -413,8 +413,8 @@ C:\Users\SK\Desktop\itera-mockups\
 
 **Two standing exceptions apply to every locked mockup**, both already decided and not re-litigated per screen:
 
-1. **Colors always come from the locked Itera token palette**, never from a mockup's own hues. This is why Progress's charts are navy/orange/success/warning rather than the mockup's blue/purple.
-2. **A mockup element with no real data or backing feature is never fabricated.** It is either omitted outright (Billing, Plan & usage, the "Itera Pro" upsell) or rendered as a focusable `aria-disabled` row with a "Soon" pill.
+1. **Colors always come from the locked FlipTap token palette**, never from a mockup's own hues. This is why Progress's charts are navy/orange/success/warning rather than the mockup's blue/purple.
+2. **A mockup element with no real data or backing feature is never fabricated.** It is either omitted outright (Billing, Plan & usage, the "FlipTap Pro" upsell) or rendered as a focusable `aria-disabled` row with a "Soon" pill.
 
 Where a written brief and a locked mockup conflict, **say so and ask** — do not silently pick one.
 
@@ -422,8 +422,8 @@ Where a written brief and a locked mockup conflict, **say so and ask** — do no
 
 ## 15. Public marketing surface
 
-`apps/marketing` uses the product identity as raw material rather than extending the application shell. Its local presentation tokens repeat the locked navy, orange, canvas, surface, border, ink, muted, radius, Inter and JetBrains Mono values. This is deliberate duplication at a deployment boundary, not a third product token authority: the marketing app does not import `@itera/core`, because it needs no learning-domain code and must remain independently buildable.
+`apps/marketing` uses the product identity as raw material rather than extending the application shell. Its local presentation tokens repeat the locked navy, orange, canvas, surface, border, ink, muted, radius, Inter and JetBrains Mono values. This is deliberate duplication at a deployment boundary, not a third product token authority: the marketing app does not import `@fliptap/core`, because it needs no learning-domain code and must remain independently buildable.
 
-The page alternates generous white sections with deep-navy storytelling surfaces. Orange remains a signal: the primary action, small section markers, progress marks, and selected interaction state. Product visuals use layered cards, restrained technical metadata, real Itera interaction names, and explicitly labelled illustrative metrics. Motion is limited to a slow hero-card settle and short interaction-card entrance; one reduced-motion media query neutralizes all animation and smooth scrolling. At phone widths, the hero is re-composed, interaction tabs become a scrollbar-hidden horizontal rail, product chrome simplifies, and the desktop/mobile workflow becomes a deliberate vertical sequence rather than a collapsed desktop grid.
+The page alternates generous white sections with deep-navy storytelling surfaces. Orange remains a signal: the primary action, small section markers, progress marks, and selected interaction state. Product visuals use layered cards, restrained technical metadata, real FlipTap interaction names, and explicitly labelled illustrative metrics. Motion is limited to a slow hero-card settle and short interaction-card entrance; one reduced-motion media query neutralizes all animation and smooth scrolling. At phone widths, the hero is re-composed, interaction tabs become a scrollbar-hidden horizontal rail, product chrome simplifies, and the desktop/mobile workflow becomes a deliberate vertical sequence rather than a collapsed desktop grid.
 
 **Verify visually.** Tests are not sufficient for UI work. Run the app and drive Chromium via the `playwright` devDependency (`npx playwright install chromium` once), check 1440×900 and 390×844, and exercise hover, keyboard focus and graded/revealed states — not just the resting state.

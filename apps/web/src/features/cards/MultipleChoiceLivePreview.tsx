@@ -9,7 +9,7 @@ import { InteractionAnswerPreview } from './shared/InteractionAnswerPreview'
 // interaction component, not a fake mockup — rendered through
 // InteractionAnswerPreview, a simplified stand-in for ReviewSessionScreen
 // with no session chrome, just a Question/Answer toggle (see
-// docs/itera-decisions.md and that component's own doc comment). Read-only
+// docs/fliptap-decisions.md and that component's own doc comment). Read-only
 // (InteractionAnswerPreview sets hideActions, which MultipleChoiceView also
 // uses to force `locked`) — nothing to reset, unlike the old
 // ReviewSessionScreen-backed version.

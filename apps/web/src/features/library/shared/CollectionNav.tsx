@@ -25,8 +25,8 @@ export interface NavDeck {
 // indicating selection — matches the reference mockup's selected-row style.
 function rowTone(active: boolean) {
   return active
-    ? 'bg-itera-accent-soft text-itera-ink-brand'
-    : 'text-itera-ink hover:bg-itera-surface-subtle hover:text-itera-ink-brand'
+    ? 'bg-fliptap-accent-soft text-fliptap-ink-brand'
+    : 'text-fliptap-ink hover:bg-fliptap-surface-subtle hover:text-fliptap-ink-brand'
 }
 
 function cardCountFor(collectionIds: string[], decks: NavDeck[]) {
@@ -82,7 +82,7 @@ export function CollectionNav({
     <div className="flex h-full flex-col px-4 py-5">
       <nav aria-label="Collections">
         <div className="mb-3 flex items-center justify-between px-1.5">
-          <span className="text-xs font-bold uppercase tracking-wider text-itera-muted">
+          <span className="text-xs font-bold uppercase tracking-wider text-fliptap-muted">
             Collections
           </span>
           {onCreateDeck && (
@@ -90,7 +90,7 @@ export function CollectionNav({
               type="button"
               onClick={onCreateDeck}
               aria-label="Add deck"
-              className="grid h-8 w-8 flex-none place-items-center rounded-itera-control border border-itera-border-strong bg-itera-surface text-itera-ink-brand transition-colors hover:border-itera-accent hover:text-itera-accent"
+              className="grid h-8 w-8 flex-none place-items-center rounded-fliptap-control border border-fliptap-border-strong bg-fliptap-surface text-fliptap-ink-brand transition-colors hover:border-fliptap-accent hover:text-fliptap-accent"
             >
               <Plus size={16} strokeWidth={1.8} />
             </button>
@@ -100,13 +100,13 @@ export function CollectionNav({
         <button
           type="button"
           onClick={() => onSelect({ kind: 'all' })}
-          className="relative flex w-full items-center justify-between rounded-r-[9px] bg-itera-accent-soft px-3 py-2.5 text-left text-sm font-semibold text-itera-ink-brand before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-r-full before:bg-itera-accent"
+          className="relative flex w-full items-center justify-between rounded-r-[9px] bg-fliptap-accent-soft px-3 py-2.5 text-left text-sm font-semibold text-fliptap-ink-brand before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-r-full before:bg-fliptap-accent"
         >
           <span className="flex items-center gap-3">
             <Server size={17} strokeWidth={1.8} />
             All Decks
           </span>
-          <span className="text-xs font-medium text-itera-ink-brand">{totalCards}</span>
+          <span className="text-xs font-medium text-fliptap-ink-brand">{totalCards}</span>
         </button>
 
         <div className="mt-2 space-y-0.5">
@@ -125,14 +125,14 @@ export function CollectionNav({
           ))}
         </div>
 
-        <div className="mt-5 border-t border-itera-border pt-3">
+        <div className="mt-5 border-t border-fliptap-border pt-3">
           <div className="flex items-center gap-1">
             {unfiled.length > 0 ? (
               <button
                 type="button"
                 onClick={() => setUnfiledExpanded((v) => !v)}
                 aria-label={unfiledExpanded ? 'Collapse' : 'Expand'}
-                className="grid h-5 w-5 flex-none place-items-center text-itera-muted hover:text-itera-ink"
+                className="grid h-5 w-5 flex-none place-items-center text-fliptap-muted hover:text-fliptap-ink"
               >
                 {unfiledExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               </button>
@@ -151,11 +151,11 @@ export function CollectionNav({
                 <Archive
                   size={17}
                   strokeWidth={1.8}
-                  className={selection.kind === 'unfiled' ? 'text-itera-accent' : 'text-itera-ink-brand'}
+                  className={selection.kind === 'unfiled' ? 'text-fliptap-accent' : 'text-fliptap-ink-brand'}
                 />
                 Unfiled Decks
               </span>
-              <span className="text-xs font-normal text-itera-muted">{unfiledCards}</span>
+              <span className="text-xs font-normal text-fliptap-muted">{unfiledCards}</span>
             </button>
           </div>
           {unfiledExpanded && (
@@ -178,7 +178,7 @@ export function CollectionNav({
 
       <Link
         to="/settings"
-        className="mt-auto flex items-center gap-3 rounded-itera-control px-3 pb-1 pt-8 text-left text-sm font-semibold text-itera-ink hover:text-itera-accent"
+        className="mt-auto flex items-center gap-3 rounded-fliptap-control px-3 pb-1 pt-8 text-left text-sm font-semibold text-fliptap-ink hover:text-fliptap-accent"
       >
         <Settings size={17} strokeWidth={1.8} />
         Settings
@@ -229,7 +229,7 @@ function CollectionRow({
         <Folder
           size={17}
           strokeWidth={1.8}
-          className={cn('flex-none', isSelected ? 'text-itera-accent' : 'text-itera-ink-brand')}
+          className={cn('flex-none', isSelected ? 'text-fliptap-accent' : 'text-fliptap-ink-brand')}
         />
         <button
           type="button"
@@ -246,17 +246,17 @@ function CollectionRow({
             type="button"
             onClick={() => onToggle(node.collection.id)}
             aria-label={expanded ? 'Collapse' : 'Expand'}
-            className="grid h-5 w-5 flex-none place-items-center text-itera-ink-brand hover:text-itera-accent"
+            className="grid h-5 w-5 flex-none place-items-center text-fliptap-ink-brand hover:text-fliptap-accent"
           >
             {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
         ) : (
           <span className="w-5 flex-none" />
         )}
-        <span className="w-6 flex-none text-right text-xs font-normal text-itera-muted">{count}</span>
+        <span className="w-6 flex-none text-right text-xs font-normal text-fliptap-muted">{count}</span>
       </div>
       {expandable && expanded && (
-        <div className="border-l border-itera-border" style={{ marginLeft: 18 + node.depth * 16 }}>
+        <div className="border-l border-fliptap-border" style={{ marginLeft: 18 + node.depth * 16 }}>
           {node.children.map((child) => (
             <CollectionRow
               key={child.collection.id}
@@ -303,18 +303,18 @@ function DeckLeafRow({
     <button
       type="button"
       onClick={onClick}
-      className={cn('relative flex w-full items-center gap-2.5 rounded-r-[9px] py-2 pr-2 text-left text-sm before:absolute before:left-0 before:top-1/2 before:h-px before:w-3 before:bg-itera-border', rowTone(active))}
+      className={cn('relative flex w-full items-center gap-2.5 rounded-r-[9px] py-2 pr-2 text-left text-sm before:absolute before:left-0 before:top-1/2 before:h-px before:w-3 before:bg-fliptap-border', rowTone(active))}
       style={{ paddingLeft: 14 + (depth - 1) * 16 }}
     >
       <span
         className={cn(
           'h-1.5 w-1.5 flex-none rounded-full',
-          active ? 'bg-itera-accent' : 'bg-itera-border-strong',
+          active ? 'bg-fliptap-accent' : 'bg-fliptap-border-strong',
         )}
       />
       <span className={cn('min-w-0 flex-1 truncate', active && 'font-semibold')}>{deck.name}</span>
       {deck.cardCount !== undefined && (
-        <span className="flex-none text-xs font-normal text-itera-muted">{deck.cardCount}</span>
+        <span className="flex-none text-xs font-normal text-fliptap-muted">{deck.cardCount}</span>
       )}
     </button>
   )

@@ -5,7 +5,7 @@ import { chunkKey, formatManifest, parseManifest, splitIntoChunks } from './chun
 // Where the Supabase session lives on this device.
 //
 // This implements the storage shape supabase-js asks for (getItem/setItem/
-// removeItem, all async), not @itera/core's LocalSessionStore. Those are two
+// removeItem, all async), not @fliptap/core's LocalSessionStore. Those are two
 // different seams and conflating them would be a second session abstraction:
 // core's LocalSessionStore is the *local/demo* session record, which a
 // Supabase-mode app never reads at all, while this is the cloud session the

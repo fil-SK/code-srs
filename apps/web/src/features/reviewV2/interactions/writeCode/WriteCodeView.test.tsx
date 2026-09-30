@@ -177,7 +177,7 @@ describe('WriteCodeView', () => {
     await user.keyboard('3')
     await waitFor(() => {
       const good = screen.getByRole('button', { name: /Good/ })
-      expect(good.className).toMatch(/itera-accent/)
+      expect(good.className).toMatch(/fliptap-accent/)
     })
   })
 })

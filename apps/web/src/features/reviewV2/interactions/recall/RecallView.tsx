@@ -29,7 +29,7 @@ export function RecallView({
           <div className="flex items-center justify-center py-4">
             <CardPrompt text={card.prompt.value} />
           </div>
-          <div className="flex flex-col items-center justify-end gap-1.5 text-itera-muted">
+          <div className="flex flex-col items-center justify-end gap-1.5 text-fliptap-muted">
             <FlipCueIcon />
             <span className="text-sm font-medium">
               Click the card or press Space to flip
@@ -44,7 +44,7 @@ export function RecallView({
           </div>
           <RichText
             text={card.interaction.answer.value}
-            className="text-lg font-semibold leading-relaxed text-itera-ink-brand"
+            className="text-lg font-semibold leading-relaxed text-fliptap-ink-brand"
           />
         </div>
       }

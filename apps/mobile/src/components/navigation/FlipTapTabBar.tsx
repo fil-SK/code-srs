@@ -1,11 +1,11 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors } from '@itera/core'
+import { fliptapColors } from '@fliptap/core'
 import { Tabs } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { Image, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-type IteraTabBarProps = Parameters<
+type FlipTapTabBarProps = Parameters<
   NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 >[0]
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
@@ -17,9 +17,9 @@ const ICONS: Record<string, IconName> = {
   profile: 'account-outline',
 }
 
-const iteraSymbol = require('../../../assets/itera-logo.png')
+const fliptapSymbol = require('../../../assets/fliptap-logo.png')
 
-export function IteraTabBar({ state, descriptors, navigation }: IteraTabBarProps) {
+export function FlipTapTabBar({ state, descriptors, navigation }: FlipTapTabBarProps) {
   const insets = useSafeAreaInsets()
 
   // The card session is immersive: no persistent navigation while a card is on
@@ -83,11 +83,11 @@ export function IteraTabBar({ state, descriptors, navigation }: IteraTabBarProps
           >
             {isToday ? (
               <View style={[styles.todayMark, selected && styles.todayMarkSelected]}>
-                <Image resizeMode="contain" source={iteraSymbol} style={styles.todaySymbol} />
+                <Image resizeMode="contain" source={fliptapSymbol} style={styles.todaySymbol} />
               </View>
             ) : (
               <MaterialCommunityIcons
-                color={selected ? iteraColors.accent : iteraColors.muted}
+                color={selected ? fliptapColors.accent : fliptapColors.muted}
                 name={ICONS[route.name] ?? 'circle-outline'}
                 size={25}
               />
@@ -114,13 +114,13 @@ const styles = StyleSheet.create({
     minHeight: 68,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    borderTopColor: iteraColors.border,
+    borderTopColor: fliptapColors.border,
     borderTopWidth: StyleSheet.hairlineWidth,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingTop: 8,
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.navy,
+        shadowColor: fliptapColors.navy,
         shadowOffset: { width: 0, height: -5 },
         shadowOpacity: 0.06,
         shadowRadius: 14,
@@ -145,13 +145,13 @@ const styles = StyleSheet.create({
     height: 58,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: iteraColors.borderStrong,
+    borderColor: fliptapColors.borderStrong,
     borderRadius: 18,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     ...Platform.select({
       ios: {
-        shadowColor: iteraColors.accent,
+        shadowColor: fliptapColors.accent,
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.1,
         shadowRadius: 10,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   todayMarkSelected: {
-    borderColor: iteraColors.accent,
+    borderColor: fliptapColors.accent,
     borderWidth: 1.5,
     ...Platform.select({
       ios: { shadowOpacity: 0.17 },
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-45deg' }],
   },
   label: {
-    color: iteraColors.muted,
+    color: fliptapColors.muted,
     fontSize: 11,
     fontWeight: '500',
   },
   labelSelected: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontWeight: '700',
   },
   todayLabel: {

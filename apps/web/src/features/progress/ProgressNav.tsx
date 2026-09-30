@@ -25,7 +25,7 @@ interface NavGroup {
   items: NavItem[]
 }
 
-// Mirrors the locked mockup's full sidebar IA (see docs/itera-decisions.md).
+// Mirrors the locked mockup's full sidebar IA (see docs/fliptap-decisions.md).
 // Only "Overview" has real data behind it today — the rest render as
 // visibly disabled rows with a "Soon" pill rather than being omitted, so the
 // sidebar's composition/hierarchy matches the reference without fabricating
@@ -82,7 +82,7 @@ export function ProgressNav() {
       <nav aria-label="Progress" className="space-y-5">
         {VISIBLE_GROUPS.map((group) => (
           <div key={group.heading}>
-            <div className="mb-1 px-2.5 text-xs font-bold uppercase tracking-wider text-itera-muted">
+            <div className="mb-1 px-2.5 text-xs font-bold uppercase tracking-wider text-fliptap-muted">
               {group.heading}
             </div>
             <div>
@@ -96,25 +96,25 @@ export function ProgressNav() {
                       cn(
                         'flex items-center gap-2 rounded-r-[9px] border-l-2 px-2.5 py-2 text-sm font-semibold',
                         isActive
-                          ? 'border-itera-accent bg-itera-accent-soft text-itera-ink-brand'
-                          : 'border-transparent text-itera-ink hover:bg-itera-surface-subtle hover:text-itera-ink-brand',
+                          ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
+                          : 'border-transparent text-fliptap-ink hover:bg-fliptap-surface-subtle hover:text-fliptap-ink-brand',
                       )
                     }
                   >
-                    <item.icon size={17} strokeWidth={2} className="text-itera-accent" aria-hidden="true" />
+                    <item.icon size={17} strokeWidth={2} className="text-fliptap-accent" aria-hidden="true" />
                     {item.label}
                   </NavLink>
                 ) : (
                   <div
                     key={item.label}
                     aria-disabled="true"
-                    className="flex items-center justify-between gap-2 rounded-r-[9px] border-l-2 border-transparent px-2.5 py-2 text-sm font-medium text-itera-muted-light"
+                    className="flex items-center justify-between gap-2 rounded-r-[9px] border-l-2 border-transparent px-2.5 py-2 text-sm font-medium text-fliptap-muted-light"
                   >
                     <span className="flex items-center gap-2">
                       <item.icon size={17} strokeWidth={1.9} aria-hidden="true" />
                       {item.label}
                     </span>
-                    <span className="rounded-itera-pill bg-itera-surface-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-itera-muted-light">
+                    <span className="rounded-fliptap-pill bg-fliptap-surface-subtle px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-fliptap-muted-light">
                       Soon
                     </span>
                   </div>
@@ -127,7 +127,7 @@ export function ProgressNav() {
 
       <Link
         to="/settings"
-        className="mt-auto flex items-center gap-2 rounded-itera-control px-2 py-1.5 pt-6 text-left text-sm font-semibold text-itera-muted hover:text-itera-ink-brand"
+        className="mt-auto flex items-center gap-2 rounded-fliptap-control px-2 py-1.5 pt-6 text-left text-sm font-semibold text-fliptap-muted hover:text-fliptap-ink-brand"
       >
         <Settings size={15} />
         Settings

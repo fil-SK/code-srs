@@ -1,4 +1,4 @@
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native'
 
 // The one button the authoring surfaces use.
@@ -13,9 +13,9 @@ import { Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'rea
 // target, and the disabled state is announced through accessibilityState rather
 // than being conveyed only by opacity.
 
-export type IteraButtonVariant = 'primary' | 'secondary' | 'destructive'
+export type FlipTapButtonVariant = 'primary' | 'secondary' | 'destructive'
 
-export function IteraButton({
+export function FlipTapButton({
   label,
   onPress,
   variant = 'primary',
@@ -27,7 +27,7 @@ export function IteraButton({
 }: {
   label: string
   onPress: () => void
-  variant?: IteraButtonVariant
+  variant?: FlipTapButtonVariant
   disabled?: boolean
   accessibilityHint?: string
   accessibilityLabel?: string
@@ -63,19 +63,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     paddingHorizontal: 18,
   },
   primary: {
-    backgroundColor: iteraColors.accent,
+    backgroundColor: fliptapColors.accent,
   },
   secondary: {
-    borderColor: iteraColors.borderStrong,
+    borderColor: fliptapColors.borderStrong,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
   },
   destructive: {
-    backgroundColor: iteraColors.error,
+    backgroundColor: fliptapColors.error,
   },
   disabled: {
     opacity: 0.45,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
 })
 
 const labelStyles = StyleSheet.create({
-  primary: { color: iteraColors.surface },
-  secondary: { color: iteraColors.inkBrand },
-  destructive: { color: iteraColors.surface },
+  primary: { color: fliptapColors.surface },
+  secondary: { color: fliptapColors.inkBrand },
+  destructive: { color: fliptapColors.surface },
 })

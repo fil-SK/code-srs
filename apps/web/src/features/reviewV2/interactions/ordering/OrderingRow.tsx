@@ -42,18 +42,18 @@ export function OrderingRow({
       style={style}
       data-ordering-row=""
       className={cn(
-        'group flex items-center gap-2 rounded-itera-card border bg-itera-surface px-5 py-4 text-[0.95rem] shadow-[0_1px_2px_rgba(23,32,51,0.05)]',
+        'group flex items-center gap-2 rounded-fliptap-card border bg-fliptap-surface px-5 py-4 text-[0.95rem] shadow-[0_1px_2px_rgba(23,32,51,0.05)]',
         // Graded rows tint the whole border and fill rather than carrying a
         // thick left edge: at the row's card radius that edge renders as a
         // crescent. Color is never the only signal - every row also states
         // "Correct" or "Belongs at #N" in text.
         showFeedback
           ? correct
-            ? 'border-itera-success/40 bg-itera-success-soft'
-            : 'border-itera-error/40 bg-itera-error-soft'
-          : 'border-itera-border',
+            ? 'border-fliptap-success/40 bg-fliptap-success-soft'
+            : 'border-fliptap-error/40 bg-fliptap-error-soft'
+          : 'border-fliptap-border',
         !locked && 'cursor-grab touch-none active:cursor-grabbing',
-        isDragging && 'cursor-grabbing opacity-80 shadow-lg ring-1 ring-itera-accent',
+        isDragging && 'cursor-grabbing opacity-80 shadow-lg ring-1 ring-fliptap-accent',
       )}
     >
       {/* The position number is redundant on the front (the order is already
@@ -62,20 +62,20 @@ export function OrderingRow({
           row it sits on. Kept a sibling of the label, never wrapped around
           it, so the row's visible text stays exactly the item's own. */}
       {showFeedback && (
-        <span className="w-5 flex-none font-mono text-xs text-itera-muted">{index + 1}.</span>
+        <span className="w-5 flex-none font-mono text-xs text-fliptap-muted">{index + 1}.</span>
       )}
-      <span className="flex-1 leading-snug text-itera-ink">
+      <span className="flex-1 leading-snug text-fliptap-ink">
         <InlineText text={content} />
       </span>
 
       {showFeedback ? (
         correct ? (
-          <span className="flex flex-none items-center gap-1 text-xs font-medium text-itera-success">
+          <span className="flex flex-none items-center gap-1 text-xs font-medium text-fliptap-success">
             <Check size={14} />
             Correct
           </span>
         ) : (
-          <span className="flex flex-none items-center gap-1 text-xs font-medium text-itera-error">
+          <span className="flex flex-none items-center gap-1 text-xs font-medium text-fliptap-error">
             <X size={14} />
             Belongs at #{expectedIndex + 1}
           </span>
@@ -85,7 +85,7 @@ export function OrderingRow({
           <span
             data-ordering-grip=""
             aria-hidden="true"
-            className="pointer-events-none ml-1 grid flex-none grid-cols-3 gap-[3px] text-itera-muted-light"
+            className="pointer-events-none ml-1 grid flex-none grid-cols-3 gap-[3px] text-fliptap-muted-light"
           >
             {GRIP_DOTS.map((_, dot) => (
               <span

@@ -119,7 +119,7 @@ describe('OrderingView', () => {
     const user = userEvent.setup()
     renderScreen()
 
-    const front = document.querySelector<HTMLElement>('.itera-flip-front')
+    const front = document.querySelector<HTMLElement>('.fliptap-flip-front')
     expect(front).toBeTruthy()
     expect(front?.getAttribute('role')).toBeNull()
 

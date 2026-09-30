@@ -13,7 +13,7 @@ const localSession: LocalSession = {
   createdAt: '2026-08-01T00:00:00.000Z',
 }
 
-const demoSession: LocalSession = { ...localSession, id: 'l2', kind: 'demo', email: 'demo@itera.local' }
+const demoSession: LocalSession = { ...localSession, id: 'l2', kind: 'demo', email: 'demo@fliptap.local' }
 
 function supabaseSession(email: string | undefined): Session {
   return { access_token: 't', user: { id: 'u1', email } } as unknown as Session
@@ -39,14 +39,14 @@ describe('resolveAuthState - local mode', () => {
   it('authenticates the demo workspace as its own kind', () => {
     expect(
       resolveAuthState({ mode: 'local', supabaseSession: null, localSession: demoSession }),
-    ).toEqual({ identity: { email: 'demo@itera.local', kind: 'demo' }, isAuthenticated: true })
+    ).toEqual({ identity: { email: 'demo@fliptap.local', kind: 'demo' }, isAuthenticated: true })
   })
 
   it('does not let a Supabase session substitute for a local one', () => {
     expect(
       resolveAuthState({
         mode: 'local',
-        supabaseSession: supabaseSession('cloud@itera.test'),
+        supabaseSession: supabaseSession('cloud@fliptap.test'),
         localSession: null,
       }),
     ).toEqual({ identity: null, isAuthenticated: false })
@@ -64,10 +64,10 @@ describe('resolveAuthState - Supabase mode', () => {
     expect(
       resolveAuthState({
         mode: 'supabase',
-        supabaseSession: supabaseSession('cloud@itera.test'),
+        supabaseSession: supabaseSession('cloud@fliptap.test'),
         localSession: null,
       }),
-    ).toEqual({ identity: { email: 'cloud@itera.test', kind: 'supabase' }, isAuthenticated: true })
+    ).toEqual({ identity: { email: 'cloud@fliptap.test', kind: 'supabase' }, isAuthenticated: true })
   })
 
   // The finding itself: a leftover record from a local-first build must not be
@@ -88,10 +88,10 @@ describe('resolveAuthState - Supabase mode', () => {
     expect(
       resolveAuthState({
         mode: 'supabase',
-        supabaseSession: supabaseSession('cloud@itera.test'),
+        supabaseSession: supabaseSession('cloud@fliptap.test'),
         localSession,
       }),
-    ).toEqual({ identity: { email: 'cloud@itera.test', kind: 'supabase' }, isAuthenticated: true })
+    ).toEqual({ identity: { email: 'cloud@fliptap.test', kind: 'supabase' }, isAuthenticated: true })
   })
 
   // Preserved as it shipped, deliberately: a session with no email is a real

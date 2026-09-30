@@ -1,4 +1,4 @@
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { StyleSheet, Text, View } from 'react-native'
 
 import { monoFamily } from './monoFamily'
@@ -41,10 +41,10 @@ export function NativeCodeBlock({ code, language }: { code: string; language: st
 const styles = StyleSheet.create({
   block: {
     width: '100%',
-    borderRadius: iteraRadii.control,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    borderColor: iteraColors.border,
-    backgroundColor: iteraColors.surfaceSubtle,
+    borderColor: fliptapColors.border,
+    backgroundColor: fliptapColors.surfaceSubtle,
     paddingHorizontal: 14,
     paddingTop: 24,
     paddingBottom: 12,
@@ -54,14 +54,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 10,
-    color: iteraColors.mutedLight,
+    color: fliptapColors.mutedLight,
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   line: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
   lineNumber: {
-    color: iteraColors.mutedLight,
+    color: fliptapColors.mutedLight,
     fontFamily: monoFamily,
     fontSize: 12,
     lineHeight: 20,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   code: {
     flex: 1,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontFamily: monoFamily,
     fontSize: 12.5,
     lineHeight: 20,

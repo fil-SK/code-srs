@@ -1,4 +1,4 @@
-// Flattening Itera's text syntax to plain characters, for places that cannot
+// Flattening FlipTap's text syntax to plain characters, for places that cannot
 // present formatting at all: screen-reader labels, and any future native
 // accessibility string.
 //

@@ -1,4 +1,4 @@
-import { AuthProvider, iteraColors } from '@itera/core'
+import { AuthProvider, fliptapColors } from '@fliptap/core'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { StatusBar } from 'expo-status-bar'
 import { useState } from 'react'
@@ -23,7 +23,7 @@ import { isMobileSupabaseConfigured } from '@/src/data/supabaseClient'
 // import without opening a connection.
 //
 // Everything below the providers - screens, hooks, the review views - reaches
-// data only through @itera/core. No component imports a backend, and nothing
+// data only through @fliptap/core. No component imports a backend, and nothing
 // outside src/data/supabaseClient.ts knows this app is configured by Expo.
 //
 // Two runtime modes, decided once in src/config/mobileRuntimeMode.ts and read
@@ -61,10 +61,10 @@ export default function RootLayout() {
   if (mobileRuntimeMode === 'cloud' && !isMobileSupabaseConfigured) {
     return (
       <SafeAreaProvider>
-        <StatusBar style="dark" backgroundColor={iteraColors.canvas} />
+        <StatusBar style="dark" backgroundColor={fliptapColors.canvas} />
         <StatusScreen
           detail="This build has no Supabase configuration. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in apps/mobile/.env.local, then restart Metro with the cache cleared."
-          title="Itera is not configured"
+          title="FlipTap is not configured"
         />
       </SafeAreaProvider>
     )
@@ -83,7 +83,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" backgroundColor={iteraColors.canvas} />
+      <StatusBar style="dark" backgroundColor={fliptapColors.canvas} />
       <QueryClientProvider client={queryClient}>
         <AuthProvider config={authConfig}>{navigator}</AuthProvider>
       </QueryClientProvider>

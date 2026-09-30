@@ -31,8 +31,8 @@ export function MatchingOptionRow({
         disabled={!canRemove}
         aria-label="Remove option"
         className={cn(
-          'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-itera-border text-itera-muted',
-          canRemove ? 'hover:border-itera-error hover:text-itera-error' : 'opacity-40',
+          'grid h-9 w-9 flex-none place-items-center rounded-[9px] border border-fliptap-border text-fliptap-muted',
+          canRemove ? 'hover:border-fliptap-error hover:text-fliptap-error' : 'opacity-40',
         )}
       >
         <X size={15} />

@@ -1,4 +1,4 @@
-import type { Card, CardInteraction, InteractionType, SubmitReviewResult } from '@itera/core'
+import type { Card, CardInteraction, InteractionType, SubmitReviewResult } from '@fliptap/core'
 import { act, render } from '@testing-library/react-native'
 import { AccessibilityInfo } from 'react-native'
 
@@ -9,7 +9,7 @@ import { createDemoSeed } from '@/src/demo/demoWorkspace'
 /**
  * Test support for the native Review session. Not a `*.test.tsx` file, so the
  * runner does not execute it, and under `src/` rather than `app/`, where Expo
- * Router's require.context would pull it into the bundle (itera-decisions D356).
+ * Router's require.context would pull it into the bundle (fliptap-decisions D356).
  */
 
 /** One fixed instant, so seeded due dates and FSRS previews are reproducible. */

@@ -29,21 +29,21 @@ export function ReviewPersistError({
   return (
     <div
       role="alert"
-      className="mt-3 flex items-start gap-3 rounded-itera-card border border-itera-error bg-itera-error-soft p-4"
+      className="mt-3 flex items-start gap-3 rounded-fliptap-card border border-fliptap-error bg-fliptap-error-soft p-4"
     >
       <TriangleAlert
         aria-hidden="true"
         size={18}
-        className="mt-0.5 shrink-0 text-itera-error"
+        className="mt-0.5 shrink-0 text-fliptap-error"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-sm leading-relaxed text-itera-ink-brand">{message}</p>
+        <p className="text-sm leading-relaxed text-fliptap-ink-brand">{message}</p>
       </div>
       <button
         ref={retryRef}
         type="button"
         onClick={onRetry}
-        className="shrink-0 rounded-itera-control bg-itera-accent px-3.5 py-2 text-sm font-semibold text-white outline-none transition-opacity hover:brightness-105 focus-visible:ring-2 focus-visible:ring-itera-accent focus-visible:ring-offset-2"
+        className="shrink-0 rounded-fliptap-control bg-fliptap-accent px-3.5 py-2 text-sm font-semibold text-white outline-none transition-opacity hover:brightness-105 focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2"
       >
         Try again
       </button>

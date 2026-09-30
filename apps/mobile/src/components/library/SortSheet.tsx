@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii, type DeckSortKey } from '@itera/core'
+import { fliptapColors, fliptapRadii, type DeckSortKey } from '@fliptap/core'
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { DECK_SORT_OPTIONS } from './deckSorting'
@@ -12,7 +12,7 @@ import { DECK_SORT_OPTIONS } from './deckSorting'
 // not reproduced here.
 //
 // The four options and their meanings are web's, unchanged, because the
-// ordering itself comes from the shared `sortDecks` in @itera/core. "Due soon"
+// ordering itself comes from the shared `sortDecks` in @fliptap/core. "Due soon"
 // is web's label for most-due-first, not next-due-date; the wording is kept so
 // the two platforms do not describe the same ordering differently.
 
@@ -60,7 +60,7 @@ export function SortSheet({
                 {option.label}
               </Text>
               {selected ? (
-                <MaterialCommunityIcons color={iteraColors.accent} name="check" size={21} />
+                <MaterialCommunityIcons color={fliptapColors.accent} name="check" size={21} />
               ) : null}
             </Pressable>
           )
@@ -76,9 +76,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,23,42,0.35)',
   },
   sheet: {
-    borderTopLeftRadius: iteraRadii.card,
-    borderTopRightRadius: iteraRadii.card,
-    backgroundColor: iteraColors.surface,
+    borderTopLeftRadius: fliptapRadii.card,
+    borderTopRightRadius: fliptapRadii.card,
+    backgroundColor: fliptapColors.surface,
     paddingTop: 10,
     paddingBottom: 34,
     paddingHorizontal: 18,
@@ -87,13 +87,13 @@ const styles = StyleSheet.create({
     width: 38,
     height: 4,
     alignSelf: 'center',
-    borderRadius: iteraRadii.pill,
-    backgroundColor: iteraColors.border,
+    borderRadius: fliptapRadii.pill,
+    backgroundColor: fliptapColors.border,
   },
   title: {
     marginTop: 14,
     marginBottom: 6,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -104,11 +104,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   optionText: {
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 15,
   },
   optionTextSelected: {
-    color: iteraColors.accent,
+    color: fliptapColors.accent,
     fontWeight: '700',
   },
   pressed: {

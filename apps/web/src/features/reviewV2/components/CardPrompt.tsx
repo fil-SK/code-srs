@@ -20,7 +20,7 @@ export function CardPrompt({
     <RichText
       text={text}
       className={cn(
-        'itera-card-prompt font-bold leading-snug text-itera-ink-brand',
+        'fliptap-card-prompt font-bold leading-snug text-fliptap-ink-brand',
         compact ? 'text-xl' : 'text-2xl',
         className,
       )}

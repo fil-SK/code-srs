@@ -18,7 +18,7 @@ import {
   type Roadmap,
   type WorkspaceSnapshot,
   type WriteGuarantee,
-} from '@itera/core'
+} from '@fliptap/core'
 
 // The Demo runtime's storage backend: a complete, honest Repository held in
 // plain JavaScript objects.
@@ -39,7 +39,7 @@ import {
 //     is implemented, including the stores mobile has no UI for, because a
 //     backend that throws on the half of the interface nobody happens to call
 //     yet is a trap for whoever calls it next.
-//   * It is not in @itera/core. Core owns the contract and deliberately owns no
+//   * It is not in @fliptap/core. Core owns the contract and deliberately owns no
 //     way to build one (see data/registry.ts); a backend belongs to the
 //     platform that composes it, and the marketing fixture that seeds this one
 //     could never live in core at all.

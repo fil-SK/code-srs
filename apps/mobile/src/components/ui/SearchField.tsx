@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { iteraColors, iteraRadii } from '@itera/core'
+import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import type { StyleProp, ViewStyle } from 'react-native'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 
@@ -32,14 +32,14 @@ export function SearchField({
 }) {
   return (
     <View style={[styles.wrap, style]}>
-      <MaterialCommunityIcons color={iteraColors.mutedLight} name="magnify" size={23} />
+      <MaterialCommunityIcons color={fliptapColors.mutedLight} name="magnify" size={23} />
       <TextInput
         accessibilityLabel={accessibilityLabel}
         autoCapitalize="none"
         autoCorrect={false}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={iteraColors.mutedLight}
+        placeholderTextColor={fliptapColors.mutedLight}
         returnKeyType="search"
         style={styles.input}
         value={value}
@@ -54,7 +54,7 @@ export function SearchField({
           onPress={() => onChangeText('')}
           style={({ pressed }) => [styles.clear, pressed && styles.clearPressed]}
         >
-          <MaterialCommunityIcons color={iteraColors.surface} name="close" size={14} />
+          <MaterialCommunityIcons color={fliptapColors.surface} name="close" size={14} />
         </Pressable>
       ) : null}
     </View>
@@ -67,16 +67,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    borderColor: iteraColors.borderStrong,
-    borderRadius: iteraRadii.control,
+    borderColor: fliptapColors.borderStrong,
+    borderRadius: fliptapRadii.control,
     borderWidth: 1,
-    backgroundColor: iteraColors.surface,
+    backgroundColor: fliptapColors.surface,
     paddingHorizontal: 14,
   },
   input: {
     minWidth: 0,
     flex: 1,
-    color: iteraColors.inkBrand,
+    color: fliptapColors.inkBrand,
     fontSize: 15,
     paddingVertical: 0,
   },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    backgroundColor: iteraColors.mutedLight,
+    backgroundColor: fliptapColors.mutedLight,
   },
   clearPressed: {
     opacity: 0.6,

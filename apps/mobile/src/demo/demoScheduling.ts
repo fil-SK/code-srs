@@ -1,4 +1,4 @@
-import type { Card, Millis, SchedulingState, SchedulingStateKind } from '@itera/core'
+import type { Card, Millis, SchedulingState, SchedulingStateKind } from '@fliptap/core'
 
 import type { MobileCardStatus } from '@/src/types/library'
 
