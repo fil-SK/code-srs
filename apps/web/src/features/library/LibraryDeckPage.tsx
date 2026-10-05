@@ -46,7 +46,6 @@ import {
 } from '@/hooks/useCards'
 import { useCreateDeck, useDecks } from '@/hooks/useDecks'
 import { INTERACTION_META } from '@/features/cards/shared/interactionTypeMeta'
-import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
 import { CardTableHeader, CardTableRow } from './shared/CardTable'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
 import { CardListFooter } from './shared/CardListFooter'
@@ -377,17 +376,6 @@ export function LibraryDeckPage() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <OverflowMenu
-            bordered
-            ariaLabel="More deck actions"
-            items={[
-              {
-                label: 'Flip through',
-                icon: BookOpen,
-                onClick: () => navigate(`/preview?deck=${id}&from=/decks/${id}`),
-              },
-            ]}
-          />
           <button
             type="button"
             onClick={() => setSettingsOpen((o) => !o)}
@@ -421,11 +409,13 @@ export function LibraryDeckPage() {
             </div>
             {deck.description && <p className="mt-2 max-w-md text-sm text-fliptap-muted">{deck.description}</p>}
 
-            <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-y-0 sm:divide-x sm:divide-fliptap-border">
-              <div className="sm:pr-4">
+            {/* One unwrapped row on desktop. When it wrapped, the mastery ring dropped to a
+                second line under "cards", away from the "last studied" it belongs with. */}
+            <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:items-center sm:gap-y-0 sm:divide-x sm:divide-fliptap-border">
+              <div className="sm:pr-3">
                 <Stat icon={GalleryVerticalEnd} label="cards" value={String(totalCards)} />
               </div>
-              <div className="sm:px-4">
+              <div className="sm:px-3">
                 <Stat
                   icon={CalendarDays}
                   label="due today"
@@ -433,10 +423,10 @@ export function LibraryDeckPage() {
                   accent={metrics.dueCount > 0}
                 />
               </div>
-              <div className="sm:px-4">
+              <div className="sm:px-3">
                 <Stat icon={Clock3} label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
               </div>
-              <div className="flex items-center gap-3.5 sm:pl-4">
+              <div className="flex items-center gap-3.5 sm:pl-3">
                 <MasteryRing value={metrics.masteryFraction} />
                 <div>
                   <div className="font-fliptap-display text-lg font-bold text-fliptap-ink-brand">
@@ -454,6 +444,13 @@ export function LibraryDeckPage() {
             <Link to={`/review?deck=${id}`}>
               <Button variant="primary" className="w-full justify-center py-3 text-sm">
                 <Play size={16} strokeWidth={1.8} /> Study Now
+              </Button>
+            </Link>
+          )}
+          {totalCards > 0 && (
+            <Link to={`/preview?deck=${id}&from=/decks/${id}`}>
+              <Button variant="secondary" className="w-full justify-center py-3 text-sm">
+                <BookOpen size={17} strokeWidth={1.8} /> Flip through
               </Button>
             </Link>
           )}
