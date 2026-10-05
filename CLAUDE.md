@@ -55,6 +55,8 @@ npx tsc -b --force      # the real typecheck (see the warning below)
 npx playwright install chromium                                         # once, before browser verification
 ```
 
+**Dev scenario switcher (`/dev`, web only, temporary).** In `npm run dev`, open `http://localhost:5173/dev` (sign in with the demo workspace first, since `/dev` is outside the auth guard but the product pages are not). It offers two generated starting points: **Brand new user** (empty workspace) and **Long-time user** (23 cards, four decks, about three weeks of review history, a broken streak). Loading one replaces the local IndexedDB workspace in one transaction, then refreshes every cached query, so Today, Library, Progress and the rest show it without a reload. Before the first scenario load, the real workspace is parked in a separate `fliptap-dev-parking` database; **Restore my session** brings it back. Scenarios are regenerated from `apps/web/src/dev/scenarios.ts` (seeded, so a reset is exact), and the page refuses to act in Supabase mode. Code: `apps/web/src/dev/` plus the lazy `/dev` route in `apps/web/src/app/router.tsx`. **Remove all of it before publishing** (see `docs/TODO.md`).
+
 `npx vitest run`, `npx tsc -b --force` and `npm run lint` must all be clean before a change is done (current baseline: `docs/CURRENT_STATE.md` §16).
 
 **Do not use `npx tsc --noEmit` as the typecheck gate — it checks nothing here.** `tsconfig.json` is solution-style (`"files": []` + `references`), so that command is trivially "clean" and proves nothing. Use `npx tsc -b --force` (or `npm run build`). Also: `apps/web/tsconfig.app.json` excludes `*.test.ts(x)`, so **the web app's test files are never typechecked** — a dangling import in a test only fails at Vitest run time. **`packages/core`'s tests are the exception**: `tsconfig.core.test.json` checks them, which is how four `@/domain` tests asserting on functions deleted with the v1 card model were found (they passed only because `.toThrow()` catches a `ReferenceError`).
@@ -110,6 +112,7 @@ Ask before doing any of these; none of them is implied by an ordinary feature re
 - **Do not add a dependency** for anything in the hand-built list above without asking.
 - **`docs/fliptap-decisions.md` is append-only** and `docs/archive/*` is history — never edit either in place to make it agree with new work.
 - Schema changes need the user to run SQL in the Supabase editor (`supabase/schema.sql` is not auto-applied), so hand them the exact block.
+- **The `/dev` scenario switcher must be removed before the app is published** (`apps/web/src/dev/`, its lazy route in `router.tsx`, and the `dev/*` tests). It is a development aid, not a product feature; do not extend it into one, and do not leave it in a production build.
 
 ## Files with hard constraints stated in the file itself
 

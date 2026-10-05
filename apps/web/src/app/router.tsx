@@ -23,8 +23,23 @@ import { WriteCodePreviewPage } from '@/features/design-preview/review-write-cod
 import { OrderingPreviewPage } from '@/features/design-preview/review-ordering/OrderingPreviewPage'
 import { MatchingPreviewPage } from '@/features/design-preview/review-matching/MatchingPreviewPage'
 import { WalkthroughPreviewPage } from '@/features/design-preview/review-walkthrough/WalkthroughPreviewPage'
+// Dev-only: the scenario switcher is absent from production builds. The import
+// is dynamic and sits inside the import.meta.env.DEV branch, which is statically
+// false in production, so the whole module (and its database) is dropped.
+const devRoutes = import.meta.env.DEV
+  ? [
+      {
+        path: '/dev',
+        errorElement: <RouteError />,
+        lazy: async () => ({
+          Component: (await import('@/dev/DevScenariosPage')).DevScenariosPage,
+        }),
+      },
+    ]
+  : []
 
 export const router = createBrowserRouter([
+  ...devRoutes,
   // Every product route sits behind one guard (a pathless layout route), so
   // "signed out" is answered in exactly one place rather than per page. Only
   // /login and /design-preview/* live outside it.

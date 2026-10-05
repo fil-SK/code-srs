@@ -433,3 +433,7 @@ On each of the pages, there should be an orange-wavy shape
 ## Responsive table redesign.
 
 ## Milestones
+
+## Remove the /dev scenario switcher before publishing
+
+A development-only page at `/dev` (`apps/web/src/dev/`, the lazy route in `apps/web/src/app/router.tsx`, and the `apps/web/src/dev/*.test.ts` tests) replaces the local workspace with generated starting points (a brand-new user, a long-time user). It is excluded from production builds, but the code itself is not meant to ship: delete the directory, the route block, and the related test file before the app is published. Recorded in `CLAUDE.md` and `docs/fliptap-decisions.md` (D461).
