@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { PaceDay } from '@/domain/stats/todayMetrics'
 
 // Real seven-day activity: one bucket per local calendar day, counting
@@ -41,6 +42,7 @@ function smoothPath(points: [number, number][]): string {
 }
 
 const DAY_NAME = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
+const DAY_DATE = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
 
 export function PaceChart({ days }: { days: PaceDay[] }) {
   const counts = days.map((d) => d.count)
@@ -53,6 +55,13 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
   const last = points[points.length - 1]
   const chartBottom = HEIGHT - BOTTOM
   const areaPath = `${linePath} L ${last[0]} ${chartBottom} L ${first[0]} ${chartBottom} Z`
+
+  // The day under the pointer. Each day owns a column, so the hit target is that
+  // column's full height and catches days with no reviews too.
+  const [hovered, setHovered] = useState<number | null>(null)
+  const columnWidth = days.length > 1 ? (WIDTH - LEFT - RIGHT) / (days.length - 1) : WIDTH - LEFT - RIGHT
+  const hoveredDay = hovered !== null ? days[hovered] : null
+  const hoveredPoint = hovered !== null ? points[hovered] : null
 
   const description = days
     .map((d) => `${DAY_NAME.format(new Date(d.date))} ${d.count}`)
@@ -70,89 +79,129 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
         {total === 0 ? 'No reviews in the last 7 days' : 'Reviews completed per day'}
       </p>
 
+      <div className="relative mt-2">
       <svg
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        className="mt-2 w-full"
-        role="img"
-        aria-label={`Reviews completed per day over the last seven days: ${description}`}
-      >
-        <defs>
-          <linearGradient id="pace-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--fliptap-accent)" stopOpacity="0.14" />
-            <stop offset="100%" stopColor="var(--fliptap-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {[0, axisMax / 2, axisMax].map((tick) => {
-          const y = TOP + (1 - tick / axisMax) * (HEIGHT - TOP - BOTTOM)
-          return (
-            <g key={tick}>
-              <line
-                x1={LEFT}
-                x2={WIDTH - RIGHT}
-                y1={y}
-                y2={y}
-                stroke="var(--fliptap-border)"
-                strokeWidth="1"
-              />
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          className="w-full"
+          role="img"
+          aria-label={`Reviews completed per day over the last seven days: ${description}`}
+          onPointerLeave={() => setHovered(null)}
+        >
+          <defs>
+            <linearGradient id="pace-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--fliptap-accent)" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="var(--fliptap-accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+  
+          {[0, axisMax / 2, axisMax].map((tick) => {
+            const y = TOP + (1 - tick / axisMax) * (HEIGHT - TOP - BOTTOM)
+            return (
+              <g key={tick}>
+                <line
+                  x1={LEFT}
+                  x2={WIDTH - RIGHT}
+                  y1={y}
+                  y2={y}
+                  stroke="var(--fliptap-border)"
+                  strokeWidth="1"
+                />
+                <text
+                  x={0}
+                  y={y + 4}
+                  fill="var(--fliptap-muted)"
+                  fontSize="11"
+                  fontFamily="var(--font-fliptap-sans)"
+                >
+                  {tick}
+                </text>
+              </g>
+            )
+          })}
+  
+          {days.map((day, index) => {
+            const [x] = chartPoint(0, index, days.length, axisMax)
+            return (
               <text
-                x={0}
-                y={y + 4}
+                key={day.date}
+                x={x}
+                y={HEIGHT - 5}
+                textAnchor="middle"
                 fill="var(--fliptap-muted)"
                 fontSize="11"
                 fontFamily="var(--font-fliptap-sans)"
               >
-                {tick}
+                {day.label}
+              </text>
+            )
+          })}
+  
+          <path d={areaPath} fill="url(#pace-area)" />
+          <path
+            d={linePath}
+            fill="none"
+            stroke="var(--fliptap-accent)"
+            strokeWidth="2.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <circle cx={last[0]} cy={last[1]} r="3.5" fill="var(--fliptap-accent)" />
+  
+          {/* Shifted left of the end point so the callout cannot clip the SVG's
+              right edge (found in an earlier browser pass). Hidden while another
+              day is hovered, so it does not sit under that day's tooltip. */}
+          {hovered === null && (
+            <g transform={`translate(${last[0] - 66} ${last[1] - 34})`}>
+              <rect width="60" height="24" rx="6" fill="var(--fliptap-navy-soft)" />
+              <text
+                x="30"
+                y="16"
+                textAnchor="middle"
+                fill="var(--fliptap-ink-brand)"
+                fontSize="11"
+                fontWeight="600"
+                fontFamily="var(--font-fliptap-sans)"
+              >
+                Today
               </text>
             </g>
-          )
-        })}
-
-        {days.map((day, index) => {
-          const [x] = chartPoint(0, index, days.length, axisMax)
-          return (
-            <text
-              key={day.date}
-              x={x}
-              y={HEIGHT - 5}
-              textAnchor="middle"
-              fill="var(--fliptap-muted)"
-              fontSize="11"
-              fontFamily="var(--font-fliptap-sans)"
-            >
-              {day.label}
-            </text>
-          )
-        })}
-
-        <path d={areaPath} fill="url(#pace-area)" />
-        <path
-          d={linePath}
-          fill="none"
-          stroke="var(--fliptap-accent)"
-          strokeWidth="2.25"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <circle cx={last[0]} cy={last[1]} r="3.5" fill="var(--fliptap-accent)" />
-
-        {/* Shifted left of the end point so the callout cannot clip the SVG's
-            right edge (found in an earlier browser pass). */}
-        <g transform={`translate(${last[0] - 66} ${last[1] - 34})`}>
-          <rect width="60" height="24" rx="6" fill="var(--fliptap-navy-soft)" />
-          <text
-            x="30"
-            y="16"
-            textAnchor="middle"
-            fill="var(--fliptap-ink-brand)"
-            fontSize="11"
-            fontWeight="600"
-            fontFamily="var(--font-fliptap-sans)"
+          )}
+  
+          {hoveredPoint && (
+            <circle cx={hoveredPoint[0]} cy={hoveredPoint[1]} r="5" fill="var(--fliptap-accent)" stroke="var(--fliptap-surface)" strokeWidth="2" />
+          )}
+  
+          {days.map((day, index) => {
+            const [x] = chartPoint(0, index, days.length, axisMax)
+            return (
+              <rect
+                key={`hit-${day.date}`}
+                x={x - columnWidth / 2}
+                y={0}
+                width={columnWidth}
+                height={HEIGHT}
+                fill="transparent"
+                onPointerEnter={() => setHovered(index)}
+              />
+            )
+          })}
+        </svg>
+  
+        {hoveredDay && hoveredPoint && (
+          <div
+            role="tooltip"
+            className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md bg-fliptap-ink-brand px-2.5 py-1.5 text-[11px] text-white shadow-md"
+            style={{
+              left: `${(hoveredPoint[0] / WIDTH) * 100}%`,
+              top: `${(hoveredPoint[1] / HEIGHT) * 100}%`,
+              transform: `translate(${hoveredPoint[0] / WIDTH < 0.15 ? '0' : hoveredPoint[0] / WIDTH > 0.85 ? '-100%' : '-50%'}, -140%)`,
+            }}
           >
-            Today
-          </text>
-        </g>
-      </svg>
+            <div className="font-semibold">{DAY_DATE.format(new Date(hoveredDay.date))}</div>
+            <div>{hoveredDay.count === 0 ? 'No reviews' : `${hoveredDay.count} review${hoveredDay.count === 1 ? '' : 's'}`}</div>
+          </div>
+        )}
+      </div>
     </section>
   )
 }
