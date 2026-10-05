@@ -45,7 +45,7 @@ export function ContinueLearningList({ rows }: { rows: ContinueRow[] }) {
               return (
                 <div
                   key={row.deckId}
-                  className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-fliptap-surface-subtle sm:grid-cols-[40px_minmax(0,1fr)_auto_minmax(140px,0.72fr)_auto] sm:px-5"
+                  className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-fliptap-surface-subtle sm:grid-cols-[40px_minmax(0,1fr)_4.5rem_minmax(140px,0.72fr)_5.5rem] sm:px-5"
                 >
                   <div className="row-span-2 grid h-10 w-10 place-items-center rounded-fliptap-control bg-fliptap-navy font-mono text-xs font-bold text-white sm:row-span-1">
                     {markLabelFor(row.name)}
@@ -62,7 +62,10 @@ export function ContinueLearningList({ rows }: { rows: ContinueRow[] }) {
                     )}
                   </div>
 
-                  <div className="col-start-2 row-start-2 text-xs font-bold text-fliptap-ink-brand sm:col-start-auto sm:row-start-auto">
+                  {/* A fixed-width column on desktop, right-aligned, so every row's count
+                      and progress bar start at the same x. Auto-sizing per row is what
+                      drifted them apart. */}
+                  <div className="col-start-2 row-start-2 text-xs font-bold text-fliptap-ink-brand sm:col-start-auto sm:row-start-auto sm:text-right">
                     {row.dueCount} due
                   </div>
 
@@ -80,14 +83,14 @@ export function ContinueLearningList({ rows }: { rows: ContinueRow[] }) {
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="w-8 flex-none text-right text-xs text-fliptap-muted">
+                    <span className="w-10 flex-none text-right text-xs text-fliptap-muted">
                       {percentage}%
                     </span>
                   </div>
 
                   <Link
                     to={actionable ? `/review?deck=${row.deckId}` : `/decks/${row.deckId}`}
-                    className="col-start-3 row-start-1 inline-flex items-center gap-0.5 text-sm font-semibold text-fliptap-accent transition-colors hover:text-fliptap-accent-hover sm:col-start-auto sm:row-start-auto"
+                    className="col-start-3 row-start-1 inline-flex items-center gap-0.5 text-sm font-semibold text-fliptap-accent transition-colors hover:text-fliptap-accent-hover sm:col-start-auto sm:row-start-auto sm:justify-self-end"
                   >
                     {actionable ? 'Continue' : 'Open'}
                     <ChevronRight size={14} aria-hidden="true" />
