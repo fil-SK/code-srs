@@ -117,15 +117,6 @@ export function ReviewPage() {
 
   return (
     <FlipTapSurface className="min-h-screen">
-      {scope && (
-        <div className="mx-auto max-w-3xl px-4 pt-4 text-sm text-fliptap-muted">
-          Studying <span className="font-semibold text-fliptap-ink-brand">{scope.name}</span>{' '}
-          and its subdecks ·{' '}
-          <Link to="/review" className="text-fliptap-accent hover:underline">
-            all decks
-          </Link>
-        </div>
-      )}
       {/* Keyed by the snapshot id, never by the live queue's length - the
           latter remounted the session on every grade. */}
       <ReviewSessionV2 key={session.id} cards={session.cards} />
