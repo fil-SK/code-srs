@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
 import { heatmapMonthLabels, toHeatmapWeeks } from '@fliptap/core'
 import {
@@ -9,6 +9,28 @@ import {
 import { SegmentedToggle } from './SegmentedToggle'
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+type TooltipAlign = 'start' | 'center' | 'end'
+type TooltipPlacement = 'above' | 'below'
+
+const TOOLTIP_SHIFT: Record<TooltipAlign, string> = {
+  start: '0',
+  center: '-50%',
+  end: '-100%',
+}
+
+// "Tue, Oct 5, 2026: 12 cards reviewed". Used for both the visible tooltip and
+// the cell's accessible name, so sighted and screen-reader users get the same answer.
+function heatmapCellLabel(day: HeatmapDay): string {
+  const date = new Date(day.date).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+  if (day.count === 0) return `${date}: no cards reviewed`
+  return `${date}: ${day.count} card${day.count === 1 ? '' : 's'} reviewed`
+}
 
 const LEVEL_BG: Record<HeatmapDay['level'], string> = {
   0: 'var(--fliptap-surface-subtle)',
@@ -31,6 +53,15 @@ export function ActivityHeatmap({
   const months = useMemo(() => heatmapMonthLabels(weeks), [weeks])
   const cell = 12
   const gap = 3
+  // The hovered cell's day and its position inside the grid. A visible label
+  // replaces the native `title`, which appears late and never on touch.
+  const [hover, setHover] = useState<{
+    day: HeatmapDay
+    left: number
+    top: number
+    align: TooltipAlign
+    placement: TooltipPlacement
+  } | null>(null)
 
   return (
     <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]">
@@ -67,7 +98,8 @@ export function ActivityHeatmap({
             </div>
 
             <div
-              className="grid"
+              className="relative grid"
+              onPointerLeave={() => setHover(null)}
               style={{
                 gridTemplateColumns: `repeat(${weeks.length}, ${cell}px)`,
                 gridTemplateRows: `14px repeat(7, ${cell}px)`,
@@ -87,7 +119,27 @@ export function ActivityHeatmap({
                 week.map((day, di) => (
                   <div
                     key={`${wi}-${di}`}
-                    title={day ? `${new Date(day.date).toDateString()}: ${day.count} review${day.count === 1 ? '' : 's'}` : undefined}
+                    role={day ? 'img' : undefined}
+                    aria-label={day ? heatmapCellLabel(day) : undefined}
+                    onPointerEnter={
+                      day
+                        ? (e) => {
+                            // Centre the label over the cell, but pin it to the grid's
+                            // start or end near the edges: the scroll container would
+                            // otherwise clip it. The half-width is a rough label size.
+                            const left = e.currentTarget.offsetLeft
+                            const gridWidth = e.currentTarget.offsetParent?.clientWidth ?? 0
+                            const edge = 90
+                            const align: TooltipAlign =
+                              left < edge ? 'start' : left > gridWidth - edge ? 'end' : 'center'
+                            // The top week row sits under the month labels, and above it the
+                            // scroll container clips, so its label opens downward instead.
+                            const top = e.currentTarget.offsetTop
+                            const placement: TooltipPlacement = top < 30 ? 'below' : 'above'
+                            setHover({ day, left, top, align, placement })
+                          }
+                        : undefined
+                    }
                     className="rounded-[3px]"
                     style={{
                       gridColumn: wi + 1,
@@ -98,6 +150,20 @@ export function ActivityHeatmap({
                     }}
                   />
                 )),
+              )}
+
+              {hover && (
+                <div
+                  role="tooltip"
+                  className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md bg-fliptap-ink-brand px-2 py-1 text-[11px] text-white shadow-md"
+                  style={{
+                    left: hover.align === 'start' ? hover.left : hover.align === 'end' ? hover.left + cell : hover.left + cell / 2,
+                    top: hover.placement === 'above' ? hover.top - 6 : hover.top + cell + 6,
+                    transform: `translate(${TOOLTIP_SHIFT[hover.align]}, ${hover.placement === 'above' ? '-100%' : '0'})`,
+                  }}
+                >
+                  <span className="font-semibold">{heatmapCellLabel(hover.day)}</span>
+                </div>
               )}
             </div>
           </div>

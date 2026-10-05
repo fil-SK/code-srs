@@ -437,3 +437,8 @@ On each of the pages, there should be an orange-wavy shape
 ## Remove the /dev scenario switcher before publishing
 
 A development-only page at `/dev` (`apps/web/src/dev/`, the lazy route in `apps/web/src/app/router.tsx`, and the `apps/web/src/dev/*.test.ts` tests) replaces the local workspace with generated starting points (a brand-new user, a long-time user). It is excluded from production builds, but the code itself is not meant to ship: delete the directory, the route block, and the related test file before the app is published. Recorded in `CLAUDE.md` and `docs/fliptap-decisions.md` (D461).
+
+
+## Check heat map tooltips in the other ranges and on mobile
+
+The Activity heat map labels (`apps/web/src/features/progress/components/ActivityHeatmap.tsx`) were checked in headless Chromium only in the 30D range at 1440x900: the left, middle and right cells of the top row, and the last cell of the grid. Still unchecked: the 7D, 3M and 1Y ranges (the grid has different column counts, so edge detection and the top-row flip should be re-verified), and the 390x844 layout, where the scroll container is narrower.
