@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
 import type { RetentionPoint } from '@/domain/stats/progressMetrics'
 import { DeckScopeDropdown, type DropdownOption } from './DeckScopeDropdown'
@@ -12,6 +12,16 @@ import {
 } from './retentionChartPath'
 
 const DATE_LABEL = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+const FULL_DATE_LABEL = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
+// A bucket spans one day on short ranges and several on long ones, so the
+// tooltip names the whole span rather than implying a single day.
+function bucketLabel(point: RetentionPoint): string {
+  const start = new Date(point.bucketStart)
+  const end = new Date(point.bucketEnd - 1)
+  if (start.toDateString() === end.toDateString()) return FULL_DATE_LABEL.format(start)
+  return `${DATE_LABEL.format(start)} – ${FULL_DATE_LABEL.format(end)}`
+}
 
 export function RetentionChart({
   points,
@@ -35,6 +45,14 @@ export function RetentionChart({
   const last = known[known.length - 1]
   const lastX = last ? xFor(points.indexOf(last), points.length) : 0
   const lastY = last ? yFor(last.retention) : 0
+
+  // The bucket under the pointer. Each bucket owns a column of the plot, so the
+  // hit target is that column's full height, which also catches gaps.
+  const [hovered, setHovered] = useState<number | null>(null)
+  const columnWidth = points.length > 1 ? (WIDTH - 2 * PAD_X) / (points.length - 1) : WIDTH - 2 * PAD_X
+  const hoveredPoint = hovered !== null ? points[hovered] : null
+  const hoveredX = hovered !== null ? xFor(hovered, points.length) : 0
+  const hoveredY = hoveredPoint?.retention != null ? yFor(hoveredPoint.retention) : HEIGHT / 2
 
   // A handful of evenly-spaced x-axis date labels rather than one per bucket.
   const labelCount = Math.min(5, points.length)
@@ -64,7 +82,13 @@ export function RetentionChart({
         <p className="mt-8 text-sm text-fliptap-muted">Not enough review history yet to chart a trend.</p>
       ) : (
         <div className="relative mt-4">
-          <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label="Retention rate over time">
+          <svg
+            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+            className="w-full"
+            role="img"
+            aria-label="Retention rate over time"
+            onPointerLeave={() => setHovered(null)}
+          >
             {[0, 0.25, 0.5, 0.75, 1].map((v) => (
               <line
                 key={v}
@@ -135,9 +159,46 @@ export function RetentionChart({
                 {DATE_LABEL.format(new Date(points[i].bucketStart))}
               </text>
             ))}
+
+            {hoveredPoint?.retention != null && (
+              <circle cx={hoveredX} cy={hoveredY} r="5.5" fill="var(--fliptap-accent)" stroke="var(--fliptap-surface)" strokeWidth="2" />
+            )}
+
+            {points.map((p, i) => (
+              <rect
+                key={`hit-${p.bucketStart}`}
+                x={xFor(i, points.length) - columnWidth / 2}
+                y={0}
+                width={columnWidth}
+                height={HEIGHT}
+                fill="transparent"
+                onPointerEnter={() => setHovered(i)}
+              />
+            ))}
           </svg>
 
-          {last && (
+          {hoveredPoint && (
+            <div
+              role="tooltip"
+              className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md bg-fliptap-ink-brand px-2.5 py-1.5 text-[11px] text-white shadow-md"
+              style={{
+                left: `${(hoveredX / WIDTH) * 100}%`,
+                top: `${(hoveredY / HEIGHT) * 100}%`,
+                transform: `translate(${hoveredX / WIDTH < 0.15 ? '0' : hoveredX / WIDTH > 0.85 ? '-100%' : '-50%'}, -140%)`,
+              }}
+            >
+              <div className="font-semibold">{bucketLabel(hoveredPoint)}</div>
+              <div>
+                {hoveredPoint.retention === null
+                  ? 'No reviews in this period'
+                  : `${Math.round(hoveredPoint.retention * 100)}% retention`}
+              </div>
+            </div>
+          )}
+
+          {/* Hidden while a bucket is hovered: the tooltip states that value, and the
+              two would otherwise sit on top of each other on the latest point. */}
+          {last && hovered === null && (
             <span
               className="absolute rounded-fliptap-pill bg-fliptap-accent px-2 py-0.5 text-xs font-semibold text-white"
               style={{
