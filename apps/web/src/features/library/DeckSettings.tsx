@@ -6,12 +6,13 @@ import { buildDeckTree, flattenDeckTree, subtreeIds } from '@/domain/decks/tree'
 import { DECK_LANGUAGES } from '@/domain/decks/languages'
 import { validateDeckForm } from '@fliptap/core'
 import { useSaveDeck } from '@/hooks/useDecks'
+import { DeckIconPicker } from './shared/DeckIconPicker'
 
-// Edit a deck's name, description, and parent. The parent list excludes the
+// The parent list excludes the
 // deck itself and its descendants, so a move can never create a cycle.
 // Setting the parent to "Top level" promotes it; picking another leaf deck
 // as the parent is exactly how a new Collection gets created (see
-// collectionTree.ts — Collections are derived from Deck.parentId, not
+// collectionTree.ts: Collections are derived from Deck.parentId, not
 // authored directly).
 export function DeckSettings({
   deck,
@@ -27,6 +28,7 @@ export function DeckSettings({
   const [description, setDescription] = useState(deck.description ?? '')
   const [parentId, setParentId] = useState(deck.parentId ?? '')
   const [language, setLanguage] = useState(deck.language ?? '')
+  const [iconId, setIconId] = useState(deck.iconId)
 
   const parentOptions = useMemo(() => {
     const forbidden = new Set(subtreeIds(decks, deck.id))
@@ -37,11 +39,12 @@ export function DeckSettings({
     name.trim() !== deck.name ||
     description.trim() !== (deck.description ?? '') ||
     (parentId || undefined) !== deck.parentId ||
-    (language || undefined) !== deck.language
+    (language || undefined) !== deck.language ||
+    iconId !== deck.iconId
 
   // The shared rule, not a second one: a deck needs a name. Extracted so a
   // native deck editor gates on the same function rather than restating it.
-  const canSave = validateDeckForm({ name, description }).canSave
+  const canSave = validateDeckForm({ name, description, iconId }).canSave
 
   function handleSave() {
     if (!canSave) return
@@ -52,6 +55,7 @@ export function DeckSettings({
         description: description.trim() || undefined,
         parentId: parentId || undefined,
         language: language || undefined,
+        iconId,
       },
       { onSuccess: onClose },
     )
@@ -62,6 +66,7 @@ export function DeckSettings({
       <Field label="Name">
         <input className={fieldClass} value={name} onChange={(e) => setName(e.target.value)} />
       </Field>
+      <DeckIconPicker value={iconId} onChange={setIconId} />
       <Field label="Description (optional)">
         <textarea
           className={fieldClass}
@@ -91,6 +96,7 @@ export function DeckSettings({
           ))}
         </select>
       </Field>
+      {save.isError && <p role="alert" className="text-sm text-fliptap-error">Could not save the deck. Please try again.</p>}
       <div className="flex flex-wrap items-center gap-2.5">
         <Button variant="primary" onClick={handleSave} disabled={!dirty || !canSave || save.isPending}>
           {save.isPending ? 'Saving…' : 'Save deck'}

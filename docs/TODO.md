@@ -79,9 +79,12 @@ the app is used.
 
 ## Deck identity
 
-Icons for decks, specific backgrounds with SVG to place above, or to use text.
-Today and the Library currently derive a 1-3 character monogram from the deck
-name (`markLabelFor`), which is deterministic but not chosen.
+Web's generic-icon portion is complete (D468): 48 searchable choices in New
+Deck and Deck/Collection settings, saved as shared `Deck.iconId`, rendered on
+Library, Today and Progress. Remaining work: a native renderer and chooser
+over the same catalog, and any fuller deck-cover/background system. Native
+still uses its existing generated marks. Company-logo choices are excluded
+by the owner's decision.
 
 ## Roadmaps
 
@@ -421,6 +424,9 @@ until the owner requests it.
 ## Dark mode.
 
 ## Deck identity.
+
+See the scoped remaining work under "Deck identity" above; generic web icons
+are implemented by D468.
 
 ## Route transitions.
 

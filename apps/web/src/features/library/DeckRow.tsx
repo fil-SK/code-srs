@@ -3,7 +3,6 @@ import { Pencil, Trash2 } from 'lucide-react'
 import type { Deck } from '@/types'
 import { DeckMark } from './shared/DeckMark'
 import { MeterBar } from './shared/MeterBar'
-import { markLabelFor } from './deckMark'
 import type { DeckMetrics } from '@/domain/stats/deckMetrics'
 import { formatLastStudied } from '@/features/cards/shared/format'
 import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
@@ -73,7 +72,7 @@ export function DeckRow({
       )}
     >
       <div className="flex min-w-0 items-center gap-3">
-        <DeckMark label={markLabelFor(deck.name)} size={allDecks ? 'md' : 'sm'} />
+        <DeckMark iconId={deck.iconId} size={allDecks ? 'md' : 'sm'} />
         <div className="min-w-0">
           <div className={cn('truncate font-semibold text-fliptap-ink-brand', allDecks ? 'text-[15px]' : 'text-sm')}>
             {deck.name}

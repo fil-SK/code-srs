@@ -3,7 +3,6 @@ import { ChevronRight, Info } from 'lucide-react'
 import type { Deck } from '@/types'
 import type { DeckPerformanceRow } from '@/domain/stats/progressMetrics'
 import { DeckMark } from '@/features/library/shared/DeckMark'
-import { markLabelFor } from '@/features/library/deckMark'
 import { cn } from '@/lib/cn'
 
 function rateTone(value: number | null): string {
@@ -63,7 +62,7 @@ export function DeckPerformanceTable({
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <DeckMark label={markLabelFor(deck.name)} />
+                      <DeckMark iconId={deck.iconId} />
                       <div className="min-w-0">
                         <div className="truncate text-sm font-semibold text-fliptap-ink-brand">
                           {deck.name}

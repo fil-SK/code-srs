@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import type { ContinueRow } from '@/domain/stats/todayMetrics'
-import { markLabelFor } from '@/features/library/deckMark'
+import { DeckMark } from '@/features/library/shared/DeckMark'
 
 // Real decks, ordered by domain/stats/todayMetrics#buildContinueLearning. The
 // four fixture rows this shipped with (C++ Fundamentals, Compiler
@@ -47,9 +47,7 @@ export function ContinueLearningList({ rows }: { rows: ContinueRow[] }) {
                   key={row.deckId}
                   className="grid grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1.5 px-4 py-3 transition-colors hover:bg-fliptap-surface-subtle sm:grid-cols-[40px_minmax(0,1fr)_4.5rem_minmax(140px,0.72fr)_5.5rem] sm:px-5"
                 >
-                  <div className="row-span-2 grid h-10 w-10 place-items-center rounded-fliptap-control bg-fliptap-navy font-mono text-xs font-bold text-white sm:row-span-1">
-                    {markLabelFor(row.name)}
-                  </div>
+                  <DeckMark iconId={row.iconId} className="row-span-2 h-10 w-10 sm:row-span-1" />
 
                   <div className="min-w-0">
                     <div className="truncate text-sm font-semibold text-fliptap-ink-brand">

@@ -2,6 +2,23 @@
 
 **Last verified against the working tree: 2026-08-27** (branch `mvp_demo_cleaning`).
 
+> **Generic deck icons on web (2026-10-05, D468).** New Deck is now a name-and-icon
+> form, with 48 generic software-development icons grouped under Code, Data,
+> Systems and Workflow. The same searchable chooser is available in Deck and
+> Collection settings. A saved selection appears on Library rows and identity
+> headers, Today's Continue Learning and Progress's Deck performance.
+> Existing decks show the generic Code icon until a selection is saved;
+> their persisted rows are not rewritten. Core owns the stable optional
+> `Deck.iconId` contract and catalog, while web binds the icons to Lucide SVGs.
+> Backup validation accepts supported ids and omission, preserving version 2.
+> Native icon presentation remains a later step. No company-logo choices,
+> remote icon requests or new dependencies were added. Lucide's license notices
+> ship at `/third-party-licenses.txt` and are included in the PWA precache.
+> Chromium checks pass at 1440x900 and 390x844, including persistence, Cancel,
+> collection scope, keyboard focus/dismissal, layout and offline local saves.
+> Root verification passes 117 files / 1,121 tests, forced TypeScript checking
+> and lint. The production build succeeds with the existing chunk-size advisory.
+
 > **Web canvas waves (2026-10-05, D462-D467).** The shared `FlipTapSurface` now adds
 > faint orange curves in the upper-right and bottom-left corners, inspired by the owner's mobile
 > mockup. Nested Review/editor surfaces share one canvas. The decoration is
@@ -342,7 +359,9 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Latest root verification (2026-10-05, web canvas waves): `npx vitest run` passes 116 files / 1112 tests; `npx tsc -b --force` and `npm run lint` are clean.** Chromium checks at 1440x900 and 390x844 cover the wave treatment, page overflow, Review reveal and reduced motion. Pixel comparisons confirm Progress navigation and Settings are unaffected by the decoration; central background samples on empty Today match the neutral canvas. **Previous verification (2026-08-28, after the pre-recording polish pass D453-D458):** root Vitest was 115 files / 1106 tests, `apps/mobile` `npx jest` was 42 suites / 570 tests. The five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
+**Latest root verification (2026-10-05, generic deck icons D468):** `npx vitest run` passes 117 files / 1121 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. Chromium at 1440x900 and 390x844 verifies chooser search/categories, creation, icon-only edits, reload persistence, Cancel, collection scope, focus containment/return, dismissal, overflow and offline local saves. Library, Today and Progress show the same saved marks. The distributed Lucide license matches the installed package and is present in the 25-entry PWA precache.
+
+**Previous root verification (2026-10-05, web canvas waves): `npx vitest run` passed 116 files / 1112 tests; `npx tsc -b --force` and `npm run lint` were clean.** Chromium checks at 1440x900 and 390x844 cover the wave treatment, page overflow, Review reveal and reduced motion. Pixel comparisons confirm Progress navigation and Settings are unaffected by the decoration; central background samples on empty Today match the neutral canvas. **Previous verification (2026-08-28, after the pre-recording polish pass D453-D458):** root Vitest was 115 files / 1106 tests, `apps/mobile` `npx jest` was 42 suites / 570 tests. The five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
 
 ```
 npx vitest run       → 111 test files, 1064 tests, all passing (75.94s)

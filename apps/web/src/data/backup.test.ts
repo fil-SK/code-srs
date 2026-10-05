@@ -45,6 +45,17 @@ async function storedIds() {
 }
 
 describe('export/import round-trip', () => {
+  it('preserves chosen icons and decks without icons through a real backup file', async () => {
+    await repo.decks.put(deck)
+    await repo.decks.put(fixtureDeck({ id: 'with-icon', iconId: 'database' }))
+    const json = serializeBackup(await exportBackup(repo))
+
+    await importBackup(repo, parseBackup(json), 'replace')
+
+    expect((await repo.decks.getById('with-icon'))?.iconId).toBe('database')
+    expect((await repo.decks.getById(deck.id))?.iconId).toBeUndefined()
+  })
+
   it('restores cards and decks via replace import', async () => {
     await repo.decks.put(deck)
     await repo.cards.put(card)

@@ -59,6 +59,7 @@ Update it in the same commit as any change to a listed capability.
 |---|---|---|---|---|
 | Collection tree | library/collectionTree | yes | yes | implemented (demo/local) — derived from canonical Deck.parentId on both platforms, through the same helpers; the parallel mobile collection model is deleted; both platforms also list the cards filed on a collection itself, which is what a promoted deck leaves behind; D422, D445 |
 | Deck list and metrics | domain/stats/deckMetrics | yes | demo repository | implemented (demo/local) — read through the shared hooks over the demo backend; D424 |
+| Choose a generic deck icon | design/deckIcons, domain/decks/deckForm | 48 searchable choices in create/settings; saved marks across Library/Today/Progress | existing generated marks | web-only (decision) — web first; shared optional iconId prepares a later native renderer/chooser; D468 |
 | Open a deck | — | yes | demo workspace | deferred — master plan Phase 6; every deck row, Today row, Progress row and deck notification resolves its own deckId over demo data, and an unknown id gets a not-found state; D370, D374 |
 | Card list | hooks/useCards | yes | yes | implemented (demo/local) — mobile reads through useSearchCards over the demo backend; D424 |
 | Open a card | — | study preview | demo workspace | implemented (demo/local) — every card row opens the card it names by its canonical id, and an unknown id gets a not-found state; D404 |

@@ -14,6 +14,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Highlights
 
+- **48 generic programming and software icons** for decks, with category filters and search in New Deck and Deck/Collection settings. Saved choices appear consistently in Library, Today and Progress and survive backup export/import.
 - **Soft orange waves in opposite corners** across the web app, fading to a nearly neutral center, with responsive sizing, a static treatment and quieter backgrounds during Review and card study.
 - **6 focused card interactions**, several with code-aware variants (see below).
 - **FSRS scheduling** (via `ts-fsrs`) with a 4-button self-grade bar and auto-grading where it makes sense.
@@ -228,3 +229,8 @@ Project history (the original repository audit, the phased redesign plan, and th
 ## License
 
 Personal project — no license specified. If you'd like to reuse it, open an issue.
+
+Deck icons use the bundled Lucide set. Its ISC and inherited Feather MIT
+copyright/license notices are included in
+[`apps/web/public/third-party-licenses.txt`](apps/web/public/third-party-licenses.txt)
+and distributed at `/third-party-licenses.txt`, including offline in the PWA.

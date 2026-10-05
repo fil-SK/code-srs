@@ -42,6 +42,17 @@ Boundaries: for *implementation status detail* (real vs. placeholder numbers, kn
 
 These rules apply to every card and every session, regardless of route.
 
+### Deck icons on web — implemented
+
+New Deck opens a form for the name and a generic software-development icon.
+Deck and Collection settings offer the same 48 choices, with category filters
+and keyword search. Create/Save persists the selected icon; Cancel leaves the
+deck unchanged. Library rows and headers, Today's Continue Learning and
+Progress's Deck performance show the saved choice. Older decks use the Code
+icon until the learner selects one, and backup export/import preserves choices.
+The catalog includes no company logos. Native presentation is a later step
+(D468); full deck covers and custom uploads remain unbuilt.
+
 ### Card interactions (the six v2 types) — implemented
 
 | Interaction | What it drills | Response | Grading |

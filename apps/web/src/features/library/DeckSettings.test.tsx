@@ -60,4 +60,34 @@ describe('DeckSettings', () => {
       'Original description',
     )
   })
+
+  it('saves an icon-only edit while preserving the rest of the deck', async () => {
+    const user = userEvent.setup()
+    const onClose = vi.fn()
+    renderSettings(onClose)
+
+    expect(screen.getByRole('button', { name: 'Save deck' }).hasAttribute('disabled')).toBe(true)
+    await user.click(screen.getByRole('button', { name: 'Choose icon' }))
+    await user.type(screen.getByLabelText('Search deck icons'), 'sql')
+    await user.click(screen.getByRole('button', { name: 'Database', exact: true }))
+    await user.click(screen.getByRole('button', { name: 'Save deck' }))
+
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+    expect(await getRepository().decks.getById(deck.id)).toMatchObject({
+      ...deck,
+      updatedAt: expect.any(Number),
+      iconId: 'database',
+    })
+  })
+
+  it('discards an icon selection on Cancel', async () => {
+    const user = userEvent.setup()
+    renderSettings(vi.fn())
+
+    await user.click(screen.getByRole('button', { name: 'Choose icon' }))
+    await user.click(screen.getByRole('button', { name: 'Processor', exact: true }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect((await getRepository().decks.getById(deck.id))?.iconId).toBeUndefined()
+  })
 })

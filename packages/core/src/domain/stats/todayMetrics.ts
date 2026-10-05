@@ -150,6 +150,7 @@ export interface ContinueRow {
   deckId: ID
   name: string
   description?: string
+  iconId?: Deck['iconId']
   dueCount: number
   masteryFraction: number
   lastStudied?: Millis
@@ -185,6 +186,7 @@ export function buildContinueLearning(
         deckId: deck.id,
         name: deck.name,
         description: deck.description,
+        iconId: deck.iconId,
         dueCount: m.dueCount,
         masteryFraction: m.masteryFraction,
         lastStudied: m.lastStudied,

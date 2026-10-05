@@ -12,6 +12,7 @@ export interface NewDeckInput {
   name: string
   description?: string
   parentId?: ID
+  iconId?: Deck['iconId']
 }
 
 export function useCreateDeck() {

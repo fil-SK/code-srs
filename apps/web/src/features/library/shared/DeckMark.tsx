@@ -1,64 +1,37 @@
+import { getDeckIcon, type DeckIconId } from '@fliptap/core'
 import { cn } from '@/lib/cn'
+import { DECK_ICON_VIEWS } from './deckIconViews'
 
-// Restrained square deck mark: a navy tile with bold initials, plus a small
-// diagonal corner ribbon (drawn, not an image asset) — mirrors
-// ContinueLearningList.tsx's existing badge-chip recipe
-// (rounded-fliptap-control bg-fliptap-navy font-mono text-xs font-bold text-white),
-// scaled up for the deck header.
-const SIZE_CLASS: Record<'sm' | 'md' | 'lg' | 'xl', string> = {
-  sm: 'grid h-9 w-9 place-items-center text-xs',
-  md: 'grid h-11 w-11 place-items-center text-[13px]',
-  lg: 'grid h-20 w-20 place-items-center text-2xl',
-  xl: 'grid h-[148px] w-[148px] place-items-center text-5xl',
+const SIZES = {
+  sm: { className: 'h-9 w-9', icon: 18 },
+  md: { className: 'h-11 w-11', icon: 22 },
+  lg: { className: 'h-20 w-20', icon: 40 },
+  xl: { className: 'h-[148px] w-[148px]', icon: 64 },
 }
 
+// One restrained treatment at every size, including old decks without a choice.
 export function DeckMark({
-  label,
+  iconId,
   size = 'sm',
+  className,
 }: {
-  label: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  iconId?: DeckIconId
+  size?: keyof typeof SIZES
+  className?: string
 }) {
-  const isLarge = size === 'lg' || size === 'xl'
-  const isMedium = size === 'md'
+  const icon = getDeckIcon(iconId)
+  const Icon = DECK_ICON_VIEWS[icon.id]
   return (
     <div
+      aria-hidden="true"
+      data-deck-icon={icon.id}
       className={cn(
-        'relative flex-none overflow-hidden rounded-fliptap-control bg-fliptap-navy font-mono font-bold text-white',
-        SIZE_CLASS[size],
+        'grid flex-none place-items-center rounded-fliptap-control bg-fliptap-navy text-white',
+        SIZES[size].className,
+        className,
       )}
     >
-      <span className="relative z-10">{label}</span>
-      <div
-        className="absolute bg-slate-500/45"
-        style={{
-          bottom: isLarge ? -26 : isMedium ? -11 : -8,
-          right: isLarge ? -48 : isMedium ? -21 : -16,
-          width: isLarge ? 150 : isMedium ? 62 : 46,
-          height: isLarge ? 34 : isMedium ? 14 : 10,
-          transform: 'rotate(-34deg)',
-        }}
-      />
-      <div
-        className="absolute bg-fliptap-accent"
-        style={{
-          bottom: isLarge ? -9 : isMedium ? -4 : -3,
-          right: isLarge ? -42 : isMedium ? -18 : -14,
-          width: isLarge ? 138 : isMedium ? 57 : 42,
-          height: isLarge ? 11 : isMedium ? 5 : 4,
-          transform: 'rotate(-34deg)',
-        }}
-      />
-      <div
-        className="absolute bg-fliptap-error"
-        style={{
-          bottom: isLarge ? 1 : 0,
-          right: isLarge ? -51 : isMedium ? -22 : -17,
-          width: isLarge ? 132 : isMedium ? 54 : 40,
-          height: isLarge ? 5 : isMedium ? 3 : 2,
-          transform: 'rotate(-34deg)',
-        }}
-      />
+      <Icon size={SIZES[size].icon} strokeWidth={1.75} />
     </div>
   )
 }

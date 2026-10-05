@@ -24,4 +24,12 @@ describe('validateDeckForm', () => {
   it('does not require a description', () => {
     expect(validateDeckForm({ name: 'x', description: '' }).errors).toEqual([])
   })
+
+  it('accepts a supported icon and rejects an unrecognized selection', () => {
+    expect(validateDeckForm({ name: 'Data', description: '', iconId: 'database' }).canSave).toBe(true)
+    expect(validateDeckForm({ name: 'Data', description: '', iconId: 'company-logo' as never })).toEqual({
+      canSave: false,
+      errors: ['Choose a supported deck icon.'],
+    })
+  })
 })

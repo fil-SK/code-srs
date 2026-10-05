@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Card, Deck, Draft, ID, Roadmap } from '../../types'
 import { CARD_SCHEMA_VERSION } from '../../types/card'
+import { DECK_ICONS } from '../../design/deckIcons'
 import {
   ALL_INTERACTION_TYPES,
   fixtureCard,
@@ -66,6 +67,19 @@ describe('assertValidDecks', () => {
 
   it('rejects a non-string parentId', () => {
     expect(() => assertValidDecks([{ ...fixtureDeck(), parentId: 7 }])).toThrow(/"parentId"/)
+  })
+
+  it('accepts every supported icon without requiring it on older decks', () => {
+    expect(() => assertValidDecks([
+      fixtureDeck(),
+      ...DECK_ICONS.map((icon) => fixtureDeck({ id: icon.id, iconId: icon.id })),
+    ])).not.toThrow()
+  })
+
+  it('rejects unknown, malformed and remote icon selections', () => {
+    for (const iconId of ['company-logo', 'https://example.com/icon.svg', 7, null]) {
+      expect(() => assertValidDecks([{ ...fixtureDeck(), iconId }])).toThrow(/unsupported "iconId"/)
+    }
   })
 
   // parentId is deliberately NOT checked referentially: useDeleteDeck does not

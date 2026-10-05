@@ -1799,3 +1799,43 @@ account menus and focus return pass, with no console or page errors.
 Root Vitest passes 116 files / 1,112 tests; forced TypeScript checking and
 lint are clean.
 The production build succeeds with the existing chunk-size advisory.
+
+## 2026-10-05 - Chosen generic software-development icons for web decks
+
+**D468. Deck identity uses a curated generic icon catalog, selected by the
+learner, with no company logos.** The owner requested more useful choices
+than generated initials and explicitly excluded official-company marks.
+Web now offers 48 Lucide line icons under Code, Data, Systems and Workflow,
+with label/keyword search and a visible selected state. Every glyph uses the
+same white-on-navy treatment and preserves the existing tile geometry,
+replacing web's monogram and corner ribbon. This supersedes D457's web
+monogram presentation; a full deck-cover system remains deferred.
+
+New Deck is a name-and-icon form following the existing desktop modal /
+below-480px bottom-sheet pattern. Deck and Collection settings use the same
+inline chooser. A choice is a preview until Create or Save succeeds; Cancel
+discards it. Collection creation keeps its parent scope. Library rows and
+identity headers, Today's Continue Learning and Progress's Deck performance
+all read the saved selection through one `DeckMark` renderer.
+
+Core owns a stable optional `Deck.iconId` and catalog metadata, never icon
+markup, a URL or a UI dependency. Web owns the Lucide component binding.
+Older decks render the default Code icon without being rewritten; the
+existing shared create/save hooks persist explicit choices. Backup version
+2 accepts omission and validates present ids, preserving selections through
+export/import without a migration. Native's renderer and chooser are a later
+step over the shared contract. No new dependency or remote asset is needed.
+Lucide's ISC and inherited Feather MIT notices ship in the public
+`third-party-licenses.txt`, explicitly included in the PWA precache.
+
+Chromium verification at 1440x900 and 390x844 covers category/search results,
+the empty-search state, creation, icon-only editing, reload persistence,
+Cancel, collection identity and nested creation. Focus containment and return,
+Escape dismissal, hover and keyboard focus, sheet bounds and body overflow
+pass. Saved marks match Library, Today and Progress; bundled icons and Dexie
+saves work offline, with no page or console errors.
+
+Root verification passes all 117 files / 1,121 tests, `npx tsc -b --force` and
+`npm run lint`. The production build succeeds with the existing chunk-size
+advisory. The distributed license text matches the installed Lucide license
+exactly, and the generated service worker includes it in the 25-entry precache.

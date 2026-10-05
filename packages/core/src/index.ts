@@ -161,3 +161,4 @@ export * from './interactions/walkthrough'
 export * from './charts/retentionChartPath'
 
 export * from './today/greetings'
+export * from './design/deckIcons'

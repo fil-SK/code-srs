@@ -10,6 +10,7 @@ import type {
 } from '../../types'
 import { CARD_SCHEMA_VERSION } from '../../types/card'
 import { ALLOWED_IMAGE_MIME, isSafeImageSource } from '../../content/imageSource'
+import { isDeckIconId } from '../../design/deckIcons'
 
 // Structural validation for the entities inside a backup file, run by
 // parseBackup before anything is handed to the import layer.
@@ -95,6 +96,9 @@ export function assertValidDecks(decks: unknown[]): asserts decks is Deck[] {
       if (raw[key] !== undefined && typeof raw[key] !== 'string') {
         fail('Deck', i, id, `has a "${key}" that is not a string.`)
       }
+    }
+    if (raw.iconId !== undefined && !isDeckIconId(raw.iconId)) {
+      fail('Deck', i, id, 'has an unsupported "iconId".')
     }
   })
 }

@@ -6,7 +6,8 @@ import type { Deck } from '@/types'
 import { fieldClass } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { useDialogs } from '@/components/ui/dialogs'
-import { useCreateDeck, useDecks, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
+import { useDecks, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
+import { useDeckCreateDialog } from './useDeckCreateDialog'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
 import {
   collectionIdFor,
@@ -52,7 +53,7 @@ export function LibraryBrowserPage() {
   const allCards = useSearchCards({ includeSuspended: true })
   const dueCards = useDueCards({ now })
 
-  const createDeck = useCreateDeck()
+  const { openCreateDeck, dialog: createDeckDialog } = useDeckCreateDialog()
   const saveDeck = useSaveDeck()
   const deleteDeck = useDeleteDeck()
 
@@ -107,14 +108,8 @@ export function LibraryBrowserPage() {
   useEffect(() => setPage(1), [search, sort, dueOnly, selection])
   useEffect(() => setPage((current) => Math.min(current, totalPages)), [totalPages])
 
-  async function newDeck() {
-    const name = await dialogs.prompt({
-      title: 'New deck',
-      label: 'Deck name',
-      placeholder: 'e.g. Templates',
-      confirmLabel: 'Create deck',
-    })
-    if (name) createDeck.mutate({ name })
+  function newDeck() {
+    openCreateDeck()
   }
 
   async function rename(deck: Deck) {
@@ -354,6 +349,7 @@ export function LibraryBrowserPage() {
           )}
         </>
       )}
+      {createDeckDialog}
     </LibraryShell>
   )
 }

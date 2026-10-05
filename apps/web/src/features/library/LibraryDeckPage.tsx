@@ -35,7 +35,6 @@ import {
 import type { Card, SchedulingStateKind } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { fieldClass } from '@/components/ui/Field'
-import { useDialogs } from '@/components/ui/dialogs'
 import { cn } from '@/lib/cn'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
 import { languageLabel } from '@/domain/decks/languages'
@@ -44,7 +43,8 @@ import {
   useReorderCards,
   useSearchCards,
 } from '@/hooks/useCards'
-import { useCreateDeck, useDecks } from '@/hooks/useDecks'
+import { useDecks } from '@/hooks/useDecks'
+import { useDeckCreateDialog } from './useDeckCreateDialog'
 import { INTERACTION_META } from '@/features/cards/shared/interactionTypeMeta'
 import { CardTableHeader, CardTableRow } from './shared/CardTable'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
@@ -56,7 +56,6 @@ import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from './shared/EmptyState'
 import { LibraryShell } from './shared/LibraryShell'
 import { DeckSettings } from './DeckSettings'
-import { markLabelFor } from './deckMark'
 import {
   deriveCollections,
   collectionIdFor,
@@ -163,9 +162,8 @@ function SortableCardTableRow({
 export function LibraryDeckPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const dialogs = useDialogs()
   const decksQuery = useDecks()
-  const createDeck = useCreateDeck()
+  const { openCreateDeck, dialog: createDeckDialog } = useDeckCreateDialog()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [tab, setTab] = useState<'cards' | 'insights'>('cards')
   const [compact, setCompact] = useState(false)
@@ -204,14 +202,8 @@ export function LibraryDeckPage() {
     [decksQuery.data],
   )
 
-  async function newDeck() {
-    const name = await dialogs.prompt({
-      title: 'New deck',
-      label: 'Deck name',
-      placeholder: 'e.g. Templates',
-      confirmLabel: 'Create deck',
-    })
-    if (name) createDeck.mutate({ name })
+  function newDeck() {
+    openCreateDeck()
   }
 
   const deck = decks.find((d) => d.id === id)
@@ -338,12 +330,6 @@ export function LibraryDeckPage() {
   const path = collectionPathFor(collections, cid)
   const metrics = metricsFor(metricsMap, deck.id)
   const totalCards = cards.length
-  // The deck's own name, always. This used to fall back to the parent
-  // collection's name whenever the deck had one, so "Modern C++ & Memory"
-  // inside "Languages & Compilers" showed a mark for the collection - a
-  // different monogram from the one the same deck carries in the sidebar, on
-  // Today and on Progress.
-  const markLabel = markLabelFor(deck.name, 3)
 
   return (
     <LibraryShell
@@ -394,7 +380,7 @@ export function LibraryDeckPage() {
 
       <div className="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-8">
         <div className="flex min-w-0 flex-1 flex-col items-start gap-5 sm:flex-row sm:gap-7">
-          <DeckMark label={markLabel} size="xl" />
+          <DeckMark iconId={deck.iconId} size="xl" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <h1 className="font-fliptap-display text-2xl font-bold tracking-tight text-fliptap-ink-brand sm:text-3xl">
@@ -630,6 +616,7 @@ export function LibraryDeckPage() {
           )}
         </>
       )}
+      {createDeckDialog}
     </LibraryShell>
   )
 }

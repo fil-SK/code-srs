@@ -67,6 +67,10 @@ Create one or more decks and put the cards in them.
   milliseconds (plain numbers), not date strings.
 - Do NOT emit a "language" field. It exists, but it holds a natural-language code
   ("en", "de", "sr", ...) for the deck's wording, not a programming language.
+- Omit "iconId" when generating decks. It is optional and accepts only ids from
+  the app's fixed generic-icon catalog, never logo names, markup or URLs. Decks
+  without it import normally and show the Code icon; I can choose an icon later
+  in Deck settings. The backup version is still 2.
 - Every card's "deckId" MUST equal a deck "id" in this file, unless I have told you to
   add cards to a deck that already exists in my library (in which case use that exact
   deck id and you may leave "decks" empty).

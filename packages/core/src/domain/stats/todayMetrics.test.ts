@@ -248,6 +248,18 @@ describe('buildContinueLearning', () => {
     expect(rows.find((r) => r.deckId === 'backlog')?.dueCount).toBe(2)
   })
 
+  it('carries a chosen deck icon into Today without changing its ranking', () => {
+    const cards = [card('a', 'backlog'), card('b', 'recent')]
+    const rows = buildContinueLearning([
+      deck('backlog', 'Backlog', { iconId: 'database' }),
+      deck('recent', 'Recent'),
+    ], metricsFrom(cards))
+
+    expect(rows.map((row) => row.deckId)).toEqual(['backlog', 'recent'])
+    expect(rows[0].iconId).toBe('database')
+    expect(rows[1].iconId).toBeUndefined()
+  })
+
   it('puts decks with due work above decks with none', () => {
     const cards = [
       // Idle was studied most recently, but has nothing waiting.

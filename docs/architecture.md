@@ -356,6 +356,20 @@ Conventions observed across all of them: query keys always go through `qk`, neve
 
 ## Entities
 
+**Deck icons (D468).** `Deck.iconId?: DeckIconId` is optional JSON metadata.
+`packages/core/src/design/deckIcons.ts` owns its stable 48-id catalog, labels,
+categories, search keywords, validation and Code fallback; it imports no UI
+library. Web's `features/library/shared/deckIconViews.ts` binds those ids to
+Lucide components, and `DeckMark` renders them consistently across surfaces.
+The shared create/save hooks persist the field through the existing repository
+seam; Today carries it in `ContinueRow` without changing metric calculations.
+No Dexie schema bump, Supabase migration or rewrite of existing decks is
+required. Backup version 2 remains valid without the field, and a present
+field must be a supported id. Native can bind this same catalog to its own
+renderer later. The web icon assets are bundled SVG components, with Lucide's
+ISC and inherited Feather MIT notices distributed and precached as
+`apps/web/public/third-party-licenses.txt`.
+
 | Entity | Type file | Repo | Dexie table | Supabase table | Tree/graph helpers |
 |---|---|---|---|---|---|
 | **Card** | `packages/core/src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |

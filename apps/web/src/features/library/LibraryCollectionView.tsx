@@ -19,7 +19,8 @@ import { languageLabel } from '@/domain/decks/languages'
 import { flattenDeckTree, buildDeckTree } from '@/domain/decks/tree'
 import { checkDeckDeletion, childDeckCount } from '@fliptap/core'
 import { useSearchCards } from '@/hooks/useCards'
-import { useCreateDeck, useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
+import { useDeleteDeck, useSaveDeck } from '@/hooks/useDecks'
+import { useDeckCreateDialog } from './useDeckCreateDialog'
 import { OverflowMenu } from '@/features/cards/shared/OverflowMenu'
 import { CardTableHeader, CardTableRow } from './shared/CardTable'
 import { RowFilterDropdown } from './shared/RowFilterDropdown'
@@ -29,7 +30,6 @@ import { EmptyState } from './shared/EmptyState'
 import { Stat } from './shared/Stat'
 import { DeckTableHeader, DeckRow } from './DeckRow'
 import { DeckSettings } from './DeckSettings'
-import { markLabelFor } from './deckMark'
 import {
   collectionIdFor,
   collectionPathFor,
@@ -67,7 +67,7 @@ export function LibraryCollectionView({
   onSelect: (selection: LibrarySelection) => void
 }) {
   const dialogs = useDialogs()
-  const createDeck = useCreateDeck()
+  const { openCreateDeck, dialog: createDeckDialog } = useDeckCreateDialog()
   const saveDeck = useSaveDeck()
   const deleteDeck = useDeleteDeck()
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -113,15 +113,8 @@ export function LibraryCollectionView({
   const directCards = useSearchCards({ deckId: collectionId, includeSuspended: true })
   const directCount = directCards.data?.length ?? 0
 
-  async function newDeck() {
-    const name = await dialogs.prompt({
-      title: 'New deck',
-      description: deck ? `It will be created inside “${deck.name}”.` : undefined,
-      label: 'Deck name',
-      placeholder: 'e.g. Templates',
-      confirmLabel: 'Create deck',
-    })
-    if (name) createDeck.mutate({ name, parentId: collectionId })
+  function newDeck() {
+    openCreateDeck({ parentId: collectionId, parentName: deck?.name })
   }
 
   async function renameChild(child: Deck) {
@@ -192,8 +185,6 @@ export function LibraryCollectionView({
 
   if (!deck) return null
 
-  const markLabel = markLabelFor(deck.name, 3)
-
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -241,7 +232,7 @@ export function LibraryCollectionView({
 
       <div className="flex flex-wrap items-start justify-between gap-8">
         <div className="flex min-w-0 flex-1 items-start gap-6">
-          <DeckMark label={markLabel} size="lg" />
+          <DeckMark iconId={deck.iconId} size="lg" />
           <div>
             <div className="flex items-center gap-2.5">
               <h1 className="font-fliptap-display text-3xl font-bold tracking-tight text-fliptap-ink-brand">
@@ -403,6 +394,7 @@ export function LibraryCollectionView({
           <CardListFooter count={directCount} page={1} totalPages={1} onPageChange={() => {}} />
         </>
       )}
+      {createDeckDialog}
     </div>
   )
 }

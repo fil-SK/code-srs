@@ -26,6 +26,7 @@ export default defineConfig({
       // leaving this on adds a second, byte-identical precache entry for
       // fliptap-logo.png.
       includeManifestIcons: false,
+      includeAssets: ['third-party-licenses.txt'],
       manifest: {
         name: 'FlipTap',
         short_name: 'FlipTap',
