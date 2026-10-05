@@ -8,20 +8,23 @@ import { createWebAuthConfig } from '@/auth/webAuthConfig'
 import { isSupabaseConfigured } from '@/data/supabase/client'
 import { DialogProvider } from '@/components/ui/dialogs'
 import { AccountSettingsPage } from './AccountSettingsPage'
+import { ThemeProvider } from '@/app/theme'
 
 function renderAt(path: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
       <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
-        <DialogProvider>
-          <MemoryRouter initialEntries={[path]}>
-            <Routes>
-              <Route path="/settings" element={<AccountSettingsPage />} />
-              <Route path="/settings/:section" element={<AccountSettingsPage />} />
-            </Routes>
-          </MemoryRouter>
-        </DialogProvider>
+        <ThemeProvider>
+          <DialogProvider>
+            <MemoryRouter initialEntries={[path]}>
+              <Routes>
+                <Route path="/settings" element={<AccountSettingsPage />} />
+                <Route path="/settings/:section" element={<AccountSettingsPage />} />
+              </Routes>
+            </MemoryRouter>
+          </DialogProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>,
   )

@@ -87,6 +87,7 @@ export function CodeView({
           EditorState.readOnly.of(true),
           EditorView.lineWrapping,
           baseTheme,
+          EditorView.theme({}, { dark: theme === 'dark' }),
           syntaxHighlighting(
             theme === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle,
           ),

@@ -1,12 +1,11 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import { ForceLightTheme } from './ForceLightTheme'
 import { CanvasWaves } from './CanvasWaves'
 
 const CanvasContext = createContext(false)
 
-// Shared root for any tree rendered in the FlipTap visual system: ForceLightTheme
-// (see that file) plus `.fliptap-scope` (the namespaced token set, src/index.css).
+// Shared root for any tree rendered in the FlipTap visual system. The scoped
+// tokens and CodeMirror both follow the app's active theme.
 // Used by both /design-preview/* (via PreviewShell, which adds its own banner)
 // and the production Review route once it renders v2 interactions - one
 // mechanism, not a separate "real" vs "preview" copy of it.
@@ -25,19 +24,17 @@ export function FlipTapSurface({
 
   return (
     <CanvasContext.Provider value={true}>
-      <ForceLightTheme>
-        <div
-          className={cn(
-            'fliptap-scope',
-            nested ? 'fliptap-surface-nested' : 'fliptap-canvas',
-            !nested && canvasTone === 'quiet' && 'fliptap-canvas-quiet',
-            className,
-          )}
-        >
-          {!nested && <CanvasWaves />}
-          {children}
-        </div>
-      </ForceLightTheme>
+      <div
+        className={cn(
+          'fliptap-scope',
+          nested ? 'fliptap-surface-nested' : 'fliptap-canvas',
+          !nested && canvasTone === 'quiet' && 'fliptap-canvas-quiet',
+          className,
+        )}
+      >
+        {!nested && <CanvasWaves />}
+        {children}
+      </div>
     </CanvasContext.Provider>
   )
 }

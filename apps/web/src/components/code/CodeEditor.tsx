@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { EditorState } from '@codemirror/state'
+import { Compartment, EditorState } from '@codemirror/state'
 import { EditorView, keymap, lineNumbers } from '@codemirror/view'
 import {
   defaultKeymap,
@@ -32,8 +32,8 @@ const baseTheme = EditorView.theme({
 
 // Editable CodeMirror. `value` is the initial document only — the editor is
 // uncontrolled after mount (recreating per keystroke would lose the cursor), so
-// callers remount it (via key) when they need a fresh document. Recreated on
-// language/theme change. Changes are pushed up via onChange.
+// callers remount it (via key) when they need a fresh document. A theme change
+// reconfigures highlighting without discarding the document, selection or undo.
 export function CodeEditor({
   value,
   language,
@@ -47,6 +47,10 @@ export function CodeEditor({
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
   const { theme } = useTheme()
+  const themeRef = useRef(theme)
+  themeRef.current = theme
+  const themeCompartment = useRef(new Compartment())
+  const viewRef = useRef<EditorView | null>(null)
 
   useEffect(() => {
     const parent = ref.current
@@ -62,9 +66,12 @@ export function CodeEditor({
           keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
           EditorView.lineWrapping,
           baseTheme,
-          syntaxHighlighting(
-            theme === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle,
-          ),
+          themeCompartment.current.of([
+            EditorView.theme({}, { dark: themeRef.current === 'dark' }),
+            syntaxHighlighting(
+              themeRef.current === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle,
+            ),
+          ]),
           ...languageExtension(language),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) onChangeRef.current(u.state.doc.toString())
@@ -72,6 +79,7 @@ export function CodeEditor({
         ],
       }),
     })
+    viewRef.current = view
 
     // The self-hosted variable font uses font-display: swap. Refresh
     // CodeMirror's line metrics after it arrives so the editor does not keep
@@ -83,11 +91,21 @@ export function CodeEditor({
 
     return () => {
       destroyed = true
+      viewRef.current = null
       view.destroy()
     }
     // value is intentionally the initial doc only; see component note.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [language, theme])
+  }, [language])
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: themeCompartment.current.reconfigure([
+        EditorView.theme({}, { dark: theme === 'dark' }),
+        syntaxHighlighting(theme === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle),
+      ]),
+    })
+  }, [theme])
 
   return (
     <div

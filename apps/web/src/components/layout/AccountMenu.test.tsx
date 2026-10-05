@@ -113,7 +113,6 @@ describe('AccountMenu', () => {
 
     await user.click(trigger())
     const placeholders = [
-      'Preferences',
       'Study settings',
       'Spaced repetition',
       'Keyboard shortcuts',
@@ -130,9 +129,21 @@ describe('AccountMenu', () => {
       'true',
     )
 
-    await user.click(screen.getByRole('menuitem', { name: /Preferences/ }))
+    await user.click(screen.getByRole('menuitem', { name: /Study settings/ }))
     expect(screen.getByTestId('pathname').textContent).toBe('/decks')
     expect(screen.getByRole('menu')).toBeTruthy()
+  })
+
+  it('opens Appearance from the Preferences shortcut', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+    await user.click(trigger())
+    const link = screen.getByRole('menuitem', { name: 'Preferences' })
+    expect(link.getAttribute('href')).toBe('/settings/appearance')
+    expect(link.hasAttribute('aria-disabled')).toBe(false)
+    await user.click(link)
+    expect(screen.getByTestId('pathname').textContent).toBe('/settings/appearance')
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
   it('navigates to the full Account settings page and closes', async () => {

@@ -31,9 +31,8 @@ export default defineConfig({
         name: 'FlipTap',
         short_name: 'FlipTap',
         description: 'Spaced-repetition learning for software, CS, and compilers.',
-        // FlipTap's canvas (--fliptap-canvas), not the pre-rebrand dark palette:
-        // the app is light-only for now, so a dark splash/chrome color would
-        // flash the wrong background before first paint.
+        // Installation metadata uses the default light canvas. The page updates
+        // browser chrome to the user's saved theme at runtime.
         theme_color: '#f6f7f9',
         background_color: '#f6f7f9',
         display: 'standalone',

@@ -22,17 +22,6 @@ export function EmailPasswordSection() {
   )
 }
 
-export function AppearanceSection() {
-  return (
-    <PlaceholderSection
-      title="Appearance"
-      description="How FlipTap looks."
-      note="Not available yet. FlipTap is light-only for now — its palette has no dark variant, so a theme control would have nothing to switch to. The toggle returns once one exists."
-      planned={['Light / dark / system theme', 'Interface density', 'Code font and size']}
-    />
-  )
-}
-
 export function NotificationsSection() {
   return (
     <PlaceholderSection

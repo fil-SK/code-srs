@@ -5,7 +5,7 @@ import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 // nav, no header actions, no production layout of any kind — this is not
 // AppShell with parts hidden, it is a structurally separate route registered
 // as a sibling of AppShell in router.tsx (see docs/archive/fliptap-redesign-plan.md
-// Phase B). The FlipTap surface itself (ForceLightTheme + .fliptap-scope) is
+// Phase B). The FlipTap surface itself (.fliptap-scope and the active theme) is
 // shared with production via FlipTapSurface; only the "not part of the live
 // app" banner is specific to this preview wrapper.
 export function PreviewShell({ children }: { children: ReactNode }) {

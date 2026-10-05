@@ -23,9 +23,9 @@ import { cn } from '@/lib/cn'
 // carries only the profile-menu reference's requested shortcuts; the full set
 // of settings sections still lives inside the Account settings page.
 //
-// Sign out is live whenever any session is (local, demo, or Supabase) — it is
-// the exit half of the /login loop. Account settings and Import / Export are
-// the only real routes here. Rows without a backing page remain marked "Soon"
+// Sign out is live whenever any session is (local, demo, or Supabase). Account
+// settings, Preferences (Appearance) and Import / Export are real routes here.
+// Rows without a backing page remain marked "Soon"
 // and focusable (aria-disabled, not `disabled`) so keyboard users hear their
 // state instead of skipping visible content.
 //
@@ -74,7 +74,7 @@ function MenuItem({ row, onNavigate }: { row: MenuRow; onNavigate: () => void })
               ? 'text-fliptap-accent'
               : active
                 ? 'text-fliptap-accent'
-                : 'text-fliptap-navy',
+                : 'text-fliptap-ink-brand',
         )}
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -154,7 +154,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
   const groups: MenuRow[][] = [
     [
       { label: 'Account settings', icon: User, to: '/settings' },
-      { label: 'Preferences', icon: SlidersHorizontal },
+      { label: 'Preferences', icon: SlidersHorizontal, to: '/settings/appearance' },
     ],
     [
       { label: 'Study settings', icon: GraduationCap },

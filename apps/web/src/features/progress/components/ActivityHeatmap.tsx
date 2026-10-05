@@ -155,7 +155,7 @@ export function ActivityHeatmap({
             <div
               ref={tooltipRef}
               role="tooltip"
-              className="pointer-events-none fixed z-10 whitespace-nowrap rounded-md bg-fliptap-ink-brand px-2 py-1 text-[11px] text-white shadow-md"
+              className="pointer-events-none fixed z-10 whitespace-nowrap rounded-md bg-fliptap-navy px-2 py-1 text-[11px] text-white shadow-md"
               style={{
                 left: position?.left ?? 0,
                 top: position?.top ?? 0,

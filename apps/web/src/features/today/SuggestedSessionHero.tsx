@@ -42,7 +42,7 @@ import fliptapSymbolMask from '@/assets/fliptap-symbol-mask.png'
 //     rectangle.
 //   #3 (deep navy #17243A): left +8.3%  top -2.1%  w 100.0% h 92.4%  rotate -5deg
 //     -> barely clears the top; reads mainly as a right-edge sliver.
-//   #4 (pale #D9DEE5):      left +11.6% top +4.1%  w 99.2%  h 82.9%  rotate +0.15deg
+//   #4 (#D9DEE5 light, #374151 dark): left +11.6% top +4.1% w 99.2% h 82.9% rotate +0.15deg
 //     -> starts below the front card's own top, so it never appears above
 //        it — only a narrow accent at the far right. Position matches the
 //        original placement; only the color was darkened from #F1F3F6 (it
@@ -225,15 +225,14 @@ export function SuggestedSessionHero({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* card #4 — pale, furthest back. Nudged further right (was 11.6%)
-          and darkened toward a visible gray (was #F1F3F6, blended almost
-          into the page canvas) so it actually reads as its own layer.
+      {/* Card #4, furthest back. Its neutral fill follows the active theme
+          so the exposed edge stays distinct from the navy layers.
           Starts below the front card's own top, so it never peeks above
           it. Hidden on mobile. */}
       <div
         aria-hidden="true"
         className={cn(
-          'absolute hidden rounded-[21px] border border-[rgba(30,41,59,0.12)] bg-[#D9DEE5] shadow-[0_5px_13px_rgba(15,23,42,0.05)] sm:block',
+          'fliptap-session-rear-card absolute hidden rounded-[21px] border shadow-[0_5px_13px_rgba(15,23,42,0.05)] sm:block',
           revealBase,
         )}
         style={{

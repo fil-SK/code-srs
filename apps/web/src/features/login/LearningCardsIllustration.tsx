@@ -94,7 +94,7 @@ function DotGrid({ style }: { style: React.CSSProperties }) {
     <div
       className="absolute"
       style={{
-        backgroundImage: 'radial-gradient(#c3ccd9 1.6px, transparent 1.6px)',
+        backgroundImage: 'radial-gradient(var(--fliptap-border-strong) 1.6px, transparent 1.6px)',
         backgroundSize: '15px 15px',
         opacity: 0.75,
         ...style,
@@ -140,7 +140,7 @@ function Card({ card }: { card: IllustrationCard }) {
                 ? 'var(--fliptap-accent)'
                 : header === 'orange'
                   ? '#ffffff'
-                  : 'var(--fliptap-navy)',
+                  : 'var(--fliptap-ink-brand)',
           }}
         />
         <div

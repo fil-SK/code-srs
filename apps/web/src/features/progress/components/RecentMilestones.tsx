@@ -12,7 +12,7 @@ const TYPE_ICON: Record<MilestoneType, LucideIcon> = {
 
 const TYPE_TONE: Record<MilestoneType, string> = {
   streak: 'bg-fliptap-accent-soft text-fliptap-accent',
-  reviews: 'bg-fliptap-navy-soft text-fliptap-navy',
+  reviews: 'bg-fliptap-navy-soft text-fliptap-ink-brand',
   retention: 'bg-fliptap-success-soft text-fliptap-success',
 }
 

@@ -65,8 +65,8 @@ const EDGE_STROKE: Record<BoardEdgeState, string> = {
 
 const BADGE_CLASS: Record<BoardEdgeState, string> = {
   paired: 'bg-fliptap-navy',
-  correct: 'bg-fliptap-success',
-  incorrect: 'bg-fliptap-error',
+  correct: 'bg-fliptap-success-solid',
+  incorrect: 'bg-fliptap-error-solid',
 }
 
 // Fixed columns are a shared option list — usually short labels like Yes/No —

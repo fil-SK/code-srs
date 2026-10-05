@@ -303,7 +303,7 @@ export function RoadmapCanvas({
                   onRemoveEdge(edge.id)
                   setSelectedEdge(null)
                 }}
-                className="absolute flex h-6 w-6 items-center justify-center rounded-full bg-red text-white shadow-[var(--shadow)] hover:brightness-110"
+                className="absolute flex h-6 w-6 items-center justify-center rounded-full bg-fliptap-error-solid text-white shadow-[var(--shadow)] hover:brightness-110"
                 style={{ left: (a.x + b.x) / 2 - 12, top: (a.y + b.y) / 2 - 12 }}
                 aria-label="Delete link"
               >

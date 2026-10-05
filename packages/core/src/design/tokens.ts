@@ -25,8 +25,7 @@
 //    `box-shadow` and React Native's elevation/shadowOpacity are different
 //    models rather than different syntaxes for one thing.
 
-// The locked --fliptap-* palette. Light-only: the app declares itself light and
-// has no dark palette to pair these with (docs/CURRENT_STATE.md).
+// The locked light palette remains the default for native presentations.
 export const fliptapColors = {
   navy: '#1e293b',
 
@@ -51,14 +50,46 @@ export const fliptapColors = {
   selectionBorder: '#9cb4db',
 
   success: '#15803d',
+  successSolid: '#15803d',
   successSoft: '#ecfdf3',
   error: '#c2413a',
+  errorSolid: '#c2413a',
   errorSoft: '#fef2f2',
   warning: '#b45309',
   warningSoft: '#fff7ed',
 } as const
 
 export type FlipTapColorName = keyof typeof fliptapColors
+
+// Matching semantic roles, available to native without changing its runtime.
+export const fliptapDarkColors = {
+  navy: '#1e293b',
+  canvas: '#0f1724',
+  surface: '#172131',
+  surfaceSubtle: '#1c293b',
+  ink: '#e5ecf5',
+  inkBrand: '#f1f5f9',
+  muted: '#a8b7cb',
+  mutedLight: '#8a9bb2',
+  border: '#2d3d52',
+  borderStrong: '#465a74',
+  accent: '#ff6902',
+  accentHover: '#ea5f00',
+  accentActive: '#d95700',
+  accentSoft: '#35261f',
+  accentSofter: '#28221f',
+  navySoft: '#223149',
+  selectionSoft: '#203149',
+  selectionBorder: '#6585b4',
+  success: '#4ade80',
+  successSolid: '#15803d',
+  successSoft: '#18382a',
+  error: '#fb8f86',
+  errorSolid: '#b93832',
+  errorSoft: '#3b252a',
+  warning: '#fbbf24',
+  warningSoft: '#392e1d',
+} as const satisfies Record<FlipTapColorName, string>
 
 // Density units, not a spacing scale: pills, controls, cards and dialogs each
 // have one radius and the difference between them is meaningful ("don't round

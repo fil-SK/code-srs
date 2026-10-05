@@ -1839,3 +1839,19 @@ Root verification passes all 117 files / 1,121 tests, `npx tsc -b --force` and
 `npm run lint`. The production build succeeds with the existing chunk-size
 advisory. The distributed license text matches the installed Lucide license
 exactly, and the generated service worker includes it in the 25-entry precache.
+
+
+## 2026-10-05 — Web dark theme
+
+**D469. Web now supports Light, Dark and System appearance, superseding D47 and D181’s light-only decision.** The owner requested dark theme and explicitly scoped it to the web app. Appearance is a real section, and the account menu’s Preferences shortcut opens it. Light remains the default to preserve the existing experience. The browser-local preference uses the existing key; System follows live device changes, the head script restores before paint, browser tabs synchronize, and blocked storage still allows an in-memory selection.
+
+Every semantic palette role now has a dark value, with slate surfaces, readable neutral/status copy, the locked orange signal and fixed navy fills with white foregrounds. Root and scoped tokens cover auth loading, body backgrounds, immersive Review and floating controls. Core mirrors the dark palette for identity consistency; the bidirectional drift test covers both palettes and checks dark text/status contrast. `ForceLightTheme` is removed. CodeMirror reads the resolved theme, and CodeEditor reconfigures a compartment so switching appearance preserves unsaved code, selection and undo history. The Today hero and login fan keep their locked geometry. Native and marketing keep their current appearance; no dependency, entity, schema or backup change is involved.
+
+Verification: Chromium at 1440x900 and 390x844 covers the main routes, authoring, login, account menu, dialog/sheet states, hover and keyboard focus, all six Review interactions and feedback, completion, light regression, live System changes, saved reload, cross-tab code/undo preservation and reduced motion. Production first paint restores explicit Dark and System in both device modes with the React bundle blocked; invalid storage falls back to light. No page errors or document overflow were found. Root gates pass 118 files / 1,130 tests, forced TypeScript checking and lint. The production build succeeds with the existing chunk-size advisory.
+
+
+## 2026-10-05 - Today stack rear-card color
+
+**D470. The furthest-back hero card uses dark gray in dark mode.** The owner requested a darker neutral instead of the pale gray exposed edge after D469. Card #4 now uses `#374151` and a faint light border in dark mode; light mode keeps `#d9dee5` and its original border. This is a one-off illustration fill, not a new product palette role. Offsets, dimensions, rotation, hover/reveal motion and the mobile two-card composition are unchanged.
+
+Verification: Chromium at 1440x900 confirms the dark-gray fill, exposed edge, hover zoom and keyboard focus; light mode retains the original pale fill. At 390x844 the rear card remains hidden and the page has no horizontal overflow. No page errors. All 118 files / 1,130 tests, forced TypeScript checking and lint pass.

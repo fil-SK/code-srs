@@ -49,7 +49,7 @@ export function CardTypeChooser({
             >
               <Icon
                 size={20}
-                className={isSelected ? 'text-fliptap-accent' : enabled ? 'text-fliptap-navy' : 'text-fliptap-muted'}
+                className={isSelected ? 'text-fliptap-accent' : enabled ? 'text-fliptap-ink-brand' : 'text-fliptap-muted'}
                 aria-hidden="true"
               />
               <span className="text-xs font-semibold">{meta.label}</span>

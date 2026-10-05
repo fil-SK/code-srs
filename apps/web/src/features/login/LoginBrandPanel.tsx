@@ -39,7 +39,7 @@ function Principle({
   return (
     <div className="flex flex-1 flex-col items-center px-3 text-center">
       <span className="relative grid h-9 w-10 place-items-center">
-        <Icon size={30} strokeWidth={1.7} className="text-fliptap-navy" aria-hidden="true" />
+        <Icon size={30} strokeWidth={1.7} className="text-fliptap-ink-brand" aria-hidden="true" />
         {checked && (
           <span className="absolute bottom-0 right-0 grid h-[15px] w-[15px] place-items-center rounded-full bg-fliptap-surface-subtle">
             <Check size={12} strokeWidth={2.6} className="text-fliptap-accent" aria-hidden="true" />

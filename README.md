@@ -25,7 +25,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
 - **Progress**: learned and due cards, review volume, mature-material retention, current streak, activity, and actionable per-deck metrics.
 - **Import / Export** your whole collection as JSON.
-- **Dark/light theme**, responsive, mobile-friendly, installable (PWA).
+- **Light, dark and system themes** in Account settings → Appearance, saved on this browser; responsive, mobile-friendly and installable (PWA).
 - **Two storage modes**: local-only (IndexedDB, zero setup) or cloud sync (Supabase Postgres + magic-link auth).
 
 ---

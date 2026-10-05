@@ -13,10 +13,8 @@ import { primaryNavLinks } from './primaryNavLinks'
 // entry, the same structural pattern Today/design-preview already used
 // before this milestone) — there is no CSS-hiding involved.
 //
-// There is no theme toggle: the app is light-only (FlipTap has no dark palette
-// yet) and ForceLightTheme pins this tree to light, so a toggle would be
-// inert. ThemeProvider/useTheme survive only because CodeView/CodeEditor read
-// the theme to choose their syntax palette.
+// Appearance is configured in Account settings. The shared surface follows
+// ThemeProvider, including the code views inside this shell.
 export function AppShell() {
   const { pathname } = useLocation()
   const isCardPreview =

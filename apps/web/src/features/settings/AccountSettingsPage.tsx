@@ -4,8 +4,8 @@ import { useIsWideLibrary } from '@/features/library/shared/useIsWideLibrary'
 import { SettingsNav } from './SettingsNav'
 import { resolveSection } from './settingsSections'
 import { ProfileSection } from './sections/ProfileSection'
+import { AppearanceSection } from './sections/AppearanceSection'
 import {
-  AppearanceSection,
   ConnectedDevicesSection,
   EmailPasswordSection,
   NotificationsSection,

@@ -27,9 +27,9 @@ const RATING_BARS: { rating: Rating; label: string; tone: string }[] = [
   // same precedent - a slate ramp throughout, the palest accent tint on Again
   // alone, because Again is the only grade that changes what happens next.
   { rating: 1, label: 'Again', tone: 'bg-fliptap-accent/50' },
-  { rating: 2, label: 'Hard', tone: 'bg-fliptap-navy/30' },
-  { rating: 3, label: 'Good', tone: 'bg-fliptap-navy/60' },
-  { rating: 4, label: 'Easy', tone: 'bg-fliptap-navy/85' },
+  { rating: 2, label: 'Hard', tone: 'bg-fliptap-ink-brand/30' },
+  { rating: 3, label: 'Good', tone: 'bg-fliptap-ink-brand/60' },
+  { rating: 4, label: 'Easy', tone: 'bg-fliptap-ink-brand/85' },
 ]
 
 function Metric({ value, label }: { value: string; label: string }) {
@@ -115,9 +115,9 @@ export function SessionCompleteCard({
             one shape with a smudge behind it. */}
         <div aria-hidden="true" className="mx-auto mb-6 h-[52px] w-[88px]">
           <div className="relative h-full w-full">
-            <span className="absolute left-[34px] top-0 h-[38px] w-[52px] rotate-[10deg] rounded-[8px] bg-fliptap-navy/20" />
-            <span className="absolute left-[17px] top-[5px] h-[38px] w-[52px] rotate-[5deg] rounded-[8px] bg-fliptap-navy/45" />
-            <span className="absolute left-0 top-[11px] h-[38px] w-[52px] rounded-[8px] bg-fliptap-navy" />
+            <span className="absolute left-[34px] top-0 h-[38px] w-[52px] rotate-[10deg] rounded-[8px] bg-fliptap-ink-brand/20" />
+            <span className="absolute left-[17px] top-[5px] h-[38px] w-[52px] rotate-[5deg] rounded-[8px] bg-fliptap-ink-brand/45" />
+            <span className="absolute left-0 top-[11px] h-[38px] w-[52px] rounded-[8px] bg-fliptap-ink-brand" />
           </div>
         </div>
 

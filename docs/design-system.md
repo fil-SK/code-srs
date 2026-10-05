@@ -10,79 +10,56 @@ The canonical FlipTap visual and interaction design system: brand rules, tokens,
 
 This document owns *how it should look and behave*. It does not track *what is built* — that is [`CURRENT_STATE.md`](CURRENT_STATE.md) — or *why a call was made*, which is [`fliptap-decisions.md`](fliptap-decisions.md).
 
-There are **two token systems** layered on top of each other. Understanding the split is the key to everything else in this doc.
+FlipTap’s palette supplies the product colors and re-points legacy semantic tokens so every web surface follows the same theme.
 
 ---
 
-## 1. The two token systems
+## 1. Theme tokens
 
-**General app tokens** — defined on `:root, [data-theme='light']` in `apps/web/src/index.css`. The app is light-only: the `[data-theme='dark']` block and the `dark` custom-variant were deleted (nothing could match them, and zero `dark:` utilities exist), and `<html>` is stamped `data-theme="light"` statically:
+**IMPLEMENTED (D469).** Web supports Light, Dark and System at `/settings/appearance`, also reachable from the account menu’s Preferences shortcut. The browser-local choice is saved automatically under the existing `code-srs-theme` key. Light is the default for new browsers and invalid or unavailable storage. System follows device appearance changes while the app is open. A head script restores the saved preference before styles paint; `ThemeProvider` owns the live preference and resolved theme, synchronizes browser tabs and updates browser chrome. Native and marketing retain their existing light presentation.
 
-| Token | Light | Dark | Tailwind utility |
+**One palette with legacy aliases.** `:root` and `.fliptap-scope` define the light `--fliptap-*` roles. `:root[data-theme=dark]` and dark scoped descendants override every color role. Root tokens also paint auth loading, the body and portals. `FlipTapSurface` paints the shared canvas without overriding the theme context. Native controls and scrollbars follow `color-scheme`.
+
+`@theme inline` keeps utilities bound to runtime CSS variables. General names such as `--bg`, `--panel`, `--panel-2`, `--text`, `--muted`, `--faint`, `--border`, `--accent`, `--accent-soft`, `--green`, `--red`, `--amber`, `--shadow` and `--code-bg` re-point to the corresponding FlipTap roles. `--blue` maps to `accent-active`. Keep this compatibility seam so older components inherit the active palette.
+
+| Token (`--fliptap-…`) | Light | Dark | Role |
 |---|---|---|---|
-| `--bg` | `#f4f5f8` | `#0b0e14` | `bg-bg` |
-| `--bg-elev` | `#ffffff` | `#11151d` | `bg-bg-elev` |
-| `--panel` | `#ffffff` | `#151a23` | `bg-panel` |
-| `--panel-2` | `#f7f8fa` | `#1b212c` | `bg-panel-2` |
-| `--border` | `#e3e6ec` | `#232b38` | `border-border` |
-| `--text` | `#1b2130` | `#e6e9ef` | `text-text` |
-| `--muted` | `#5d6678` | `#8b94a7` | `text-muted` |
-| `--faint` | `#98a0b0` | `#5b6473` | `text-faint` |
-| `--accent` | `#6d57e0` | `#8b7cf6` | `bg-accent` / `text-accent` |
-| `--accent-soft` | `rgba(109,87,224,.1)` | `rgba(139,124,246,.14)` | `bg-accent-soft` |
-| `--green` | `#1f9d63` | `#3fb27f` | `text-green` |
-| `--amber` | `#b9802f` | `#d8a657` | `text-amber` |
-| `--red` | `#d2515c` | `#e06c75` | `text-red` |
-| `--blue` | `#2f74c0` | `#61afef` | `text-blue` |
-| `--code-bg` | `#f7f8fb` | `#0d111a` | `bg-code-bg` |
-| `--shadow` | `0 8px 30px rgba(20,24,40,.1)` | `0 8px 30px rgba(0,0,0,.45)` | `shadow-[var(--shadow)]` |
+| `navy` | `#1e293b` | `#1e293b` | `Fixed navy fills with white foregrounds` |
+| `canvas` | `#f6f7f9` | `#0f1724` | `Page background` |
+| `surface` | `#ffffff` | `#172131` | `Cards and panels` |
+| `surface-subtle` | `#f9fafb` | `#1c293b` | `Secondary surfaces and code` |
+| `ink` | `#172033` | `#e5ecf5` | `Primary text` |
+| `ink-brand` | `#1e293b` | `#f1f5f9` | `Headings, values and neutral icons` |
+| `muted` | `#64748b` | `#a8b7cb` | `Secondary copy` |
+| `muted-light` | `#94a3b8` | `#8a9bb2` | `Tertiary copy` |
+| `border` | `#e3e7ed` | `#2d3d52` | `Default border` |
+| `border-strong` | `#cbd3de` | `#465a74` | `Emphasized border` |
+| `accent` | `#ff6902` | `#ff6902` | `Locked orange signal` |
+| `accent-hover` | `#ea5f00` | `#ea5f00` | `Hover state` |
+| `accent-active` | `#d95700` | `#d95700` | `Active state` |
+| `accent-soft` | `#fff2e8` | `#35261f` | `Orange tint` |
+| `accent-softer` | `#fff8f3` | `#28221f` | `Quieter orange tint` |
+| `navy-soft` | `#eef2f7` | `#223149` | `Neutral tint` |
+| `selection-soft` | `#f2f6fc` | `#203149` | `Selection background` |
+| `selection-border` | `#9cb4db` | `#6585b4` | `Selection border` |
+| `success` | `#15803d` | `#4ade80` | `Success copy` |
+| `success-solid` | `#15803d` | `#15803d` | Solid fill behind white feedback glyphs |
+| `success-soft` | `#ecfdf3` | `#18382a` | `Success background` |
+| `error` | `#c2413a` | `#fb8f86` | `Error copy` |
+| `error-solid` | `#c2413a` | `#b93832` | Solid fill behind white danger labels/glyphs |
+| `error-soft` | `#fef2f2` | `#3b252a` | `Error background` |
+| `warning` | `#b45309` | `#fbbf24` | `Warning copy` |
+| `warning-soft` | `#fff7ed` | `#392e1d` | `Warning background` |
 
-`--radius-card: 12px` (`rounded-card`). Fonts: `--font-sans` (Inter stack), `--font-mono` (JetBrains Mono stack) — same names in both themes.
+The orange signal rule applies in both themes. Fixed navy fills use white copy; neutral foregrounds use `ink-brand` so they stay readable on dark surfaces. Chart tooltips keep fixed navy backgrounds and white copy. The Today hero and login card fan retain their locked geometry. Today's furthest-back card (#4) uses pale gray `#d9dee5` in light mode and dark gray `#374151` with a faint light border in dark mode (D470); it remains hidden below 640px.
 
-These are exposed to Tailwind via `@theme inline` in `apps/web/src/index.css`, which makes utilities emit `var(--…)` directly — which is what lets `.fliptap-scope` re-point them at runtime (below) rather than needing a rebuild. Mappings whose utilities had no consumers left (`bg-bg`, `bg-bg-elev`, `bg-fliptap-canvas`, `font-fliptap-mono`, `rounded-fliptap-code`) have been removed.
+**Shadows are platform-specific.** Light card: `0 12px 30px rgba(23,32,51,.08), 0 2px 6px rgba(23,32,51,.05)`; dark card: `0 12px 30px rgba(0,0,0,.2), 0 2px 6px rgba(0,0,0,.15)`. Light float: `0 18px 50px rgba(23,32,51,.12)`; dark float: `0 18px 50px rgba(0,0,0,.35)`.
 
-**FlipTap-scope tokens** — an additive, **light-only** namespace (`.fliptap-scope` in `apps/web/src/index.css`), applied via `FlipTapSurface`. It does two things at once:
+**Shared identity stays in sync.** `packages/core/src/design/tokens.ts` exports `fliptapColors` (the native default) and `fliptapDarkColors` with the same complete role set. `apps/web/src/design/tokenDrift.test.ts` checks both CSS palettes in both directions, with exactly the two shadow values exempted, and verifies dark text/status contrast. The shared module also carries radii, font families/roles and shadow intent names. No stylesheet is generated and no layout mechanics or type/spacing scale belongs in core.
 
-1. Defines the actual `--fliptap-*` custom properties (the locked brand palette).
-2. **Re-points the general tokens above** (`--bg`, `--panel`, `--text`, `--accent`, `--green`, `--amber`, `--red`, `--blue`, `--shadow`, `--code-bg`, ...) to the FlipTap values, scoped to `.fliptap-scope` and its descendants only.
+Radii: controls 9px, cards 14px, dialogs 16px, pills 999px. `rounded-card` aliases the 14px card radius. Fonts: self-hosted Inter Variable for non-code UI and JetBrains Mono Variable for code/shortcuts/technical metadata. `font-fliptap-display` is a compatibility alias to Inter.
 
-This re-pointing is the whole trick: every pre-redesign component already used `bg-panel`/`text-muted`/`bg-accent`-style utilities. Wrapping a subtree in `.fliptap-scope` reskins it completely with **zero edits to any component inside it** — the global `:root` rules outside the scope are untouched. Note the corollary: **on-brand colors are not evidence that a surface was redesigned.** Roadmaps still has pre-redesign layout and density while looking broadly correct.
-
-### FlipTap token table (all light-only)
-
-| Token | Hex | Notes |
-|---|---|---|
-| `--fliptap-navy` | `#1e293b` | Locked brand color — "foundation" |
-| `--fliptap-orange` | `#ff6902` | Locked brand color — "energy," see §4 below |
-| `--fliptap-canvas` | `#f6f7f9` | Page background |
-| `--fliptap-surface` | `#ffffff` | Card/panel background |
-| `--fliptap-surface-subtle` | `#f9fafb` | Secondary surface (e.g. search pill background) |
-| `--fliptap-ink` | `#172033` | Primary text |
-| `--fliptap-ink-brand` | `#1e293b` | Emphasized text (titles, values) |
-| `--fliptap-muted` | `#64748b` | Secondary text |
-| `--fliptap-muted-light` | `#94a3b8` | Tertiary text |
-| `--fliptap-border` | `#e3e7ed` | Default border |
-| `--fliptap-border-strong` | `#cbd3de` | Emphasized border |
-| `--fliptap-accent` / `-hover` / `-active` | `#ff6902` / `#ea5f00` / `#d95700` | Primary orange + interaction states |
-| `--fliptap-accent-soft` / `-softer` | `#fff2e8` / `#fff8f3` | Tinted orange backgrounds |
-| `--fliptap-navy-soft` | `#eef2f7` | Tinted navy background |
-| `--fliptap-selection-soft` / `-border` | `#f2f6fc` / `#9cb4db` | Selected-state background/border |
-| `--fliptap-success` / `-soft` | `#15803d` / `#ecfdf3` | Maps from `--green` |
-| `--fliptap-error` / `-soft` | `#c2413a` / `#fef2f2` | Maps from `--red` |
-| `--fliptap-warning` / `-soft` | `#b45309` / `#fff7ed` | Maps from `--amber` |
-| `--fliptap-shadow-card` | `0 12px 30px rgba(23,32,51,.08), 0 2px 6px rgba(23,32,51,.05)` | Sparingly — main Review cards, not every row |
-| `--fliptap-shadow-float` | `0 18px 50px rgba(23,32,51,.12)` | Elevated/floating elements |
-
-`--blue` has no dedicated FlipTap token (informational, not success/warning/error) — it re-points to `--fliptap-accent-active` instead.
-
-**The same palette exists as platform-neutral values, and drift is mechanically impossible.** `apps/web/src/index.css` stays the source that paints the browser — nothing is generated, injected or built from TypeScript. `packages/core/src/design/tokens.ts` carries the same identity as values a React Native app can read (`fliptapColors`, `fliptapRadii`, `fliptapFonts`, `fliptapFontWeights`, and `FLIPTAP_SHADOW_INTENTS`), because a native app cannot resolve a CSS custom property. `apps/web/src/design/tokenDrift.test.ts` parses the `.fliptap-scope` block and the `--radius-fliptap-*` declarations and asserts the two agree **in both directions**, so neither an edited hex nor a newly added `--fliptap-*` variable can land without its shared counterpart. The two shadow values are the only exemption — `box-shadow` and React Native's elevation model are different models, not different syntaxes, so only the intent *names* are shared — and the test asserts that exemption set is exactly those two.
-
-**What is deliberately not in that module:** the type/spacing scale (below — it is a design rule, not a token), page widths, breakpoints, nav heights and sidebar widths. Those are layout mechanics, and web and native are meant to differ in layout while sharing identity.
-
-Radii: `--radius-fliptap-control: 9px`, `--radius-fliptap-card: 14px`, `--radius-fliptap-dialog: 16px`, `--radius-fliptap-pill: 999px` (pills/tags/small labels only — don't round everything equally). There is no longer a `--radius-fliptap-code`: its `rounded-fliptap-code` utility lost its last consumer and both were deleted, so code surfaces take their corners from the container they sit in.
-
-Fonts: `font-fliptap-sans` (Inter) for everything non-code, and `font-mono` (JetBrains Mono) on code surfaces — the `font-fliptap-mono` alias was deleted once it had no consumers, so there is one utility per family rather than two names for the same stack. The legacy `font-fliptap-display` utility is retained as a compatibility alias to Inter, so an old explicit display class cannot silently switch a screen to another family. Both fonts are self-hosted via `@fontsource` so the offline PWA actually has them cached, not falling back to `system-ui`.
-
+**Code and motion.** `CodeView`/`CodeEditor` read the resolved theme for light or One Dark highlighting. CodeEditor reconfigures its theme compartment without resetting unsaved content, selection or undo history. Code backgrounds, caret and selection use semantic tokens. Appearance changes have no page animation, and existing color transitions respect reduced motion.
 ### Typography rules — DESIGN RULE (locked)
 
 Two families, no more. **Do not add another family or mix decorative fonts.**
@@ -122,11 +99,11 @@ Top bars — **DESIGN RULE:** global nav 68–72px desktop; the immersive Review
 
 ---
 
-## 2. `FlipTapSurface` / `ForceLightTheme`
+## 2. `FlipTapSurface`
 
 `apps/web/src/features/reviewV2/components/FlipTapSurface.tsx`:
 
-The wrapper supplies `ForceLightTheme` and `.fliptap-scope`. The outermost
+The wrapper supplies `.fliptap-scope` and follows the app-wide theme. The outermost
 surface also owns `.fliptap-canvas` and one `CanvasWaves` decoration; nested
 surfaces inherit that canvas and keep their backgrounds transparent. A local
 React context identifies nesting, including the production Review wrapper and
@@ -168,11 +145,11 @@ nearly neutral regardless of the individual drawings' width or rotation.
 Progress's desktop sidebar shields navigation through its Settings footer
 with `--fliptap-canvas`, matching the original page ground (D467). Library's
 wave-exclusion behavior applies without changing Progress to a white panel.
-The existing white navigation panel at phone widths retains its original color.
+The navigation panel at phone widths follows the active surface color.
 
 Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `RouteError` and `PreviewShell` (design-preview) — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the FlipTap visual system needs to be wrapped in `FlipTapSurface`** (or already be a descendant of one of the above).
 
-`ForceLightTheme` locally overrides `ThemeContext` (from `apps/web/src/app/theme.tsx`) to a static `{theme: 'light', ...}` for its subtree — it does **not** touch `document.documentElement` or `localStorage`, so the app's real global theme state is unaffected outside the wrapped subtree. It exists because `CodeView` picks its syntax-highlight *palette* (light `defaultHighlightStyle` vs. dark `oneDarkHighlightStyle`) from live `useTheme()` context, not a CSS variable — without this override, a globally-dark user would see a light FlipTap code background paired with a dark syntax palette. Only light values are defined in `.fliptap-scope` (spec §36 defers dark mode), so the app is light-only. `ThemeToggle.tsx` has been deleted and there is no theme toggle anywhere, but `Theme` keeps its `'dark'` member precisely because `CodeView`/`CodeEditor` select the `oneDark` palette from it.
+`ForceLightTheme` was removed in D469. The scoped CSS palette and code highlighting now follow the same app-wide resolved theme, including nested editor previews. No surface overrides it locally.
 
 ---
 
@@ -180,7 +157,7 @@ Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `Ro
 
 | Component | Purpose | Variants/props |
 |---|---|---|
-| `Button.tsx` | Base button | `variant?: 'primary' \| 'secondary' \| 'ghost' \| 'danger'` (default `secondary`). `primary`: `bg-accent text-white hover:brightness-110`. `secondary`: `border border-border bg-panel-2 hover:border-accent`. `ghost`: `text-muted hover:bg-panel`. `danger`: `bg-red text-white hover:brightness-110` (`--red` re-points to `--fliptap-error` inside `.fliptap-scope`, so it reads as the FlipTap error color without needing an fliptap-only token). Base radius `rounded-[9px]`, disabled → `opacity-50 pointer-events-none`. Props are `ComponentPropsWithRef<'button'>`, so `ref` passes through (React 19 ref-as-prop). |
+| `Button.tsx` | Base button | `variant?: 'primary' \| 'secondary' \| 'ghost' \| 'danger'` (default `secondary`). `primary`: `bg-accent text-white hover:brightness-110`. `secondary`: `border border-border bg-panel-2 hover:border-accent`. `ghost`: `text-muted hover:bg-panel`. `danger`: `bg-fliptap-error-solid text-white hover:brightness-110`, using a dedicated fill so white labels remain readable in both themes. Base radius `rounded-[9px]`, disabled → `opacity-50 pointer-events-none`. Props are `ComponentPropsWithRef<'button'>`, so `ref` passes through (React 19 ref-as-prop). |
 | `Field.tsx` | Labeled form field + shared input classes | Exports `fieldClass`/`selectClass` strings (`rounded-[9px] border border-border bg-code-bg ... focus:border-accent`) used across every card-type editor. `<Field label>` renders an uppercase, tracked-out `text-xs font-semibold text-muted` caption above its children. |
 | `FloatingPanel.tsx` | Portaled, viewport-aware popover panel anchored to a trigger | `anchor: HTMLElement \| null`, `onClose`, `align?: 'start' \| 'end'` (default `end`), `className?`, `role?`, `ariaLabel?`, `manageFocus?`, `returnFocusTo?`. Positions itself `fixed` against the anchor's rect, flips **above** the anchor when it would not fit below, clamps to 8px from every viewport edge, re-places on scroll (capture) / resize, and closes on outside `mousedown` or Escape. `manageFocus` (default **off**, so the pointer-driven row kebab menus are unchanged) adds real menu keyboard semantics: focus moves to the first non-`aria-disabled` `role="menuitem"` once the panel has been *measured* (focusing it earlier is a silent no-op — the panel is `visibility: hidden` until then), Arrow/Home/End walk the items with wrapping, Tab closes, and on unmount focus returns to `returnFocusTo` unless the user has already moved it elsewhere. |
 | `dialogs.tsx` | In-app replacements for `window.confirm` / `window.prompt` / `window.alert` | `<DialogProvider>` (mounted in `apps/web/src/app/providers.tsx`) + `useDialogs()` → `{ confirm, prompt, alert }`, all promise-based so call sites read like the blocking builtins: `if (await dialogs.confirm({ title, description, danger }))`. `prompt` resolves the trimmed value or `null`; its submit button is disabled while empty. Rendered as a portaled modal with a `rgba(23,32,51,0.45)` scrim, `rounded-fliptap-dialog` surface, Escape/scrim-click to dismiss. **Focus is contained and returned:** on open it moves to the prompt input, else the confirm button — except a `danger` confirm, which opens on **Cancel** so Enter on an unexpected delete dialog dismisses rather than deletes. Tab/Shift+Tab wrap within the dialog's own controls and pull focus back in if it has escaped, handled on a `document` keydown (the same listener that owns Escape) so containment holds even when focus is already behind the modal. On close, focus returns to whatever was focused when the dialog opened, when that element is still connected and the user has not moved focus themselves — the same two-part guard `FloatingPanel` uses. |
@@ -248,7 +225,7 @@ Two entry points: `RichText` (block-level — handles fences + text) and `Inline
 
 ## 6. Code display (`apps/web/src/components/code/`)
 
-`CodeView.tsx` — a read-only CodeMirror 6 view: line numbers, non-editable, line wrapping, transparent background (so the wrapping container's `--code-bg` shows through), JetBrains Mono at 13px. Syntax palette is chosen from live `useTheme()` (`oneDarkHighlightStyle` vs `defaultHighlightStyle`) — this is exactly why `ForceLightTheme` (§2) has to exist wherever `.fliptap-scope` is used.
+`CodeView.tsx` — a read-only CodeMirror 6 view: line numbers, non-editable, line wrapping, transparent background (so the wrapping container's `--code-bg` shows through), JetBrains Mono at 13px. Syntax palette is chosen from live `useTheme()` (`oneDarkHighlightStyle` vs `defaultHighlightStyle`) and matches the active CSS palette.
 
 `highlightLines?: number[]` (1-based) tints specific lines via a custom read-only `StateField`, styled as `background: var(--accent-soft)` + `box-shadow: inset 3px 0 0 0 var(--accent)` (tinted background + left accent bar) — used for a walkthrough step's "focus here" range. The array comes from `apps/web/src/features/reviewV2/interactions/walkthrough/focusLines.ts`'s `focusToHighlightLines`, which expands a step's authored `focus` ranges (`Array<{startLine, endLine}>`). The old `apps/web/src/components/code/lineRanges.ts` (`parseLineRanges`, which parsed a typed string like `"26-34, 40, 42-45"`) was deleted with the v1 surface and has no successor: focus ranges are structured card data now, not a string a person types.
 

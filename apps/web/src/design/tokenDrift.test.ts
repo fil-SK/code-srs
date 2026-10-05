@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { FLIPTAP_SHADOW_INTENTS, fliptapColors, fliptapRadii } from '@fliptap/core'
+import { FLIPTAP_SHADOW_INTENTS, fliptapColors, fliptapDarkColors, fliptapRadii } from '@fliptap/core'
 
 // The seam between two representations of one brand.
 //
@@ -106,6 +106,43 @@ describe('the FlipTap palette has one truth in two representations', () => {
     const forbidden = /width|height|breakpoint|margin|padding|gap|sidebar|navbar|navigation|inset|offset|zindex/i
     for (const key of [...Object.keys(fliptapColors), ...Object.keys(fliptapRadii)]) {
       expect(forbidden.test(key), key).toBe(false)
+    }
+  })
+})
+
+describe('the dark palette shares every semantic role without drift', () => {
+  const dark = declarations(block("[data-theme='dark'] .fliptap-scope"), 'fliptap-')
+
+  it('matches the complete light role set and the shared dark values', () => {
+    expect([...dark.keys()].sort()).toEqual([...cssColors.keys()].sort())
+    expect(Object.keys(fliptapDarkColors).sort()).toEqual(Object.keys(fliptapColors).sort())
+    for (const [name, value] of dark) {
+      if (NOT_SHARED_AS_VALUES.includes(name)) continue
+      expect(fliptapDarkColors[camel(name) as keyof typeof fliptapDarkColors], name).toBe(value)
+    }
+  })
+
+  it('keeps dark text and status copy readable on their surfaces', () => {
+    function luminance(hex: string) {
+      const channels = hex.slice(1).match(/../g)!.map((part) => {
+        const c = parseInt(part, 16) / 255
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      })
+      return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+    }
+    const pairs = [
+      ['ink', 'canvas'], ['inkBrand', 'surface'], ['muted', 'surface'],
+      ['mutedLight', 'surfaceSubtle'], ['success', 'successSoft'],
+      ['error', 'errorSoft'], ['warning', 'warningSoft'], ['accent', 'accentSoft'],
+    ] as const
+    for (const [foreground, background] of pairs) {
+      const values = [luminance(fliptapDarkColors[foreground]), luminance(fliptapDarkColors[background])]
+      const ratio = (Math.max(...values) + 0.05) / (Math.min(...values) + 0.05)
+      expect(ratio, `${foreground} on ${background}`).toBeGreaterThanOrEqual(4.5)
+    }
+    for (const role of ['successSolid', 'errorSolid'] as const) {
+      const ratio = (luminance('#ffffff') + 0.05) / (luminance(fliptapDarkColors[role]) + 0.05)
+      expect(ratio, `white on ${role}`).toBeGreaterThanOrEqual(4.5)
     }
   })
 })

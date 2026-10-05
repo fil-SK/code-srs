@@ -14,7 +14,7 @@ export function ExplanationPanel({
   if (!text?.trim()) return null
   return (
     <div className="mt-4 flex items-start gap-3 rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-fliptap-control bg-fliptap-navy-soft text-fliptap-navy">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-fliptap-control bg-fliptap-navy-soft text-fliptap-ink-brand">
         <BookOpen size={18} />
       </div>
       <div>

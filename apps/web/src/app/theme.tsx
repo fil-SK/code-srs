@@ -8,59 +8,76 @@ import {
 } from 'react'
 
 export type Theme = 'dark' | 'light'
+export type ThemePreference = Theme | 'system'
 
 const STORAGE_KEY = 'code-srs-theme'
 
 interface ThemeContextValue {
   theme: Theme
-  setTheme: (theme: Theme) => void
+  preference: ThemePreference
+  setTheme: (theme: ThemePreference) => void
   toggle: () => void
 }
 
-// Exported so a subtree can locally override the active theme without touching
-// document.documentElement or localStorage — see
-// src/features/reviewV2/components/ForceLightTheme.tsx, which FlipTapSurface
-// composes to pin the whole app to light. `Theme` keeps its 'dark' member
-// because CodeView/CodeEditor read it to choose between the light and oneDark
-// syntax palettes; it is not a user-facing setting (there is no toggle).
-// eslint-disable-next-line react-refresh/only-export-components
-export const ThemeContext = createContext<ThemeContextValue | null>(null)
+const ThemeContext = createContext<ThemeContextValue | null>(null)
 
-// Light is the fallback because the app is light-only: no dark palette exists,
-// and FlipTapSurface pins the whole tree to light via ForceLightTheme anyway. A
-// 'dark' fallback here used to write data-theme="dark" back onto <html> on
-// mount, which darkened the pre-router AuthGate screen (it renders outside
-// .fliptap-scope, so it reads --bg from :root directly).
-function getInitialTheme(): Theme {
+function getInitialPreference(): ThemePreference {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === 'dark' || stored === 'light') return stored
+    if (stored === 'dark' || stored === 'light' || stored === 'system') return stored
   } catch {
-    // localStorage unavailable (private mode, etc.) — fall through
+    // A blocked preference store must not prevent the app from opening.
   }
   return 'light'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme)
+  const [preference, setPreference] = useState<ThemePreference>(getInitialPreference)
+  const [systemDark, setSystemDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches,
+  )
+  const theme = preference === 'system' ? (systemDark ? 'dark' : 'light') : preference
+
+  useEffect(() => {
+    const query = window.matchMedia('(prefers-color-scheme: dark)')
+    const update = () => setSystemDark(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    const restore = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY && event.key !== null) return
+      setPreference(getInitialPreference())
+    }
+    window.addEventListener('storage', restore)
+    return () => window.removeEventListener('storage', restore)
+  }, [])
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      'content', theme === 'dark' ? '#0f1724' : '#f6f7f9',
+    )
+  }, [theme])
+
+  useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, theme)
+      localStorage.setItem(STORAGE_KEY, preference)
     } catch {
       // ignore persistence failures
     }
-  }, [theme])
+  }, [preference])
 
-  const setTheme = useCallback((next: Theme) => setThemeState(next), [])
+  const setTheme = useCallback((next: ThemePreference) => setPreference(next), [])
   const toggle = useCallback(
-    () => setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark')),
-    [],
+    () => setPreference(theme === 'dark' ? 'light' : 'dark'),
+    [theme],
   )
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggle }}>
+    <ThemeContext.Provider value={{ theme, preference, setTheme, toggle }}>
       {children}
     </ThemeContext.Provider>
   )

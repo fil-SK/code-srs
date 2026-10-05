@@ -190,7 +190,7 @@ export function PaceChart({ days }: { days: PaceDay[] }) {
         {hoveredDay && hoveredPoint && (
           <div
             role="tooltip"
-            className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md bg-fliptap-ink-brand px-2.5 py-1.5 text-[11px] text-white shadow-md"
+            className="pointer-events-none absolute z-10 whitespace-nowrap rounded-md bg-fliptap-navy px-2.5 py-1.5 text-[11px] text-white shadow-md"
             style={{
               left: `${(hoveredPoint[0] / WIDTH) * 100}%`,
               top: `${(hoveredPoint[1] / HEIGHT) * 100}%`,

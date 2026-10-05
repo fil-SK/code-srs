@@ -65,7 +65,7 @@ export function KpiTile({
   const dark = variant === 'dark'
   const lightIconTone = {
     accent: 'bg-fliptap-accent-soft text-fliptap-accent',
-    navy: 'bg-fliptap-navy-soft text-fliptap-navy',
+    navy: 'bg-fliptap-navy-soft text-fliptap-ink-brand',
     success: 'bg-fliptap-success-soft text-fliptap-success',
     warning: 'bg-fliptap-warning-soft text-fliptap-warning',
   }[iconTone]

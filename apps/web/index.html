@@ -1,12 +1,22 @@
 <!doctype html>
-<!-- The app is light-only (no dark palette exists), so the theme is declared
-     statically here. There is no pre-paint theme script: it existed to restore
-     a saved dark/light choice, and with no toggle there is nothing to restore. -->
 <html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/fliptap-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7f9" />
+    <script>
+      // Restore before styles paint, including on standalone and login routes.
+      try {
+        const preference = localStorage.getItem('code-srs-theme')
+        const dark = preference === 'dark' ||
+          (preference === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        document.querySelector('meta[name="theme-color"]').content = dark ? '#0f1724' : '#f6f7f9'
+      } catch {
+        // Keep the default light theme when preference storage is unavailable.
+      }
+    </script>
     <title>FlipTap</title>
   </head>
   <body>
