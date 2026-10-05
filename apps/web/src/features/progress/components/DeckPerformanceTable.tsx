@@ -10,8 +10,10 @@ function rateTone(value: number | null): string {
   return value >= 0.8 ? 'text-fliptap-success' : 'text-fliptap-warning'
 }
 
+// The deck column takes whatever is left and truncates, so the table never
+// needs a min-width or a scroll container to fit a narrow card.
 const GRID =
-  'grid min-w-[300px] grid-cols-[minmax(105px,1fr)_58px_32px_62px_14px] items-center gap-1 sm:min-w-[390px] sm:grid-cols-[minmax(150px,1fr)_72px_48px_76px_18px] sm:gap-2'
+  'grid grid-cols-[minmax(0,1fr)_56px_36px_72px_14px] items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_72px_56px_96px_18px] sm:gap-x-4'
 
 export function DeckPerformanceTable({
   rows,
@@ -35,17 +37,17 @@ export function DeckPerformanceTable({
         {visible.length === 0 ? (
           <p className="mt-4 text-sm text-fliptap-muted">No active cards yet.</p>
         ) : (
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4">
             <div
               className={cn(
                 GRID,
-                'px-1 pb-2 text-xs font-bold uppercase tracking-wide text-fliptap-muted',
+                'px-2 pb-2 text-xs font-bold uppercase tracking-wide text-fliptap-muted',
               )}
             >
               <span>Deck</span>
-              <span>Learned</span>
-              <span>Due</span>
-              <span>Retention</span>
+              <span className="text-center">Learned</span>
+              <span className="text-center">Due</span>
+              <span className="text-center">Retention</span>
               <span />
             </div>
             <div className="divide-y divide-fliptap-border">
@@ -58,7 +60,7 @@ export function DeckPerformanceTable({
                     to={due > 0 ? `/review?deck=${deckId}` : `/decks/${deckId}`}
                     className={cn(
                       GRID,
-                      '-mx-2 rounded-fliptap-control px-2 py-3 transition-colors hover:bg-fliptap-surface-subtle',
+                      'rounded-fliptap-control px-2 py-3 transition-colors hover:bg-fliptap-surface-subtle',
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-3">
@@ -74,11 +76,11 @@ export function DeckPerformanceTable({
                         )}
                       </div>
                     </div>
-                    <span className="text-sm text-fliptap-ink">
+                    <span className="text-center text-sm text-fliptap-ink">
                       {learned} / {active}
                     </span>
-                    <span className="text-sm font-semibold text-fliptap-ink">{due}</span>
-                    <span className={cn('text-sm font-semibold', rateTone(retention))}>
+                    <span className="text-center text-sm font-semibold text-fliptap-ink">{due}</span>
+                    <span className={cn('text-center text-sm font-semibold', rateTone(retention))}>
                       {retention === null ? '—' : `${Math.round(retention * 100)}%`}
                     </span>
                     <ChevronRight size={16} className="text-fliptap-muted" />
