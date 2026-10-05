@@ -1,6 +1,9 @@
-import type { ReactNode } from 'react'
+import { createContext, useContext, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { ForceLightTheme } from './ForceLightTheme'
+import { CanvasWaves } from './CanvasWaves'
+
+const CanvasContext = createContext(false)
 
 // Shared root for any tree rendered in the FlipTap visual system: ForceLightTheme
 // (see that file) plus `.fliptap-scope` (the namespaced token set, src/index.css).
@@ -10,13 +13,31 @@ import { ForceLightTheme } from './ForceLightTheme'
 export function FlipTapSurface({
   children,
   className,
+  canvasTone = 'default',
 }: {
   children: ReactNode
   className?: string
+  canvasTone?: 'default' | 'quiet'
 }) {
+  // Review and editor previews can nest surfaces. Only the outer page paints
+  // the canvas, otherwise each preview would restart and compound the waves.
+  const nested = useContext(CanvasContext)
+
   return (
-    <ForceLightTheme>
-      <div className={cn('fliptap-scope', className)}>{children}</div>
-    </ForceLightTheme>
+    <CanvasContext.Provider value={true}>
+      <ForceLightTheme>
+        <div
+          className={cn(
+            'fliptap-scope',
+            nested ? 'fliptap-surface-nested' : 'fliptap-canvas',
+            !nested && canvasTone === 'quiet' && 'fliptap-canvas-quiet',
+            className,
+          )}
+        >
+          {!nested && <CanvasWaves />}
+          {children}
+        </div>
+      </ForceLightTheme>
+    </CanvasContext.Provider>
   )
 }

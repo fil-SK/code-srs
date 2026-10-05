@@ -61,7 +61,7 @@ export function ReviewPage() {
   // already there rather than replacing a different screen.
   if (loading || !session) {
     return (
-      <FlipTapSurface className="min-h-screen">
+      <FlipTapSurface canvasTone="quiet" className="min-h-screen">
         <LoadingRegion label="Preparing your session">
           <header className="mb-14 min-h-20 w-full border-b border-fliptap-border bg-fliptap-surface px-4 sm:px-6">
             <div className="mx-auto grid min-h-20 w-full max-w-[1280px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
@@ -88,7 +88,7 @@ export function ReviewPage() {
 
   if (session.cards.length === 0) {
     return (
-      <FlipTapSurface className="grid min-h-screen place-items-center px-4">
+      <FlipTapSurface canvasTone="quiet" className="grid min-h-screen place-items-center px-4">
         <div className="mx-auto max-w-md rounded-fliptap-card border border-dashed border-fliptap-border bg-fliptap-surface p-10 text-center">
           <div className="text-lg font-semibold text-fliptap-ink-brand">Nothing due 🎯</div>
           <p className="mt-2 text-sm text-fliptap-muted">
@@ -116,7 +116,7 @@ export function ReviewPage() {
   }
 
   return (
-    <FlipTapSurface className="min-h-screen">
+    <FlipTapSurface canvasTone="quiet" className="min-h-screen">
       {/* Keyed by the snapshot id, never by the live queue's length - the
           latter remounted the session on every grade. */}
       <ReviewSessionV2 key={session.id} cards={session.cards} />

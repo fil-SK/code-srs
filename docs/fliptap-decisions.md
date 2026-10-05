@@ -1653,3 +1653,149 @@ Context: "Itera" turned out to be taken, so the product renamed again to **FlipT
 **D461. A development-only `/dev` page can replace the local workspace with generated starting points, so new-user and long-time-user states can be reviewed without hand-building data.** Two scenarios: `blank` (empty) and `veteran` (23 cards in four decks, about three weeks of reviews, a broken streak). Both are generated in code from a seeded random source, so resetting to one is exact. Loading a scenario replaces the Dexie workspace in one transaction via the existing `importBackup(..., 'replace')`. The live workspace is parked in a separate IndexedDB database (`fliptap-dev-parking`) before the first scenario replaces it, and restored from the page; scenarios are never parked, since they regenerate. The page refuses to act in Supabase mode.
 
 **Why:** product review of empty and established states was otherwise limited to whatever data happened to be in the browser. **Scope:** the route is registered only in development builds through a dynamic import inside `import.meta.env.DEV`, which keeps `apps/web/src/dev/` out of the production bundle (verified by searching the built JS). The code is a temporary aid and is to be removed before publishing (see `docs/TODO.md`). It is not a product feature and does not change the backup format, the card model, or any stored row.
+
+## 2026-10-05 - Soft orange waves on the web canvas
+
+**D462. Web pages share one faint orange wave background, following the owner's
+explicit request to carry the background motif from the mobile mockup onto web
+first.** The reference is
+`C:\Users\SK\Desktop\itera-mockups\mobile\ChatGPT Image Aug 23, 2026, 09_56_29 PM.png`,
+treated as **DIRECTION** for the curves only. Existing page compositions and
+locked hero/illustration geometry are unchanged. Native mobile adoption is
+deferred until requested.
+
+The outermost `FlipTapSurface` owns three static SVG curves, colored by the
+existing FlipTap accent token and faded toward the left and bottom. Nested
+Review and editor-preview surfaces share that canvas rather than painting
+another copy. The decoration is hidden from assistive technology, ignores
+pointer input, scrolls with the page and clips only its own drawing. No image
+asset, dependency, core token or persisted data changed.
+
+This is a narrow, owner-approved exception to §4's orange-as-signal rule in
+`design-system.md`: low-opacity canvas atmosphere is allowed; the existing
+budget for orange controls and accents still applies. Verification: Chromium
+at 1440x900 and 390x844 across Login, Today, Library, Progress, Settings and
+Review, including empty Today, revealed Recall, nesting and reduced motion;
+no horizontal overflow or console/page errors. Search focus rings and account
+menu placement/focus return pass at both widths, and the waves do not change
+content bounds. Root Vitest passes 116 files / 1,112 tests, the real TypeScript
+build check and lint are clean, and the production build succeeds with the
+existing chunk-size advisory.
+
+## 2026-10-05 - Quieter web waves, with a separate study intensity
+
+**D463. Keep D462's orange wave motif and geometry, with reduced intensity and
+an earlier bottom fade.** After reviewing the initial screenshots, the owner
+approved a modest reduction across ordinary pages and a stronger reduction
+where the learner focuses on one card. The same drawing now has layer opacity
+0.8 by default (20% lower than D462) and 0.55 on study surfaces (45% lower).
+The gradient's middle stop moves from 45% to 40% and transparency from 100%
+to 90%, softening the region where the three paths overlap.
+
+`FlipTapSurface` exposes a presentation-only `canvasTone="quiet"`, chosen by
+the outer page. Review requests it through loading, empty, active, revealed
+and complete states; design previews and AppShell's card study/flip-through
+routes use it too. Nested surfaces continue to inherit one canvas. The shared
+palette, curve paths, page geometry and native mobile remain unchanged. This
+refines D462's intensity and preserves its narrowly approved canvas exception.
+
+Verification: Chromium at 1440x900 and 390x844, including active/revealed
+Review, real single-card session completion, empty Review, card study and deck
+flip-through. One wave layer and the intended opacity persist across each
+state; no page overflow or console/page errors. Search focus rings, account
+menu placement and focus return remain correct at both widths, and reduced
+motion remains static. Root Vitest passes 116 files / 1,112 tests; the forced
+TypeScript build check and lint are clean. The production build succeeds with
+the existing chunk-size advisory.
+
+## 2026-10-05 - A bottom-left counterpart connects the web canvas corners
+
+**D464. Add a softer bottom-left wave that echoes the upper-right motif.** The
+owner requested something in the opposite corner so the two areas connect.
+The same three paths and gradient are drawn again, rotated 180 degrees, at
+60% of the upper drawing's opacity. Shared curvature and fading create a
+diagonal flow across the canvas; D463's default and quiet study intensities
+continue to apply to the whole decoration.
+
+One clipped, non-interactive layer now spans the page. The upper drawing stays
+at the top; the lower drawing is anchored to the page's bottom and appears
+there on long scrolling pages. Both scale/crop for phone widths and use unique
+gradient ids. Nested surfaces inherit one pair of drawings, with no additional
+canvas. Page layout, the locked hero geometry, the palette, persisted data and
+native mobile are unchanged.
+
+Verification: Chromium at 1440x900 and 390x844 across short, empty and scrolling
+pages, active/revealed Review, real session completion and card study previews.
+One layer contains two drawings, retains the correct quiet/default intensity
+and follows the page bottom without horizontal overflow. A phone screenshot
+at the end of Today confirms the lower corner placement. Keyboard focus,
+account menus, focus return and reduced motion remain correct; no console or
+page errors. Root Vitest passes 116 files / 1,112 tests; the forced TypeScript
+build check and lint are clean. The production build succeeds with the
+existing chunk-size advisory.
+
+## 2026-10-05 - Define the lower wave's curved edges more clearly
+
+**D465. Increase the bottom-left drawing's opacity from 0.6 to 0.85 and lift
+it 35px on desktop and 30px on phone layouts.** The owner found D464's lower
+wave read as a color smudge. Exposing more of the existing curved edges and
+increasing their visibility makes the counterpart read as a wave. This
+supersedes D464's lower intensity/offsets; the upper wave and D463's quieter
+Review treatment keep their approved values.
+
+The shared paths, gradients, page anchoring and non-interactive behavior stay
+the same. Chromium verification covers desktop and phone layouts, short and
+scrolling pages, Review reveal/completion, nesting and keyboard/menu behavior.
+The forced TypeScript check, lint and production build pass. An initial full
+Vitest run hit a 5-second timeout in the existing MatchingEditorShell form
+test; its isolated rerun passed, followed by all 116 files / 1,112 tests in the
+full suite. No test code or timeout configuration changed, and the captured
+failure and rerun output are retained with the session's visual QA artifacts.
+
+## 2026-10-05 - Keep the wave color at the sides and protect Progress navigation
+
+**D466. Fade the shared decoration across the page width, and give Progress's
+desktop sidebar an opaque white surface.** The owner found the lower wave
+tinted the Settings footer and Overview/Learning navigation on Progress, and
+that Today carried too much color through its middle. ProgressShell now uses
+the existing surface token through the full sidebar height, matching Library's
+opaque navigation treatment without changing its layout.
+
+The full-page wave layer retains its approved intensity in the outer 12% on
+each side and fades to 3% through the central 38%-62%. Applying this mask to
+the whole layer keeps the center almost neutral independently of the two
+drawings' responsive sizes and the lower drawing's rotation. D465's defined
+corner curves and D463's quieter study intensity remain in place.
+
+Verification: Chromium at 1440x900 and 390x844 covers Today, Progress,
+Library and the existing Review/preview states, with no overflow or page/
+console errors. Progress navigation and Settings screenshots are unchanged
+when the wave layer is hidden, including on Review history; rounded phone
+panel corners intentionally reveal the canvas outside the panel. Settings
+keyboard activation, focus rings, account menu placement/focus return and
+reduced motion pass. Twenty-five background samples in empty Today's central
+region exactly match the neutral canvas RGB value. Root Vitest passes all
+116 files / 1,112 tests; forced TypeScript checking and lint are clean.
+The production build succeeds with the existing chunk-size advisory.
+
+## 2026-10-05 - Preserve Progress's original sidebar color
+
+**D467. Progress excludes the waves using its original neutral canvas color,
+superseding D466's added white desktop sidebar.** The owner clarified that
+Library was a reference for keeping decoration outside content, not for
+changing Progress's colors. The desktop sidebar now paints
+`--fliptap-canvas`, the same ground it had before the waves, so Overview,
+Learning and Settings remain neutral without becoming a white panel.
+
+The existing phone-width navigation panel retains its original white surface.
+D466's page-width fade and Today's nearly neutral center remain unchanged.
+No page geometry, palette, interaction or data behavior changed.
+
+Chromium verification at 1440x900 and 390x844 confirms the original sidebar
+colors, wave-free navigation and Settings, and the same treatment on Review
+history. Screenshots of the protected regions are unchanged when the wave
+layer is hidden. Keyboard Settings navigation, visible focus rings, Library
+account menus and focus return pass, with no console or page errors.
+Root Vitest passes 116 files / 1,112 tests; forced TypeScript checking and
+lint are clean.
+The production build succeeds with the existing chunk-size advisory.

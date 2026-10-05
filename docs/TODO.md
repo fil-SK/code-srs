@@ -410,7 +410,9 @@ Da odabereš i koliko si napredovao u mesecu. Tamo gde mi stoji datum, da mogu d
 
 ## Color
 
-On each of the pages, there should be an orange-wavy shape
+Web complete (2026-10-05, D462-D467): one shared soft orange wave background across
+web pages. Translating the treatment to the native mobile app remains deferred
+until the owner requests it.
 
 ## Scrollbar styling.
 

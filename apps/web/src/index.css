@@ -206,6 +206,73 @@
   font-family: var(--font-fliptap-sans);
 }
 
+/* A page owns one static wash with two ends. Negative stacking within an
+   isolated canvas keeps it behind controls without changing content layout. */
+.fliptap-canvas {
+  position: relative;
+  isolation: isolate;
+}
+.fliptap-surface-nested {
+  background: transparent;
+}
+.fliptap-canvas-waves {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+  color: var(--fliptap-accent);
+  opacity: 0.8;
+  /* Fade against the page width so both drawings stay at the sides even when
+     their responsive sizes and the lower drawing's rotation differ. */
+  mask-image: linear-gradient(
+    to right,
+    #000 12%,
+    rgb(0 0 0 / 0.03) 38%,
+    rgb(0 0 0 / 0.03) 62%,
+    #000 88%
+  );
+}
+.fliptap-canvas-quiet > .fliptap-canvas-waves {
+  opacity: 0.55;
+}
+.fliptap-canvas-waves svg {
+  position: absolute;
+}
+.fliptap-canvas-waves-top {
+  top: 0;
+  right: 0;
+  width: clamp(800px, 85%, 1400px);
+  height: 650px;
+  mask-image: linear-gradient(to right, transparent, #000 45%);
+}
+.fliptap-canvas-waves-bottom {
+  bottom: -55px;
+  left: 0;
+  width: clamp(800px, 80%, 1300px);
+  height: 520px;
+  transform: rotate(180deg);
+  opacity: 0.85;
+  mask-image: linear-gradient(to right, transparent, #000 55%);
+}
+
+@media (max-width: 767px) {
+  .fliptap-canvas-waves-top {
+    top: 48px;
+    right: -180px;
+    width: 780px;
+    height: 440px;
+    mask-image: linear-gradient(to right, transparent, #000 65%);
+  }
+  .fliptap-canvas-waves-bottom {
+    bottom: -40px;
+    left: -160px;
+    width: 740px;
+    height: 360px;
+    mask-image: linear-gradient(to right, transparent, #000 65%);
+  }
+}
+
 /* FlipTap's flip primitive, and the only one (src/features/reviewV2/components/
    FlipCard.tsx). Grid-overlap sizing (both faces share one grid cell, so the
    container sizes to the taller face) plus backface-visibility and

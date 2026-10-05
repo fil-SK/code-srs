@@ -10,7 +10,7 @@ import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 // app" banner is specific to this preview wrapper.
 export function PreviewShell({ children }: { children: ReactNode }) {
   return (
-    <FlipTapSurface className="min-h-screen">
+    <FlipTapSurface canvasTone="quiet" className="min-h-screen">
       <div className="border-b border-fliptap-border bg-fliptap-surface px-4 py-2 text-center text-xs font-medium text-fliptap-muted">
         Design preview — not part of the live app
       </div>

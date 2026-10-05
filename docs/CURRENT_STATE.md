@@ -2,6 +2,24 @@
 
 **Last verified against the working tree: 2026-08-27** (branch `mvp_demo_cleaning`).
 
+> **Web canvas waves (2026-10-05, D462-D467).** The shared `FlipTapSurface` now adds
+> faint orange curves in the upper-right and bottom-left corners, inspired by the owner's mobile
+> mockup. Nested Review/editor surfaces share one canvas. The decoration is
+> static, responsive, non-interactive and hidden from assistive technology.
+> The refined treatment uses 20% lower layer opacity on ordinary pages and 45%
+> lower opacity on Review/study surfaces, with an earlier fade toward the bottom.
+> The lower drawing mirrors the same curves at 85% of their opacity, is lifted
+> slightly to expose its curved edges, and follows
+> the bottom of the page, creating a soft diagonal connection on short and scrolling pages.
+> A page-width mask fades the center to 3% of the decoration's intensity,
+> concentrating color at the sides. Progress's desktop sidebar keeps the
+> original neutral canvas color through Settings, excluding the background
+> wash without introducing a white panel.
+> Chromium verification covers desktop and phone widths; native mobile is
+> unchanged. The root verification gates pass: 116 files / 1,112 tests,
+> `npx tsc -b --force`, and `npm run lint`. The production build also succeeds
+> with the existing chunk-size advisory.
+
 > **Canonical Demo Repository convergence (milestone M-PARITY-1A, §31).** The
 > mobile Demo runtime now uses the same Repository-backed Deck/Card/ReviewLog
 > architecture as the rest of FlipTap: a mobile-owned `InMemoryRepository`
@@ -173,6 +191,7 @@ Real data, real behavior, production-routed:
 ## 4. AppShell / navigation state
 
 - `apps/web/src/components/layout/AppShell.tsx` = `FlipTapSurface` (`.fliptap-scope` + `ForceLightTheme`) → `TopNav` → `<main class="mx-auto max-w-[1280px]">` → `<Outlet/>`.
+- The outermost `FlipTapSurface` owns one static, faint orange `CanvasWaves` background across standard pages, Login, Review, previews and route errors. It contains upper-right and bottom-left drawings of the same curves; the lower drawing uses 85% opacity, is raised slightly to show the curved edges and follows the page bottom. A page-width mask concentrates the color at the sides, fading to 3% through the center. Progress's desktop sidebar shields navigation through Settings with the original canvas color. Ordinary pages use a 0.8 layer opacity; Review and study/flip-through previews request `canvasTone="quiet"` at 0.55. Nested surfaces remain transparent so the waves never repeat inside cards or editors. Its clipped, non-interactive layer does not clip page content; see `design-system.md` §2 and D462-D467.
 - `TopNav` is presentational: logo, primary nav links, `rightSlot`. Its wordmark matches the finalized login branding in Inter Variable at weight 650. Primary destinations come from `primaryNavLinks.ts` and are exactly **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
 - Right side of the nav: `StreakBadge` + `AccountMenu`. Nothing else. `StreakBadge` reads the canonical `computeStreak` (`packages/core/src/domain/stats/streak.ts`) — the same calculation Today and Progress use — and the Today link's due badge (`useNavBadges`) has always been a real count.
 - **There is no global Search and no global Create action** — removed as a product call (both are scoped concepts; search lives inside Library, create inside a deck). `CreateMenu.tsx` and `TopNav`'s search affordance were deleted, not hidden.
@@ -323,7 +342,7 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Current counts (2026-08-28, after the pre-recording polish pass D453-D458): root `npx vitest run` is 115 files / 1106 tests, `apps/mobile` `npx jest` is 42 suites / 570 tests.** `npx tsc -b --force` and `npm run lint` are clean, and the five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
+**Latest root verification (2026-10-05, web canvas waves): `npx vitest run` passes 116 files / 1112 tests; `npx tsc -b --force` and `npm run lint` are clean.** Chromium checks at 1440x900 and 390x844 cover the wave treatment, page overflow, Review reveal and reduced motion. Pixel comparisons confirm Progress navigation and Settings are unaffected by the decoration; central background samples on empty Today match the neutral canvas. **Previous verification (2026-08-28, after the pre-recording polish pass D453-D458):** root Vitest was 115 files / 1106 tests, `apps/mobile` `npx jest` was 42 suites / 570 tests. The five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
 
 ```
 npx vitest run       → 111 test files, 1064 tests, all passing (75.94s)

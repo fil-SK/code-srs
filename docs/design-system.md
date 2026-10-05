@@ -126,15 +126,49 @@ Top bars — **DESIGN RULE:** global nav 68–72px desktop; the immersive Review
 
 `apps/web/src/features/reviewV2/components/FlipTapSurface.tsx`:
 
-```tsx
-export function FlipTapSurface({ children, className }) {
-  return (
-    <ForceLightTheme>
-      <div className={cn('fliptap-scope', className)}>{children}</div>
-    </ForceLightTheme>
-  )
-}
-```
+The wrapper supplies `ForceLightTheme` and `.fliptap-scope`. The outermost
+surface also owns `.fliptap-canvas` and one `CanvasWaves` decoration; nested
+surfaces inherit that canvas and keep their backgrounds transparent. A local
+React context identifies nesting, including the production Review wrapper and
+editor live previews, without changing their content layout.
+
+**Web canvas waves (D462, refined by D463-D467).** Three soft SVG curves rise
+toward the upper right, echoed by a smaller mirrored drawing in the bottom
+left. Both use `--fliptap-accent` at low opacity and fade into the canvas.
+The decoration scrolls with the page, is static, hidden from assistive
+technology and ignores pointer input. Only its own layer clips overflow;
+content, card shadows, focus rings and portal menus retain their existing
+behavior. Phone-width web layouts crop and scale the same curves. Native
+mobile adoption is deferred. The reference is the background motif in
+`C:\Users\SK\Desktop\itera-mockups\mobile\ChatGPT Image Aug 23, 2026, 09_56_29 PM.png`,
+used as **DIRECTION** for this decoration only.
+
+The current layer opacity is **0.8 on ordinary pages** and **0.55 on study
+surfaces**, respectively 20% and 45% lower than the original D462 treatment.
+The vertical gradient's middle stop is at 40% and reaches transparency at 90%,
+so overlapping curves fade sooner near the bottom. `FlipTapSurface` accepts
+`canvasTone="quiet"` for Review (loading, empty, active and complete), the
+design previews and AppShell's card study/flip-through routes. Only the
+outermost surface chooses the tone; nested surfaces inherit its single canvas.
+
+The bottom-left drawing uses the same paths and gradient rotated 180 degrees,
+at **85% of the upper drawing's opacity** (D465, increased from D464's 60%).
+It is lifted 35px on desktop and 30px on phones from its original placement
+to expose more of the curved edges. Its lighter curves create a diagonal
+connection between the corners while leaving the center quiet. One clipped
+decoration layer spans the full page: the upper drawing stays at the top and
+the lower drawing follows the page's bottom, including scrolling pages. Each
+drawing owns a unique gradient id. Phone layouts scale and crop both ends;
+neither is fixed to the viewport.
+
+A horizontal mask on the full-page decoration confines the visible color to
+the sides (D466). It retains full intensity in the outer 12% on each side,
+fades to 3% through the central 38%-62% of the page, and keeps the center
+nearly neutral regardless of the individual drawings' width or rotation.
+Progress's desktop sidebar shields navigation through its Settings footer
+with `--fliptap-canvas`, matching the original page ground (D467). Library's
+wave-exclusion behavior applies without changing Progress to a white panel.
+The existing white navigation panel at phone widths retains its original color.
 
 Used by `AppShell` (whole app), `ReviewPage`/`ReviewSessionV2`, `LoginPage`, `RouteError` and `PreviewShell` (design-preview) — one shared mechanism, not separate "real" vs. "preview" copies. **Any new top-level surface that should render in the FlipTap visual system needs to be wrapped in `FlipTapSurface`** (or already be a descendant of one of the above).
 
@@ -180,6 +214,10 @@ Other conventions seen across `apps/web/src/features/today/*.tsx`:
 - **Non-icon badges**: `ContinueLearningList.tsx` uses short text/glyph badges (`'C++'`, `'⚙'`, `'IR'`) inside a square `rounded-fliptap-control` navy tile with white mono text — a variant of the same wrapper idea for content that isn't a lucide icon.
 
 **The orange-usage rule (locked, spec §4.4):** orange is a *signal*, not theme paint. Reserved for: primary actions, the active-nav marker, the current important metric, session-progress accents, small branded focus details. **Not** meant to color every icon/progress-bar/tag/row simultaneously. Rule of thumb: **one primary orange action + at most two or three minor orange accents per screen.** (This is why the sidebar's active-item treatment is a left accent bar + light tint, not a solid orange pill — see `fliptap-decisions.md` D48.) When adding a new icon, default to `text-fliptap-muted` or `text-fliptap-ink-brand` unless it's genuinely one of the few orange-worthy elements on that screen.
+
+**Owner-approved canvas exception (D462, 2026-10-05):** the faint background
+waves in §2 are decorative atmosphere rather than an action or status signal.
+They do not change the accent budget for controls, icons, rows or progress bars.
 
 ---
 
@@ -276,7 +314,7 @@ Never add to Review: global navigation, the FlipTap logo, a left sidebar, the up
 
 **DESIGN RULE.** Three levels, and rarely more on one screen:
 
-1. **Canvas** (`--fliptap-canvas`) — the page ground. Set by `.fliptap-scope`; a page should not paint its own background.
+1. **Canvas** (`--fliptap-canvas`) — the page ground, with one shared faint orange wave decoration on web (§2). Set by `FlipTapSurface`; a page should not paint its own background.
 2. **Surface** (`--fliptap-surface`) — cards, panels, popovers. One border (`--fliptap-border`), `--radius-fliptap-card`, shadow only when genuinely elevated.
 3. **Subtle surface** (`--fliptap-surface-subtle`) — secondary fills inside a surface (search pills, inset areas). Not a third card layer.
 

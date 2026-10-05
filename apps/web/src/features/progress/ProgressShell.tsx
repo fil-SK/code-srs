@@ -10,9 +10,13 @@ import { useIsWideProgress } from './useIsWideProgress'
 export function ProgressShell({ children }: { children: ReactNode }) {
   const isWide = useIsWideProgress()
 
+  // Match the page ground so its decorative wash stays outside navigation.
   return isWide ? (
     <div className="grid grid-cols-[240px_1fr] items-stretch gap-8">
-      <div className="border-r border-fliptap-border pr-2">
+      <div
+        className="border-r border-fliptap-border pr-2"
+        style={{ backgroundColor: 'var(--fliptap-canvas)' }}
+      >
         <ProgressNav />
       </div>
       <div className="min-w-0">{children}</div>

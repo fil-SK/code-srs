@@ -23,7 +23,7 @@ export function AppShell() {
     pathname === '/preview' || /^\/cards\/[^/]+\/study$/.test(pathname)
 
   return (
-    <FlipTapSurface className="min-h-screen">
+    <FlipTapSurface canvasTone={isCardPreview ? 'quiet' : 'default'} className="min-h-screen">
       <TopNav
         navLinks={primaryNavLinks}
         rightSlot={
