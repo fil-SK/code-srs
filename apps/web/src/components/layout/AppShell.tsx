@@ -7,7 +7,7 @@ import { StreakBadge } from './StreakBadge'
 import { primaryNavLinks } from './primaryNavLinks'
 
 // The one shared shell for every standard product route (Today, Library,
-// focused Deck, Roadmaps, Progress, Settings, Card create/edit/preview) — see
+// focused Deck, Roadmaps, Progress, Settings, About, Card create/edit/preview). See
 // docs/fliptap-decisions.md's App Shell convergence entry. Review is NOT a
 // child of this route (router.tsx moves it to its own top-level, chrome-free
 // entry, the same structural pattern Today/design-preview already used

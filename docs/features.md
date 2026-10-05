@@ -107,6 +107,10 @@ Signing in is real and gates the whole product: `/login` mints either a Supabase
 
 Account settings → Appearance offers Light, Dark and System. Preferences in the account menu opens it directly. Light is the default, and the selection is saved on this browser and restored before first paint. System follows live device appearance changes. The active theme covers shell, login/loading/error states, Library, Today, Progress, authoring, all six Review interactions and floating controls; code highlighting follows it without discarding edits. Interface density and code font settings remain planned. Native and marketing appearance are unchanged.
 
+## About FlipTap — implemented on web
+
+The account menu's About FlipTap row opens `/about` in the shared app shell. The page explains the product's purpose, six card interactions, learning loop and FSRS ratings. Library and JSON Import / Export links open the existing product routes; Icon licenses opens the distributed license notice. The storage explanation reflects the active workspace: browser-local and offline-capable in local mode, cloud storage requiring a connection in Supabase mode. It contains no sample learner metrics or promises about native persistence.
+
 ## Public marketing site — implemented
 
 `apps/marketing` is the separately buildable pre-launch page for market validation. It positions FlipTap for software engineers and serious technical learning, shows the six interaction types, demonstrates Today/Review/Progress concepts with explicitly illustrative values, explains the intended desktop-authoring-to-mobile-review workflow without claiming production sync, states that the product is preparing for early access, and ends in an early-access interest form.

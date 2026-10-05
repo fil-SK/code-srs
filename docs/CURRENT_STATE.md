@@ -1,6 +1,8 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-05** (branch `dev/scenario-switcher`; web themes).
+**Last verified against the working tree: 2026-10-05** (branch `dev/scenario-switcher`; web themes and About).
+
+> **About FlipTap on web (2026-10-05, D471).** `/about` is a live page in the shared app shell, reached from the account menu's About FlipTap row. It introduces the product, the six card interactions and FSRS review ratings, with working Library, Import / Export and icon-license links. Its storage explanation follows the active auth mode: browser-local/offline in local mode, cloud/connection-required in Supabase mode. Light and Dark use the existing semantic palette. No persisted data or mobile behavior changes.
 
 > **Today stack color (2026-10-05, D470).** The furthest-back hero card now uses dark gray in dark mode, keeping its pale gray light-mode fill and the tuned geometry. It remains hidden below 640px.
 
@@ -187,6 +189,7 @@ Real data, real behavior, production-routed:
 | Progress | `/progress` | `apps/web/src/features/progress/ProgressPage.tsx` |
 | Review history | `/progress/history` | `apps/web/src/features/progress/ReviewHistoryPage.tsx` |
 | Account settings | `/settings`, `/settings/:section` | `apps/web/src/features/settings/AccountSettingsPage.tsx` |
+| About FlipTap | `/about` | `apps/web/src/features/about/AboutPage.tsx` |
 | Login | `/login` | `apps/web/src/features/login/LoginPage.tsx` |
 | Deck/card preview flip-through | `/preview` | `apps/web/src/features/preview/PreviewPage.tsx` |
 
@@ -236,8 +239,8 @@ Real data, real behavior, production-routed:
 ## 6. Account / avatar menu state
 
 - `AccountMenu` + `AccountMenuContent` (`apps/web/src/components/layout/`). Built on the existing `FloatingPanel` — **no popover dependency was added.** 300px anchored, viewport-height-capped panel with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger). Below 480px (`useIsNarrowShell`) the identical content renders as a bottom sheet.
-- Live rows: **Account settings**, **Import / Export**, and **Sign out** (enabled whenever the active mode has a session - a local/demo one in local mode, a Supabase one in Supabase mode).
-- Placeholder rows: Preferences, Study settings, **Spaced repetition (FSRS)**, Keyboard shortcuts, Help & documentation, What's new, About FlipTap — focusable `aria-disabled` rows with a "Soon" pill (never `disabled`, never hidden). Spaced repetition joined that list on 2026-08-18: it used to link to `/settings/card-scheduling`, which is not a slug in `settingsSections.ts`, so `resolveSection` silently landed the user on Profile.
+- Live rows: **Account settings**, **Preferences** (Appearance), **Import / Export**, **About FlipTap**, and **Sign out** (enabled whenever the active mode has a session - a local/demo one in local mode, a Supabase one in Supabase mode).
+- Placeholder rows: Study settings, **Spaced repetition (FSRS)**, Keyboard shortcuts, Help & documentation, What's new — focusable `aria-disabled` rows with a "Soon" pill (never `disabled`, never hidden). Spaced repetition joined that list on 2026-08-18: it used to link to `/settings/card-scheduling`, which is not a slug in `settingsSections.ts`, so `resolveSection` silently landed the user on Profile.
 - The header block shows **real identity only**. There is no profile record and no display name in this product, so it renders the session's email (or "Demo workspace" for the demo identity, matching `AccountSettingsPage`'s subtitle) over a line saying where the data lives — "Stored in this browser" / "Synced with Supabase" / "Local data only". Since P1-3 that line cannot contradict the active backend: a `local`/`demo` identity only exists in local mode, so "Stored in this browser" can no longer be shown while the app is reading Supabase. The former hardcoded **"Your name"** line is gone; it read as fabricated account data.
 - The grouped menu follows `profile-menu.png`: account/preferences; a divided study group; keyboard/help; What's new/About; Sign out. **It remains quick navigation only.** New settings still belong in `apps/web/src/features/settings/`; the menu links only the requested high-value shortcuts.
 
@@ -363,7 +366,9 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Latest root verification (2026-10-05, generic deck icons D468):** `npx vitest run` passes 117 files / 1121 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. Chromium at 1440x900 and 390x844 verifies chooser search/categories, creation, icon-only edits, reload persistence, Cancel, collection scope, focus containment/return, dismissal, overflow and offline local saves. Library, Today and Progress show the same saved marks. The distributed Lucide license matches the installed package and is present in the 25-entry PWA precache.
+**Latest root verification (2026-10-05, About D471):** `npx vitest run` passes 119 files / 1133 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. The About regressions cover live account-menu navigation and mode-specific storage copy. Chromium at 1440x900 and 390x844 verifies Light/Dark layout, direct-route sign-in return, menu activation by keyboard, hover, visible keyboard focus, Library/backup/license links and reload, without document overflow or page errors.
+
+**Previous root verification (2026-10-05, generic deck icons D468):** `npx vitest run` passes 117 files / 1121 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. Chromium at 1440x900 and 390x844 verifies chooser search/categories, creation, icon-only edits, reload persistence, Cancel, collection scope, focus containment/return, dismissal, overflow and offline local saves. Library, Today and Progress show the same saved marks. The distributed Lucide license matches the installed package and is present in the 25-entry PWA precache.
 
 **Previous root verification (2026-10-05, web canvas waves): `npx vitest run` passed 116 files / 1112 tests; `npx tsc -b --force` and `npm run lint` were clean.** Chromium checks at 1440x900 and 390x844 cover the wave treatment, page overflow, Review reveal and reduced motion. Pixel comparisons confirm Progress navigation and Settings are unaffected by the decoration; central background samples on empty Today match the neutral canvas. **Previous verification (2026-08-28, after the pre-recording polish pass D453-D458):** root Vitest was 115 files / 1106 tests, `apps/mobile` `npx jest` was 42 suites / 570 tests. The five reworked surfaces (Today, Library, the deck page, Progress, the Review session and its completion state) were verified in Chromium at 1440x900 and 390x844. The narrative below is the M-DEMO-4 baseline and its reasoning, which still holds; only the totals have moved.
 
@@ -503,6 +508,7 @@ Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither
 | `/progress` | Progress |
 | `/progress/history` | Review history |
 | `/settings`, `/settings/:section` | Account settings |
+| `/about` | About FlipTap |
 
 **Behind `RequireAuth`, outside `AppShell`:** `/review` (immersive, chrome-free by construction).
 

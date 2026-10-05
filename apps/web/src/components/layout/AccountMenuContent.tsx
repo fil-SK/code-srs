@@ -24,7 +24,7 @@ import { cn } from '@/lib/cn'
 // of settings sections still lives inside the Account settings page.
 //
 // Sign out is live whenever any session is (local, demo, or Supabase). Account
-// settings, Preferences (Appearance) and Import / Export are real routes here.
+// settings, Preferences (Appearance), Import / Export and About are real routes here.
 // Rows without a backing page remain marked "Soon"
 // and focusable (aria-disabled, not `disabled`) so keyboard users hear their
 // state instead of skipping visible content.
@@ -167,7 +167,7 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
     ],
     [
       { label: "What's new", icon: Gift },
-      { label: 'About FlipTap', icon: Info },
+      { label: 'About FlipTap', icon: Info, to: '/about' },
     ],
     [
       {

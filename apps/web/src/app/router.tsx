@@ -16,6 +16,7 @@ import { CardStudyPreviewPage } from '@/features/cards/CardStudyPreviewPage'
 import { ProgressPage } from '@/features/progress/ProgressPage'
 import { ReviewHistoryPage } from '@/features/progress/ReviewHistoryPage'
 import { AccountSettingsPage } from '@/features/settings/AccountSettingsPage'
+import { AboutPage } from '@/features/about/AboutPage'
 import { DesignPreviewIndex } from '@/features/design-preview/DesignPreviewIndex'
 import { RecallPreviewPage } from '@/features/design-preview/review-recall/RecallPreviewPage'
 import { MultipleChoicePreviewPage } from '@/features/design-preview/review-multiple-choice/MultipleChoicePreviewPage'
@@ -70,6 +71,7 @@ export const router = createBrowserRouter([
           { path: 'progress/history', element: <ReviewHistoryPage /> },
           { path: 'settings', element: <AccountSettingsPage /> },
           { path: 'settings/:section', element: <AccountSettingsPage /> },
+          { path: 'about', element: <AboutPage /> },
         ],
       },
       // Review is immersive (locked IA): no global nav, no logo, no sidebar. A

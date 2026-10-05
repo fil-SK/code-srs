@@ -23,6 +23,7 @@ function renderMenu() {
         <Routes>
           <Route path="/decks" element={<div>Library</div>} />
           <Route path="/settings" element={<div>Account settings page</div>} />
+          <Route path="/about" element={<div>About page</div>} />
         </Routes>
       </MemoryRouter>
     </AuthProvider>,
@@ -118,7 +119,6 @@ describe('AccountMenu', () => {
       'Keyboard shortcuts',
       'Help & documentation',
       "What's new",
-      'About FlipTap',
     ]
     for (const label of placeholders) {
       const item = screen.getByRole('menuitem', { name: new RegExp(label) })
@@ -169,6 +169,22 @@ describe('AccountMenu', () => {
     expect(screen.getByRole('menuitem', { name: 'Import / Export' }).getAttribute('href')).toBe(
       '/settings/import-export',
     )
+  })
+
+  it('opens About FlipTap as a live destination and closes the menu', async () => {
+    const user = userEvent.setup()
+    renderMenu()
+
+    await user.click(trigger())
+    const link = screen.getByRole('menuitem', { name: 'About FlipTap' })
+    expect(link.getAttribute('href')).toBe('/about')
+    expect(link.hasAttribute('aria-disabled')).toBe(false)
+    expect(link.textContent).not.toContain('Soon')
+
+    await user.click(link)
+    expect(screen.getByTestId('pathname').textContent).toBe('/about')
+    expect(screen.getByText('About page')).toBeTruthy()
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 
   // /settings/card-scheduling is not a section in settingsSections.ts, so this
