@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { LogoLoader } from '@/components/brand/LogoLoader'
 import { useAuth } from './AuthProvider'
 
 // Waits for the Supabase session bootstrap before rendering the router, so a
@@ -13,8 +14,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center text-sm text-muted">
-        Loading…
+      <div className="flex min-h-dvh items-center justify-center">
+        <LogoLoader />
       </div>
     )
   }

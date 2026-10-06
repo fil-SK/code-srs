@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@fliptap/core'
 import { Button } from '@/components/ui/Button'
+import { LogoLoader } from '@/components/brand/LogoLoader'
 import { SCENARIOS, type ScenarioId } from './scenarios'
 import {
   getActiveWorkspace,
@@ -20,6 +21,7 @@ export function DevScenariosPage() {
   const [parked, setParked] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [revealKey, setRevealKey] = useState(0)
 
   async function refresh() {
     setActive(await getActiveWorkspace())
@@ -103,6 +105,24 @@ export function DevScenariosPage() {
         >
           Restore my session
         </Button>
+      </section>
+
+      {/* Logo animation preview. DEV-ONLY: remove this section with the rest of /dev. */}
+      <section className="space-y-3 rounded-lg border p-4">
+        <h2 className="font-medium">Logo animation</h2>
+        <p className="text-sm text-neutral-600">
+          The looping loader is what the app shows while the session restores. The reveal plays
+          once; replay it to watch again.
+        </p>
+        <div className="flex items-center gap-6">
+          <LogoLoader />
+          <div className="flex flex-col items-center gap-2">
+            <LogoLoader key={revealKey} variant="reveal" className="h-24 w-24" />
+            <Button variant="secondary" onClick={() => setRevealKey((k) => k + 1)}>
+              Replay reveal
+            </Button>
+          </div>
+        </div>
       </section>
 
       {error && (
