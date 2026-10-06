@@ -21,6 +21,14 @@ function WaveDrawing({ washId, className }: { washId: string; className: string 
         <path d="M0 406C180 310 292 444 478 370S706 326 848 204S1072 94 1200 164V650H0Z" />
         <path d="M0 474C180 380 340 484 518 418S754 366 898 258S1102 168 1200 212V650H0Z" />
       </g>
+      {/* Hairline contours follow the crest of the middle wave at fixed offsets,
+          so they read as one engraved set. vector-effect keeps them 1px wide
+          even though preserveAspectRatio="none" stretches the drawing. */}
+      <g fill="none" stroke="currentColor" vectorEffect="non-scaling-stroke" strokeWidth="1">
+        <path opacity="0.2" d="M0 406C180 310 292 444 478 370S706 326 848 204S1072 94 1200 164" />
+        <path opacity="0.14" transform="translate(0 26)" d="M0 406C180 310 292 444 478 370S706 326 848 204S1072 94 1200 164" />
+        <path opacity="0.08" transform="translate(0 52)" d="M0 406C180 310 292 444 478 370S706 326 848 204S1072 94 1200 164" />
+      </g>
     </svg>
   )
 }

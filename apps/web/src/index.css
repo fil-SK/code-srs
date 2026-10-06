@@ -279,7 +279,34 @@
   height: 520px;
   transform: rotate(180deg);
   opacity: 0.85;
-  mask-image: linear-gradient(to right, transparent, #000 55%);
+  /* Start at partial strength, not fully transparent, so the bottom-left
+     corner reads as part of the composition instead of disappearing. */
+  mask-image: linear-gradient(to right, rgb(0 0 0 / 0.5), #000 40%);
+}
+
+/* Slow parallax drift. Each layer moves only toward the side its mask already
+   fades out (the top wave drifts right, the bottom wave drifts left), so the
+   motion never exposes an empty edge. The individual `translate` property is
+   used because the bottom layer already owns `transform: rotate(180deg)`. */
+@keyframes fliptap-wave-drift-top {
+  from { translate: 0 0; }
+  to { translate: 18px 0; }
+}
+@keyframes fliptap-wave-drift-bottom {
+  from { translate: 0 0; }
+  to { translate: -18px 0; }
+}
+.fliptap-canvas-waves-top {
+  animation: fliptap-wave-drift-top 24s ease-in-out infinite alternate;
+}
+.fliptap-canvas-waves-bottom {
+  animation: fliptap-wave-drift-bottom 30s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fliptap-canvas-waves-top,
+  .fliptap-canvas-waves-bottom {
+    animation: none;
+  }
 }
 
 @media (max-width: 767px) {
@@ -295,7 +322,7 @@
     left: -160px;
     width: 740px;
     height: 360px;
-    mask-image: linear-gradient(to right, transparent, #000 65%);
+    mask-image: linear-gradient(to right, rgb(0 0 0 / 0.5), #000 50%);
   }
 }
 
