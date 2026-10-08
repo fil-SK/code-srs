@@ -2255,3 +2255,10 @@ Verification: isolated Chromium passes Light/Dark at 1440x900, 390x844 and
 baselines, hover/focus and no document overflow. Forced TypeScript and root
 lint pass. Full-suite verification is pending after machine-load timeouts in
 unrelated editor tests; no test settings were changed in the repository.
+
+## 2026-10-09 - Remove web deck Insights
+
+**D489 (supersedes D107). Remove Insights and retain Cards as the single active tab.**
+The owner found the status/type inventories unhelpful and explicitly chose to remove the panel. The web deck page now renders its card list directly under the existing Cards tab treatment, preserving its orange underline, typography and spacing. Tab switching state and the Insights-only breakdown code are removed. The single tab and panel are linked with accessible tab semantics. Card search, filters, sorting, pagination, actions and header metrics retain their behavior. No data or scheduling changes, and no replacement analytics surface is introduced.
+
+Verification: forced TypeScript and root lint pass. Chromium checks Light/Dark at 1440x900 and 390x844, keyboard focus/activation, Cards panel visibility and no document overflow or page errors. Full Vitest verification remains blocked by host startup stalls after unrelated editor-test timeouts in the default run.

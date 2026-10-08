@@ -49,7 +49,6 @@ import { RowFilterDropdown } from './shared/RowFilterDropdown'
 import { CardListFooter } from './shared/CardListFooter'
 import { DeckMark } from './shared/DeckMark'
 import { MasteryRing } from './shared/MasteryRing'
-import { MeterBar } from './shared/MeterBar'
 import { LoadingRegion, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from './shared/EmptyState'
 import { LibraryShell } from './shared/LibraryShell'
@@ -163,7 +162,6 @@ export function LibraryDeckPage() {
   const decksQuery = useDecks()
   const { openCreateDeck, dialog: createDeckDialog } = useDeckCreateDialog()
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [tab, setTab] = useState<'cards' | 'insights'>('cards')
   const [compact, setCompact] = useState(false)
   const now = useMemo(() => Date.now(), [])
 
@@ -449,248 +447,163 @@ export function LibraryDeckPage() {
         <DeckSettings deck={deck} decks={decks} onClose={() => setSettingsOpen(false)} />
       )}
 
-      <div className="mb-6 mt-10 flex items-center gap-8 border-b border-fliptap-border text-base font-semibold">
-        {(['cards', 'insights'] as const).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setTab(key)}
-            className={
-              tab === key
-                ? 'min-w-24 border-b-2 border-fliptap-accent px-4 pb-3.5 text-fliptap-ink-brand'
-                : 'min-w-24 border-b-2 border-transparent px-4 pb-3.5 text-fliptap-muted hover:text-fliptap-ink'
-            }
-          >
-            {key === 'cards' ? 'Cards' : 'Insights'}
-          </button>
-        ))}
+      <div role="tablist" aria-label="Deck content" className="mb-6 mt-10 flex items-center gap-8 border-b border-fliptap-border text-base font-semibold">
+        <button
+          id="deck-cards-tab"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="deck-cards-panel"
+          className="min-w-24 border-b-2 border-fliptap-accent px-4 pb-3.5 text-fliptap-ink-brand"
+        >
+          Cards
+        </button>
       </div>
 
-      {tab === 'insights' ? (
-        <InsightsTab meta={combinedMeta} />
-      ) : (
-        <>
-          <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-            <div className="relative w-full max-w-[280px]">
-              <Search
-                size={18}
-                strokeWidth={1.8}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fliptap-muted"
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search cards..."
-                className={`${fieldClass} h-11 bg-fliptap-surface pl-10`}
-              />
+      <div id="deck-cards-panel" role="tabpanel" aria-labelledby="deck-cards-tab">
+        <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
+          <div className="relative w-full max-w-[280px]">
+            <Search
+              size={18}
+              strokeWidth={1.8}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fliptap-muted"
+            />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search cards..."
+              className={`${fieldClass} h-11 bg-fliptap-surface pl-10`}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <RowFilterDropdown
+              label="Type"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              options={[{ value: 'all', label: 'All' }, ...typeOptions.map((t) => ({ value: t, label: t }))]}
+            />
+            <RowFilterDropdown
+              label="Status"
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as StatusFilter)}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'new', label: 'New' },
+                { value: 'learning', label: 'Learning' },
+                { value: 'review', label: 'Review' },
+                { value: 'relearning', label: 'Relearning' },
+                { value: 'suspended', label: 'Suspended' },
+              ]}
+            />
+            <RowFilterDropdown
+              label="Sort"
+              value={sort}
+              onChange={(v) => setSort(v as SortKey)}
+              showValueWhenDefault
+              options={[
+                { value: 'manual', label: 'Manual' },
+                { value: 'dueSoon', label: 'Due soon' },
+                { value: 'name', label: 'Name' },
+                { value: 'type', label: 'Type' },
+                { value: 'status', label: 'Status' },
+              ]}
+            />
+            <div className="flex h-11 items-center gap-0 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface p-1">
+              <button
+                type="button"
+                aria-label="Comfortable rows"
+                aria-pressed={!compact}
+                onClick={() => setCompact(false)}
+                className={cn(
+                  'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
+                  !compact
+                    ? 'bg-fliptap-accent-soft text-fliptap-accent'
+                    : 'text-fliptap-muted hover:text-fliptap-ink',
+                )}
+              >
+                <LayoutList size={18} />
+              </button>
+              <button
+                type="button"
+                aria-label="Compact rows"
+                aria-pressed={compact}
+                onClick={() => setCompact(true)}
+                className={cn(
+                  'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
+                  compact
+                    ? 'bg-fliptap-accent-soft text-fliptap-accent'
+                    : 'text-fliptap-muted hover:text-fliptap-ink',
+                )}
+              >
+                <Rows3 size={18} />
+              </button>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <RowFilterDropdown
-                label="Type"
-                value={typeFilter}
-                onChange={setTypeFilter}
-                options={[{ value: 'all', label: 'All' }, ...typeOptions.map((t) => ({ value: t, label: t }))]}
-              />
-              <RowFilterDropdown
-                label="Status"
-                value={statusFilter}
-                onChange={(v) => setStatusFilter(v as StatusFilter)}
-                options={[
-                  { value: 'all', label: 'All' },
-                  { value: 'new', label: 'New' },
-                  { value: 'learning', label: 'Learning' },
-                  { value: 'review', label: 'Review' },
-                  { value: 'relearning', label: 'Relearning' },
-                  { value: 'suspended', label: 'Suspended' },
-                ]}
-              />
-              <RowFilterDropdown
-                label="Sort"
-                value={sort}
-                onChange={(v) => setSort(v as SortKey)}
-                showValueWhenDefault
-                options={[
-                  { value: 'manual', label: 'Manual' },
-                  { value: 'dueSoon', label: 'Due soon' },
-                  { value: 'name', label: 'Name' },
-                  { value: 'type', label: 'Type' },
-                  { value: 'status', label: 'Status' },
-                ]}
-              />
-              <div className="flex h-11 items-center gap-0 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface p-1">
-                <button
-                  type="button"
-                  aria-label="Comfortable rows"
-                  aria-pressed={!compact}
-                  onClick={() => setCompact(false)}
-                  className={cn(
-                    'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
-                    !compact
-                      ? 'bg-fliptap-accent-soft text-fliptap-accent'
-                      : 'text-fliptap-muted hover:text-fliptap-ink',
-                  )}
-                >
-                  <LayoutList size={18} />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Compact rows"
-                  aria-pressed={compact}
-                  onClick={() => setCompact(true)}
-                  className={cn(
-                    'grid h-8 w-9 place-items-center rounded-[7px] transition-colors',
-                    compact
-                      ? 'bg-fliptap-accent-soft text-fliptap-accent'
-                      : 'text-fliptap-muted hover:text-fliptap-ink',
-                  )}
-                >
-                  <Rows3 size={18} />
-                </button>
+          </div>
+        </div>
+
+        {!cardsQuery.isLoading && combinedMeta.length === 0 && (
+          <EmptyState
+            title="No cards yet"
+            description="This deck doesn't have any cards yet."
+            action={
+              <Link to={`/decks/${id}/cards/new`}>
+                <Button variant="primary">Add a card</Button>
+              </Link>
+            }
+          />
+        )}
+
+        {!cardsQuery.isLoading && combinedMeta.length > 0 && sortedMeta.length === 0 && (
+          <EmptyState
+            title="No cards match"
+            description="Try a different search, type, or status filter."
+          />
+        )}
+
+        {sortedMeta.length > 0 && (
+          <div className="overflow-x-auto">
+            <div className="px-2">
+              <CardTableHeader />
+            </div>
+            <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-2">
+              <div className="divide-y divide-fliptap-border">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                  <SortableContext
+                    items={pageMeta.map((meta) => meta.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {pageMeta.map((meta) => {
+                      const card = cardById.get(meta.id)
+                      if (!card) return null
+                      const Row = manualReorder ? SortableCardTableRow : CardTableRow
+                      return (
+                        <Row
+                          key={meta.id}
+                          card={card}
+                          decks={flatDecks}
+                          now={now}
+                          compact={compact}
+                        />
+                      )
+                    })}
+                  </SortableContext>
+                </DndContext>
               </div>
             </div>
           </div>
+        )}
 
-          {!cardsQuery.isLoading && combinedMeta.length === 0 && (
-            <EmptyState
-              title="No cards yet"
-              description="This deck doesn't have any cards yet."
-              action={
-                <Link to={`/decks/${id}/cards/new`}>
-                  <Button variant="primary">Add a card</Button>
-                </Link>
-              }
-            />
-          )}
-
-          {!cardsQuery.isLoading && combinedMeta.length > 0 && sortedMeta.length === 0 && (
-            <EmptyState
-              title="No cards match"
-              description="Try a different search, type, or status filter."
-            />
-          )}
-
-          {sortedMeta.length > 0 && (
-            <div className="overflow-x-auto">
-              <div className="px-2">
-                <CardTableHeader />
-              </div>
-              <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface px-2">
-                <div className="divide-y divide-fliptap-border">
-                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                    <SortableContext
-                      items={pageMeta.map((meta) => meta.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {pageMeta.map((meta) => {
-                        const card = cardById.get(meta.id)
-                        if (!card) return null
-                        const Row = manualReorder ? SortableCardTableRow : CardTableRow
-                        return (
-                          <Row
-                            key={meta.id}
-                            card={card}
-                            decks={flatDecks}
-                            now={now}
-                            compact={compact}
-                          />
-                        )
-                      })}
-                    </SortableContext>
-                  </DndContext>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {sortedMeta.length > 0 && (
-            <CardListFooter
-              count={sortedMeta.length}
-              page={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-              pageSize={PAGE_SIZE}
-            />
-          )}
-        </>
-      )}
+        {sortedMeta.length > 0 && (
+          <CardListFooter
+            count={sortedMeta.length}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={PAGE_SIZE}
+          />
+        )}
+      </div>
       {createDeckDialog}
     </LibraryShell>
-  )
-}
-
-// A light breakdown from data already computed elsewhere (status per card,
-// type per card) - no new metric/domain concept invented for this, just two
-// distributions over the same rows the Cards tab already lists.
-function InsightsTab({ meta }: { meta: RowMeta[] }) {
-  const total = meta.length
-
-  const statusCounts = useMemo(() => {
-    const counts: Record<StatusFilter, number> = {
-      all: 0,
-      new: 0,
-      learning: 0,
-      review: 0,
-      relearning: 0,
-      suspended: 0,
-    }
-    for (const row of meta) {
-      if (row.suspended) counts.suspended += 1
-      else counts[row.state] += 1
-    }
-    return counts
-  }, [meta])
-
-  const typeCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const row of meta) counts.set(row.typeLabel, (counts.get(row.typeLabel) ?? 0) + 1)
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
-  }, [meta])
-
-  if (total === 0) {
-    return <EmptyState title="Nothing to show yet" description="Add some cards to see insights for this deck." />
-  }
-
-  const statusRows: { label: string; count: number }[] = [
-    { label: 'New', count: statusCounts.new },
-    { label: 'Learning', count: statusCounts.learning },
-    { label: 'Review', count: statusCounts.review },
-    { label: 'Relearning', count: statusCounts.relearning },
-    { label: 'Suspended', count: statusCounts.suspended },
-  ]
-
-  return (
-    <div className="grid gap-6 sm:grid-cols-2">
-      <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5">
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-fliptap-muted">By status</h2>
-        <div className="space-y-3">
-          {statusRows.map((row) => (
-            <div key={row.label} className="flex items-center gap-3">
-              <span className="w-24 flex-none text-sm text-fliptap-ink">{row.label}</span>
-              <div className="flex-1">
-                <MeterBar value={total > 0 ? row.count / total : 0} />
-              </div>
-              <span className="w-8 flex-none text-right text-sm font-semibold text-fliptap-ink-brand">
-                {row.count}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5">
-        <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-fliptap-muted">By type</h2>
-        <div className="space-y-3">
-          {typeCounts.map(([label, count]) => (
-            <div key={label} className="flex items-center gap-3">
-              <span className="w-24 flex-none truncate text-sm text-fliptap-ink">{label}</span>
-              <div className="flex-1">
-                <MeterBar value={total > 0 ? count / total : 0} />
-              </div>
-              <span className="w-8 flex-none text-right text-sm font-semibold text-fliptap-ink-brand">{count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
   )
 }
