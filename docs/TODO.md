@@ -98,7 +98,7 @@ by the owner's decision.
 
 ## Icons
 
-Currently icons are looking really ugly. I need clean looking icons, like when GPT generates me in the mockup, and then to have them "standardized" for my app, so that the same ones are used in the web app and in mobile app. No need to try to adapt to some existing ones if they are ugly.
+D472 implements the reviewed metric, navigation and card-interaction subset with shared artwork. Remaining utility/action icons need their own incremental artwork review. Deck icons are explicitly skipped for now by the owner; do not extend this pass to them. Physical-device review of the native SVG presentation is pending.
 
 ## Notifications
 

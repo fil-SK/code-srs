@@ -1,10 +1,7 @@
-import type MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { fliptapColors } from '@fliptap/core'
-import type { ComponentProps } from 'react'
+import { fliptapColors, type ApprovedIconName } from '@fliptap/core'
 
 import type { MobileCardStatus, MobileDeckCardViewModel } from '@/src/types/library'
 
-type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
 // How a card is drawn, kept apart from the components that draw it: the card
 // row needs both of these, and the deck screen's card-type chooser needs the
@@ -22,12 +19,12 @@ export const statusColors: Record<MobileCardStatus, string> = {
 
 export const interactionVisuals: Record<
   MobileDeckCardViewModel['interactionType'],
-  { icon: IconName; backgroundColor: string }
+  { icon: ApprovedIconName; backgroundColor: string }
 > = {
-  recall: { icon: 'code-braces', backgroundColor: fliptapColors.navy },
-  walkthrough: { icon: 'source-branch', backgroundColor: '#0d9488' },
-  multiple_choice: { icon: 'format-list-checks', backgroundColor: '#f59e0b' },
-  write_code: { icon: 'code-tags', backgroundColor: '#2563eb' },
-  ordering: { icon: 'format-list-numbered', backgroundColor: '#059669' },
-  matching: { icon: 'vector-link', backgroundColor: '#7c3aed' },
+  recall: { icon: 'recall', backgroundColor: fliptapColors.navy },
+  walkthrough: { icon: 'walkthrough', backgroundColor: '#0d9488' },
+  multiple_choice: { icon: 'multiple_choice', backgroundColor: '#f59e0b' },
+  write_code: { icon: 'write_code', backgroundColor: '#2563eb' },
+  ordering: { icon: 'ordering', backgroundColor: '#059669' },
+  matching: { icon: 'matching', backgroundColor: '#7c3aed' },
 }

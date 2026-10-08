@@ -1,6 +1,19 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-05** (branch `dev/scenario-switcher`; web themes and About).
+**Last verified against the working tree: 2026-10-08** (branch `dev/scenario-switcher`; approved web/native icon artwork).
+
+> **Approved icons on web and native (2026-10-08, D472).** Four metric identities,
+> five navigation choices and six card interaction identities now use the owner's
+> reviewed artwork. Today retains the existing FlipTap symbol. Recall uses the
+> original web Brain on both platforms; Multiple Choice uses the original native
+> list-checks glyph on both. The remaining custom glyphs retain their approved
+> fills and geometry, including the unclipped retention arrow target and the
+> clock without sector shading. Core owns plain drawing data, and web/native own
+> SVG renderers. Existing text-only web navigation, layouts and initials stay
+> intact. Deck icons and remaining utility/action icons are outside this pass.
+> No dependencies, persisted records, schema, grading or scheduling changed.
+> Physical-device verification remains pending; browser verification cannot
+> establish native device appearance.
 
 > **About FlipTap on web (2026-10-05, D471).** `/about` is a live page in the shared app shell, reached from the account menu's About FlipTap row. It introduces the product, the six card interactions and FSRS review ratings, with working Library, Import / Export and icon-license links. Its storage explanation follows the active auth mode: browser-local/offline in local mode, cloud/connection-required in Supabase mode. Light and Dark use the existing semantic palette. No persisted data or mobile behavior changes.
 
@@ -292,7 +305,7 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 **Behavior and View are now separate owners.** Each type's `interactive` flag, `isResponseReady`, `autoGrade` and semantic `widthFor` live in `packages/core/src/interactions/<type>.ts` as an `InteractionBehavior`; the six Views stay web-specific and each `interactions/<type>/index.ts` is `{ ...<type>Behavior, View }`. Nothing in `apps/web/src/` reimplements any of those four, and a test asserts the binding holds by reference. `widthFor` returns `'default' | 'wide'` — the intent — and only `ReviewSessionScreen` turns that into `max-w-2xl`/`max-w-4xl`.
 
-**New-card composition:** `/decks/:deckId/cards/new` now follows the locked `add-new-card.png` reference as one continuous 880px surface, expanding to 1120px only while the desktop preview drawer is open. The page header is **Cancel | New card**; Recall is selected by default; the existing six interaction icons are unchanged; numbered Choose interaction / Card content / Organize sections use inset hairlines; Deck and Tags keep their existing values, gain identifying icons and share one explicit control height; Save and bordered Cancel live in the footer. Narrow screens retain Editor/Preview tabs. No character limits or counters were added.
+**New-card composition:** `/decks/:deckId/cards/new` now follows the locked `add-new-card.png` reference as one continuous 880px surface, expanding to 1120px only while the desktop preview drawer is open. The page header is **Cancel | New card**; Recall is selected by default; the six interaction icons use the approved shared artwork (D472); numbered Choose interaction / Card content / Organize sections use inset hairlines; Deck and Tags keep their existing values, gain identifying icons and share one explicit control height; Save and bordered Cancel live in the footer. Narrow screens retain Editor/Preview tabs. No character limits or counters were added.
 
 **There is one card model, one rendering path and one authoring path.** `apps/web/src/features/cards/` holds the six editor shells; `apps/web/src/features/reviewV2/interactions/` holds the six views.
 
@@ -366,7 +379,9 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Latest root verification (2026-10-05, About D471):** `npx vitest run` passes 119 files / 1133 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. The About regressions cover live account-menu navigation and mode-specific storage copy. Chromium at 1440x900 and 390x844 verifies Light/Dark layout, direct-route sign-in return, menu activation by keyboard, hover, visible keyboard focus, Library/backup/license links and reload, without document overflow or page errors.
+**Latest verification (2026-10-08, approved icons D472):** `npx vitest run --maxWorkers=2` passes 119 files / 1133 tests; `npx tsc -b --force`, root lint, mobile typecheck and mobile lint are clean. Mobile Jest passes 42 suites / 570 tests with `--runInBand --forceExit`; the bounded runner accommodates existing open timers and emits the existing asynchronous font `act` warnings. The web production build succeeds with its existing chunk-size advisory, and the offline iOS/Hermes bundle export succeeds. Chromium at 1440x900 and 390x844 in Light/Dark verifies Today, Progress, About, deck metrics, all six chooser glyphs, profile menu, navigation hover/focus, and Recall reveal, grading and completion. No page errors or document overflow were found. Native physical-device appearance remains unverified.
+
+**Previous root verification (2026-10-05, About D471):** `npx vitest run` passes 119 files / 1133 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. The About regressions cover live account-menu navigation and mode-specific storage copy. Chromium at 1440x900 and 390x844 verifies Light/Dark layout, direct-route sign-in return, menu activation by keyboard, hover, visible keyboard focus, Library/backup/license links and reload, without document overflow or page errors.
 
 **Previous root verification (2026-10-05, generic deck icons D468):** `npx vitest run` passes 117 files / 1121 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. Chromium at 1440x900 and 390x844 verifies chooser search/categories, creation, icon-only edits, reload persistence, Cancel, collection scope, focus containment/return, dismissal, overflow and offline local saves. Library, Today and Progress show the same saved marks. The distributed Lucide license matches the installed package and is present in the 25-entry PWA precache.
 
@@ -529,7 +544,7 @@ Status only. Usage rules — families, weights, scale, icon conventions, the ora
 
 **Typography — implemented.** Inter and JetBrains Mono are self-hosted variable webfonts via `@fontsource-variable`, imported at the top of `apps/web/src/index.css` and bundled by Vite, so the offline PWA has them cached rather than falling back to `system-ui`. That last clause is only true because `apps/web/vite.config.ts` sets `workbox.globPatterns` explicitly: workbox-build's default glob is js/css/html, so until the P2-A pass all twelve `.woff2` files and the Today hero's PNG mask were emitted but never precached (audit 2026-08-22). The precache manifest is now 24 entries and is the thing to check after any asset-pipeline change. Inter is the app-wide non-code default; `--font-fliptap-sans` and the compatibility `--font-fliptap-display` token both alias `--font-sans`. (The `--font-fliptap-mono` alias was deleted — it had no consumers; code surfaces use `font-mono`.) **Gap:** the intended type scale is **not** wired into CSS vars — components use literal Tailwind utilities and match the scale by eye.
 
-**Icons — implemented.** `lucide-react` remains the only icon library, at a single version. The small one-off SVG exceptions are the bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx`, plus `StreakFlameIcon.tsx`: one shared brand glyph added because Lucide's thin generic flame did not match the locked Progress reference at nav/KPI sizes.
+**Icons — reviewed subset implemented (D472).** `packages/core/src/design/approvedIcons.ts` owns 14 glyph drawings; the fifteenth approved choice retains Today's brand symbol. `ApprovedIcons.tsx` on web and `ApprovedIcon.tsx` / `AppIcon.tsx` on native render the same paths. Metrics, native navigation, profile navigation, card rows/choosers and Review type badges use the reviewed drawings. Existing text-only web links remain text-only. Lucide and MaterialCommunityIcons continue to supply unreviewed utility icons; deck artwork is unchanged. The hero bracket/watermark remain deliberate illustration exceptions.
 
 **Tokens are implemented for light and dark web appearance and mirrored as shared values.** `apps/web/src/index.css` defines the palette on `:root` and `.fliptap-scope`, then overrides every color role for dark appearance. Legacy semantic aliases still re-point to those roles. This covers the scoped app and pre-router loading or portalled content. Core exports `fliptapColors` and `fliptapDarkColors`; the bidirectional drift test covers both. Native continues to consume the light palette.
 

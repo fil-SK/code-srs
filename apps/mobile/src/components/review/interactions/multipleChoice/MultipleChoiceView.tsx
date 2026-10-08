@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   gradeMultipleChoice,
   fliptapColors,
@@ -27,7 +27,7 @@ function MultipleChoiceBadge({ submitted }: { submitted: boolean }) {
     <View style={[styles.badge, submitted && styles.badgeSubmitted]}>
       <MaterialCommunityIcons
         color={submitted ? fliptapColors.accent : fliptapColors.inkBrand}
-        name={submitted ? 'check-decagram-outline' : 'format-list-checks'}
+        name={submitted ? 'check-decagram-outline' : 'multiple_choice'}
         size={21}
       />
       <Text style={[styles.badgeText, submitted && styles.badgeTextSubmitted]}>

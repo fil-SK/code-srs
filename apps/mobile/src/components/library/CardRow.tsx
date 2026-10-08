@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 

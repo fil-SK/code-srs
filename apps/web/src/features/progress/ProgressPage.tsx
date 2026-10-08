@@ -1,5 +1,6 @@
+import { CalendarMetricIcon as Clock3, RetentionIcon as RefreshCw } from '@/components/icons/ApprovedIcons'
 import { useMemo, useState } from 'react'
-import { Clock3, CopyCheck, GraduationCap, RefreshCw } from 'lucide-react'
+import { CopyCheck, GraduationCap } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { useReviewLogs } from '@/hooks/useReview'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
@@ -173,7 +174,7 @@ export function ProgressPage() {
                 icon={Clock3}
                 label="Due"
                 value={kpis.due.toLocaleString()}
-                iconTone="navy"
+                iconTone="blue"
                 footer={<span className="text-fliptap-muted">Due now</span>}
               />
               <KpiTile

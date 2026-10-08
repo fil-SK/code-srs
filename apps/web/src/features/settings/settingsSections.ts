@@ -1,3 +1,4 @@
+import { ProfileIcon as User } from '@/components/icons/ApprovedIcons'
 import {
   ArrowUpDown,
   Bell,
@@ -5,7 +6,6 @@ import {
   Mail,
   Monitor,
   Palette,
-  User,
   type LucideIcon,
 } from 'lucide-react'
 

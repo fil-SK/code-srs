@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors } from '@fliptap/core'
 import { useFocusEffect } from 'expo-router'
 import type { ComponentProps } from 'react'
@@ -201,27 +201,27 @@ export function TodayHero({
         <View style={styles.frontContent}>
           <View style={styles.metricGrid}>
             <Metric
-              icon="calendar-check-outline"
+              icon="calendar"
               iconColor="#60a5fa"
               label="Due today"
               suffix={dueToday === 1 ? 'card' : 'cards'}
               value={String(dueToday)}
             />
             <Metric
-              icon="fire"
+              icon="streak"
               iconColor={fliptapColors.accent}
               label="Current streak"
               suffix={streak === 1 ? 'day' : 'days'}
               value={String(streak)}
             />
             <Metric
-              icon="bullseye-arrow"
+              icon="retention"
               iconColor="#34d399"
               label="Retention"
               value={retention === null ? '—' : `${retention}%`}
             />
             <Metric
-              icon="clock-outline"
+              icon="time"
               iconColor="#a78bfa"
               label="Estimated session"
               suffix="min"

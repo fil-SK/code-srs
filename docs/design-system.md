@@ -172,7 +172,29 @@ Both `FloatingPanel` and `dialogs` portal into `document.body`, which sits **out
 
 ## 4. Icon conventions
 
-Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lucide's set so its stroke width and geometry stay consistent. The deliberate SVG exceptions are a small bracket motif and logo-derived watermark inside `SuggestedSessionHero.tsx` (see §6), and `apps/web/src/components/icons/StreakFlameIcon.tsx`: the one shared streak glyph used by the top nav, Progress, Today and Profile because Lucide's thin generic flame did not match the locked `progress.png` silhouette at small sizes.
+**Reviewed identities (D472)** use `packages/core/src/design/approvedIcons.ts`'s
+shared drawing data through the web and native SVG renderers. The approved set is
+Streak, Retention, Calendar, Study Time, Library, Review, Progress, Profile and
+all six card interactions; Today keeps the existing brand symbol. Recall is the
+original web Brain, and Multiple Choice is the original native list-checks glyph.
+Custom shapes retain their reviewed stroke widths, rounded forms and subtle fills.
+The retention target preserves the native font's full outline and baseline; the
+clock has a whole-face tint with no sector. Do not replace these with approximate
+library equivalents or recolor them per item. Metrics use the approved orange
+streak, green retention, blue calendar and purple time accents on readable
+surfaces. Navigation inherits the existing selected/neutral roles; card tiles
+keep their existing type colors. Use a readable pale clock on the navy Today hero.
+
+Ordinary unreviewed web UI icons still come from **`lucide-react`**, and native
+utility icons retain MaterialCommunityIcons. Deck icons are explicitly deferred
+from this redesign and keep D468's current treatment. Text-only web top links
+remain text-only, the Today brand mark and account initials remain intact, and
+no new navigation destination is introduced. The hero bracket motif and
+logo-derived watermark remain illustration exceptions (see §6).
+
+The two selected MaterialCommunityIcons outlines carry their Apache-2.0 source
+notice in `ICON-LICENSES.txt` and web's offline-available third-party notices.
+Lucide's existing ISC/Feather notices are retained.
 
 **The circular badge pattern** (`apps/web/src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
 
@@ -182,7 +204,7 @@ Icons come from **`lucide-react`**. To add an ordinary UI icon, pick one from lu
 </div>
 ```
 
-A 32px soft-orange circle with an orange glyph, used for the compact grouped metrics in Momentum — lucide icons inherit `currentColor`, so the wrapper's `text-fliptap-accent` is what colors the icon, not a prop on the icon itself.
+A 32px soft circle for compact grouped metrics. Streak and milestone keep orange; approved Retention and Calendar use green and blue glyphs with matching subtle fills. All drawings inherit `currentColor`, so their surrounding surface controls the tone.
 
 Other conventions seen across `apps/web/src/features/today/*.tsx`:
 - **Sizes**: 14–17px for ordinary inline/list icons and 15px for most nav/action chrome. The branded streak flame is 24px in the top nav, and Progress KPI badges use 17px glyphs inside 36px circles because those are compact data-visualization marks rather than inline controls.

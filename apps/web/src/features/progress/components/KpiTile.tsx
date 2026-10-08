@@ -59,12 +59,13 @@ export function KpiTile({
   footer?: React.ReactNode
   sparkline?: number[]
   variant?: 'light' | 'dark'
-  iconTone?: 'accent' | 'navy' | 'success' | 'warning'
+  iconTone?: 'accent' | 'navy' | 'success' | 'warning' | 'blue'
   iconFilled?: boolean
 }) {
   const dark = variant === 'dark'
   const lightIconTone = {
     accent: 'bg-fliptap-accent-soft text-fliptap-accent',
+    blue: 'bg-[light-dark(#eff6ff,#1c2e47)] text-[light-dark(#2563eb,#60a5fa)]',
     navy: 'bg-fliptap-navy-soft text-fliptap-ink-brand',
     success: 'bg-fliptap-success-soft text-fliptap-success',
     warning: 'bg-fliptap-warning-soft text-fliptap-warning',

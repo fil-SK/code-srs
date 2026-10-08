@@ -1,6 +1,7 @@
+import { CalendarMetricIcon as CalendarClock } from '@/components/icons/ApprovedIcons'
 import { useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarClock, Sprout, Undo2, type LucideIcon } from 'lucide-react'
+import { Sprout, Undo2, type LucideIcon } from 'lucide-react'
 import {
   formatInterval,
   formatSessionDuration,

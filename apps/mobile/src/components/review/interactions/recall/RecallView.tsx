@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useEffect, useRef, useState } from 'react'
 import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -20,7 +20,7 @@ function RecallBadge({ answer = false }: { answer?: boolean }) {
     <View style={[styles.badge, answer && styles.badgeAnswer]}>
       <MaterialCommunityIcons
         color={answer ? fliptapColors.accent : fliptapColors.inkBrand}
-        name={answer ? 'check-decagram-outline' : 'head-question-outline'}
+        name={answer ? 'check-decagram-outline' : 'recall'}
         size={20}
       />
       <Text style={[styles.badgeText, answer && styles.badgeTextAnswer]}>

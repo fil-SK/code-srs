@@ -426,6 +426,25 @@ Compiler-enforced touchpoints first; the build fails until each is handled.
 
 ---
 
+## Shared icon artwork
+
+`packages/core/src/design/approvedIcons.ts` (D472) carries only platform-neutral
+drawing data: a view box, shape/group nodes and primitive attributes. It imports
+no UI package and is exported through core's existing public barrel. Web's
+`components/icons/ApprovedIcons.tsx` renders native SVG elements with decorative
+accessibility defaults; mobile's `ApprovedIcon.tsx` renders the same nodes through
+its existing `react-native-svg` dependency. `AppIcon.tsx` keeps MaterialCommunityIcons
+as the native fallback for unreviewed utilities. Drawing geometry is fixed by the
+approved artwork; each surface continues to own size, color, badge, layout and
+interaction. No generated build step or remote asset is involved. Web's
+`INTERACTION_META` and native's `interactionVisuals` bind the six type identities
+to these drawings; authoring capability remains separate and unchanged.
+
+Deck marks retain their existing catalog/rendering and optional `Deck.iconId`
+contract (D468). Today retains the existing logo; text-only web links and account
+initials retain their existing presentation. Icon licensing is recorded beside
+the shared artwork and in web's existing precached third-party notice file.
+
 ## Web appearance
 
 `apps/web/src/app/theme.tsx` owns the browser-local Light / Dark / System preference and resolved light/dark theme. It alone reads or writes the theme preference in application TypeScript, under the existing `code-srs-theme` key; `apps/web/index.html` restores the same choice before paint. Device changes affect System only, storage events synchronize tabs, and blocked storage does not prevent an in-memory choice. The provider updates the document theme and browser chrome. CSS owns both palettes and keeps legacy aliases; core mirrors both palettes as platform-neutral values, without selecting native appearance. `FlipTapSurface` supplies canvas/scoped styling and no longer forces light. CodeMirror’s editable theme compartment avoids resetting document, selection and undo during a theme change.

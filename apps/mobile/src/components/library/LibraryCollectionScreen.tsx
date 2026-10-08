@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii, markLabelFor, type DeckSortKey } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
@@ -184,7 +184,7 @@ export function LibraryCollectionScreen({ viewModel }: { viewModel: MobileCollec
           <CollectionMetric
             accented
             bordered
-            icon="calendar-clock-outline"
+            icon="calendar"
             label="due today"
             value={viewModel.dueToday}
           />

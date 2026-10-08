@@ -1,4 +1,4 @@
-import { Brain, CodeXml, Link2, ListChecks, ListOrdered, Waypoints } from 'lucide-react'
+import { RecallIcon as Brain, WriteCodeIcon as CodeXml, MatchingIcon as Link2, MultipleChoiceIcon as ListChecks, OrderingIcon as ListOrdered, WalkthroughIcon as Waypoints } from '@/components/icons/ApprovedIcons'
 import type { LucideIcon } from 'lucide-react'
 import type { InteractionType } from '@/types/card'
 

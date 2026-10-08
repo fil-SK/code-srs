@@ -1,3 +1,4 @@
+import { ProgressIcon as TrendingUp } from '@/components/icons/ApprovedIcons'
 import { NavLink, Link } from 'react-router-dom'
 import {
   ChartNoAxesColumn,
@@ -8,7 +9,6 @@ import {
   ScanSearch,
   Server,
   Settings,
-  TrendingUp,
   Trophy,
   type LucideIcon,
 } from 'lucide-react'

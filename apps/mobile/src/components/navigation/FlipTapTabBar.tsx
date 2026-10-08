@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors } from '@fliptap/core'
 import { Tabs } from 'expo-router'
 import type { ComponentProps } from 'react'
@@ -11,10 +11,10 @@ type FlipTapTabBarProps = Parameters<
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
 const ICONS: Record<string, IconName> = {
-  library: 'book-open-page-variant-outline',
-  review: 'refresh',
-  progress: 'chart-bar',
-  profile: 'account-outline',
+  library: 'library',
+  review: 'review',
+  progress: 'progress',
+  profile: 'profile',
 }
 
 const fliptapSymbol = require('../../../assets/fliptap-logo.png')

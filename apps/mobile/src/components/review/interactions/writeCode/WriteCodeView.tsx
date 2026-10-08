@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii, writeCodeBehavior } from '@fliptap/core'
 import { useEffect, useRef, useState } from 'react'
 import {
@@ -32,7 +32,7 @@ function WriteCodeBadge({ submitted }: { submitted: boolean }) {
     <View style={[styles.badge, submitted && styles.badgeSubmitted]}>
       <MaterialCommunityIcons
         color={submitted ? fliptapColors.accent : fliptapColors.inkBrand}
-        name={submitted ? 'check-decagram-outline' : 'code-tags'}
+        name={submitted ? 'check-decagram-outline' : 'write_code'}
         size={22}
       />
       <Text style={[styles.badgeText, submitted && styles.badgeTextSubmitted]}>

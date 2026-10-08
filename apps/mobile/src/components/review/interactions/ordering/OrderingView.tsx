@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { gradeOrdering, fliptapColors, fliptapRadii, stripInlineMarkers, type ID } from '@fliptap/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
@@ -26,7 +26,7 @@ function OrderingBadge({ results = false }: { results?: boolean }) {
     <View style={[styles.badge, results && styles.badgeResults]}>
       <MaterialCommunityIcons
         color={results ? fliptapColors.accent : fliptapColors.inkBrand}
-        name={results ? 'check-decagram-outline' : 'format-list-numbered'}
+        name={results ? 'check-decagram-outline' : 'ordering'}
         size={21}
       />
       <Text style={[styles.badgeText, results && styles.badgeTextResults]}>

@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   gradeWalkthroughStep,
   initialWalkthroughState,
@@ -51,7 +51,7 @@ function WalkthroughBadge({ finished }: { finished: boolean }) {
     <View style={[styles.badge, finished && styles.badgeFinished]}>
       <MaterialCommunityIcons
         color={finished ? fliptapColors.accent : fliptapColors.inkBrand}
-        name={finished ? 'check-decagram-outline' : 'vector-polyline'}
+        name={finished ? 'check-decagram-outline' : 'walkthrough'}
         size={21}
       />
       <Text style={[styles.badgeText, finished && styles.badgeTextFinished]}>

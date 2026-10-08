@@ -1,3 +1,4 @@
+import { ProfileIcon as User } from '@/components/icons/ApprovedIcons'
 import { Link, useLocation } from 'react-router-dom'
 import {
   ArrowUpDown,
@@ -9,7 +10,6 @@ import {
   LogOut,
   SlidersHorizontal,
   TrendingUp,
-  User,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'

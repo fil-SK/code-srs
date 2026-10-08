@@ -1,3 +1,4 @@
+import { CalendarMetricIcon as CalendarDays, StudyTimeIcon as Clock3, LibraryIcon as BookOpen } from '@/components/icons/ApprovedIcons'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -18,10 +19,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-  BookOpen,
-  CalendarDays,
   ChevronRight,
-  Clock3,
   GalleryVerticalEnd,
   GripVertical,
   LayoutList,

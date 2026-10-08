@@ -1,9 +1,8 @@
+import { CalendarMetricIcon as CalendarClock, StudyTimeIcon as Clock } from '@/components/icons/ApprovedIcons'
 import { useEffect, useMemo, useState } from 'react'
 import {
   BookOpen,
-  CalendarClock,
   ChevronRight,
-  Clock,
   Folder,
   Plus,
   Search,

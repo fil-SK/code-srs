@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   gradeMatching,
   fliptapColors,
@@ -52,7 +52,7 @@ function MatchingBadge({ results = false }: { results?: boolean }) {
     <View style={[styles.badge, results && styles.badgeResults]}>
       <MaterialCommunityIcons
         color={results ? fliptapColors.accent : fliptapColors.inkBrand}
-        name={results ? 'check-decagram-outline' : 'link-variant'}
+        name={results ? 'check-decagram-outline' : 'matching'}
         size={21}
       />
       <Text style={[styles.badgeText, results && styles.badgeTextResults]}>

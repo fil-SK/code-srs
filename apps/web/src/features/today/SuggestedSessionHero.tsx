@@ -1,6 +1,7 @@
+import { StudyTimeIcon as Clock } from '@/components/icons/ApprovedIcons'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, Clock, Play, SlidersHorizontal } from 'lucide-react'
+import { ChevronRight, Play, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import fliptapSymbolMask from '@/assets/fliptap-symbol-mask.png'
 
@@ -328,7 +329,7 @@ export function SuggestedSessionHero({
             {hasDue ? `${cardCount} ${cardCount === 1 ? 'card' : 'cards'}` : 'Nothing due'}
           </div>
           <div className="mt-3 flex items-center gap-1.5 text-[16px] text-[rgba(248,250,252,0.72)]">
-            <Clock size={16} />
+            <Clock size={16} color="#b7a0ff" />
             {hasDue
               ? `Approximately ${estimatedMinutes} ${estimatedMinutes === 1 ? 'minute' : 'minutes'}`
               : nextDue !== undefined

@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   DATE_RANGE_PRESETS,
   heatmapMonthLabels,
@@ -24,10 +24,10 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
 const metricPresentation: Record<MobileProgressMetricViewModel['id'], { icon: IconName; color: string; soft: string }> = {
   learned: { icon: 'school-outline', color: '#7c5ce7', soft: '#f1edff' },
-  due: { icon: 'calendar-clock-outline', color: fliptapColors.accent, soft: fliptapColors.accentSoft },
+  due: { icon: 'calendar', color: '#2563eb', soft: '#eff6ff' },
   reviews: { icon: 'file-document-outline', color: '#2876e8', soft: '#eaf2ff' },
-  retention: { icon: 'sync', color: '#17a05d', soft: '#e9f9f0' },
-  streak: { icon: 'fire', color: fliptapColors.accent, soft: fliptapColors.accentSoft },
+  retention: { icon: 'retention', color: '#17a05d', soft: '#e9f9f0' },
+  streak: { icon: 'streak', color: fliptapColors.accent, soft: fliptapColors.accentSoft },
 }
 
 const heatColors = ['#fff5ed', '#ffd9bf', '#ffb27c', '#ff8740', fliptapColors.accent]
@@ -355,7 +355,7 @@ function Milestones({ milestones }: { milestones: MobileProgressViewModel['miles
           return (
             <View key={milestone.id} style={[styles.milestoneRow, index > 0 && styles.rowBorder]}>
               <View style={[styles.milestoneIcon, { backgroundColor: streak ? fliptapColors.accentSoft : fliptapColors.successSoft }]}>
-                <MaterialCommunityIcons color={streak ? fliptapColors.accent : fliptapColors.success} name={streak ? 'fire' : 'trophy-outline'} size={21} />
+                <MaterialCommunityIcons color={streak ? fliptapColors.accent : fliptapColors.success} name={streak ? 'streak' : 'trophy-outline'} size={21} />
               </View>
               <View style={styles.deckCopy}>
                 <Text style={styles.rowTitle}>{milestone.title}</Text>

@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
@@ -20,9 +20,9 @@ const notificationVisuals: Record<
   Exclude<MobileNotificationItem['kind'], 'deck'>,
   { icon: IconName; color: string; background: string }
 > = {
-  session: { icon: 'calendar-check-outline', color: fliptapColors.accent, background: fliptapColors.accentSoft },
-  streak: { icon: 'fire', color: fliptapColors.accent, background: fliptapColors.accentSoft },
-  retention: { icon: 'sync', color: fliptapColors.success, background: fliptapColors.successSoft },
+  session: { icon: 'calendar', color: fliptapColors.accent, background: fliptapColors.accentSoft },
+  streak: { icon: 'streak', color: fliptapColors.accent, background: fliptapColors.accentSoft },
+  retention: { icon: 'retention', color: fliptapColors.success, background: fliptapColors.successSoft },
   warning: { icon: 'alert-outline', color: fliptapColors.accent, background: fliptapColors.accentSoft },
   import: { icon: 'clipboard-check-outline', color: '#2563eb', background: '#eff6ff' },
   cards: { icon: 'school-outline', color: '#7c3aed', background: '#f5f3ff' },

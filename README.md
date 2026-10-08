@@ -14,6 +14,8 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Highlights
 
+- **Consistent reviewed icons across web and mobile** for learning metrics, navigation identities and all six card types, using shared SVG drawings. Deck choices retain their existing artwork.
+
 - **48 generic programming and software icons** for decks, with category filters and search in New Deck and Deck/Collection settings. Saved choices appear consistently in Library, Today and Progress and survive backup export/import.
 - **Soft orange waves in opposite corners** across the web app, fading to a nearly neutral center, with responsive sizing, a static treatment and quieter backgrounds during Review and card study.
 - **6 focused card interactions**, several with code-aware variants (see below).

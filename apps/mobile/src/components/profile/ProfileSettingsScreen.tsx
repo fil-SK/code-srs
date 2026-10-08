@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii, useAuth } from '@fliptap/core'
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
@@ -34,7 +34,7 @@ interface UnavailableSection {
 }
 
 const sections: ProfileSection[] = [
-  { id: 'profile', label: 'Profile', icon: 'account-outline' },
+  { id: 'profile', label: 'Profile', icon: 'profile' },
   { id: 'email', label: 'Email & Password', icon: 'email-outline' },
   { id: 'appearance', label: 'Appearance', icon: 'palette-outline' },
   { id: 'notifications', label: 'Notifications', icon: 'bell-outline' },
@@ -225,7 +225,7 @@ function WorkspaceCard({
   const body = (
     <>
       <View style={styles.avatar}>
-        <MaterialCommunityIcons color={fliptapColors.surface} name="account-outline" size={34} />
+        <MaterialCommunityIcons color={fliptapColors.surface} name="profile" size={34} />
       </View>
       <View style={styles.workspaceCopy}>
         <Text numberOfLines={1} style={styles.workspaceTitle}>

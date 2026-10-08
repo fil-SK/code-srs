@@ -1,13 +1,16 @@
+import { CalendarMetricIcon as CalendarClock, RetentionIcon as Target } from '@/components/icons/ApprovedIcons'
 import { Link } from 'react-router-dom'
-import { CalendarClock, Flag, Target } from 'lucide-react'
+import { Flag } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import type { NextMilestone } from '@/domain/stats/todayMetrics'
 import { formatDayCount } from '@/domain/stats/streak'
 
-function MetricIcon({ icon: Icon }: { icon: LucideIcon }) {
+function MetricIcon({ icon: Icon, tone }: { icon: LucideIcon; tone?: 'retention' | 'calendar' }) {
   return (
-    <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent">
+    <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent"
+      style={tone ? { color: tone === 'retention' ? 'var(--fliptap-success)' : 'light-dark(#2563eb, #60a5fa)', backgroundColor: 'color-mix(in srgb, currentColor 10%, var(--fliptap-surface))' } : undefined}
+    >
       <Icon size={15} aria-hidden="true" />
     </div>
   )
@@ -79,7 +82,7 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
             calculation over mature attempts whose required stateBefore is
             review or relearning. */}
         <div className="flex items-center gap-3">
-          <MetricIcon icon={Target} />
+          <MetricIcon icon={Target} tone="retention" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-fliptap-ink-brand">Retention</div>
             <div className="mt-0.5 text-xs text-fliptap-muted">
@@ -94,7 +97,7 @@ export function MomentumPanel({ streak, retention, dueCount, milestone }: Moment
         </div>
 
         <div className="flex items-center gap-3">
-          <MetricIcon icon={CalendarClock} />
+          <MetricIcon icon={CalendarClock} tone="calendar" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-fliptap-ink-brand">Due today</div>
             <div className="mt-0.5 text-xs text-fliptap-muted">

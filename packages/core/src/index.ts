@@ -162,3 +162,5 @@ export * from './charts/retentionChartPath'
 
 export * from './today/greetings'
 export * from './design/deckIcons'
+
+export * from './design/approvedIcons'

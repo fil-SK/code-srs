@@ -1863,3 +1863,44 @@ Verification: Chromium at 1440x900 confirms the dark-gray fill, exposed edge, ho
 The page introduces the purpose of FlipTap, the Recall / Reflect / Return learning loop, all six card interactions and the learner's final FSRS rating. Its description of data storage comes from `useAuth().mode`: local browser storage with offline study in local mode, cloud storage requiring a connection in Supabase mode. Library, Import / Export and icon licenses link working destinations. No founder identity, product version, learner metrics, code execution or native persistence claim is invented. The page reuses the shared brand mark, interaction metadata and semantic theme palette, with one orange primary action and responsive stacked content. No data, schema, dependency or cloud integration changes are involved.
 
 Verification: Chromium at 1440x900 and 390x844 in Light and Dark confirms layout, direct-route sign-in return, account-menu keyboard activation, hover and visible focus, Library and backup navigation, reload, license availability, and no document overflow or page errors. Regressions cover menu navigation and mode-specific storage copy. All 119 files / 1,133 tests, forced TypeScript checking and lint pass; the production build succeeds with the existing chunk-size advisory.
+
+
+## 2026-10-08 - Individually approved icons on web and native
+
+**D472. Apply the owner's reviewed metric, navigation and interaction artwork,
+with one shared set of drawings and platform-owned renderers.** The owner first
+approved comparisons one icon at a time, then explicitly authorized applying
+them to code. The scope is four metrics, five navigation choices and six card
+types. Today retains the existing FlipTap symbol; text-only web navigation and
+account initials remain as they are. Deck artwork is explicitly excluded,
+superseding the preliminary approvals of the first six deck proposals; D468's
+current presentation remains. Remaining utility/action glyphs await their own
+review.
+
+The approved metric set is a filled flame, the full native bullseye-arrow target,
+a rounded calendar and a tinted clock with no sector shading. Recall uses the
+original web Lucide Brain on both platforms, superseding the preliminary mobile
+braces selection. Multiple Choice uses the original native format-list-checks
+on both. Write Code, Ordering, Matching and Walkthrough use the approved custom
+SVGs. Library, Review, Progress and Profile retain their approved subtle fills.
+Existing metric/category color roles and readable surface-specific variants are
+preserved. This supersedes the single-library-only convention in the design
+system for this reviewed subset, including the earlier bespoke flame drawing.
+
+Core owns plain primitive drawing data, with no DOM or native dependency. Web
+and native render the same paths through their platform SVG primitives; native
+already depends on react-native-svg. Selected existing glyphs retain source
+licenses, and web's notice file stays in the PWA precache. No dependency, entity,
+storage, schema, grading, FSRS or native authoring capability changes. Physical
+device verification is still pending and is not established by Chromium.
+
+Verification: root Vitest passes 119 files / 1133 tests with `--maxWorkers=2`;
+forced root TypeScript, root lint, mobile typecheck and mobile lint are clean.
+Mobile Jest passes 42 suites / 570 tests with `--runInBand --forceExit`, retaining
+the existing asynchronous font warnings and open-timer runner limitation. Web's
+production build succeeds with the existing chunk-size advisory; the offline
+iOS/Hermes export also succeeds. Chromium checks Today, Progress, About, deck
+metrics and all six chooser glyphs in Light/Dark at 1440x900 and 390x844, plus
+profile navigation, hover/focus and Recall reveal, grade and completion. No page
+errors or document overflow were found. Physical-device verification remains
+pending.

@@ -1,4 +1,5 @@
-import { BookOpen, Calendar, Camera, Clock, ExternalLink, User } from 'lucide-react'
+import { ProfileIcon as User, StudyTimeIcon as Clock } from '@/components/icons/ApprovedIcons'
+import { BookOpen, Calendar, Camera, ExternalLink } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { NotBuiltYet, Panel, SectionShell } from './SectionShell'

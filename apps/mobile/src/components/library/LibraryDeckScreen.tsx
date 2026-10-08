@@ -1,4 +1,4 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
+import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   checkDeckDeletion,
   fliptapColors,
@@ -231,7 +231,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
             <View style={styles.metricsRow}>
               <DeckMetric icon="cards-outline" label="cards" value={String(viewModel.cardCount)} />
               <DeckMetric
-                icon="calendar-blank-outline"
+                icon="calendar"
                 label="due"
                 value={String(viewModel.dueCount)}
               />
@@ -243,7 +243,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
             </View>
 
             <View style={styles.lastStudiedRow}>
-              <MaterialCommunityIcons color={fliptapColors.inkBrand} name="clock-outline" size={18} />
+              <MaterialCommunityIcons color={fliptapColors.inkBrand} name="time" size={18} />
               <Text style={styles.lastStudiedText}>
                 Last studied: {viewModel.lastStudiedLabel}
               </Text>
