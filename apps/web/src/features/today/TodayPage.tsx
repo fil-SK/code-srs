@@ -6,13 +6,11 @@ import { EmptyState } from '@/features/library/shared/EmptyState'
 import { buildRange } from '@/domain/stats/dateRange'
 import { computeDeckMetrics } from '@/domain/stats/deckMetrics'
 import { computeRetention } from '@/domain/stats/progressMetrics'
-import { computeStreak } from '@/domain/stats/streak'
+import { computeMomentum } from '@fliptap/core'
 import {
   buildContinueLearning,
-  computePaceSeries,
   estimateSessionMinutes,
   nextDueAt,
-  selectNextMilestone,
   summarizeDueQueue,
 } from '@/domain/stats/todayMetrics'
 import { useDueCards, useSearchCards } from '@/hooks/useCards'
@@ -55,7 +53,7 @@ function useIsWideToday(): boolean {
 // the illustrative constants each panel used to carry are gone. This component
 // is the only place Today fetches: the four panels are presentational and take
 // already-computed props, and every calculation behind those props is a pure
-// function in src/domain/stats (todayMetrics, streak, deckMetrics,
+// function in packages/core/src/domain/stats (momentum, todayMetrics, deckMetrics,
 // progressMetrics), so none of it is trapped inside a component.
 //
 // Renders through the shared AppShell/TopNav rather than a private per-page
@@ -115,22 +113,18 @@ export function TodayPage() {
     () => estimateSessionMinutes(logData ?? [], queue.dueCount),
     [logData, queue.dueCount],
   )
-  const streak = useMemo(() => computeStreak(logData ?? [], now), [logData, now])
+  const momentum = useMemo(() => computeMomentum(logData ?? [], now, queue.dueCount), [logData, now, queue.dueCount])
   const retention = useMemo(() => {
     const range = buildRange('30d', now)
     return computeRetention(
       (logData ?? []).filter((l) => l.reviewedAt >= range.from && l.reviewedAt < range.to),
     )
   }, [logData, now])
-  const milestone = useMemo(
-    () => selectNextMilestone(deckData ?? [], cardData ?? [], logData ?? [], metrics),
-    [deckData, cardData, logData, metrics],
-  )
   const continueRows = useMemo(
     () => buildContinueLearning(deckData ?? [], metrics),
     [deckData, metrics],
   )
-  const paceDays = useMemo(() => computePaceSeries(logData ?? [], now), [logData, now])
+  const paceDays = momentum.days
   const nextDue = useMemo(() => nextDueAt(cardData ?? [], now), [cardData, now])
 
   const loading = allCards.isLoading || dueCards.isLoading || decks.isLoading || logs.isLoading
@@ -161,7 +155,7 @@ export function TodayPage() {
             />
             <Skeleton
               className="rounded-fliptap-card"
-              style={{ gridArea: 'momentum', height: 340, marginTop: isWide ? 21 : undefined }}
+              style={{ gridArea: 'momentum', height: 440, marginTop: isWide ? 21 : undefined }}
             />
             <Skeleton className="rounded-fliptap-card" style={{ gridArea: 'continue', height: 300 }} />
             <Skeleton className="rounded-fliptap-card" style={{ gridArea: 'pace', height: 232 }} />
@@ -219,10 +213,8 @@ export function TodayPage() {
         </div>
         <div style={{ gridArea: 'momentum', marginTop: isWide ? '21px' : undefined }}>
           <MomentumPanel
-            streak={streak.current}
+            momentum={momentum}
             retention={retention}
-            dueCount={queue.dueCount}
-            milestone={milestone}
           />
         </div>
         <div style={{ gridArea: 'continue' }}>

@@ -1,180 +1,98 @@
-import { CalendarMetricIcon as CalendarClock, RetentionIcon as Target } from '@/components/icons/ApprovedIcons'
+import { Check, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Flag } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import type { MomentumSummary } from '@fliptap/core'
+import { RetentionIcon } from '@/components/icons/ApprovedIcons'
+import { AchievementIcon } from '@/components/icons/AchievementIcon'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
-import type { NextMilestone } from '@/domain/stats/todayMetrics'
-import { formatDayCount } from '@/domain/stats/streak'
-
-function MetricIcon({ icon: Icon, tone }: { icon: LucideIcon; tone?: 'retention' | 'calendar' }) {
-  return (
-    <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent"
-      style={tone ? { color: tone === 'retention' ? 'var(--fliptap-success)' : 'light-dark(#2563eb, #60a5fa)', backgroundColor: 'color-mix(in srgb, currentColor 10%, var(--fliptap-surface))' } : undefined}
-    >
-      <Icon size={15} aria-hidden="true" />
-    </div>
-  )
-}
-
-function ProgressBar({ label, value }: { label: string; value: number }) {
-  const percentage = Math.round(value * 100)
-
-  return (
-    <div
-      className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-fliptap-pill bg-fliptap-border"
-      role="progressbar"
-      aria-label={label}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={percentage}
-    >
-      <div
-        className="h-full rounded-fliptap-pill bg-fliptap-accent"
-        style={{ width: `${percentage}%` }}
-      />
-    </div>
-  )
-}
+import { cn } from '@/lib/cn'
 
 export interface MomentumPanelProps {
-  /** From the one canonical streak calculation (domain/stats/streak). */
-  streak: number
-  /** Shared with Progress (domain/stats/progressMetrics), 0-1, or null. */
+  momentum: MomentumSummary
+  /** Mature-review retention over the same trailing 30 days as Progress. */
   retention: number | null
-  /** The same due count the hero and /review use. */
-  dueCount: number
-  milestone: NextMilestone | null
 }
 
-// Four real rows. The composition is the one from the supplied dashboard
-// direction (grouped icon metrics, no per-row dividers, one divider above Next
-// milestone) - only the values changed, from illustrative constants to data.
-//
-// Weekly goal used to sit in row 2 ("4 of 5 sessions"). It was removed rather
-// than computed: there is no goal concept anywhere in this product, so any
-// number there would have been invented. Retention took its slot, so the row
-// order and rhythm are unchanged.
-export function MomentumPanel({ streak, retention, dueCount, milestone }: MomentumPanelProps) {
+// Today fetches and computes everything. This panel presents one focal streak,
+// its real recent days, a supporting metric and the shared next achievement.
+export function MomentumPanel({ momentum, retention }: MomentumPanelProps) {
+  const { streak, status, days, nextAchievement, earnedCount } = momentum
+
   return (
-    <section
-      aria-labelledby="momentum-heading"
-      className="flex min-h-[345px] flex-col rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]"
-    >
-      <h2 id="momentum-heading" className="text-base font-semibold text-fliptap-ink-brand">
-        Momentum
-      </h2>
+    <section aria-labelledby="momentum-heading"
+      className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]">
+      <h2 id="momentum-heading" className="text-base font-semibold text-fliptap-ink-brand">Momentum</h2>
 
-      <div className="mt-5 flex flex-1 flex-col gap-5">
-        <div className="flex items-center gap-3">
-          <MetricIcon icon={StreakFlameIcon} />
+      <div className="mt-4 rounded-fliptap-control bg-fliptap-accent-softer px-4 py-3">
+        <div className="flex items-center gap-3.5">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent">
+            <StreakFlameIcon size={30} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h3 className="flex items-baseline gap-2 text-fliptap-ink-brand">
+              <span className="text-[36px] leading-none font-semibold tracking-tight tabular-nums">{streak.current}</span>
+              <span className="text-sm font-semibold">day streak</span>
+            </h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-fliptap-muted">{status}</p>
+          </div>
+        </div>
+
+        <ol aria-label="Study activity over the last seven days" className="mt-3 grid grid-cols-7 gap-2">
+          {days.map((day) => (
+            <li key={day.date} title={`${day.dateLabel}: ${day.studied ? 'Studied' : 'No reviews'}${day.isToday ? ' (Today)' : ''}`}
+              data-studied={day.studied} data-today={day.isToday}
+              className="flex min-w-0 flex-col items-center gap-1.5">
+              <span aria-hidden="true" className={cn('text-[11px] font-medium', day.isToday ? 'text-fliptap-ink-brand' : 'text-fliptap-muted')}>
+                {day.isToday ? 'Today' : day.label}
+              </span>
+              <span aria-hidden="true" className={cn('grid size-7 place-items-center rounded-full',
+                day.studied ? 'bg-fliptap-ink-brand text-fliptap-surface' : 'border border-fliptap-border-strong bg-fliptap-surface/70',
+                day.isToday && 'ring-2 ring-fliptap-accent/60 ring-offset-2 ring-offset-fliptap-accent-softer')}>
+                {day.studied ? <Check size={14} strokeWidth={2.5} /> : <span className="size-1 rounded-full bg-fliptap-border-strong" />}
+              </span>
+              <span className="sr-only">{day.dateLabel}: {day.studied ? 'Studied' : 'No reviews'}{day.isToday ? ', Today' : ''}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-2 text-[11px] text-fliptap-muted">Last 7 days</p>
+      </div>
+
+      <div className="my-3 flex items-center gap-2.5">
+        <RetentionIcon size={18} aria-hidden="true" className="shrink-0 text-fliptap-muted" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-medium text-fliptap-ink-brand">Retention</p>
+          <p className="mt-0.5 text-[11px] text-fliptap-muted">{retention === null ? 'No mature reviews yet' : 'Last 30 days'}</p>
+        </div>
+        <span className="text-lg font-semibold text-fliptap-ink-brand tabular-nums">{retention === null ? '—' : `${Math.round(retention * 100)}%`}</span>
+      </div>
+
+      <div className="border-t border-fliptap-border pt-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h3 className="text-xs font-semibold text-fliptap-ink-brand">{nextAchievement ? 'Next achievement' : 'Your achievements'}</h3>
+          <span className="text-[11px] text-fliptap-muted">{earnedCount} of 4 earned</span>
+        </div>
+        <Link to="/progress" className="group -mx-2 flex items-start gap-3 rounded-fliptap-control px-2 py-1.5 outline-none transition-colors hover:bg-fliptap-surface-subtle focus-visible:ring-2 focus-visible:ring-fliptap-accent">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full border border-fliptap-border bg-fliptap-navy-soft text-fliptap-ink-brand">
+            <AchievementIcon id={nextAchievement?.id ?? 'four-weeks'} size={32} />
+          </span>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-fliptap-ink-brand">Current streak</div>
-            <div className="mt-0.5 text-xs text-fliptap-muted">
-              {streak === 0
-                ? 'Review a card to start one'
-                : `${formatDayCount(streak)} in a row`}
-            </div>
+            <p className="text-sm font-semibold text-fliptap-ink-brand">{nextAchievement?.title ?? 'All four earned'}</p>
+            <p className={nextAchievement ? "sr-only" : "mt-1 text-xs leading-relaxed text-fliptap-muted"}>{nextAchievement?.description ?? 'Your study milestones are in Progress.'}</p>
+            {nextAchievement && (
+              <>
+                <div role="progressbar" aria-label={nextAchievement.title} aria-valuemin={0} aria-valuemax={nextAchievement.target}
+                  aria-valuenow={nextAchievement.progress} aria-valuetext={nextAchievement.progressLabel}
+                  className="mt-2.5 h-1 overflow-hidden rounded-full bg-fliptap-navy-soft">
+                  <div className="h-full rounded-full bg-fliptap-ink-brand/60" style={{ width: `${nextAchievement.progress / nextAchievement.target * 100}%` }} />
+                </div>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-fliptap-muted">{nextAchievement.progressLabel}</p>
+              </>
+            )}
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-fliptap-ink-brand">
+              View achievements <ChevronRight size={13} aria-hidden="true" />
+            </span>
           </div>
-          <div className="text-2xl leading-none font-semibold text-fliptap-ink-brand">{streak}</div>
-        </div>
-
-        {/* "Retention", not "Recall rate": this is the shared Progress
-            calculation over mature attempts whose required stateBefore is
-            review or relearning. */}
-        <div className="flex items-center gap-3">
-          <MetricIcon icon={Target} tone="retention" />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-fliptap-ink-brand">Retention</div>
-            <div className="mt-0.5 text-xs text-fliptap-muted">
-              {retention === null ? 'No mature reviews yet' : 'Last 30 days'}
-            </div>
-          </div>
-          {/* An em dash, never 0%, when there is nothing to measure - 0% would
-              read as "you failed every card". */}
-          <div className="text-sm font-bold text-fliptap-ink-brand">
-            {retention === null ? '—' : `${Math.round(retention * 100)}%`}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <MetricIcon icon={CalendarClock} tone="calendar" />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-fliptap-ink-brand">Due today</div>
-            <div className="mt-0.5 text-xs text-fliptap-muted">
-              {dueCount === 0 ? 'Nothing waiting' : 'Ready to review'}
-            </div>
-          </div>
-          <div className="text-sm font-bold text-fliptap-ink-brand">{dueCount}</div>
-        </div>
-
-        <div className="mt-auto border-t border-fliptap-border pt-4">
-          <div className="mb-3 text-xs font-semibold text-fliptap-ink-brand">Next milestone</div>
-          <MilestoneRow milestone={milestone} />
-        </div>
+        </Link>
       </div>
     </section>
-  )
-}
-
-// A derived, unpersisted continuation target (domain/stats/todayMetrics).
-// "Learned" means exactly one thing here - a current, non-suspended card with
-// at least one review - so the copy says "cards learned" and never "mastered".
-function MilestoneRow({ milestone }: { milestone: NextMilestone | null }) {
-  if (!milestone) {
-    return (
-      <div className="flex items-center gap-3">
-        <MetricIcon icon={Flag} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-fliptap-ink-brand">All caught up</div>
-          <div className="mt-1 text-xs text-fliptap-muted">
-            Every active card has been reviewed at least once.
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const title =
-    milestone.kind === 'finish-deck'
-      ? `Finish ${milestone.name}`
-      : milestone.kind === 'start-deck'
-        ? `Start ${milestone.name}`
-        : `Review ${milestone.name}`
-
-  const body = (
-    <div className="flex items-center gap-3">
-      <MetricIcon icon={Flag} />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-fliptap-ink-brand">{title}</div>
-        {milestone.kind === 'finish-deck' ? (
-          <div className="mt-1 flex items-center gap-4">
-            <span className="flex-none text-xs text-fliptap-muted">
-              {milestone.learned} of {milestone.total} cards learned
-            </span>
-            <ProgressBar
-              label={`${milestone.name} learned progress`}
-              value={milestone.learned / milestone.total}
-            />
-          </div>
-        ) : (
-          // No bar: a due count has no honest denominator to draw against.
-          <div className="mt-1 text-xs text-fliptap-muted">
-            {milestone.dueCount} {milestone.dueCount === 1 ? 'card' : 'cards'} due
-          </div>
-        )}
-      </div>
-    </div>
-  )
-
-  // A deck can be in progress with nothing due right now, so the row only
-  // offers a review session when one actually exists - otherwise it opens the
-  // deck. It never advertises a session it cannot start.
-  return (
-    <Link
-      to={milestone.dueCount > 0 ? `/review?deck=${milestone.deckId}` : `/decks/${milestone.deckId}`}
-      className="block rounded-fliptap-control outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent"
-    >
-      {body}
-    </Link>
   )
 }

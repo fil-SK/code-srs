@@ -1,11 +1,11 @@
 import { Check } from 'lucide-react'
-import type { Achievement } from '@fliptap/core'
+import { selectNextAchievement, type Achievement } from '@fliptap/core'
 import { AchievementIcon } from '@/components/icons/AchievementIcon'
 import { cn } from '@/lib/cn'
 
 export function Achievements({ achievements }: { achievements: Achievement[] }) {
   const earned = achievements.filter((item) => item.unlockedAt !== undefined).length
-  const next = achievements.find((item) => item.unlockedAt === undefined)?.id
+  const next = selectNextAchievement(achievements)?.id
   return (
     <section aria-labelledby="achievements-heading"
       className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]">

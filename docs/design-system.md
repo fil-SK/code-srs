@@ -196,7 +196,7 @@ The two selected MaterialCommunityIcons outlines carry their Apache-2.0 source
 notice in `ICON-LICENSES.txt` and web's offline-available third-party notices.
 Lucide's existing ISC/Feather notices are retained.
 
-**The circular badge pattern** (`apps/web/src/features/today/MomentumPanel.tsx`), the most common treatment for a labeled icon in a list row:
+**The compact circular badge pattern**, for labeled list-row icons (Momentum now uses the larger focal treatment specified below):
 
 ```tsx
 <div className="grid h-8 w-8 flex-none place-items-center rounded-full bg-fliptap-accent-soft text-fliptap-accent">
@@ -492,3 +492,22 @@ using the same drawings and titles. Web's View in Progress link has ordinary
 keyboard focus and hover; Back to Today remains the primary orange action.
 No confetti, animation, points, new theme token or extra orange status fill is
 introduced. Native retains its existing theme, scroll container and tab geometry.
+
+## 17. Web Today Momentum (D475)
+
+Keep the existing Today grid and tuned session hero. Momentum has three levels:
+a focal streak in a subtle `accent-softer` inset, a compact neutral retention
+row, and a separated next-achievement link. The approved flame is 30px in a
+44px circular tint; the streak number is 36px. Seven chronological markers show
+real local study activity, with neutral filled checks for studied days, outlined
+empty days and an orange ring plus Today label for the current day. Dates/status
+are available to assistive technology and native title tooltips; markers are
+informational, not controls or a goal.
+
+The achievement's original 32px drawing sits in a 48px neutral badge. Its progress
+uses a thin neutral bar, with the shared text and raw target exposed accessibly.
+The whole row links to Progress and has hover and visible keyboard focus. All
+four earned changes the footer to collection copy, with no pending bar. Retention
+shows an em dash without mature samples. Orange remains confined to the flame
+and Today outline, keeping the session hero's primary action dominant. No new
+animation, palette role, dependency or trophy destination is introduced.

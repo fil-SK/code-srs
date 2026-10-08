@@ -117,3 +117,9 @@ export function withSessionCompletion(
   )
   return finalCard && scheduled ? { ...log, sessionCompleted: true } : log
 }
+
+// Catalog order is shared by Today and Progress, rather than choosing a new
+// target every time relative progress changes.
+export function selectNextAchievement(achievements: readonly Achievement[]): Achievement | undefined {
+  return achievements.find((item) => item.unlockedAt === undefined)
+}

@@ -242,7 +242,7 @@ it (sessions? reviews? days studied?).
 D473 (2026-10-08) implements four evidence-based study achievements on web and
 native Demo, superseding the blanket deferral under D210 for this bounded set.
 Progress shows lifetime progress and earned dates; completion acknowledges new
-unlocks. Today's Next milestone remains its derived in-progress-deck continuation.
+unlocks. D475 replaces web Momentum's deck milestone with one pending shared achievement and a link to Progress; native Today keeps its existing presentation.
 
 Still deferred: a separate achievements page, mastery/topic awards, custom goals,
 XP, currency, levels and leaderboards. No achievement entity or scoring subsystem

@@ -1984,3 +1984,40 @@ dependable native release needs durability, recovery and physical-device
 evidence, with storage architecture still undecided. The mobile authoring parity
 sequence remains a capability roadmap, not a blocker to a browser-local web
 beta. No persisted data, schema, scheduling, grading or product runtime changes.
+
+## 2026-10-08 - Streak-focused web Momentum
+
+**D475. Implement the owner's approved Momentum hierarchy: streak and real
+recent days, compact retention, and one ongoing achievement linked to Progress.**
+This supersedes D171's equal-weight metric rows and D210's web Momentum deck
+continuation. The due count stays prominent in the session hero; deck continuation
+stays in Continue Learning. D209's Weekly Goal deferral and D473's four achievement
+rules are unchanged. No trophy page or native presentation change is included.
+
+Core's `computeMomentum` composes the canonical streak, local-calendar Pace
+buckets and existing achievement evidence. Future logs do not light markers.
+Any review counts as activity; an achievement still requires its own scheduled
+eligibility. The status acknowledges studying today, prompts due work when it
+exists, or asks the learner to return when the next card is ready. It does not
+encourage early reviews merely to preserve a streak. `selectNextAchievement`
+uses the same first-unearned catalog order on Today and Progress. If all four
+are earned, the footer shows the collection without an invented next target.
+
+The approved flame and large number lead a subtle tinted inset; seven neutral
+checks/empty markers end at an orange-ringed Today. Retention remains a small
+supporting metric, with its mature-attempt semantics and absent-sample em dash.
+One original achievement badge, neutral progress bar and focusable link close
+the panel. Density was tightened after browser review so the panel does not
+push the second grid row unnecessarily far below the hero. No hero offsets,
+rotations or artwork changed, and no new animation or palette role was added.
+No data writes, schema change, grading, scheduling or cloud work is involved.
+
+Verification: 121 root Vitest files / 1,152 tests pass; forced TypeScript, root
+lint and the production web build pass (existing chunk-size advisory only).
+Chromium checks Light/Dark at 1440x900 and 390x844 across new, ongoing,
+studied-today, no-due and all-earned states, seven correct markers, hover,
+visible focus and Enter navigation to Progress's same Next up. A real one-card
+session verifies new activity and the next achievement; completion Undo removes
+both, and reload preserves committed history. Reduced-motion and the Belgrade
+DST transition are checked in the phone browser. No page errors or document
+overflow were found. Native UI is unchanged and no device verification is claimed.

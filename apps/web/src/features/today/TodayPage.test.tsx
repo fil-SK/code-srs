@@ -60,6 +60,7 @@ function log(cardId: string, reviewedAt: number): ReviewLog {
     rating: 3,
     autoGraded: false,
     durationMs: 12_000,
+    dueBefore: reviewedAt - 1,
     stabilityBefore: 1,
     stabilityAfter: 4,
     difficultyBefore: 5,
@@ -151,7 +152,7 @@ describe('Today — cards exist but nothing is due', () => {
     renderToday()
 
     expect(await screen.findByText('Nothing due')).toBeTruthy()
-    // The hero's eyebrow, and again on the milestone row - both honest.
+    // The caught-up hero remains distinct from ongoing achievements.
     expect(screen.getAllByText('All caught up').length).toBeGreaterThan(0)
     expect(screen.getByText(/Next card due/)).toBeTruthy()
     expect(screen.queryByText('Start session')).toBeNull()
@@ -166,8 +167,8 @@ describe('Today — cards exist but nothing is due', () => {
   it('still shows real context in Momentum', async () => {
     renderToday()
     await screen.findByText('Nothing due')
-    expect(screen.getByText('Current streak')).toBeTruthy()
-    expect(screen.getByText('Due today')).toBeTruthy()
+    expect(screen.getByText('day streak')).toBeTruthy()
+    expect(screen.queryByText('Due today')).toBeNull()
   })
 })
 
@@ -193,7 +194,7 @@ describe('Today — due cards but no review history', () => {
 
     const momentum = within(screen.getByRole('region', { name: 'Momentum' }))
     expect(momentum.getByText('0')).toBeTruthy()
-    expect(momentum.getByText('Review a card to start one')).toBeTruthy()
+    expect(momentum.getByText('Review a card to start your streak.')).toBeTruthy()
     expect(momentum.getByText('No mature reviews yet')).toBeTruthy()
     expect(momentum.getByText('—')).toBeTruthy()
     expect(momentum.queryByText('0%')).toBeNull()
@@ -205,11 +206,12 @@ describe('Today — due cards but no review history', () => {
     expect(await screen.findByText('Approximately 1 minute')).toBeTruthy()
   })
 
-  it('falls back to a due deck for the milestone, since nothing is in progress', async () => {
+  it('offers the first real achievement and links to the full collection', async () => {
     renderToday()
     await screen.findByText('2 cards')
     const momentum = within(screen.getByRole('region', { name: 'Momentum' }))
-    expect(momentum.getByText(/^Start /)).toBeTruthy()
+    expect(momentum.getByText('First step')).toBeTruthy()
+    expect(momentum.getByRole('link', { name: /View achievements/ }).getAttribute('href')).toBe('/progress')
   })
 
   it('shows an honest empty pace chart', async () => {
@@ -230,24 +232,26 @@ describe('Today — populated', () => {
         card('c3', 'deck-1', now + 3 * DAY), // in the deck, never reviewed
         card('c4', 'deck-2', now + 3 * DAY, now - 5 * DAY),
       ],
-      logs: [log('c1', now - DAY), log('c2', now - DAY), log('c4', now - 5 * DAY)],
+      logs: [{ ...log('c1', now - DAY), sessionCompleted: true }, log('c2', now - DAY), log('c4', now - 5 * DAY)],
     })
   })
 
-  it('renders four real Momentum rows', async () => {
+  it('presents the streak, real activity, retention and the next achievement', async () => {
     renderToday()
     await screen.findByRole('heading', { name: 'Momentum' })
 
-    expect(screen.getByText('Current streak')).toBeTruthy()
+    expect(screen.getByText('day streak')).toBeTruthy()
     expect(screen.getByText('Retention')).toBeTruthy()
-    expect(screen.getByText('Due today')).toBeTruthy()
-    expect(screen.getByText('Next milestone')).toBeTruthy()
+    expect(screen.queryByText('Due today')).toBeNull()
+    expect(screen.getByText('Next achievement')).toBeTruthy()
+    expect(screen.getByRole('list', { name: 'Study activity over the last seven days' }).querySelectorAll('li')).toHaveLength(7)
   })
 
-  it('tracks the in-progress deck with learned-card wording', async () => {
+  it('tracks scheduled study days instead of duplicating deck continuation', async () => {
     renderToday()
-    expect(await screen.findByText('Finish Compilers')).toBeTruthy()
-    expect(screen.getByText('2 of 3 cards learned')).toBeTruthy()
+    expect(await screen.findByText('Finding your rhythm')).toBeTruthy()
+    expect(screen.getByText('2 of 5 days in the last 7 days')).toBeTruthy()
+    expect(screen.queryByText('Finish Compilers')).toBeNull()
     expect(screen.queryByText(/mastered/)).toBeNull()
   })
 

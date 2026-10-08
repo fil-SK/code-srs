@@ -167,3 +167,4 @@ export * from './design/approvedIcons'
 
 export * from './domain/stats/achievements'
 export * from './design/achievementIcons'
+export * from './domain/stats/momentum'

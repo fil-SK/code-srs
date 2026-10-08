@@ -50,7 +50,7 @@ Update it in the same commit as any change to a listed capability.
 | Session start | — | yes | starts a demo session | implemented (demo/local) — Today's CTA opens the real local session; cloud persistence deferred |
 | Adjust session | — | yes | no | web-only (decision) — never exposed in the native hierarchy, and advanced session controls stay deferred; TODO.md "Adjust session"; D409 |
 | Pace chart | — | yes | no | web-only (decision) — native hierarchy omits it; not a functionality gap |
-| Next milestone row | domain/stats/progressMetrics | yes | no | web-only (decision) — native slot shows estimated session length instead |
+| Momentum activity markers and next achievement | domain/stats/momentum, achievements | yes | no | web presentation (D475); native Today retains existing metrics, while shared achievements remain available in native Progress |
 | Weekly goal | — | no | no | deferred — no goal concept exists; features.md "Planned" |
 
 ## Library
