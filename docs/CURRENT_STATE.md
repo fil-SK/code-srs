@@ -2,6 +2,12 @@
 
 **Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; web navbar due indicator).
 
+> **Stronger web rating hover colors (2026-10-09, D484).** Hover and keyboard focus now use more visible background tints and colored borders; Easy's blue feather is darker. Colors still mix existing theme tokens, while neutral rest and orange suggestion/selection are retained. Verification: 121 files / 1,153 tests, forced TypeScript and lint pass; Chromium checks both themes and widths, hover/focus, orange selection and reduced motion.
+
+> **Web rating hover colors (2026-10-09, D482).** Neutral rating options gain restrained red/amber/green/selection-blue icons, background washes and borders on hover or keyboard focus. Rest stays muted; suggested/selected ratings stay orange. Existing theme tokens and reduced-motion-aware 150ms transitions keep the treatment quiet. Verification: 121 files / 1,153 tests, forced TypeScript and lint pass; Chromium verifies all hover colors, keyboard focus, orange selection and reduced motion in both themes at desktop/phone widths.
+
+> **Web review rating icons (2026-10-09, D480).** Again, Hard, Good and Easy now use retry, mountain, checkmark and feather outline icons. The existing 24px/2px Lucide treatment, muted/orange theme roles, labels, intervals, geometry and keyboard behavior are retained. Verification: 121 files / 1,152 tests, forced TypeScript and lint pass; Chromium checks both themes at desktop/phone widths, reveal, hover, focus and rating shortcuts without page errors or horizontal overflow.
+
 > **Animated web card progress (2026-10-09, D481, supersedes D477).** A small
 > centered indicator above the card replaces the topbar line. Up to ten cards
 > use segments; longer sessions use one continuous track. Neutral fill and an

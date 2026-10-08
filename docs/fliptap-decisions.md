@@ -2103,6 +2103,23 @@ Verification: 121 files / 1,152 tests, forced TypeScript checking and root lint
 pass. Isolated Chromium checks cover Light/Dark at 1440x900 and 390x844,
 positive and zero counts, hover, keyboard focus and navigation. No page errors.
 
+## 2026-10-09 - Expressive web review rating icons
+
+**D480 (supersedes D162's icon choices). Ratings describe recall through retry, effort, success and ease.**
+The owner selected the expressive alternative: Again uses RefreshCw, Hard
+Mountain, Good Check and Easy Feather. The existing Lucide outline family,
+24px size, rounded stroke ends and 2px stroke keep these metaphors consistent
+with the application's utility icons. Muted neutral icons and orange suggested
+or selected emphasis retain the existing semantic theme roles. Button geometry,
+labels, real scheduling intervals, accessible names, decorative SVG treatment
+and 1-4 keyboard behavior are unchanged. This replaces the four icon concepts
+in the older locked answer-icons reference; the reference's layout still applies.
+Native presentation is outside this web change.
+
+Verification: 121 files / 1,152 root tests, forced TypeScript and root lint pass.
+Chromium checks Light/Dark at 1440x900 and 390x844, revealed controls, hover,
+keyboard focus and rating shortcuts with no page errors or horizontal overflow.
+
 ## 2026-10-09 - Animated progress above the web review card
 
 **D481 (supersedes D477). Card progress moves above the card and animates between positions.**
@@ -2132,3 +2149,35 @@ and real saved-review advancement with a fresh answer state. No page errors.
 The indicator remains within the phone viewport. The existing global navbar
 on phone-width preview pages extends beyond its available width; that separate
 layout issue is unchanged by this work.
+
+## 2026-10-09 - Restrained color on review rating engagement
+
+**D482 (extends D480). Rating options gain color on hover and keyboard focus.**
+The owner wanted a little more character without a colorful resting row.
+Neutral options now tint only while hovered or visibly keyboard-focused:
+Again uses the existing error roles, Hard warning, Good success and Easy
+selection blue. Icons gain the foreground color; a pale background wash and
+subtle border echo it. Labels and scheduling intervals remain neutral.
+Suggested and selected ratings keep their orange treatment so guidance is
+unambiguous. No palette roles, layout, scheduling or native changes are added.
+Color transitions last 150ms and are disabled for reduced motion.
+
+Verification: 121 files / 1,153 root tests, forced TypeScript and root lint pass.
+Chromium verifies all four hover colors and keyboard focus in Light/Dark at
+1440x900 and 390x844, retained orange selection, and disabled transitions
+under reduced motion, without page errors or horizontal overflow.
+
+## 2026-10-09 - More visible review rating hover colors
+
+**D484 (supersedes D482's tint strength). Hover and focus colors need clearer contrast.**
+The owner found the first treatment too pale. Again, Hard and Good now mix
+14% of their existing error/warning/success foreground into the surface,
+with 65% foreground borders, instead of half-opacity soft fills and 40% borders.
+Easy mixes 20% selection blue into the surface and deepens its icon with
+40% ink-brand, keeping the blue hue readable in both themes. All colors still
+come from existing theme roles. Neutral rest, orange suggested/selected states,
+labels, intervals, geometry and reduced-motion behavior retain D482.
+Verification: 121 files / 1,153 root tests, forced TypeScript and lint pass.
+Chromium verifies all four stronger hover/focus colors in both themes at
+1440x900 and 390x844, retained orange selection and reduced motion with no
+page errors or horizontal overflow; screenshots confirm the increased tint.
