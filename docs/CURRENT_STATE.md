@@ -2,6 +2,18 @@
 
 **Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; web navbar due indicator).
 
+> **Animated web card progress (2026-10-09, D481, supersedes D477).** A small
+> centered indicator above the card replaces the topbar line. Up to ten cards
+> use segments; longer sessions use one continuous track. Neutral fill and an
+> orange diamond follow the displayed position with a quiet 300ms movement,
+> including backward preview navigation. Reduced motion updates immediately.
+> The persistent outer shell keeps progress mounted; the keyed inner card
+> resets answers, timing and grading state. The text count remains in the bar.
+> No scheduling, persistence or native behavior changes.
+> Verification: 1,153 tests, forced TypeScript and lint pass. Chromium checks
+> both themes/widths, actual movement, reduced motion and real review resets.
+> The existing phone-width preview navbar overflow remains a separate issue.
+
 > **Web navbar due indicator (2026-10-09, D479).** Today now carries quiet
 > muted `· N due` text in place of the orange count badge. The count is omitted
 > at zero and below 640px; Today's existing All caught up state stays in-page.
@@ -27,15 +39,6 @@
 > checks both themes at desktop and phone widths, including keyboard flip.
 > Verification: 121 files / 1,152 tests pass with two workers and a 20-second
 > test timeout; forced TypeScript checking and root lint pass.
-
-> **Web review position line (2026-10-08, D477).** Review and preview share a
-> quiet 2px line at the bottom of the immersive topbar. Its neutral fill follows
-> the displayed card position (card 2 of 10 is 20%), including backward preview
-> navigation. It has no animation or extra visible label; assistive technology
-> receives the card position. Single-card previews show a full line. Chromium
-> verifies both themes/widths and review/preview navigation; 1,152 root tests
-> pass with an extended timeout, and forced TypeScript/lint pass. Grading,
-> scheduling, persisted data and native presentation are unchanged.
 
 > **Streak-focused web Momentum (2026-10-08, D475).** Today's panel now leads
 > with the canonical streak, seven actual local study-day markers and a status

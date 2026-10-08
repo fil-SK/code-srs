@@ -18,7 +18,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 - **48 generic programming and software icons** for decks, with category filters and search in New Deck and Deck/Collection settings. Saved choices appear consistently in Library, Today and Progress and survive backup export/import.
 - **Soft orange waves in opposite corners** across the web app, fading to a nearly neutral center, with responsive sizing, a static treatment and quieter backgrounds during Review and card study.
-- **Quiet card-position line** beneath the web Review and Preview topbar, alongside the text count.
+- **Quiet animated card progress** above web Review and Preview cards, with segments for short sessions, a moving position marker and reduced-motion support.
 - **6 focused card interactions**, several with code-aware variants (see below).
 - **FSRS scheduling** (via `ts-fsrs`) with a 4-button self-grade bar and auto-grading where it makes sense.
 - **Nested decks** of arbitrary depth, with drag-and-drop **card reordering**, deck **reparenting**, and **move-card-between-decks**.

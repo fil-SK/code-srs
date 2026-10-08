@@ -133,7 +133,6 @@ export function PreviewPage() {
     <div>
       <FlipTapSurface>
         <ReviewSessionScreen
-          key={current.id}
           card={card}
           definition={getInteractionDefinition(card.interaction.type)}
           current={safeIndex + 1}

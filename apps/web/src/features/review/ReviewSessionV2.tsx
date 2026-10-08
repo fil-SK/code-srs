@@ -119,7 +119,6 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   return (
     <FlipTapSurface>
       <ReviewSessionScreen
-        key={current.id}
         card={current}
         definition={getInteractionDefinition(current.interaction.type)}
         current={index + 1}

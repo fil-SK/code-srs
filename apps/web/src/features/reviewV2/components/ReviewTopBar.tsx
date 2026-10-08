@@ -27,11 +27,9 @@ export function ReviewTopBar({
   nextDisabled?: boolean
 }) {
   const showsCardNavigation = Boolean(onPrevious && onNext)
-  const position = total > 0 ? Math.min(Math.max(current, 0), total) : 0
-  const progress = total > 0 ? (position / total) * 100 : 0
 
   return (
-    <header className="relative mb-14 min-h-20 w-full border-b border-fliptap-border bg-fliptap-surface px-4 sm:px-6">
+    <header className="mb-14 min-h-20 w-full border-b border-fliptap-border bg-fliptap-surface px-4 sm:px-6">
       <div className="mx-auto grid min-h-20 w-full max-w-[1280px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center">
         <button
           type="button"
@@ -89,17 +87,6 @@ export function ReviewTopBar({
           )}
           <span className="text-sm font-medium sm:text-base">{shortcutLabel}</span>
         </span>
-      </div>
-      <div
-        role="progressbar"
-        aria-label="Card position"
-        aria-valuemin={0}
-        aria-valuemax={Math.max(total, 1)}
-        aria-valuenow={position}
-        aria-valuetext={`Card ${position} of ${total}`}
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-fliptap-border"
-      >
-        <div className="h-full bg-fliptap-muted-light" style={{ width: `${progress}%` }} />
       </div>
     </header>
   )

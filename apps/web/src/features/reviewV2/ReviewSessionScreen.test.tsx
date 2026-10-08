@@ -67,6 +67,27 @@ describe('ReviewSessionScreen (via Recall)', () => {
     expect(screen.getByText('to flip')).toBeTruthy()
   })
 
+  it('retains progress across cards while resetting the revealed answer', async () => {
+    const user = userEvent.setup()
+    const props = {
+      card: fixture,
+      definition: recallDefinition,
+      current: 1,
+      total: 10,
+      onExit: () => {},
+      schedulingBefore: initialSchedulingState(),
+    }
+    const { rerender } = render(<ReviewSessionScreen {...props} />)
+    const progress = screen.getByRole('progressbar', { name: 'Card position' })
+    await user.keyboard(' ')
+    expect(answerFaceHidden()).toBe(false)
+
+    rerender(<ReviewSessionScreen {...props} card={{ ...fixture, id: 'next-recall' }} current={2} />)
+
+    expect(screen.getByRole('progressbar', { name: 'Card position' })).toBe(progress)
+    expect(progress.getAttribute('aria-valuenow')).toBe('2')
+    expect(answerFaceHidden()).toBe(true)
+  })
   it('Space reveals the answer', async () => {
     const user = userEvent.setup()
     renderScreen()

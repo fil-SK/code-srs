@@ -2102,3 +2102,33 @@ hero layout is introduced. The shared due query remains the source of truth.
 Verification: 121 files / 1,152 tests, forced TypeScript checking and root lint
 pass. Isolated Chromium checks cover Light/Dark at 1440x900 and 390x844,
 positive and zero counts, hover, keyboard focus and navigation. No page errors.
+
+## 2026-10-09 - Animated progress above the web review card
+
+**D481 (supersedes D477). Card progress moves above the card and animates between positions.**
+The owner approved a segmented treatment inspired by their supplied image and
+requested movement when advancing. A centered 280px indicator fits in the
+existing topbar-to-card gap. Rounded 4px tracks use neutral semantic colors;
+a small orange outline diamond marks current / total. Sessions of ten cards
+or fewer use one segment per card; longer sessions use a continuous track to
+avoid crowded marks. The text count remains in the topbar. No sparkle, glow,
+bounce or extra visible label is introduced, and native presentation is unchanged.
+
+The fill and diamond move over 300ms with ease-out, including backward preview
+navigation. Tailwind's motion variants disable both transitions for reduced
+motion. A persistent `ReviewSessionScreen` wrapper owns the indicator while
+`ReviewCardScreen` stays keyed by card id, preserving the reset of response,
+phase, timing and pending grade on every new card. The production session and
+deck preview no longer key the outer wrapper. Hidden-topbar authoring previews
+also hide progress. Position is not a count of committed grades; reveal and
+failed persistence do not advance it. Scheduling and stored rows do not change.
+
+Verification: 121 root files / 1,153 tests pass with two workers and a
+20-second timeout; forced TypeScript, root lint and whitespace checks pass.
+Chromium checks both themes at 1440x900 and 390x844, sampling intermediate
+marker positions to prove movement without remounting, backward navigation,
+reveal, keyboard activation, single-card and 30-card sessions, reduced motion
+and real saved-review advancement with a fresh answer state. No page errors.
+The indicator remains within the phone viewport. The existing global navbar
+on phone-width preview pages extends beyond its available width; that separate
+layout issue is unchanged by this work.

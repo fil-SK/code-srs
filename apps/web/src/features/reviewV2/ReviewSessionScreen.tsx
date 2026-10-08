@@ -4,6 +4,7 @@ import type { CardInteraction, Card, InteractionType } from '@/types/card'
 import { cn } from '@/lib/cn'
 import { reviewService, type SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { formatInterval } from '@/domain/scheduling/format'
+import { ReviewProgress } from './components/ReviewProgress'
 import { ReviewTopBar } from './components/ReviewTopBar'
 import { TipPanel } from './components/TipPanel'
 import { ExplanationPanel } from './components/ExplanationPanel'
@@ -33,10 +34,10 @@ function hasWalkthroughCode(interaction: CardInteraction): boolean {
 // global navigation, sidebar, logo, deck metadata, tags, a due queue, or
 // stats; see the module doc in reviewPhase.ts for the state machine itself.
 //
-// Callers reset per-card state by remounting with `key={card.id}` — simpler
+// The outer shell resets per-card state with `key={card.id}`, simpler
 // and more robust than manually resetting phase/response/timing on every
 // field that needs it.
-export function ReviewSessionScreen<T extends InteractionType>({
+function ReviewCardScreen<T extends InteractionType>({
   card,
   definition,
   current,
@@ -374,6 +375,18 @@ export function ReviewSessionScreen<T extends InteractionType>({
         )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// Progress stays mounted while the keyed card shell resets its answer and timing.
+export function ReviewSessionScreen<T extends InteractionType>(
+  props: Parameters<typeof ReviewCardScreen<T>>[0],
+) {
+  return (
+    <div className="relative">
+      {!props.hideTopBar && <ReviewProgress current={props.current} total={props.total} />}
+      <ReviewCardScreen key={props.card.id} {...props} />
     </div>
   )
 }
