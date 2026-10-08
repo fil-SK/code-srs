@@ -83,7 +83,7 @@ function StepMultipleChoice({
           type="button"
           onClick={() => onSubmit(choice)}
           disabled={choice.length === 0}
-          className="mt-3 rounded-fliptap-control bg-fliptap-accent px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+          className="mt-3 rounded-fliptap-control fliptap-button fliptap-button-primary px-3.5 py-2 text-sm font-semibold text-white disabled:pointer-events-none disabled:opacity-40"
         >
           Submit
         </button>
@@ -126,7 +126,7 @@ function StepExactInput({
           type="button"
           onClick={() => onSubmit(value)}
           disabled={!value.trim()}
-          className="mt-3 rounded-fliptap-control bg-fliptap-accent px-3.5 py-2 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+          className="mt-3 rounded-fliptap-control fliptap-button fliptap-button-primary px-3.5 py-2 text-sm font-semibold text-white disabled:pointer-events-none disabled:opacity-40"
         >
           Submit
         </button>

@@ -118,7 +118,7 @@ export function MultipleChoiceView({
                 type="button"
                 onClick={onPrimaryAction}
                 disabled={!responseReady}
-                className="min-h-12 w-full rounded-fliptap-control bg-fliptap-accent px-6 py-3 text-sm font-semibold text-white transition-[background-color,opacity] hover:bg-fliptap-accent-hover disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:min-w-44"
+                className="min-h-12 w-full rounded-fliptap-control fliptap-button fliptap-button-primary px-6 py-3 text-sm font-semibold text-white disabled:pointer-events-none disabled:opacity-40 sm:w-auto sm:min-w-44"
               >
                 Submit answer
               </button>

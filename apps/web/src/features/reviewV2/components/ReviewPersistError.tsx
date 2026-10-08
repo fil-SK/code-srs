@@ -43,7 +43,7 @@ export function ReviewPersistError({
         ref={retryRef}
         type="button"
         onClick={onRetry}
-        className="shrink-0 rounded-fliptap-control bg-fliptap-accent px-3.5 py-2 text-sm font-semibold text-white outline-none transition-opacity hover:brightness-105 focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2"
+        className="shrink-0 rounded-fliptap-control fliptap-button fliptap-button-primary px-3.5 py-2 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2"
       >
         Try again
       </button>

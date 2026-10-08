@@ -2167,6 +2167,37 @@ Chromium verifies all four hover colors and keyboard focus in Light/Dark at
 1440x900 and 390x844, retained orange selection, and disabled transitions
 under reduced motion, without page errors or horizontal overflow.
 
+## 2026-10-09 - Approved tactile web buttons
+
+**D483. Web actions adopt the owner's reviewed tactile treatment.**
+The owner approved a side-by-side comparison, then refined the orange hover:
+a gradient-to-solid swap felt like a blink, and a color-only revision felt
+static. The accepted result keeps one fixed highlight, a 2px lower edge and
+smooth 180ms color/shadow changes, lifts 2px on hover and depresses 1px on press.
+A transparent 3px hit-area extension keeps hover stable at the original edge.
+Secondary buttons gain quiet neutral depth, ghost actions a neutral hover,
+and destructive controls retain the theme's solid error fill and white text.
+
+One component-layer CSS treatment serves the shared Button and existing custom
+primary actions in Library, About, history, Review and completion. Explicit
+surface sizing utilities still win. Today retains its 52px action and tuned
+card geometry; only the action styling and Adjust session contrast change.
+The editor's old shadow-none override is removed. Standard controls are 40px,
+with 44px minimum targets on coarse pointers. Keyboard focus and native button
+semantics remain. Hover requires a fine pointer, disabled controls never move,
+and reduced motion removes transitions and transforms. No palette role,
+dependency, storage, grading, scheduling, native or marketing change is needed.
+
+Verification: 121 files / 1,153 root tests, forced TypeScript and root lint pass.
+The production web build passes with its existing chunk-size advisory.
+Isolated Chromium checks Light/Dark at 1440x900 and 390x844 across Today,
+Adjust session, deck creation, real authoring saves, destructive confirmations
+and revealed Multiple Choice. Frame samples confirm gradual color/movement
+with a fixed gradient and stable edge hover; press, keyboard focus, disabled
+controls, reduced motion and coarse-pointer targets pass. No page errors or
+document overflow were found. Browser writes used generated data in a fresh
+context and did not access the owner's workspace.
+
 ## 2026-10-09 - More visible review rating hover colors
 
 **D484 (supersedes D482's tint strength). Hover and focus colors need clearer contrast.**
@@ -2181,3 +2212,27 @@ Verification: 121 files / 1,153 root tests, forced TypeScript and lint pass.
 Chromium verifies all four stronger hover/focus colors in both themes at
 1440x900 and 390x844, retained orange selection and reduced motion with no
 page errors or horizontal overflow; screenshots confirm the increased tint.
+
+## 2026-10-09 - Balanced primary and secondary web actions
+
+**D485 (refines D483). Library actions should feel related without an excessive primary shadow.**
+The owner found Import Deck plain next to an overly raised New Deck. Import
+was still a standalone link with the older flat style. It now uses the shared
+secondary classes, preserving its 44px sizing, icon and working importer route.
+Shared secondary actions gain a quiet 1px lower edge, a compact shadow and
+smooth border/background/shadow feedback on hover. Standard primary actions
+reduce their lower edge and hover lift from 2px to 1px, with smaller resting
+and hover shadows. Orange remains the primary signal; neutral actions have
+comparable craft rather than competing orange accents. Today's previously
+approved 52px hero retains its stronger 2px lift and orange shadow.
+
+The fixed gradient, stable hit extension, press feedback, disabled semantics,
+keyboard focus, fine-pointer hover and reduced-motion behavior retain D483.
+No layout, data, interaction semantics, native or marketing change is added.
+
+Verification: Chromium passes Light/Dark at 1440x900 and 390x844 for primary
+and secondary hover, press, keyboard focus, stable edge hover, disabled deck
+creation and real importer navigation. Reduced motion, touch targets and
+touch navigation pass, with no page errors or document overflow. All 121 files /
+1,153 tests, forced TypeScript and root lint pass. The production web build
+passes with its existing chunk-size advisory.

@@ -183,14 +183,14 @@ export function LibraryBrowserPage() {
                 <button
                   type="button"
                   onClick={newDeck}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-fliptap-control bg-fliptap-accent px-5 text-sm font-semibold text-white transition-[filter] hover:brightness-95"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-fliptap-control fliptap-button fliptap-button-primary px-5 text-sm font-semibold text-white"
                 >
                   <Plus size={18} strokeWidth={1.8} /> New Deck
                 </button>
                 <Link
                   to="/settings/import-export"
                   title="Open FlipTap JSON import"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-fliptap-control border border-fliptap-border-strong bg-fliptap-surface px-5 text-sm font-semibold text-fliptap-ink-brand transition-colors hover:border-fliptap-accent hover:text-fliptap-accent"
+                  className="fliptap-button fliptap-button-secondary h-11 gap-2 rounded-fliptap-control px-5 text-sm font-semibold"
                 >
                   <Upload size={17} strokeWidth={1.8} /> Import Deck
                 </Link>

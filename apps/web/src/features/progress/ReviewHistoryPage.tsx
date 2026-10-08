@@ -143,7 +143,7 @@ export function ReviewHistoryPage() {
             action={
               <Link
                 to="/review"
-                className="inline-flex items-center justify-center rounded-[9px] bg-fliptap-accent px-4 py-2 text-sm font-semibold text-white hover:bg-fliptap-accent-hover"
+                className="inline-flex items-center justify-center rounded-[9px] fliptap-button fliptap-button-primary px-4 py-2 text-sm font-semibold text-white"
               >
                 Start reviewing
               </Link>

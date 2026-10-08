@@ -135,7 +135,7 @@ export function OrderingView({
                 type="button"
                 onClick={onPrimaryAction}
                 disabled={!responseReady}
-                className="rounded-fliptap-control bg-fliptap-accent px-8 py-3 text-sm font-semibold text-white transition-opacity hover:brightness-105 disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-fliptap-control fliptap-button fliptap-button-primary px-8 py-3 text-sm font-semibold text-white disabled:pointer-events-none disabled:opacity-40"
               >
                 Submit answer
               </button>

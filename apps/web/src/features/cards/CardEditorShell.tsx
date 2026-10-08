@@ -106,7 +106,7 @@ export function CardEditorShell({
         <div className="flex items-center gap-3">
           <Button
             variant="primary"
-            className="min-w-[92px] shadow-none"
+            className="min-w-[92px]"
             onClick={onSave}
             disabled={!canSave || isSaving}
           >

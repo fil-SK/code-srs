@@ -52,7 +52,7 @@ export function AboutPage() {
           </p>
           <Link
             to="/decks"
-            className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-fliptap-control bg-fliptap-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-fliptap-accent-hover"
+            className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-fliptap-control fliptap-button fliptap-button-primary px-5 py-2.5 text-sm font-semibold text-white"
           >
             Open your library <ArrowRight size={17} aria-hidden="true" />
           </Link>

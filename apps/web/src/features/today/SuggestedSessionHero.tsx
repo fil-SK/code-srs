@@ -346,7 +346,7 @@ export function SuggestedSessionHero({
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
             <Link
               to={hasDue ? '/review' : '/decks'}
-              className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[9px] bg-[#FF6902] px-7 text-[16px] font-semibold text-white shadow-[0_8px_18px_rgba(255,105,2,0.22)] transition-all duration-150 ease-out hover:-translate-y-px hover:bg-[#F66200] hover:shadow-[0_10px_22px_rgba(255,105,2,0.25)] motion-reduce:transition-none"
+              className="fliptap-button fliptap-button-primary fliptap-button-hero rounded-[9px] text-white"
             >
               {hasDue && <Play size={16} className="fill-white" />}
               {hasDue ? 'Start session' : 'Go to Library'}
@@ -357,7 +357,7 @@ export function SuggestedSessionHero({
               <button
                 type="button"
                 onClick={onAdjust}
-                className="inline-flex cursor-pointer items-center gap-1.5 text-[14px] font-medium text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
+                className="inline-flex cursor-pointer items-center gap-1.5 text-[14px] font-medium text-[#F8FAFC]/75 transition-colors hover:text-[#F8FAFC]"
               >
                 <SlidersHorizontal size={15} />
                 Adjust session

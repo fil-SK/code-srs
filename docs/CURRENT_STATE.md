@@ -1,6 +1,26 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; web navbar due indicator).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; balanced web action hierarchy).
+
+> **Balanced web action hierarchy (2026-10-09, D485, refines D483).**
+> Library Import Deck now shares the neutral button's lower edge, compact
+> depth and smooth hover response. Standard orange actions use a smaller
+> shadow and 1px lift; Today's approved hero keeps its 2px lift. Both variants
+> retain focus, press, disabled, touch and reduced-motion behavior. Chromium
+> checks both themes at desktop/phone widths and real import navigation.
+> All 121 files / 1,153 tests, forced TypeScript, lint and web build pass.
+
+> **Tactile web buttons (2026-10-09, D483).** Shared actions and existing
+> Library/Review primary controls use the approved fixed highlight, subtle
+> lower edge, smooth orange/shadow change, 2px hover lift and 1px press. Today
+> keeps its 52px action and tuned geometry. Neutral and danger variants match
+> both themes; coarse pointers get 44px targets, disabled controls stay still,
+> keyboard focus remains visible and reduced motion removes movement.
+> No data, scheduling, native or marketing change.
+> Verification: 121 files / 1,153 tests, forced TypeScript, lint and web build
+> pass. Chromium verifies both themes at 1440x900 and 390x844, hover/press,
+> focus, disabled states, authoring saves, review reveal, reduced motion and
+> coarse-pointer targets without page errors or document overflow.
 
 > **Stronger web rating hover colors (2026-10-09, D484).** Hover and keyboard focus now use more visible background tints and colored borders; Easy's blue feather is darker. Colors still mix existing theme tokens, while neutral rest and orange suggestion/selection are retained. Verification: 121 files / 1,153 tests, forced TypeScript and lint pass; Chromium checks both themes and widths, hover/focus, orange selection and reduced motion.
 

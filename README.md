@@ -14,6 +14,8 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Highlights
 
+- **Tactile web buttons** with subtle depth, a smooth hover lift and press feedback, matching both themes and honoring reduced motion.
+
 - **Consistent reviewed icons across web and mobile** for learning metrics, navigation identities and all six card types, using shared SVG drawings. Deck choices retain their existing artwork.
 
 - **48 generic programming and software icons** for decks, with category filters and search in New Deck and Deck/Collection settings. Saved choices appear consistently in Library, Today and Progress and survive backup export/import.

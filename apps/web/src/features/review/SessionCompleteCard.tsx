@@ -220,7 +220,7 @@ export function SessionCompleteCard({
           )}
           <Link
             to="/"
-            className="inline-flex min-h-11 items-center justify-center rounded-fliptap-control bg-fliptap-accent px-6 text-sm font-semibold text-white transition-colors hover:bg-fliptap-accent-hover"
+            className="inline-flex min-h-11 items-center justify-center rounded-fliptap-control fliptap-button fliptap-button-primary px-6 text-sm font-semibold text-white"
           >
             Back to Today
           </Link>
