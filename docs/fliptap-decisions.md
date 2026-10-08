@@ -2256,6 +2256,33 @@ baselines, hover/focus and no document overflow. Forced TypeScript and root
 lint pass. Full-suite verification is pending after machine-load timeouts in
 unrelated editor tests; no test settings were changed in the repository.
 
+## 2026-10-09 - Smaller, broadly useful deck icon palette
+
+**D488 (supersedes D468's selectable catalog size).** The owner found the
+48-icon picker crowded with narrow choices, especially Git symbols. Web's
+shared New Deck and Deck/Collection settings picker now offers 15: Code,
+Terminal, Braces, Debugging, Problem solving, Database, Graphs, Processor,
+Memory, Servers, Web, Layers, Security, Tooling and Documentation. These
+work across broad topics without requiring an exact subject match. Search,
+category filters, preview, focus return and the existing mark styling remain.
+
+Core exports `DECK_ICON_CHOICES` separately from the stable persisted catalog.
+Retired choices remain valid ids with their original labels and renderers,
+so existing decks can be edited without losing their selection and backups
+still import and export them. Nothing rewrites rows or changes backup version
+2, storage, scheduling, dependencies or native presentation.
+
+Verification: forced TypeScript and root lint pass. Chromium passes Light and
+Dark at 1440x900 and 390x844: exactly 15 choices, retired choices absent,
+category/keyword filtering, hover, keyboard focus and return, a real create,
+reload persistence, no document overflow and no page errors. Screenshots were
+visually inspected in all four combinations. Picker regressions cover retired
+selection preservation; the real backup round-trip includes a retired id.
+Affected suites pass: 8 files / 97 tests with thread workers. Full-suite
+verification remains pending: full fork-worker and thread-worker runs made
+no reported progress after the banner and were stopped. The focused suite
+completed successfully; no passing full-suite result is claimed.
+
 ## 2026-10-09 - Remove web deck Insights
 
 **D489 (supersedes D107). Remove Insights and retain Cards as the single active tab.**

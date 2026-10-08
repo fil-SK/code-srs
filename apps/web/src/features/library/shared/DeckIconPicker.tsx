@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react'
 import { Check, Search } from 'lucide-react'
-import { DECK_ICONS, DECK_ICON_CATEGORIES, getDeckIcon, type DeckIconId } from '@fliptap/core'
+import { DECK_ICON_CHOICES, DECK_ICON_CATEGORIES, getDeckIcon, type DeckIconId } from '@fliptap/core'
 import { fieldClass } from '@/components/ui/Field'
 import { cn } from '@/lib/cn'
 import { DeckMark } from './DeckMark'
@@ -17,7 +17,7 @@ export function DeckIconPicker({ value, onChange }: {
   const [category, setCategory] = useState('All')
   const selected = getDeckIcon(value)
   const query = search.trim().toLowerCase()
-  const icons = DECK_ICONS.filter((icon) =>
+  const icons = DECK_ICON_CHOICES.filter((icon) =>
     (category === 'All' || icon.category === category) &&
     `${icon.label} ${icon.keywords}`.toLowerCase().includes(query),
   )

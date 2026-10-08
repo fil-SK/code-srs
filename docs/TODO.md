@@ -250,7 +250,7 @@ was introduced. Native physical-device verification is pending.
 
 ## Deck identity
 
-Web's generic-icon portion is complete (D468): 48 searchable choices in New
+Web's generic-icon portion is complete (D468, refined by D488): 15 searchable choices in New
 Deck and Deck/Collection settings, saved as shared `Deck.iconId`, rendered on
 Library, Today and Progress. Remaining work: a native renderer and chooser
 over the same catalog, and any fuller deck-cover/background system. Native

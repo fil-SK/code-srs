@@ -2,6 +2,8 @@
 
 **Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; balanced web action hierarchy).
 
+> **Curated web deck icons (2026-10-09, D488).** New Deck and Deck/Collection settings now offer 15 broad software engineering choices. Git-specific and other narrow choices are retired from selection. Existing saved selections still render, save and round-trip through backups without rewriting rows. Native presentation is unchanged. Verification results recorded in D488.
+
 > **Web deck Insights removed (2026-10-09, D489).** Cards remains the single active tab with its existing orange underline and spacing. The status/type breakdowns and switching state are removed; card controls and header metrics remain. Forced TypeScript and lint pass; Chromium checks Light/Dark at 1440x900 and 390x844, tab focus and activation, visible Cards content and no document overflow or page errors. Full-suite verification is blocked on this Windows host: the default run timed out in unrelated editor tests, and bounded process/thread-worker retries stalled during startup.
 
 > **Web deck metric alignment (2026-10-09, D487).** Cards, due today, last

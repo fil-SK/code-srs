@@ -1,6 +1,7 @@
 export const DECK_ICON_CATEGORIES = ['Code', 'Data', 'Systems', 'Workflow'] as const
 
-// Stable choices shared by platforms. Each renderer owns its vector components;
+// Stable persisted ids shared by platforms, including retired picker choices.
+// Each renderer owns its vector components;
 // deck data carries only an id, never markup, a URL or a company logo.
 export const DECK_ICONS = [
   { id: 'code', label: 'Code', category: 'Code', keywords: 'programming source development' },
@@ -59,6 +60,14 @@ export const DECK_ICONS = [
 }[]
 
 export type DeckIconId = (typeof DECK_ICONS)[number]['id']
+
+// Keep retired ids readable and importable without crowding new selections.
+const pickerIds = new Set<DeckIconId>([
+  'code', 'terminal', 'braces', 'bug', 'puzzle',
+  'database', 'network', 'cpu', 'memory', 'server',
+  'globe', 'layers', 'shield', 'wrench', 'book-open',
+])
+export const DECK_ICON_CHOICES = DECK_ICONS.filter((icon) => pickerIds.has(icon.id))
 export const DEFAULT_DECK_ICON: DeckIconId = 'code'
 const iconIds = new Set<string>(DECK_ICONS.map((icon) => icon.id))
 
