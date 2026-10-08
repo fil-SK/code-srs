@@ -2035,6 +2035,26 @@ native presentation, metric definitions and persisted data are unchanged.
 Chromium checks Light and Dark at 1440x900 and 390x844, including the deck header,
 Recall cue and keyboard flip, with no page errors or document overflow.
 
+## 2026-10-08 - Quiet web review position line
+
+**D477. Review and preview show card position as a thin line beneath the topbar.**
+The owner requested a nondistracting visual position indicator, with card 2 of
+10 showing 20%. The shared `ReviewTopBar` renders a static 2px track with a
+neutral `muted-light` fill over `border`, positioned within the existing bottom
+edge so the 80px bar and card spacing do not change. No orange accent, animation
+or additional visible copy is introduced. Its value follows the displayed
+one-based position, including backward deck preview navigation; it represents
+position rather than the number of committed reviews. A single-card preview
+shows 100%. The accessible progressbar is named Card position and describes the
+current card and total. Embedded authoring previews that hide the topbar also
+hide the line. Native presentation, grading, scheduling and storage stay as-is.
+
+Chromium verifies Light and Dark at 1440x900 and 390x844, 20% on card 2 of
+10, backward preview navigation, answer reveal, keyboard focus/activation
+and real committed review advancement, with no page errors or settled page
+overflow. The affected review/preview suites and Matching editor suite pass.
+Forced TypeScript checking and root lint pass.
+
 Verification: 121 files / 1,152 tests pass with two workers and a 20-second
 per-test timeout. The default five-second run timed out only in the documented
 Matching editor suite; both cases pass in isolation and in the final full run.

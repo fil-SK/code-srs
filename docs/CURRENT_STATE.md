@@ -9,6 +9,15 @@
 > Verification: 121 files / 1,152 tests pass with two workers and a 20-second
 > test timeout; forced TypeScript checking and root lint pass.
 
+> **Web review position line (2026-10-08, D477).** Review and preview share a
+> quiet 2px line at the bottom of the immersive topbar. Its neutral fill follows
+> the displayed card position (card 2 of 10 is 20%), including backward preview
+> navigation. It has no animation or extra visible label; assistive technology
+> receives the card position. Single-card previews show a full line. Chromium
+> verifies both themes/widths and review/preview navigation; 1,152 root tests
+> pass with an extended timeout, and forced TypeScript/lint pass. Grading,
+> scheduling, persisted data and native presentation are unchanged.
+
 > **Streak-focused web Momentum (2026-10-08, D475).** Today's panel now leads
 > with the canonical streak, seven actual local study-day markers and a status
 > that distinguishes studied today, due work and nothing due. Retention stays

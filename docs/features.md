@@ -4,6 +4,8 @@ The canonical description of **what the product does and how it is meant to beha
 
 Boundaries: for *implementation status detail* (real vs. placeholder numbers, known issues, next milestone) read [`CURRENT_STATE.md`](CURRENT_STATE.md); for *how it is built* read [`architecture.md`](architecture.md); for *how it should look* read [`design-system.md`](design-system.md); for *why* read [`fliptap-decisions.md`](fliptap-decisions.md).
 
+Web Review and card previews share a quiet position line beneath the topbar: card 2 of 10 fills 20% of the line. It follows preview navigation and keeps the existing text count (D477).
+
 **Status legend**
 - **v1, unchanged** — original functionality, not touched by the redesign beyond an automatic color reskin (see below).
 - **v1, reskinned only** — same as above, called out explicitly where it matters.
