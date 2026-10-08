@@ -1,9 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { X } from 'lucide-react'
 import type { Card, Deck, ID } from '@/types'
 import { Button } from '@/components/ui/Button'
-import { selectClass } from '@/components/ui/Field'
+import { fieldClass, selectClass } from '@/components/ui/Field'
 import { useIsNarrowShell } from '@/components/layout/useIsNarrowShell'
 import { buildDeckTree, flattenDeckTree, subtreeIds } from '@/domain/decks/tree'
 import { resolveSessionLimit } from '@/domain/stats/todayMetrics'
@@ -84,6 +85,24 @@ export function AdjustSessionDialog({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
+      if (e.key !== 'Tab') return
+      const controls = Array.from(
+        panelRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), select:not(:disabled)',
+        ) ?? [],
+      ).filter((control) => {
+        if (control instanceof HTMLInputElement && control.type === 'radio') return control.checked
+        return true
+      })
+      const first = controls[0]
+      const last = controls[controls.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last?.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first?.focus()
+      }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -94,7 +113,7 @@ export function AdjustSessionDialog({
 
   useEffect(() => {
     const panel = panelRef.current
-    panel?.querySelector<HTMLElement>('input, select, button')?.focus()
+    panel?.querySelector<HTMLElement>('input:checked')?.focus()
     return () => {
       const active = document.activeElement
       if (active && active !== document.body && !panel?.contains(active)) return
@@ -112,145 +131,194 @@ export function AdjustSessionDialog({
     onClose()
   }
 
+  const focusClass =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent focus-visible:ring-offset-2 focus-visible:ring-offset-fliptap-surface'
+  const scopeRowClass =
+    'flex min-h-14 cursor-pointer items-center gap-3 rounded-fliptap-control px-3.5 py-3 text-sm transition-colors has-focus-visible:ring-2 has-focus-visible:ring-fliptap-accent'
+
   const form = (
     <form
       onSubmit={(e) => {
         e.preventDefault()
         start()
       }}
-      className="p-6"
+      className="flex max-h-[calc(85dvh-20px)] flex-col sm:max-h-[calc(100dvh-2rem)]"
     >
-      <h2 className="font-fliptap-display text-lg font-bold tracking-tight text-fliptap-ink-brand">
-        Adjust session
-      </h2>
-      <p className="mt-1 text-sm text-fliptap-muted">
-        Just for this session — nothing here is saved.
-      </p>
-
-      <fieldset className="mt-5">
-        <legend className="mb-2 block text-xs font-semibold tracking-wide text-fliptap-muted uppercase">
-          Scope
-        </legend>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
-            <input
-              type="radio"
-              name={`${scopeId}-scope`}
-              checked={deckId === 'all'}
-              onChange={() => setDeckId('all')}
-              className="accent-fliptap-accent"
-            />
-            <span>All due cards</span>
-            <span className="text-fliptap-muted">({dueCards.length})</span>
-          </label>
-          <label className="flex items-center gap-2.5 text-sm text-fliptap-ink">
-            <input
-              type="radio"
-              name={`${scopeId}-scope`}
-              checked={deckId !== 'all'}
-              onChange={() => setDeckId(selectableDecks[0]?.deck.id ?? 'all')}
-              disabled={selectableDecks.length === 0}
-              className="accent-fliptap-accent"
-            />
-            <span>One deck</span>
-          </label>
-          {deckId !== 'all' && (
-            <select
-              aria-label="Deck"
-              value={deckId}
-              onChange={(e) => setDeckId(e.target.value)}
-              className={cn(selectClass, 'mt-1')}
-            >
-              {selectableDecks.map(({ deck, path }) => (
-                <option key={deck.id} value={deck.id}>
-                  {path}
-                </option>
-              ))}
-            </select>
+      <div className="flex shrink-0 items-start justify-between gap-3 px-6 pt-6 pb-5">
+        <div>
+          <h2 className="font-fliptap-display text-2xl font-bold tracking-tight text-fliptap-ink-brand">
+            Adjust session
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-fliptap-muted">
+            Choose what to review and how many cards.
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Close Adjust session"
+          onClick={onClose}
+          className={cn(
+            'flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-fliptap-control text-fliptap-muted hover:bg-fliptap-surface-subtle hover:text-fliptap-ink',
+            focusClass,
           )}
-        </div>
-      </fieldset>
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+      </div>
 
-      <fieldset className="mt-5">
-        <legend className="mb-2 block text-xs font-semibold tracking-wide text-fliptap-muted uppercase">
-          Session size
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {SIZE_PRESETS.map((preset) => (
-            <button
-              key={preset.value}
-              type="button"
-              aria-pressed={size === preset.value}
-              onClick={() => setSize(preset.value)}
-              className={cn(
-                'cursor-pointer rounded-fliptap-control border px-3 py-1.5 text-sm font-medium transition-colors',
-                size === preset.value
-                  ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
-                  : 'border-fliptap-border text-fliptap-ink hover:border-fliptap-border-strong',
-              )}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-        {size === 'custom' && (
-          <div className="mt-3">
+      <div className="min-h-0 overflow-y-auto px-6 pb-6">
+        <fieldset>
+          <legend className="mb-2.5 text-sm font-semibold text-fliptap-ink-brand">
+            What to review
+          </legend>
+          <div className="space-y-1">
             <label
-              htmlFor={`${scopeId}-custom`}
-              className="mb-1.5 block text-xs font-medium text-fliptap-muted"
-            >
-              Number of cards
-            </label>
-            <input
-              id={`${scopeId}-custom`}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              step={1}
-              value={custom}
-              onChange={(e) => setCustom(e.target.value)}
-              aria-invalid={customInvalid}
-              aria-describedby={customInvalid ? `${scopeId}-custom-error` : undefined}
               className={cn(
-                'w-28 rounded-[9px] border bg-code-bg px-3.5 py-2.5 text-sm text-text outline-none',
-                customInvalid
-                  ? 'border-fliptap-error focus:border-fliptap-error'
-                  : 'border-border focus:border-accent',
+                scopeRowClass,
+                deckId === 'all'
+                  ? 'bg-fliptap-surface-subtle text-fliptap-ink-brand'
+                  : 'text-fliptap-ink hover:bg-fliptap-surface-subtle',
               )}
-            />
-            {customInvalid && (
-              <p id={`${scopeId}-custom-error`} className="mt-1.5 text-xs text-fliptap-error">
-                Enter a whole number of cards, 1 or more.
-              </p>
+            >
+              <input
+                type="radio"
+                name={scopeId + '-scope'}
+                checked={deckId === 'all'}
+                onChange={() => setDeckId('all')}
+                className="size-4 shrink-0 accent-fliptap-accent"
+              />
+              <span className="flex-1 font-medium">All due cards</span>
+              <span className="text-sm tabular-nums text-fliptap-muted">{dueCards.length}</span>
+            </label>
+            <label
+              className={cn(
+                scopeRowClass,
+                deckId !== 'all'
+                  ? 'bg-fliptap-surface-subtle text-fliptap-ink-brand'
+                  : 'text-fliptap-ink hover:bg-fliptap-surface-subtle',
+                selectableDecks.length === 0 && 'cursor-default opacity-50',
+              )}
+            >
+              <input
+                type="radio"
+                name={scopeId + '-scope'}
+                checked={deckId !== 'all'}
+                onChange={() => setDeckId(selectableDecks[0]?.deck.id ?? 'all')}
+                disabled={selectableDecks.length === 0}
+                className="size-4 shrink-0 accent-fliptap-accent"
+              />
+              <span className="font-medium">Choose a deck</span>
+            </label>
+            {deckId !== 'all' && (
+              <div className="pt-2">
+                <select
+                  aria-label="Deck"
+                  value={deckId}
+                  onChange={(e) => setDeckId(e.target.value)}
+                  className={cn(selectClass, 'min-h-11', focusClass)}
+                >
+                  {selectableDecks.map(({ deck, path }) => (
+                    <option key={deck.id} value={deck.id}>
+                      {path}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
-        )}
-      </fieldset>
+        </fieldset>
 
-      {/* Never states a count the Start button will not honor: an unusable
-          custom value asks for one instead of quietly falling back to the
-          whole queue. */}
-      <p className="mt-5 text-sm text-fliptap-muted" role="status">
-        {dueInScope === 0
-          ? 'Nothing is due in this scope.'
-          : customEmpty || customInvalid
-            ? 'Enter how many cards to study.'
-            : capped
-              ? `Starts ${effective} ${effective === 1 ? 'card' : 'cards'} — that's everything due in this scope.`
-              : `Starts ${effective} ${effective === 1 ? 'card' : 'cards'}.`}
-      </p>
+        <fieldset className="mt-6">
+          <legend className="mb-2.5 text-sm font-semibold text-fliptap-ink-brand">
+            How many cards
+          </legend>
+          <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_1.3fr] gap-1 rounded-fliptap-control bg-fliptap-surface-subtle p-1">
+            {SIZE_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                aria-pressed={size === preset.value}
+                onClick={() => setSize(preset.value)}
+                className={cn(
+                  'min-h-11 min-w-0 cursor-pointer rounded-fliptap-control border px-1 text-sm font-medium transition-colors',
+                  focusClass,
+                  size === preset.value
+                    ? 'border-fliptap-border-strong bg-fliptap-surface text-fliptap-ink-brand shadow-sm'
+                    : 'border-transparent text-fliptap-muted hover:bg-fliptap-surface hover:text-fliptap-ink',
+                )}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          {size === 'custom' && (
+            <div className="mt-3">
+              <label
+                htmlFor={scopeId + '-custom'}
+                className="mb-1.5 block text-sm font-medium text-fliptap-ink"
+              >
+                Number of cards
+              </label>
+              <input
+                id={scopeId + '-custom'}
+                type="number"
+                inputMode="numeric"
+                min={1}
+                step={1}
+                value={custom}
+                onChange={(e) => setCustom(e.target.value)}
+                aria-invalid={customInvalid}
+                aria-describedby={customInvalid ? scopeId + '-custom-error' : undefined}
+                className={cn(
+                  fieldClass,
+                  'min-h-11',
+                  focusClass,
+                  customInvalid && 'border-fliptap-error focus:border-fliptap-error',
+                )}
+              />
+              {customInvalid && (
+                <p id={scopeId + '-custom-error'} className="mt-1.5 text-xs text-fliptap-error">
+                  Enter a whole number of cards, 1 or more.
+                </p>
+              )}
+            </div>
+          )}
+        </fieldset>
 
-      <div className="mt-5 flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="primary" disabled={!canStart}>
-          Start session
-        </Button>
+        {/* Invalid custom values must not advertise a count Start cannot honor. */}
+        <div className="mt-6 rounded-fliptap-control bg-fliptap-surface-subtle px-4 py-4" role="status">
+          <p className="text-base font-semibold text-fliptap-ink-brand">
+            {dueInScope === 0
+              ? 'Nothing is due in this scope.'
+              : customEmpty || customInvalid
+                ? 'Enter how many cards to study.'
+                : String(effective) + (effective === 1 ? ' card' : ' cards') + ' ready to review'}
+          </p>
+          {canStart && (
+            <p className="mt-1 text-sm leading-relaxed text-fliptap-muted">
+              {capped
+                ? 'Only ' + dueInScope + (dueInScope === 1 ? ' card is' : ' cards are') + ' due in this scope.'
+                : deckId === 'all'
+                  ? 'From across your decks.'
+                  : 'From your selected deck and its subdecks.'}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-fliptap-border px-6 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <p className="mb-3 text-xs text-fliptap-muted">Applies to this session only.</p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose} className={cn('min-h-11', focusClass)}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="primary" disabled={!canStart} className={cn('min-h-11', focusClass)}>
+            Start session
+          </Button>
+        </div>
       </div>
     </form>
   )
-
   return createPortal(
     // document.body is outside `.fliptap-scope`, so the portal re-establishes the
     // token scope and cancels the canvas background that class paints.
@@ -278,10 +346,15 @@ export function AdjustSessionDialog({
           {form}
         </div>
       ) : (
-        <div className="absolute inset-0 grid place-items-center overflow-auto p-4">
+        <div
+          className="absolute inset-0 grid place-items-center overflow-auto p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose()
+          }}
+        >
           <div
             ref={panelRef}
-            className="relative w-full max-w-[440px] rounded-fliptap-dialog border border-fliptap-border bg-fliptap-surface shadow-[var(--fliptap-shadow-float)]"
+            className="relative w-full max-w-[460px] rounded-fliptap-dialog border border-fliptap-border bg-fliptap-surface shadow-[var(--fliptap-shadow-float)]"
           >
             {form}
           </div>

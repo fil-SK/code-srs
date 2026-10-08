@@ -103,7 +103,7 @@ describe('AdjustSessionDialog', () => {
   it('defaults to every due card and starts the plain queue', async () => {
     renderDialog()
     expect(screen.getByText('All due cards')).toBeTruthy()
-    expect(screen.getByText('Starts 7 cards.')).toBeTruthy()
+    expect(screen.getByText('7 cards ready to review')).toBeTruthy()
 
     await start()
     expect(destination()).toBe('/review')
@@ -111,11 +111,11 @@ describe('AdjustSessionDialog', () => {
 
   it('scopes to one deck and counts its whole subtree', async () => {
     renderDialog()
-    await user.click(screen.getByRole('radio', { name: /One deck/ }))
+    await user.click(screen.getByRole('radio', { name: /Choose a deck/ }))
 
     // deck-1 sorts first alphabetically among leaf decks; MLIR is its child.
     await user.selectOptions(screen.getByLabelText('Deck'), 'deck-1')
-    expect(screen.getByText('Starts 5 cards.')).toBeTruthy()
+    expect(screen.getByText('5 cards ready to review')).toBeTruthy()
 
     await start()
     expect(destination()).toBe('/review?deck=deck-1')
@@ -125,7 +125,7 @@ describe('AdjustSessionDialog', () => {
   // the path label keeps a nested deck unambiguous.
   it('offers every deck, in tree order, with its full path', async () => {
     renderDialog()
-    await user.click(screen.getByRole('radio', { name: /One deck/ }))
+    await user.click(screen.getByRole('radio', { name: /Choose a deck/ }))
     const options = within(screen.getByLabelText('Deck')).getAllByRole('option')
     expect(options.map((o) => o.textContent)).toEqual([
       'Compilers',
@@ -136,9 +136,9 @@ describe('AdjustSessionDialog', () => {
 
   it('counts only the selected deck when it has no children', async () => {
     renderDialog()
-    await user.click(screen.getByRole('radio', { name: /One deck/ }))
+    await user.click(screen.getByRole('radio', { name: /Choose a deck/ }))
     await user.selectOptions(screen.getByLabelText('Deck'), 'deck-1a')
-    expect(screen.getByText('Starts 2 cards.')).toBeTruthy()
+    expect(screen.getByText('2 cards ready to review')).toBeTruthy()
   })
 
   it.each([
@@ -156,7 +156,7 @@ describe('AdjustSessionDialog', () => {
     renderDialog(Array.from({ length: 40 }, (_, i) => card(`c${i}`, 'deck-2')))
     await chooseSize('Custom')
     await user.type(screen.getByLabelText('Number of cards'), '7')
-    expect(screen.getByText('Starts 7 cards.')).toBeTruthy()
+    expect(screen.getByText('7 cards ready to review')).toBeTruthy()
 
     await start()
     expect(destination()).toBe('/review?limit=7')
@@ -188,7 +188,7 @@ describe('AdjustSessionDialog', () => {
   it('caps a preset larger than the scope, and says so', async () => {
     renderDialog()
     await chooseSize('30')
-    expect(screen.getByText("Starts 7 cards — that's everything due in this scope.")).toBeTruthy()
+    expect(screen.getByText("Only 7 cards are due in this scope.")).toBeTruthy()
 
     // The URL still carries what was asked for; /review caps it against the
     // real queue, so the two can never disagree.
@@ -198,7 +198,7 @@ describe('AdjustSessionDialog', () => {
 
   it('combines deck scope and limit', async () => {
     renderDialog()
-    await user.click(screen.getByRole('radio', { name: /One deck/ }))
+    await user.click(screen.getByRole('radio', { name: /Choose a deck/ }))
     await user.selectOptions(screen.getByLabelText('Deck'), 'deck-2')
     await chooseSize('10')
     await start()
@@ -207,7 +207,7 @@ describe('AdjustSessionDialog', () => {
 
   it('will not start a session in a scope with nothing due', async () => {
     renderDialog([card('s1', 'deck-2')])
-    await user.click(screen.getByRole('radio', { name: /One deck/ }))
+    await user.click(screen.getByRole('radio', { name: /Choose a deck/ }))
     await user.selectOptions(screen.getByLabelText('Deck'), 'deck-1a')
 
     expect(screen.getByText('Nothing is due in this scope.')).toBeTruthy()

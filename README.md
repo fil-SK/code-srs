@@ -26,6 +26,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Decks tab, per-deck view, Browse, and an interactive Preview** — try cards (answer + check yourself) with no scheduling impact.
 - **Optional Explanation** on every card type, shown on reveal.
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
+- **Adjust session from Today**: choose all due cards or a deck and a card count, with a clear queue preview in a desktop modal or phone sheet. Choices apply only to that session.
 - **Today Momentum**: a focal streak, seven actual study days, mature retention and your next achievement, linked to Progress.
 - **Progress**: learned and due cards, review volume, mature-material retention, current streak, activity, and actionable per-deck metrics.
 - **Four study achievements**: your first finished session, five study days in seven, reviews across four weeks, and recalling a missed card on a later due review. Progress shows lifetime progress and earned dates; review completion acknowledges new unlocks. Available on web and native Demo (whose state still resets on restart).

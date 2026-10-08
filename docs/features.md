@@ -95,6 +95,8 @@ Walkthrough supports both scopes at once. The card-wide tip remains available th
 
 A study session is **temporary and generated**, not a persisted entity: sources include all due cards, one deck, or a deck scope passed as `?deck=`. The queue is snapshotted so grading does not reshuffle it mid-session.
 
+**Adjust session on Today** offers all due cards or one deck subtree and All due / 10 / 20 / 30 / Custom counts. Its summary shows the actual capped count; empty scopes and invalid custom counts cannot start. The web dialog uses a centered desktop panel and a phone bottom sheet with a reachable footer, explicit close action and contained keyboard focus (D478). These choices apply only to the next session.
+
 **Undo is available only on the end-of-session "All done" screen**, where it steps back one card and reverts the last grade — restoring the card and removing its history entry as one all-or-nothing write, the exact inverse of the grade. A failed undo changes nothing and says so, leaving the review recorded and Undo still offered. There is no mid-session undo: `ReviewSessionV2` renders the Undo control only once the queue is exhausted, and `ReviewSessionScreen`'s key handler covers Escape / Space / Enter / 1–4 only. The `useUndoGrade` mutation itself is fully general — it is the in-session UI entry point that is missing (see "Capabilities removed with the v1 surface" below).
 
 **Not implemented:** the `StudySession` type exists in `packages/core/src/types/review.ts` but nothing constructs or stores one, so there is no session goal (card count / target minutes), no session id on history rows, and no resumable session. Progress's "sessions" are **gap-clustered from review timestamps** for display purposes, not read from a session record.

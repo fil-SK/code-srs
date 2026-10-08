@@ -1,6 +1,17 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-08** (branch `dev/scenario-switcher`; streak-focused web Momentum).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; web Adjust session redesign).
+
+> **Web Adjust session redesign (2026-10-09, D478).** Today now opens a 460px
+> desktop modal or phone bottom sheet with full-width scope rows, one cohesive
+> count selector, a prominent truthful queue summary, a visible close button
+> and a quiet footer with one orange Start action. The body scrolls independently
+> on short screens while the footer stays reachable. Keyboard focus stays in the
+> dialog and returns to Adjust session on dismissal. Scope, count capping,
+> custom validation and transient review URLs retain D214's behavior.
+> Verification: 121 files / 1,152 tests, forced TypeScript and root lint pass.
+> Chromium verifies both themes at 1440x900 and 390x844, short phone screens,
+> hover/focus, dismissal, invalid/custom/capped/empty states and real launches.
 
 > **Web deck cards icon (2026-10-08, D476).** The selected deck's cards metric now
 > shares Recall's two tilted flashcards. The review hint retains its original

@@ -2059,3 +2059,29 @@ Verification: 121 files / 1,152 tests pass with two workers and a 20-second
 per-test timeout. The default five-second run timed out only in the documented
 Matching editor suite; both cases pass in isolation and in the final full run.
 Forced TypeScript checking, root lint and diff whitespace checks pass.
+
+## 2026-10-09 - Focused web Adjust session presentation
+
+**D478. Adjust session gets clearer hierarchy without expanding D214's settings.**
+The owner approved a stronger header, full-width selectable scope rows, a
+cohesive count selector, a prominent queue preview and a quiet footer. The
+desktop modal is 460px wide; phones retain the established bottom sheet below
+480px. The locked semantic palette supplies both themes. Selection uses neutral
+surfaces, the native radio remains a minor accent, and Start session is the one
+orange primary action. The header includes Close and the footer says choices
+apply to this session only. Scope and custom fields retain native semantics.
+
+The summary advertises only the effective count and explains capping. Empty or
+invalid custom input never advertises a startable queue. Subtree scoping, preset
+URLs, validation, scheduling and persistence remain D214's implementation.
+Short-screen body scrolling leaves the header and footer reachable. Tab and
+Shift+Tab stay within the dialog, Escape/Close/Cancel/scrim dismiss it, and focus
+returns to the trigger. The desktop layout layer now handles outside clicks
+that previously intercepted the underlying scrim.
+
+Verification: 121 files / 1,152 root tests pass with two workers and a 20-second
+test timeout; forced TypeScript and root lint pass. Chromium verifies Light/Dark
+at 1440x900 and 390x844, plus 390x500, scope/subtree and capped counts,
+invalid/empty/valid custom values, empty decks, hover/focus, Tab containment,
+focus return and dismissal, and real scoped three-card launches. No page errors
+or document overflow were found. No native or tuned Today hero changes.
