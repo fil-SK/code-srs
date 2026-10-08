@@ -2085,3 +2085,20 @@ at 1440x900 and 390x844, plus 390x500, scope/subtree and capped counts,
 invalid/empty/valid custom values, empty decks, hover/focus, Tab containment,
 focus return and dismissal, and real scoped three-card launches. No page errors
 or document overflow were found. No native or tuned Today hero changes.
+
+## 2026-10-09 - Quiet web navbar due status
+
+**D479. Today's due count becomes descriptive secondary text.**
+The owner approved replacing the orange count circle with muted `· N due`
+text beside Today. The filled badge suggested notification urgency and left
+its number unexplained. The label uses the existing semantic muted role,
+12px normal-weight text and no fill; the active destination keeps its thin
+orange marker. Zero omits the label, and widths below 640px show Today alone.
+The separator is hidden from assistive technology. On wider screens the count
+and due wording remain part of the link's accessible name. Today's existing
+All caught up state already covers the empty queue, so no new message or
+hero layout is introduced. The shared due query remains the source of truth.
+
+Verification: 121 files / 1,152 tests, forced TypeScript checking and root lint
+pass. Isolated Chromium checks cover Light/Dark at 1440x900 and 390x844,
+positive and zero counts, hover, keyboard focus and navigation. No page errors.

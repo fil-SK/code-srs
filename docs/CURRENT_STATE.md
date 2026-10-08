@@ -1,6 +1,14 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; web Adjust session redesign).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; web navbar due indicator).
+
+> **Web navbar due indicator (2026-10-09, D479).** Today now carries quiet
+> muted `· N due` text in place of the orange count badge. The count is omitted
+> at zero and below 640px; Today's existing All caught up state stays in-page.
+> The shared due query and the active orange navigation marker are retained.
+> Verification: 121 files / 1,152 tests, forced TypeScript and root lint pass.
+> Chromium checks Light/Dark at 1440x900 and 390x844, positive/zero counts,
+> hover, focus and navigation without page errors.
 
 > **Web Adjust session redesign (2026-10-09, D478).** Today now opens a 460px
 > desktop modal or phone bottom sheet with full-width scope rows, one cohesive

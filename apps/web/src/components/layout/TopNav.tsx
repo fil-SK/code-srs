@@ -52,8 +52,9 @@ export function TopNav({
             >
               {link.label}
               {badges[link.to] ? (
-                <span className="rounded-fliptap-pill bg-fliptap-accent px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                  {badges[link.to]}
+                <span className="hidden items-center gap-1.5 text-xs font-normal text-fliptap-muted sm:inline-flex">
+                  <span aria-hidden="true">·</span>
+                  {badges[link.to]} due
                 </span>
               ) : null}
             </NavLink>

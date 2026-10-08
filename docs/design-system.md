@@ -278,6 +278,7 @@ The shape language is **structured softness**.
 
 - `TopNav.tsx` is presentational only: logo, primary links, and a `rightSlot`. Its wordmark uses the same Inter Variable/650 treatment as login. It holds no product logic and no per-route title slot.
 - `primaryNavLinks.ts` is the single source of truth for the primary destinations, and there are exactly three: **Today (`/`) · Library (`/decks`) · Progress (`/progress`)**.
+- Today carries a small, normal-weight muted `· N due` label when the shared due count is positive. It has no filled badge and is hidden below 640px; zero renders no label. The separator is decorative, while the count and due wording form part of the link name on wider screens (D479).
 - The right side holds `StreakBadge` + `AccountMenu`. Nothing else.
 - **There is deliberately no global Search and no global `+ Create`.** The original locked IA included both; they were removed as a product call because each is a *scoped* concept — you search within a Library, you create a card within a deck — and a global affordance with no context to act on is worse than none. `CreateMenu.tsx` and `TopNav`'s search control were **deleted, not hidden**. Do not reintroduce either without a decision entry.
 - Settings is reached through the account menu, never as a top-level destination. That part of the locked IA holds.
