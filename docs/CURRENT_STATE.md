@@ -2,6 +2,14 @@
 
 **Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; balanced web action hierarchy).
 
+> **Web deck metric alignment (2026-10-09, D487).** Cards, due today, last
+> studied and mastery retain aligned values and labels when the relative date
+> is longer. The identity's available width chooses one row or a two-column
+> grid; narrow headers move actions below instead of squeezing the metrics.
+> No data or native behavior changes. Chromium checks both themes and five
+> widths; TypeScript and lint pass. Full-suite verification remains pending
+> after unrelated editor timeouts and stalled worker retries.
+
 > **Balanced web action hierarchy (2026-10-09, D485, refines D483).**
 > Library Import Deck now shares the neutral button's lower edge, compact
 > depth and smooth hover response. Standard orange actions use a smaller

@@ -2236,3 +2236,22 @@ creation and real importer navigation. Reduced motion, touch targets and
 touch navigation pass, with no page errors or document overflow. All 121 files /
 1,153 tests, forced TypeScript and root lint pass. The production web build
 passes with its existing chunk-size advisory.
+
+## 2026-10-09 - Deck metrics stay aligned across date lengths
+
+**D487 (refines D172). Focused Deck metrics respond to available header space.**
+The owner reported that Compilers had misaligned metrics while Algorithms did
+not. Chromium reproduced the difference with `14 days ago` versus `Never`:
+flex shrinking wrapped the date and `due today`, centering unequal heights.
+Values and labels now remain unwrapped. A content container query keeps the
+four metrics in one row from 30rem and uses a centered two-column grid below
+that width. Smaller horizontal separators retain the desktop composition.
+The identity retains a 480px minimum, capped at the available width, so actions
+move below before they squeeze the metrics. Phone rows center the 56px mastery
+ring against the other 44px text blocks. No data, scheduling or native changes.
+
+Verification: isolated Chromium passes Light/Dark at 1440x900, 390x844 and
+1100/880/700px with `Never` and `14 days ago`, equal text heights and aligned
+baselines, hover/focus and no document overflow. Forced TypeScript and root
+lint pass. Full-suite verification is pending after machine-load timeouts in
+unrelated editor tests; no test settings were changed in the repository.

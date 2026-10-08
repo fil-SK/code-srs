@@ -377,9 +377,9 @@ export function LibraryDeckPage() {
       </div>
 
       <div className="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-8">
-        <div className="flex min-w-0 flex-1 flex-col items-start gap-5 sm:flex-row sm:gap-7">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-5 sm:min-w-[min(100%,480px)] sm:flex-row sm:gap-7">
           <DeckMark iconId={deck.iconId} size="xl" />
-          <div className="min-w-0 flex-1">
+          <div className="@container w-full min-w-0 flex-1">
             <div className="flex items-center gap-2.5">
               <h1 className="font-fliptap-display text-2xl font-bold tracking-tight text-fliptap-ink-brand sm:text-3xl">
                 {deck.name}
@@ -393,13 +393,12 @@ export function LibraryDeckPage() {
             </div>
             {deck.description && <p className="mt-2 max-w-md text-sm text-fliptap-muted">{deck.description}</p>}
 
-            {/* One unwrapped row on desktop. When it wrapped, the mastery ring dropped to a
-                second line under "cards", away from the "last studied" it belongs with. */}
-            <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:items-center sm:gap-y-0 sm:divide-x sm:divide-fliptap-border">
-              <div className="sm:pr-3">
+            {/* Use the available identity width so longer dates never squeeze the metric labels. */}
+            <div className="mt-8 grid w-full grid-cols-2 items-center gap-y-5 whitespace-nowrap @[30rem]:flex @[30rem]:w-auto @[30rem]:gap-y-0 @[30rem]:divide-x @[30rem]:divide-fliptap-border">
+              <div className="@[30rem]:pr-2">
                 <Stat icon={CardsIcon} label="cards" value={String(totalCards)} />
               </div>
-              <div className="sm:px-3">
+              <div className="@[30rem]:px-2">
                 <Stat
                   icon={CalendarDays}
                   label="due today"
@@ -407,10 +406,10 @@ export function LibraryDeckPage() {
                   accent={metrics.dueCount > 0}
                 />
               </div>
-              <div className="sm:px-3">
+              <div className="@[30rem]:px-2">
                 <Stat icon={Clock3} label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
               </div>
-              <div className="flex items-center gap-3.5 sm:pl-3">
+              <div className="flex items-center gap-3.5 @[30rem]:pl-2">
                 <MasteryRing value={metrics.masteryFraction} />
                 <div>
                   <div className="font-fliptap-display text-lg font-bold text-fliptap-ink-brand">
