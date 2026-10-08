@@ -2,6 +2,13 @@
 
 **Last verified against the working tree: 2026-10-08** (branch `dev/scenario-switcher`; streak-focused web Momentum).
 
+> **Web deck cards icon (2026-10-08, D476).** The selected deck's cards metric now
+> shares Recall's two tilted flashcards. The review hint retains its original
+> size; the metric scales the same drawing to its existing icon slot. Chromium
+> checks both themes at desktop and phone widths, including keyboard flip.
+> Verification: 121 files / 1,152 tests pass with two workers and a 20-second
+> test timeout; forced TypeScript checking and root lint pass.
+
 > **Streak-focused web Momentum (2026-10-08, D475).** Today's panel now leads
 > with the canonical streak, seven actual local study-day markers and a status
 > that distinguishes studied today, due work and nothing due. Retention stays

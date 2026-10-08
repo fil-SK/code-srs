@@ -2021,3 +2021,21 @@ session verifies new activity and the next achievement; completion Undo removes
 both, and reload preserves committed history. Reduced-motion and the Belgrade
 DST transition are checked in the phone browser. No page errors or document
 overflow were found. Native UI is unchanged and no device verification is claimed.
+
+## 2026-10-08 - Reuse the Recall card cue in the web deck header
+
+**D476. The selected web deck's cards metric uses the same two tilted,
+overlapping flashcards as the Recall flip hint.** The owner requested replacing
+the existing stack glyph with that drawing. A shared web `CardsIcon` owns the
+original silhouette, rotations, surface fill and proportional borders; the
+review cue retains its 32x28 size and the deck metric scales it to 21px wide.
+This extends D472's icon pass only for this utility glyph. Deck identity artwork,
+native presentation, metric definitions and persisted data are unchanged.
+
+Chromium checks Light and Dark at 1440x900 and 390x844, including the deck header,
+Recall cue and keyboard flip, with no page errors or document overflow.
+
+Verification: 121 files / 1,152 tests pass with two workers and a 20-second
+per-test timeout. The default five-second run timed out only in the documented
+Matching editor suite; both cases pass in isolation and in the final full run.
+Forced TypeScript checking, root lint and diff whitespace checks pass.

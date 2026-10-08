@@ -511,3 +511,5 @@ four earned changes the footer to collection copy, with no pending bar. Retentio
 shows an em dash without mature samples. Orange remains confined to the flame
 and Today outline, keeping the session hero's primary action dominant. No new
 animation, palette role, dependency or trophy destination is introduced.
+
+**Web cards utility icon (D476).** The selected deck's cards metric and Recall's flip hint share the two tilted, overlapping flashcards in `CardsIcon`. The review hint is 32x28; the metric scales the drawing to 21px wide with proportional borders. Both inherit the surrounding semantic foreground and use the theme's surface fill.

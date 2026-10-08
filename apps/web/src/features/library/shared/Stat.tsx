@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
+import type { ComponentType } from 'react'
 
 // One icon+value+label metric, used by both the focused Deck header and the
 // Collection/container header so the two identity headers read as the same
@@ -9,7 +9,7 @@ export function Stat({
   value,
   accent,
 }: {
-  icon: LucideIcon
+  icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
   label: string
   value: string
   accent?: boolean

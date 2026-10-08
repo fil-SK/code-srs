@@ -1,4 +1,5 @@
 import { CalendarMetricIcon as CalendarDays, StudyTimeIcon as Clock3, LibraryIcon as BookOpen } from '@/components/icons/ApprovedIcons'
+import { CardsIcon } from '@/components/icons/CardsIcon'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -20,7 +21,6 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import {
   ChevronRight,
-  GalleryVerticalEnd,
   GripVertical,
   LayoutList,
   Play,
@@ -397,7 +397,7 @@ export function LibraryDeckPage() {
                 second line under "cards", away from the "last studied" it belongs with. */}
             <div className="mt-8 grid w-full grid-cols-2 gap-y-5 sm:flex sm:w-auto sm:items-center sm:gap-y-0 sm:divide-x sm:divide-fliptap-border">
               <div className="sm:pr-3">
-                <Stat icon={GalleryVerticalEnd} label="cards" value={String(totalCards)} />
+                <Stat icon={CardsIcon} label="cards" value={String(totalCards)} />
               </div>
               <div className="sm:px-3">
                 <Stat
