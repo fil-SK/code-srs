@@ -164,3 +164,6 @@ export * from './today/greetings'
 export * from './design/deckIcons'
 
 export * from './design/approvedIcons'
+
+export * from './domain/stats/achievements'
+export * from './design/achievementIcons'

@@ -193,6 +193,8 @@ describe('a demo review session', () => {
     // The log and the card agree, because both come from the one computed
     // result rather than being derived twice.
     expect(logs.at(-1)?.dueAfter).toBe(after.due)
+    expect(logs.at(-1)?.dueBefore).toBe(before.due)
+    expect(logs.at(-1)?.sessionCompleted).toBeUndefined()
     expect(logs.at(-1)?.stabilityAfter).toBe(after.stability)
     expect(logs.at(-1)?.cardId).toBe(first.id)
   })
@@ -300,6 +302,8 @@ describe('a demo review session', () => {
 
     expect(screen.getByText('Session complete')).toBeTruthy()
     expect(screen.getByText(`You reviewed ${total} of ${total} cards.`)).toBeTruthy()
+    expect(screen.getByText('First step')).toBeTruthy()
+    expect(entities.reviewLogs.filter((log) => log.sessionCompleted)).toHaveLength(1)
   })
 
   it('exits from the completion screen', async () => {

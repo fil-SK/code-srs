@@ -111,6 +111,18 @@ describe('assertValidReviewLogs', () => {
     expect(() => assertValidReviewLogs([valid])).not.toThrow()
   })
 
+  it('preserves optional scheduled-study evidence and refuses malformed facts', () => {
+    const evidence = { ...valid, dueBefore: 0, dueAfter: 2, sessionCompleted: true }
+    expect(() => assertValidReviewLogs([evidence])).not.toThrow()
+    expect(evidence).toEqual({ ...valid, dueBefore: 0, dueAfter: 2, sessionCompleted: true })
+    for (const dueBefore of ['0', NaN, Infinity, null]) {
+      expect(() => assertValidReviewLogs([{ ...valid, dueBefore }])).toThrow(/dueBefore/)
+    }
+    for (const sessionCompleted of ['true', 1, null]) {
+      expect(() => assertValidReviewLogs([{ ...valid, sessionCompleted }])).toThrow(/sessionCompleted/)
+    }
+  })
+
   it('rejects a prototype row without stateBefore', () => {
     const { stateBefore: _stateBefore, ...prototype } = valid
     expect(() => assertValidReviewLogs([prototype])).toThrow(/stateBefore/)

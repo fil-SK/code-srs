@@ -296,8 +296,13 @@ export function assertValidReviewLogs(logs: unknown[]): asserts logs is ReviewLo
         )
       }
     }
-    if (raw.dueAfter !== undefined && !isFiniteNumber(raw.dueAfter)) {
-      fail('ReviewLog', i, id, 'has a "dueAfter" that is not a number.')
+    for (const field of ['dueAfter', 'dueBefore'] as const) {
+      if (raw[field] !== undefined && !isFiniteNumber(raw[field])) {
+        fail('ReviewLog', i, id, `has a "${field}" that is not a number.`)
+      }
+    }
+    if (raw.sessionCompleted !== undefined && typeof raw.sessionCompleted !== 'boolean') {
+      fail('ReviewLog', i, id, 'has a "sessionCompleted" that is not a boolean.')
     }
   })
 }

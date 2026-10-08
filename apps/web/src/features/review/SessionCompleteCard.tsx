@@ -7,16 +7,19 @@ import {
   formatSessionDuration,
   pickSessionCompleteLine,
   type SessionSummary,
+  type Achievement,
 } from '@fliptap/core'
 import type { Rating } from '@/types'
 import { cn } from '@/lib/cn'
+import { AchievementIcon } from '@/components/icons/AchievementIcon'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 
 // The end of the core loop, and the surface a learner sees more often than any
 // other single screen. It reports the session and nothing else: every value
 // comes from `summarizeSession` over the ReviewLogs this session actually
 // wrote, so there is no score, no points and no second progression model
-// beside FSRS (docs/fliptap-decisions.md D209/D210).
+// beside FSRS (docs/fliptap-decisions.md D209/D210). D473 adds four
+// evidence-based achievements, acknowledged here after a committed session.
 //
 // Deliberately NOT here: any figure the data does not support. A session with
 // no mature card shows no recall percentage rather than a flattering 100%, and
@@ -89,6 +92,7 @@ function Fact({ Icon, children }: { Icon: LucideIcon; children: ReactNode }) {
 
 export function SessionCompleteCard({
   summary,
+  achievements = [],
   completedAt,
   canUndo,
   busy,
@@ -96,6 +100,7 @@ export function SessionCompleteCard({
   onUndo,
 }: {
   summary: SessionSummary
+  achievements?: Achievement[]
   // Fixed when the session ended, so neither the copy nor the next-due label
   // drifts while the learner sits on this screen.
   completedAt: number
@@ -175,6 +180,26 @@ export function SessionCompleteCard({
             )}
           </ul>
         </div>
+
+        {achievements.length > 0 && (
+          <div role="status" aria-label="Achievements unlocked"
+            className="mt-6 rounded-fliptap-control border border-fliptap-border bg-fliptap-surface-subtle p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-fliptap-muted">
+              {achievements.length === 1 ? 'Achievement earned' : 'Achievements earned'}
+            </p>
+            <ul className="mt-3 space-y-3">
+              {achievements.map((item) => (
+                <li key={item.id} className="flex items-center gap-3">
+                  <span className="text-fliptap-ink-brand"><AchievementIcon id={item.id} /></span>
+                  <span className="text-sm font-semibold text-fliptap-ink-brand">{item.title}</span>
+                </li>
+              ))}
+            </ul>
+            <Link to="/progress" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-fliptap-ink-brand underline decoration-fliptap-border-strong underline-offset-4 hover:text-fliptap-accent">
+              View in Progress
+            </Link>
+          </div>
+        )}
 
         {undoError && (
           <p role="alert" className="mt-4 text-sm leading-relaxed text-fliptap-error">

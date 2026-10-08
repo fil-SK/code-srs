@@ -13,6 +13,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter } from 'react-router-dom'
 import type { Card } from '@/types'
 import { richText } from '@/types/card'
+import { computeAchievements } from '@fliptap/core'
 import { getRepository } from '@/data'
 import { db } from '@/data/dexie/db'
 import { initialSchedulingState } from '@/domain/scheduling/state'
@@ -85,6 +86,7 @@ describe('Review persistence failure', () => {
 
     expect(await screen.findByText('What is a vtable?')).toBeTruthy()
     expect(await logs()).toHaveLength(1)
+    expect((await logs())[0].sessionCompleted).toBeUndefined()
   })
 
   it('does not advance, and explains itself, when the write rejects', async () => {
@@ -255,5 +257,44 @@ describe('Review completion Undo across the new persistence boundary', () => {
     const stored = await getRepository().cards.getById('card-a')
     expect(stored?.scheduling.reps).toBe(1)
     expect(screen.getByRole('button', { name: /Undo last/ })).toBeTruthy()
+  })
+})
+
+describe('Achievement completion evidence', () => {
+  beforeEach(async () => {
+    await getRepository().cards.clear()
+    await getRepository().reviews.clear()
+    await getRepository().cards.bulkPut([CARD_A])
+  })
+  afterEach(() => { vi.restoreAllMocks(); cleanup() })
+
+  it('commits the unlock with the final grade, survives remount, and disappears on Undo', async () => {
+    const user = userEvent.setup()
+    const view = renderSession([CARD_A])
+    await gradeGood(user)
+    expect(await screen.findByRole('status', { name: 'Achievements unlocked' })).toBeTruthy()
+    const stored = await logs()
+    expect(stored[0].sessionCompleted).toBe(true)
+    expect(stored[0].dueBefore).toBe(CARD_A.scheduling.due)
+    expect(computeAchievements(stored, Date.now())[0].unlockedAt).toBe(stored[0].reviewedAt)
+    await user.click(screen.getByRole('button', { name: /Undo last/ }))
+    expect(computeAchievements(await logs(), Date.now())[0].unlockedAt).toBeUndefined()
+    await gradeGood(user)
+    await screen.findByRole('status', { name: 'Achievements unlocked' })
+    view.unmount()
+    expect(computeAchievements(await logs(), Date.now())[0].unlockedAt).toBeDefined()
+  })
+
+  it('does not announce an unlock on a failed final write, and earns it on retry', async () => {
+    vi.spyOn(db.reviewLogs, 'add').mockRejectedValueOnce(new Error(RAW_BACKEND_ERROR))
+    const user = userEvent.setup()
+    renderSession([CARD_A])
+    await gradeGood(user)
+    await screen.findByRole('alert')
+    expect(screen.queryByRole('status', { name: 'Achievements unlocked' })).toBeNull()
+    expect(await logs()).toHaveLength(0)
+    await user.click(screen.getByRole('button', { name: /try again/i }))
+    await screen.findByRole('status', { name: 'Achievements unlocked' })
+    expect((await logs())[0].sessionCompleted).toBe(true)
   })
 })

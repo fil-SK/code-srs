@@ -182,3 +182,25 @@ describe('Progress deck actionability', () => {
     expect(dueDeck.compareDocumentPosition(studiedDeck) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
+
+describe('Progress achievements', () => {
+  it('shows all four achievements and keeps lifetime awards outside the reporting filter', async () => {
+    const user = userEvent.setup()
+    await repo.reviews.bulkPut([
+      { ...log('completed-session', 'mature-card', daysAgo(Date.now(), 40), 3, 'review'),
+        dueBefore: 0, sessionCompleted: true },
+    ])
+    renderProgress()
+    const section = await screen.findByRole('region', { name: 'Achievements' })
+    expect(within(section).getAllByRole('listitem')).toHaveLength(4)
+    for (const title of ['First step', 'Finding your rhythm', 'Here to stay', 'It clicked']) {
+      expect(within(section).getByRole('heading', { name: title })).toBeTruthy()
+    }
+    expect(within(section).getByText('1 of 4 earned')).toBeTruthy()
+    expect(within(section).getByText('Next up')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Select progress date range' }))
+    await user.click(screen.getByRole('option', { name: 'Last 7 days' }))
+    expect(within(section).getByText('1 of 4 earned')).toBeTruthy()
+    expect(within(section).getByRole('progressbar', { name: 'Here to stay' }).getAttribute('aria-valuemax')).toBe('4')
+  })
+})

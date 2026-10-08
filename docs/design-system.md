@@ -470,3 +470,25 @@ The page alternates generous white sections with deep-navy storytelling surfaces
 ## 16. About FlipTap on web
 
 `/about` uses the standard AppShell content frame and semantic Light/Dark palette. Its page identity precedes an editorial product introduction beside an ordered Recall / Reflect / Return panel. Six interaction descriptions form a three-column desktop grid, two columns at tablet widths and one on phones. Scheduling and active-workspace storage explanations sit in two bordered panels, stacked below `lg`. There is one orange primary action, Open your library; the backup shortcut and license link remain neutral. Shared interaction icons use neutral treatments here. No About-specific locked mockup is cited; the composition follows the existing workspace, typography, radii and spacing rules (D471).
+
+## Study achievement presentation (D473, 2026-10-08)
+
+The four achievements live inside Progress's existing milestone-panel position,
+with no separate route or navigation item. Each row has a 44px circular mark on
+web (42 points native), an original 32-unit SVG rendered at 28px, a short title,
+the exact earning rule, and either an earned date or a thin neutral progress bar
+with a readable progress label. The first unearned row says Next up. Earned is
+also stated in text with a green check on web, so neither color nor shape carries
+status alone. Rows wrap instead of truncating; the palette follows semantic
+surface, muted, inkBrand, navySoft and success roles in both web themes.
+
+The checked card, five-day calendar, four linked weeks and return/check drawings
+live as original plain SVG data in core's `design/achievementIcons.ts`. Rounded
+1.8-unit line work, a 9% currentColor fill and inherited color match the existing
+icon system; they use no raster assets, remote resources or new library.
+
+Session completion adds a quiet neutral inset for newly earned achievements,
+using the same drawings and titles. Web's View in Progress link has ordinary
+keyboard focus and hover; Back to Today remains the primary orange action.
+No confetti, animation, points, new theme token or extra orange status fill is
+introduced. Native retains its existing theme, scroll container and tab geometry.

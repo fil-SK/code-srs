@@ -1,4 +1,4 @@
-import type { Deck, Millis, MilestoneType } from '@fliptap/core'
+import type { Achievement, Deck, Millis } from '@fliptap/core'
 
 export interface MobileProgressMetricViewModel {
   id: 'learned' | 'due' | 'reviews' | 'retention' | 'streak'
@@ -31,13 +31,6 @@ export interface MobileProgressDeckViewModel {
   dueLabel: string
 }
 
-export interface MobileProgressMilestoneViewModel {
-  id: string
-  type: MilestoneType
-  title: string
-  subtitle: string
-  dateLabel: string
-}
 
 export interface MobileProgressViewModel {
   /** The dates the whole page is computed over, e.g. "Aug 24 - Sep 23, 2026". */
@@ -51,5 +44,5 @@ export interface MobileProgressViewModel {
   retentionSeries: (number | null)[]
   retentionLabels: [string, string, string]
   decks: MobileProgressDeckViewModel[]
-  milestones: MobileProgressMilestoneViewModel[]
+  achievements: Achievement[]
 }

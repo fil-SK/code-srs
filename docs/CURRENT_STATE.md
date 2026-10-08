@@ -1,6 +1,31 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-08** (branch `dev/scenario-switcher`; approved web/native icon artwork).
+**Last verified against the working tree: 2026-10-08** (branch `dev/scenario-switcher`; four shared study achievements).
+
+> **Publishing readiness backlog (2026-10-08, D474).** The owner's release advice
+> and worthwhile omissions are recorded in [TODO.md](TODO.md#publishing-readiness-priorities-2026-10-08),
+> distinguishing a browser-local web beta from a dependable native release.
+> The recommended release milestone is first-use starter content plus honest
+> local entry, followed by authoring protection, visible recovery and production
+> acceptance. This is planning only: no feature, storage mode, deployment or
+> cloud work is implemented by recording the backlog.
+
+> **Four study achievements on web and native Demo (2026-10-08, D473).**
+> Progress replaces its review-volume/streak/retention threshold feed with First
+> step, Finding your rhythm, Here to stay and It clicked. Both platforms use the
+> same lifetime rules, original SVG drawings, progress labels and earned dates;
+> session completion acknowledges only newly earned achievements. New ReviewLogs
+> carry optional pre-grade due time and a completion fact on the final committed
+> grade. No session is inferred from idle gaps, no historical rows are rewritten,
+> and backup version 2 remains compatible. Undo removes the qualifying evidence.
+> Web history survives reload; native Demo history still resets with the process
+> or Reset Demo. No separate page, XP, goals, new storage or cloud work was added.
+> Root verification passes 120 files / 1,146 tests; native passes 42 suites / 571
+> tests. Root/mobile typechecks and lint pass, and the web production build passes
+> with its existing chunk-size advisory. Chromium verifies Light/Dark at 1440x900
+> and 390x844, real unlocks, failure/retry/Undo regressions, reload persistence,
+> hover/focus and navigation without overflow or page errors. The Expo web
+> preview verifies native Progress, completion and Undo; physical-device verification is pending.
 
 > **Approved icons on web and native (2026-10-08, D472).** Four metric identities,
 > five navigation choices and six card interaction identities now use the owner's
@@ -379,7 +404,9 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Latest verification (2026-10-08, approved icons D472):** `npx vitest run --maxWorkers=2` passes 119 files / 1133 tests; `npx tsc -b --force`, root lint, mobile typecheck and mobile lint are clean. Mobile Jest passes 42 suites / 570 tests with `--runInBand --forceExit`; the bounded runner accommodates existing open timers and emits the existing asynchronous font `act` warnings. The web production build succeeds with its existing chunk-size advisory, and the offline iOS/Hermes bundle export succeeds. Chromium at 1440x900 and 390x844 in Light/Dark verifies Today, Progress, About, deck metrics, all six chooser glyphs, profile menu, navigation hover/focus, and Recall reveal, grading and completion. No page errors or document overflow were found. Native physical-device appearance remains unverified.
+**Latest verification (2026-10-08, achievements D473):** root Vitest passes 120 files / 1146 tests with two workers; forced root TypeScript, root lint, mobile typecheck and mobile lint are clean. Native Jest passes 42 suites / 571 tests with `--runInBand --forceExit`, retaining the existing font `act` warnings and open-timer limitation. The production web build and Expo web export pass. Browser QA covers the four achievement icons, empty/partial/earned states, lifetime range independence (also component-tested), real scheduled reviews, multiple new unlocks, First step even after Again, Undo/regrade, reload persistence, completion-link hover/focus and navigation in Light/Dark at desktop/phone sizes. Native Progress, completion acknowledgment and Undo are checked in the Expo web preview; physical-device verification is pending. The first broad runs hit existing five-second test timeouts under concurrent load; reruns with limited workers pass.
+
+**Previous verification (2026-10-08, approved icons D472):** `npx vitest run --maxWorkers=2` passes 119 files / 1133 tests; `npx tsc -b --force`, root lint, mobile typecheck and mobile lint are clean. Mobile Jest passes 42 suites / 570 tests with `--runInBand --forceExit`; the bounded runner accommodates existing open timers and emits the existing asynchronous font `act` warnings. The web production build succeeds with its existing chunk-size advisory, and the offline iOS/Hermes bundle export succeeds. Chromium at 1440x900 and 390x844 in Light/Dark verifies Today, Progress, About, deck metrics, all six chooser glyphs, profile menu, navigation hover/focus, and Recall reveal, grading and completion. No page errors or document overflow were found. Native physical-device appearance remains unverified.
 
 **Previous root verification (2026-10-05, About D471):** `npx vitest run` passes 119 files / 1133 tests; `npx tsc -b --force` and `npm run lint` are clean. The production build succeeds with the existing chunk-size advisory. The About regressions cover live account-menu navigation and mode-specific storage copy. Chromium at 1440x900 and 390x844 verifies Light/Dark layout, direct-route sign-in return, menu activation by keyboard, hover, visible keyboard focus, Library/backup/license links and reload, without document overflow or page errors.
 
@@ -488,6 +515,16 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 ## 17. Exact recommended next milestone
 
+**Release-planning update (2026-10-08, D474):** for publishing, the recommended
+next milestone is a useful first session on web and honest local-workspace
+entry, with the release acceptance work in
+[TODO.md](TODO.md#publishing-readiness-priorities-2026-10-08).
+The mobile parity sequence below remains a capability roadmap when that work
+resumes; it is not a prerequisite to a browser-local web beta. Native durable
+storage and physical-device acceptance are prerequisites to a dependable native
+release, not capabilities of today's Demo. Cloud remains deferred.
+
+
 **M-PARITY-1A - the mobile Demo runtime is now Repository-backed (§31) - is implemented in code and awaits the owner's physical-device confirmation.** It is an architectural convergence milestone with, by intent, almost no learner-visible difference: demo entities moved out of React state into a mobile-owned `InMemoryRepository` registered through the shared `configureRepository()`, screens read them through the shared query hooks, Review writes go through `commitReview`/`revertReview`, and the demo's parallel collection model was replaced by canonical `Deck.parentId` with Collections derived through core's `collectionTree`. M-DEMO-3, M-DEMO-4 and M-DEMO-5 remain in the same pending-device state and share that pass.
 
 **Mobile authoring is reopened and approved.** D416 deferred it on the reading that FlipTap's early story is desktop authoring plus mobile review; physical-device testing found the absence of New Deck and Add Card to be a major product gap, and the audit behind this milestone rated the create-material journey as the one broken journey in the app. D421 supersedes D416's authoring half. **Its cloud half stands: Supabase, sync and durable persistence remain deferred until after market validation.** The distinction being held is between user capability ("I can create a card") and persistence infrastructure ("my card survives a reinstall"); the first is required now, the second is not.
@@ -498,7 +535,7 @@ Test conventions: colocated `*.test.ts(x)`; the suite is hermetic (`environment:
 
 Two things in that paragraph were decided differently once built, both recorded in §32: card management went to the deck row rather than to Card study (D430), and **the in-editor live preview was not built** - a card can be inspected through Card study immediately after saving, and a preview pane inside a 390-point form is a design question this milestone did not open.
 
-**The recommended next milestone is now M-PARITY-2: Write Code and Ordering mobile authoring, plus the remaining basic Card CRUD parity** (Duplicate, Move, Suspend and the restored deck Insights tab). Then **M-PARITY-3** (Matching and Walkthrough, the two hardest editors at 390px; the form logic and its mutation helpers are already shared and unit-tested, so the cost is layout). Matching authoring belongs to master-plan **Phase 9**, not Phase 8 - Phase 8 is Progress.
+**The next milestone in the mobile capability roadmap is M-PARITY-2: Write Code and Ordering mobile authoring, plus the remaining basic Card CRUD parity** (Duplicate, Move, Suspend and the restored deck Insights tab). Then **M-PARITY-3** (Matching and Walkthrough, the two hardest editors at 390px; the form logic and its mutation helpers are already shared and unit-tested, so the cost is layout). Matching authoring belongs to master-plan **Phase 9**, not Phase 8 - Phase 8 is Progress.
 
 Deliberately **not** recommended ahead of them: mobile Review History and a Progress deck drill-down (real gaps, but the demo already tells its statistics story), Import/Export (master-plan Phase 10, and it needs `expo-file-system`/`expo-document-picker`), the notifications backend, offline SQLite and sync (Phase 11, whose semantics are a decision rather than an implementation detail), and anything cloud.
 
@@ -834,7 +871,7 @@ No `apps/web` or `packages/core` file was modified.
 
 ## 26. Reactive mobile demo statistics (milestone M-DEMO-3)
 
-**Today and Progress now derive Demo-mode learning metrics from canonical Cards + ReviewLogs.** `createDemoWorkspace()` authors only what a learner does - which card, which local day, what time, which rating, how long - and **replays it through the shared FSRS scheduler**, relative to the current local day through core’s calendar helpers. That replay produces 56 canonical `ReviewLog`s over 12 of the 18 cards *and* the current `SchedulingState` of each of those cards, so a card and its own most recent log cannot disagree. The fixture spans 28 days with a visible activity pattern, real gaps, mature Review/Relearning attempts, two genuine lapses and usable durations. It gives the demo a **four-day current streak, 84% mature Retention, 12 of 18 Learned, 56 Reviews and 9 cards Due**, plus populated charts and derived milestones, before the learner reviews anything today. No authored dashboard number, and no authored scheduling state, remains beside the entities that determine it.
+**Today and Progress now derive Demo-mode learning metrics from canonical Cards + ReviewLogs.** `createDemoWorkspace()` authors only what a learner does - which card, which local day, what time, which rating, how long - and **replays it through the shared FSRS scheduler**, relative to the current local day through core’s calendar helpers. That replay produces 56 canonical `ReviewLog`s over 12 of the 18 cards *and* the current `SchedulingState` of each of those cards, so a card and its own most recent log cannot disagree. The fixture spans 28 days with a visible activity pattern, real gaps, mature Review/Relearning attempts, two genuine lapses and usable durations. It gives the demo a **four-day current streak, 84% mature Retention, 12 of 18 Learned, 56 Reviews and 9 cards Due**, plus populated charts and derived milestones, before the learner reviews anything today. D473 replaces that historical threshold feed with four shared study achievements. No authored dashboard number, and no authored scheduling state, remains beside the entities that determine it.
 
 The runtime flow is now:
 
@@ -849,7 +886,7 @@ DemoWorkspace Cards + seeded/current ReviewLogs
   -> every mounted surface derives again immediately
 ```
 
-Today uses shared `computeStreak`, `computeRetention`, `estimateSessionMinutes`, `computeDeckMetrics` and `buildContinueLearning`. **Today’s Retention is the trailing 30 calendar days**, built with core’s `buildRange` - the same window web’s `TodayPage` uses and the same one Progress’s KPI reads, so the two mobile surfaces cannot report different retention for the same day. Progress uses shared `computeKpis`, `computeHeatmap`, `computeRetentionSeries`, `computeDeckPerformance` and `deriveMilestones`. Learned is the canonical unique active reviewed-card count; Retention is mature Review/Relearning attempts with Hard-or-better success; Due is current active due cards. The 30D range is real and its label, Reviews, Retention buckets and heat-map window all share `buildRange`. The owner-approved mobile hierarchy still exposes only 30D; 3M/1Y remain visibly unavailable rather than pretending to work.
+Today uses shared `computeStreak`, `computeRetention`, `estimateSessionMinutes`, `computeDeckMetrics` and `buildContinueLearning`. **Today’s Retention is the trailing 30 calendar days**, built with core’s `buildRange` - the same window web’s `TodayPage` uses and the same one Progress’s KPI reads, so the two mobile surfaces cannot report different retention for the same day. Progress uses shared `computeKpis`, `computeHeatmap`, `computeRetentionSeries`, `computeDeckPerformance` and, since D473, `computeAchievements`. Learned is the canonical unique active reviewed-card count; Retention is mature Review/Relearning attempts with Hard-or-better success; Due is current active due cards. The 30D range is real and its label, Reviews, Retention buckets and heat-map window all share `buildRange`. The owner-approved mobile hierarchy still exposes only 30D; 3M/1Y remain visibly unavailable rather than pretending to work.
 
 The native retention renderer now accepts null buckets, never joins across a gap, draws isolated observations as points and derives its vertical scale from the observed data. The visual composition is otherwise unchanged. Today pace remains omitted by the existing mobile hierarchy decision.
 
@@ -868,7 +905,7 @@ An independent read-only verification pass over M-DEMO-3 found four issues that 
 - **Today’s Retention window matches web.** It averaged all of history while Progress averaged thirty days, so the two agreed only while the fixture happened to fit inside the window. Today now uses core’s `buildRange('30d')`, and the regression test feeds it mature failures 40 and 45 days old whose ratings *would* change the all-time figure, then asserts Today reports 100% while all-time reports 50%.
 - **The streak in this section was wrong.** It said three days; the seeded history has always produced four. The documentation was corrected, not the data.
 
-The derived numbers moved because the old fixture was internally inconsistent, and the truthful values were taken: Due is 9 rather than 12, Reviews 56 rather than 25, Learned 12 of 18, Retention 84%. Recent milestones show a 3-day streak plus the 70%/80%/90% retention thresholds, three of which share a date because the first day of the replayed history was perfect - that is core’s `deriveMilestones` being honest about this history, and the fixture was deliberately not contorted to spread them.
+The derived numbers moved because the old fixture was internally inconsistent, and the truthful values were taken: Due is 9 rather than 12, Reviews 56 rather than 25, Learned 12 of 18, Retention 84%. Recent milestones show a 3-day streak plus the 70%/80%/90% retention thresholds, three of which share a date because the first day of the replayed history was perfect - s’s `deriveMilestones` being honest about this history, and the fixture was deliberately not contorted to spread them.
 
 Physical-device verification is **pending the owner** and is not claimed. Verify on iPhone: reset; inspect populated Today/Progress; note Due; review several cards; confirm Today, the relevant Continue Learning row, Progress Reviews/current-day activity/deck performance and Library due counts changed; Undo from completion and confirm the last change reverted; reset and confirm the starting state returned with no red screen.
 

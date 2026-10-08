@@ -123,3 +123,20 @@ describe('Deck performance', () => {
 
 // Referenced so the mock factory's module is loaded in this file's scope.
 expect(routerDouble).toBeTruthy()
+
+describe('Achievements', () => {
+  it('shows the same four shared milestones and exposes their progress', () => {
+    renderScreen()
+    expect(screen.getByText('Achievements')).toBeTruthy()
+    for (const item of viewModel.achievements) {
+      expect(screen.getByText(item.title)).toBeTruthy()
+      expect(screen.getByText(item.description)).toBeTruthy()
+      if (item.unlockedAt === undefined) {
+        expect(screen.getByLabelText(item.title).props.accessibilityValue).toEqual({
+          min: 0, max: item.target, now: item.progress, text: item.progressLabel,
+        })
+      }
+    }
+    expect(demoProgressViewModel(entities, NOW, '1y').achievements).toEqual(viewModel.achievements)
+  })
+})

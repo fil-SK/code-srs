@@ -26,6 +26,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Optional Explanation** on every card type, shown on reveal.
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
 - **Progress**: learned and due cards, review volume, mature-material retention, current streak, activity, and actionable per-deck metrics.
+- **Four study achievements**: your first finished session, five study days in seven, reviews across four weeks, and recalling a missed card on a later due review. Progress shows lifetime progress and earned dates; review completion acknowledges new unlocks. Available on web and native Demo (whose state still resets on restart).
 - **Import / Export** your whole collection as JSON.
 - **Light, dark and system themes** in Account settings → Appearance, saved on this browser; responsive, mobile-friendly and installable (PWA).
 - **About FlipTap** in the account menu: a guide to the six study formats, FSRS ratings, and where your current workspace stores its data.

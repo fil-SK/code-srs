@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { summarizeSession } from '@fliptap/core'
+import { sessionAchievementUnlocks, summarizeSession, withSessionCompletion } from '@fliptap/core'
 import type { Card, ID, ReviewLog } from '@/types'
 import type { SubmitReviewResult } from '@/domain/scheduling/reviewService'
 import { getInteractionDefinition } from '@/features/reviewV2/interactions/registry'
@@ -57,9 +57,12 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   // push an undo entry for a review that was never recorded.
   async function handleGraded(original: Card, result: SubmitReviewResult) {
     if (busy) return
-    await persist.mutateAsync({ card: original, after: result.after, log: result.log })
-    setUndoStack((s) => [...s, { card: original, logId: result.log.id }])
-    setSessionLogs((s) => [...s, result.log])
+    // The completion fact travels with the final grade in the same atomic write.
+    // A failed commit or Undo cannot leave a phantom completed session behind.
+    const log = withSessionCompletion(result.log, sessionLogs, index === queue.length - 1)
+    await persist.mutateAsync({ card: original, after: result.after, log })
+    setUndoStack((s) => [...s, { card: original, logId: log.id }])
+    setSessionLogs((s) => [...s, log])
     setIndex((i) => i + 1)
   }
 
@@ -90,11 +93,17 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
     [sessionLogs, history.data, completedAt],
   )
 
+  const unlocks = useMemo(
+    () => sessionAchievementUnlocks(history.data ?? [], sessionLogs, completedAt),
+    [history.data, sessionLogs, completedAt],
+  )
+
   if (isComplete) {
     return (
       <FlipTapSurface className="grid min-h-screen place-items-center py-10">
         <SessionCompleteCard
           summary={summary}
+          achievements={history.isSuccess ? unlocks : []}
           completedAt={completedAt}
           canUndo={undoStack.length > 0}
           busy={busy}

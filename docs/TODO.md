@@ -5,6 +5,174 @@ re-derived from scratch each time. Anything here that a milestone has since
 decided on is recorded properly in `fliptap-decisions.md`; this file is the
 holding pen, not a source of truth.
 
+## Publishing readiness priorities (2026-10-08)
+
+The owner asked to record the release advice and worthwhile omissions (D474).
+This is pending work, not a claim that anything below has shipped. A limited
+browser-local web beta and a dependable native release have different gates.
+Recording a candidate does not choose native storage, enable cloud work, or
+undo the existing Demo and market-validation deferrals.
+
+**Recommended first milestone:** useful first-use content plus honest local
+entry. Then protect authored work, make recovery visible and rehearse the
+production release before inviting a small group of target developers.
+
+| Scope / priority | Work | Existing entry or new detail |
+|---|---|---|
+| Before web beta | First review without manual setup, followed by creating a personal card | Expand [web demo seeding](#seed-the-web-demo-workspace-deferred-2026-08-28) and [onboarding](#onboarding-demo-in-the-app); acceptance below |
+| Before web beta | Honest local entry instead of a password that is never checked | New: [Local entry](#local-entry-and-storage-expectations) |
+| Before web beta | Unsaved-work protection, actionable validation and recoverable save failures | New: [Protect authored work](#protect-authored-work) |
+| Before web beta | Visible backup guidance and a fresh-browser restore rehearsal | Extend [existing backup risks](#remaining-risk-after-the-replace-import-fix-audit-p1-1); acceptance below |
+| Before public exposure | Contact/feedback and an accurate data-handling explanation | New: [Support and feedback](#support-and-feedback) |
+| Before web beta | Finished public navigation, accessible core journeys and production lifecycle checks | New: [Release acceptance](#release-surface-and-verification) |
+| Before advertising code grading | Explain accepted-answer comparison and preserve learner control over ratings | Existing [Write Code constraint](#how-writecode-currently-works); clarify it in authoring and Review |
+| Before publishing the marketing signup form | Verify a genuinely stored submission and actionable failure behavior | Existing [capture blocker](#early-access-capture-is-not-connected-found-2026-08-28) |
+| Before dependable native release | Durable learning data, a recovery path and physical-device acceptance | Existing [M1A checkpoint](#live-supabase-project-for-mobile-and-the-m1a-checkpoint-noted-2026-08-24) covers one candidate backend; requirements below |
+| Conditional on account/cloud release | Authentication recovery, account isolation and live backend evidence | Existing magic-link, pagination, RPC and import entries remain prerequisites; cloud stays deferred |
+| During small beta | Observe first-use success and unaided return; resolve actual friction | New: [Beta validation](#beta-validation-and-follow-up-candidates) |
+| After evidence from beta | Easier content intake, a manageable return after a gap and an optional reminder | Conditional candidates below; reuse existing session-control and notification entries |
+
+### First-use acceptance
+
+The empty web demo remains unseeded; its earlier deferral is not implemented.
+The first-use milestone should let a new visitor:
+
+- Start a short technical review within roughly two minutes, without creating
+  a deck or supplying an import file first.
+- Experience a small, accurate starter deck that demonstrates the value of
+  code-first cards. Prefer reviewed original examples; verify permission and
+  attribution for any redistributed content.
+- Understand Again / Hard / Good / Easy through contextual help, then create,
+  preview and save one useful card about their own material.
+- Distinguish sample content from personal learning. Illustrative demo history
+  must stay explicitly sample history, never the new user's earned progress
+  or achievements.
+- Skip guidance and return to it later. No mandatory multi-screen tour.
+
+### Local entry and storage expectations
+
+`apps/web/src/features/login/SignInPanel.tsx` requires a local email/password,
+but `signInLocal` never verifies the password. Before public exposure of local
+mode, replace the account implication with a clear local-workspace entry. Keep
+real account sign-in distinct if and when a cloud mode is released.
+
+Explain where decks and history live, whether another device can see them, and
+what clearing browser data does. About already explains storage by mode; first
+entry should not require finding About to learn this. Before an eventual
+local-to-cloud transition, use the existing explicit migration entry below
+instead of silently changing which workspace is read.
+
+### Protect authored work
+
+Source review finds form state in the six web editor shells, direct Cancel
+navigation, and a keyed card-type switch that remounts the editor. There is no
+dirty-form guard in that path. `CardEditorShell` accepts saving state but no
+save-error presentation; for example, `RecallEditorShell` awaits `mutateAsync`
+without presenting its rejection. `RecallFields` also does not render the
+shared validator's required-field reasons.
+
+Before web beta:
+
+- Warn before a dirty form is discarded by Cancel, route/back navigation or
+  changing interaction type. Cover reload/close where permitted; a browser
+  prompt cannot guarantee protection against a crash.
+- Show actionable field validation, especially why Recall cannot be saved.
+- Keep content intact after a failed write, explain the failure and offer
+  retry. Navigate only after success; retry must not create duplicate cards.
+- Verify all six types, including code, images and Preview.
+
+Recoverable editor autosave is a worthwhile follow-up if the guard does not
+cover observed loss. The retained quick-capture `Draft` inbox is a separate
+feature, not proof that unfinished editor forms are recoverable. Choose that
+recovery storage deliberately; do not reshape the entity by assumption.
+
+### Backup and durability acceptance
+
+Web export/import already exists. This is discoverability and verification,
+not a replacement backup engine:
+
+- Explain browser-local storage at entry, keep Export easy to find, and consider
+  a small backup reminder after meaningful authoring rather than every visit.
+- Request persistent browser storage where supported; handle denial or lack
+  of support honestly and surface actionable storage/write failures. Persistence
+  reduces eviction risk; it is not another copy of the workspace.
+  [MDN documents the storage behavior](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria).
+- Restore a real export into a fresh browser profile. Verify decks, all six
+  types, scheduling, history, icons and achievement evidence. Test failure
+  without damaging the destination; retain the existing local transaction and
+  cloud import limitations.
+- For native release, require authored cards and history to survive force-quit,
+  restart, backgrounding and upgrades, with an explicit export or recovery route.
+  Current in-memory Demo does not satisfy this.
+- Promise desktop-to-phone continuity only after transfer or shared-account
+  data works end to end. Full native editor parity cannot replace durability.
+
+### Support and feedback
+
+Add an obvious contact/report-a-problem path and an accurate explanation of what
+the released configuration stores or sends. A contact link is sufficient for a
+small beta; no in-app ticketing system is needed.
+
+A useful report can include version, platform, steps and an optional screenshot.
+Do not attach card contents, code, exported workspaces or account tokens
+automatically. Diagnostic collection, if introduced, needs an explicit data
+boundary and appropriate disclosure. Verify that a report reaches the intended
+inbox; a success message alone is not evidence.
+
+### Release surface and verification
+
+Route errors, safe content rendering, atomic local review writes, retry and Undo
+already exist. Preserve them; this is production acceptance, not a claim that
+those systems are missing.
+
+- Review public navigation/settings for prototype placeholders and misleading
+  account/device claims. Land Settings on useful functionality. Remove or
+  honestly mark unavailable destinations; do not build every mockup section.
+  Preserve Roadmap data and the policy for locked references.
+- Reuse [Vercel verification](#verify-vercel-deployment-after-workspace-migration),
+  [Remove /dev](#remove-the-dev-scenario-switcher-before-publishing),
+  [PWA prompts](#pwa-prompts) and pending tooltip/menu-focus entries below.
+  Review `/design-preview` separately: its fixture routes are not gated like
+  `/dev`. Do not silently expose development/demo tools as product features.
+- Verify the deployed HTTPS build: direct-route reload, install, local offline
+  cold start, connection loss, failed-write retry, reopen, and an update during
+  authoring or Review. Updates must not silently discard unsaved work or corrupt
+  committed history. Cloud mode must state its connection requirement.
+- Run the core journey with keyboard and a screen reader, at phone/desktop
+  widths in Light/Dark: navigation, authoring, all six reviews, dialogs, grading
+  and recovery. Check contrast, zoom, focus return, touch alternatives to
+  dragging and reduced motion. Native behavior needs physical-device evidence.
+- Make release checks repeatable: automated gates, a small production smoke
+  test, and a deployment/recovery checklist. No repository CI workflow is present
+  at this review; configure one when choosing the release workflow. Keep rollback
+  compatible with already-written learner data.
+
+### Beta validation and follow-up candidates
+
+Invite roughly 5-10 target developers to use their own material over two weeks.
+This is a practical research cohort, not a statistical success threshold.
+Observe first review, useful card authoring, unaided return and recovery from
+problems. Record friction and abandonment, not just feature requests or badge
+clicks. Start with direct observation and voluntary feedback; no analytics SDK
+or collection of card/code contents is implied.
+
+Worthwhile follow-ups only if real use exposes the problem:
+
+- **Lower-friction content intake:** document a path from notes or existing decks
+  into useful cards. JSON import and the external AI prompt already exist.
+  Consider CSV or Anki import if the cohort needs it; do not silently commit to
+  APKG compatibility, a marketplace or runtime AI generation.
+- **Returning after a gap:** offer an understandable, bounded session and humane
+  overdue-work guidance. The existing card-count limit may suffice initially.
+  Use deferred controls only when needed; never rewrite FSRS history or fabricate
+  streak recovery.
+- **One opt-in reminder:** scope the existing Notifications item to a useful
+  review reminder with permission, timezone, quiet-hour and cancellation behavior.
+  Native inbox previews are not OS reminders. Validate demand before a push backend.
+
+More awards, weekly targets, marketplaces, billing, richer reports and a full
+native editor set do not become web-beta blockers through this list.
+
 ## Early-access capture is not connected (found 2026-08-28)
 
 `apps/marketing/src/earlyAccess.ts` — `submitEarlyAccessInterest` is
@@ -71,11 +239,14 @@ it (sessions? reviews? days studied?).
 
 ## Milestones and achievements
 
-Deferred by D210 (Milestone 2). Today's Next milestone is a *derived*
-in-progress-deck continuation, recomputed each render — there is no milestone
-or achievement entity. A real system would cover mastery milestones, topic
-completion, streak and review-volume awards, custom goals, and unlocking as
-the app is used.
+D473 (2026-10-08) implements four evidence-based study achievements on web and
+native Demo, superseding the blanket deferral under D210 for this bounded set.
+Progress shows lifetime progress and earned dates; completion acknowledges new
+unlocks. Today's Next milestone remains its derived in-progress-deck continuation.
+
+Still deferred: a separate achievements page, mastery/topic awards, custom goals,
+XP, currency, levels and leaderboards. No achievement entity or scoring subsystem
+was introduced. Native physical-device verification is pending.
 
 ## Deck identity
 
@@ -363,7 +534,7 @@ not be conflated:
 
 > Don't add a gamification **subsystem**. Make the existing learning loop more **rewarding**.
 
-Out of scope before validation: XP, currency, levels, leaderboards, arbitrary achievements
+D473 now ships four evidence-based study achievements within the existing loop. Out of scope before validation: XP, currency, levels, leaderboards, arbitrary achievements
 — each invents a second scoring model that competes with FSRS and needs a persisted entity
 and a settings surface behind it. A Weekly Goal is in this half too (D209/D210 refused to
 fabricate goal and achievement entities, and were right).

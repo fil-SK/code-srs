@@ -41,6 +41,10 @@ export interface ReviewLog {
   // separately; dueAfter also covers learning steps, where scheduledDays is 0
   // but the card is due again in minutes.
   dueAfter?: Millis
+  // Optional for older history. These facts support scheduled-study milestones
+  // without guessing session boundaries or rewriting existing rows.
+  dueBefore?: Millis
+  sessionCompleted?: boolean
 }
 
 // ---- ReviewEvent — immutable review history (spec §9.3) ----

@@ -291,7 +291,7 @@ describe('shared statistics power every demo surface', () => {
 
   it('derives deck performance and milestones from actual review logs', () => {
     expect(progress.decks.length).toBeGreaterThan(0)
-    expect(progress.milestones.some((milestone) => milestone.type === 'streak')).toBe(true)
-    expect(progress.milestones.some((milestone) => milestone.type === 'retention')).toBe(true)
+    expect(progress.achievements).toHaveLength(4)
+    expect(progress.achievements.map((item) => item.id)).toEqual(['first-session', 'five-days', 'four-weeks', 'comeback'])
   })
 })

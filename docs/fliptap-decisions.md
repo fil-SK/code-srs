@@ -1904,3 +1904,83 @@ metrics and all six chooser glyphs in Light/Dark at 1440x900 and 390x844, plus
 profile navigation, hover/focus and Recall reveal, grade and completion. No page
 errors or document overflow were found. Physical-device verification remains
 pending.
+
+## 2026-10-08 - Four evidence-based study achievements
+
+**D473. Implement the owner's four approved achievements inside Progress, with
+original icons and session-completion acknowledgment on web and native Demo.**
+This supersedes D116's displayed volume/streak/retention threshold feed and
+D210/D454's achievement deferral only for this bounded set. Today retains its
+existing derived deck continuation. There is no separate page, scoring system,
+XP, currency, leaderboard, custom goal, mastery claim or new achievement entity.
+
+The rules are First step (finish a nonempty due-eligible snapshot session,
+regardless of rating), Finding your rhythm (five distinct local study days in
+any seven-day period), Here to stay (scheduled reviews in four distinct local
+Monday-Sunday weeks, not necessarily consecutive), and It clicked (Again on a
+card, followed by Hard/Good/Easy on a later local day when due). Same-day retries,
+early reviews and raw volume do not earn recovery. All calculations live in
+core and use the shared local-calendar helpers.
+
+Lifetime awards retain their first crossing date after the period passes, and
+the date-range filter does not change them. Pending rhythm progress uses the
+current last seven days. Undo removes the underlying evidence, and a history
+replace/import intentionally changes the recorded lifetime; no parallel award
+store masks those changes. Card moves/deletion preserve historical evidence.
+
+New logs add optional `dueBefore`. The final committed grade additionally carries
+`sessionCompleted: true` when the whole snapshot was due-eligible. This is one
+atomic card/log commit with identical retry payloads; failure cannot announce an
+award, and Undo removes completion with its grade. Old logs may establish due
+eligibility through the previous same-card `dueAfter`; otherwise no eligibility
+is guessed. Old session completion is never reconstructed from timestamp gaps.
+No migration, schema bump, persisted-row rewrite or cloud integration is needed.
+Version-2 backup validation accepts omission and validates present facts; the AI
+card prompt still generates empty history.
+
+The original checked-card, five-day-calendar, four-linked-weeks and return/check
+icons share plain drawing data and platform-owned SVG renderers. Progress uses
+neutral circular marks, accessible progress bars, earned dates and a Next up
+label. Completion shows only newly earned titles; web links to Progress. No
+orange proliferation, confetti or new motion is introduced. Native Demo keeps
+its in-memory lifecycle and resets on Restart/Reset Demo.
+
+Verification: 120 root test files / 1146 tests pass with two workers, forced
+root TypeScript and root lint pass, and mobile typecheck/lint pass. Native Jest
+passes 42 suites / 571 tests with `--runInBand --forceExit`, preserving its known
+font `act` warnings and open-timer runner limitation. The web production build
+passes with the existing chunk-size advisory, and Expo web export passes.
+Chromium at 1440x900 and 390x844 verifies Light/Dark empty/partial/earned layouts,
+new icons, multiple unlocks, Again completion, Undo/regrade, reload persistence,
+completion-link hover/focus/navigation, and no overflow or page errors. Failure
+and retry are integration-tested. Native Progress, completion and Undo are checked in the Expo web
+preview; physical-device verification remains pending. Initial concurrent broad
+test runs hit existing five-second timeouts; limited-worker reruns pass.
+
+## 2026-10-08 - Publishing readiness backlog and missing release work
+
+**D474. Record the owner's requested release-readiness advice and worthwhile
+omissions, with separate gates for a browser-local web beta and a dependable
+native release.** The owner accepted the assessment and asked to add useful
+work that was not already listed. `TODO.md` owns the prioritized backlog and
+acceptance criteria; existing early-access, demo-seeding, notifications,
+Write Code, migration, cloud verification and deployment items are linked
+rather than duplicated as new features.
+
+The recommended release milestone is useful first-use starter content plus
+honest local entry. Additional work includes protecting unfinished editor
+content, actionable validation and save failure/retry, visible backup and restore,
+contact/feedback with explicit diagnostic boundaries, production lifecycle and
+accessibility acceptance, repeatable release gates, and observing unaided use
+by a small target cohort. Content-intake improvements, overdue-work guidance
+and one opt-in reminder are conditional follow-ups rather than blanket launch
+requirements. Illustrative demo history must not become a new learner's personal
+progress or earned achievements.
+
+This is a planning record, not a completed implementation or approval to deploy,
+collect diagnostics, contact users or start Supabase work. D416's surviving
+cloud/market-validation deferral stands. Native Demo remains in memory; a
+dependable native release needs durability, recovery and physical-device
+evidence, with storage architecture still undecided. The mobile authoring parity
+sequence remains a capability roadmap, not a blocker to a browser-local web
+beta. No persisted data, schema, scheduling, grading or product runtime changes.

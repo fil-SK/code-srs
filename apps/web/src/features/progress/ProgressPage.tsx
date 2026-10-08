@@ -1,5 +1,6 @@
 import { CalendarMetricIcon as Clock3, RetentionIcon as RefreshCw } from '@/components/icons/ApprovedIcons'
 import { useMemo, useState } from 'react'
+import { computeAchievements } from '@fliptap/core'
 import { CopyCheck, GraduationCap } from 'lucide-react'
 import { StreakFlameIcon } from '@/components/icons/StreakFlameIcon'
 import { useReviewLogs } from '@/hooks/useReview'
@@ -15,7 +16,6 @@ import {
   computeReviewSeries,
   computeRetentionSeries,
   computeDeckPerformance,
-  deriveMilestones,
   heatmapDaysFor,
   type HeatmapRangeValue,
 } from '@/domain/stats/progressMetrics'
@@ -26,7 +26,7 @@ import { DateRangePicker } from './components/DateRangePicker'
 import { ActivityHeatmap } from './components/ActivityHeatmap'
 import { RetentionChart } from './components/RetentionChart'
 import { DeckPerformanceTable } from './components/DeckPerformanceTable'
-import { RecentMilestones } from './components/RecentMilestones'
+import { Achievements } from './components/Achievements'
 
 export function ProgressPage() {
   const now = useMemo(() => Date.now(), [])
@@ -90,7 +90,7 @@ export function ProgressPage() {
       ),
     [logsQuery.data, cardsQuery.data, dueCardsQuery.data, decksQuery.data, range],
   )
-  const milestones = useMemo(() => deriveMilestones(logsQuery.data ?? []), [logsQuery.data])
+  const achievements = useMemo(() => computeAchievements(logsQuery.data ?? [], now), [logsQuery.data, now])
 
   const decksById = useMemo(
     () => new Map((decksQuery.data ?? []).map((d) => [d.id, d])),
@@ -221,7 +221,7 @@ export function ProgressPage() {
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <DeckPerformanceTable rows={deckPerformance} decksById={decksById} />
-              <RecentMilestones events={milestones} />
+              <Achievements achievements={achievements} />
             </div>
           </>
       </div>

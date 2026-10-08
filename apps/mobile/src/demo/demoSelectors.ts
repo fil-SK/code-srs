@@ -13,7 +13,7 @@ import {
   computeStreak,
   dateRangePresetLabel,
   deriveCollections,
-  deriveMilestones,
+  computeAchievements,
   estimateSessionMinutes,
   formatDayCount,
   formatEventDate,
@@ -479,13 +479,7 @@ export function demoProgressViewModel(
         dueLabel: `${row.due} due`,
       }
     }),
-    milestones: deriveMilestones(entities.reviewLogs).map((milestone) => ({
-      id: `${milestone.type}-${milestone.threshold}-${milestone.date}`,
-      type: milestone.type,
-      title: milestone.title,
-      subtitle: milestone.subtitle,
-      dateLabel: formatEventDate(milestone.date, now),
-    })),
+    achievements: computeAchievements(entities.reviewLogs, now),
   }
 }
 

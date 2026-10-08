@@ -119,5 +119,6 @@ export function buildReviewLog(params: {
     stateBefore: before.state,
     state: after.state,
     dueAfter: after.due,
+    dueBefore: before.due,
   }
 }

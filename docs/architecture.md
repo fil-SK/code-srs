@@ -375,11 +375,37 @@ ISC and inherited Feather MIT notices distributed and precached as
 | **Card** | `packages/core/src/types/card.ts` | `CardRepo` (`getDue`/`search` + CRUD) | `cards` | `cards` (+ generated `deck_id`, `due`, `suspended`) | — (flat, filtered by deck/tag/interaction) |
 | **Deck** | `packages/core/src/types/deck.ts` | `CrudRepo<Deck>` | `decks` | `decks` | `packages/core/src/domain/decks/tree.ts`: `buildDeckTree`, `descendantIds`, `subtreeIds`, `flattenDeckTree` |
 | **Draft** | `packages/core/src/types/draft.ts` | `CrudRepo<Draft>` | `drafts` | `drafts` | none — the drafts UI was deleted, the data retained (see `CURRENT_STATE.md` §15) |
-| **ReviewLog** | `packages/core/src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Required `stateBefore` records the pre-grade scheduling state; existing `state` is the resulting post-grade state. Carries optional `dueAfter`; rows written before that older field existed can still render an em dash. |
+| **ReviewLog** | `packages/core/src/types/review.ts` | `ReviewRepo` (bespoke) | `reviewLogs` | `review_logs` (+ generated `card_id`, `reviewed_at`) | — (stats derived purely from logs, never denormalized). Required `stateBefore` records the pre-grade scheduling state; existing `state` is the resulting post-grade state. Carries optional `dueAfter`, `dueBefore` and `sessionCompleted`. Older missing interval evidence still renders an em dash; D473 uses the latter two facts for achievements. |
 | **Roadmap** | `packages/core/src/types/roadmap.ts` | `CrudRepo<Roadmap>` | `roadmaps` | `roadmaps` | hand-rolled SVG canvas in `apps/web/src/features/roadmaps/` (no graph library) |
 
 A `ReviewLog` stores only a `cardId`, so deck attribution always joins through the current card. Retention series and Review history use `packages/core/src/domain/stats/cardDeckIndex.ts`'s `buildCardDeckMap(cards)`; Deck Performance takes current cards directly because it also needs active-card, Learned and Due membership. A moved card follows its current deck, while a deleted card's log remains in Review history but contributes to no current deck row.
 
+### Achievement evidence (D473)
+
+`packages/core/src/domain/stats/achievements.ts` owns the four rules and
+`sessionAchievementUnlocks`; both Progress presentations consume its results.
+`buildReviewLog` records `dueBefore` from the real scheduling state. Both session
+owners call `withSessionCompletion` before the final grade's existing
+`commitReview`, adding `sessionCompleted: true` only if every review in the
+nonempty snapshot was due. Completion therefore commits atomically with the last
+grade, survives retries with identical data, and is removed by its ordinary Undo.
+No extra write or session store exists.
+
+The lifetime evaluator orders history, tracks due-eligible distinct local dates
+and Monday-Sunday weeks, and records the first qualifying crossing. Older rows
+can prove due eligibility through the previous same-card `dueAfter`; without
+either due fact they are excluded. Session completion is never inferred.
+Recovery requires Again on the same card, followed by Hard/Good/Easy on a later
+local day at or after its due time. Passing time alone cannot revoke awards;
+explicit removal/replacement of history can. No current Card is needed, so moving
+or deleting a card does not erase historical achievement evidence.
+
+Both optional facts remain inside opaque ReviewLog JSON, require no Dexie
+version or Supabase migration, and round-trip through version-2 backups. Import
+validates finite due timestamps and boolean completion when present; omission
+remains valid. The AI card prompt continues to generate empty review history.
+Original `design/achievementIcons.ts` drawing data has platform-owned SVG
+renderers, with no new dependency. Native Demo retains its in-memory/reset policy.
 Adding a whole new entity = a `CrudRepo<T>` line in each backend + a Dexie `version()` bump + a Supabase table (with RLS + grant) + a hook + a `queryKeys` entry (both in `packages/core/src/hooks/`) + inclusion in `packages/core/src/domain/io/backup.ts`'s `BackupData` and `packages/core/src/data/backup.ts`.
 
 **Backup format** (`packages/core/src/domain/io/backup.ts`, `BACKUP_VERSION = 2`): `{app: 'fliptap', version, exportedAt, data: {cards, decks, drafts, reviewLogs, roadmaps?}}`. `roadmaps` is optional so older v2 backups still import. `BACKUP_APP_MARKER` is the constant behind that `app` field. It used to be a fixed legacy identifier (`'code-srs'`, kept unchanged through the Itera rebrand so old files kept importing), but for the FlipTap rebrand it was deliberately renamed to `'fliptap'` too — a one-time compatibility break, not the general pattern for future renames.

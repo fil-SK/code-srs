@@ -1,9 +1,12 @@
 import {
+  sessionAchievementUnlocks,
+  withSessionCompletion,
   usePersistReviewResult,
   useUndoGrade,
   type Card,
   type CardInteraction,
   type ID,
+  type ReviewLog,
   type SchedulingState,
   type SubmitReviewResult,
 } from '@fliptap/core'
@@ -46,6 +49,7 @@ export interface GradedCardRecord {
   /** The card as it stood before the grade, which is what Undo restores verbatim. */
   card: Card
   logId: ID
+  log: ReviewLog
   rating: number
 }
 
@@ -74,6 +78,10 @@ export function DemoReviewSession({
     return (
       <SessionCompleteScreen
         graded={graded}
+        achievements={sessionAchievementUnlocks(
+          entities.reviewLogs, graded.map((record) => record.log),
+          Math.max(now, graded.at(-1)?.log.reviewedAt ?? now),
+        )}
         onExit={onExit}
         onUndo={
           graded.length === 0
@@ -100,14 +108,16 @@ export function DemoReviewSession({
   // - the await is what makes adding one a change to this function rather than a
   // change to the session's shape.
   async function handleGraded(result: SubmitReviewResult) {
-    await persist.mutateAsync({ card, after: result.after, log: result.log })
+    const log = withSessionCompletion(result.log, graded.map((record) => record.log), index === queue.length - 1)
+    await persist.mutateAsync({ card, after: result.after, log })
     setGraded((current) => [
       ...current,
       {
         cardId: result.log.cardId,
         before: card.scheduling,
         card,
-        logId: result.log.id,
+        logId: log.id,
+        log,
         rating: result.log.rating,
       },
     ])

@@ -52,6 +52,9 @@ a missing field, or a broken id reference means nothing is imported at all.
   free text - do not substitute any other value.
 - "version" MUST be 2. Version 1 files use a deleted card model and are refused.
 - "drafts" and "reviewLogs" must be present and empty: [].
+- Existing exported review logs may include optional "dueBefore" (numeric timestamp)
+  and "sessionCompleted" (boolean) facts used by achievements. Never invent review
+  history or achievement evidence when generating cards; leave "reviewLogs" empty.
 
 ## Deck (group the cards)
 Create one or more decks and put the cards in them.

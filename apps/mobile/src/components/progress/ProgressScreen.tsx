@@ -14,6 +14,7 @@ import type { LayoutChangeEvent } from 'react-native'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { AchievementIcon } from '@/src/components/icons/AchievementIcon'
 import { MobileHeader } from '@/src/components/today/MobileHeader'
 import type {
   MobileProgressMetricViewModel,
@@ -342,26 +343,43 @@ function DeckPerformance({
   )
 }
 
-function Milestones({ milestones }: { milestones: MobileProgressViewModel['milestones'] }) {
+function Achievements({ achievements }: { achievements: MobileProgressViewModel['achievements'] }) {
+  const earned = achievements.filter((item) => item.unlockedAt !== undefined).length
+  const next = achievements.find((item) => item.unlockedAt === undefined)?.id
   return (
     <SectionCard>
-      <Text style={styles.sectionTitle}>Recent milestones</Text>
+      <Text style={styles.sectionTitle}>Achievements</Text>
+      <Text style={styles.sectionSubtitle}>{earned} of 4 earned · All time</Text>
+      <Text style={styles.sectionSubtitle}>Small steps. Lasting habits. Based on scheduled reviews.</Text>
       <View style={styles.list}>
-        {milestones.length === 0 && (
-          <Text style={styles.rowSubtitle}>Keep reviewing to reach your first milestone.</Text>
-        )}
-        {milestones.map((milestone, index) => {
-          const streak = milestone.type === 'streak'
+        {achievements.map((item, index) => {
+          const unlocked = item.unlockedAt !== undefined
           return (
-            <View key={milestone.id} style={[styles.milestoneRow, index > 0 && styles.rowBorder]}>
-              <View style={[styles.milestoneIcon, { backgroundColor: streak ? fliptapColors.accentSoft : fliptapColors.successSoft }]}>
-                <MaterialCommunityIcons color={streak ? fliptapColors.accent : fliptapColors.success} name={streak ? 'streak' : 'trophy-outline'} size={21} />
+            <View key={item.id} style={[styles.achievementRow, index > 0 && styles.rowBorder]}>
+              <View style={[styles.milestoneIcon, { backgroundColor: unlocked ? fliptapColors.navySoft : fliptapColors.surfaceSubtle }]}>
+                <AchievementIcon id={item.id} color={unlocked ? fliptapColors.inkBrand : fliptapColors.muted} />
               </View>
               <View style={styles.deckCopy}>
-                <Text style={styles.rowTitle}>{milestone.title}</Text>
-                <Text style={styles.rowSubtitle}>{milestone.subtitle}</Text>
+                <View style={styles.achievementHeading}>
+                  <Text style={styles.rowTitle}>{item.title}</Text>
+                  <Text style={unlocked ? styles.successText : styles.rowSubtitle}>{unlocked ? 'Earned' : item.id === next ? 'Next up' : ''}</Text>
+                </View>
+                <Text style={styles.rowSubtitle}>{item.description}</Text>
+                {unlocked ? (
+                  <Text style={styles.achievementCaption}>
+                    Earned {new Date(item.unlockedAt!).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </Text>
+                ) : (
+                  <>
+                    <View accessibilityRole="progressbar" accessibilityLabel={item.title}
+                      accessibilityValue={{ min: 0, max: item.target, now: item.progress, text: item.progressLabel }}
+                      style={styles.achievementTrack}>
+                      <View style={[styles.achievementFill, { width: `${item.progress / item.target * 100}%` }]} />
+                    </View>
+                    <Text style={styles.achievementCaption}>{item.progressLabel}</Text>
+                  </>
+                )}
               </View>
-              <Text style={styles.milestoneDate}>{milestone.dateLabel}</Text>
             </View>
           )
         })}
@@ -369,7 +387,6 @@ function Milestones({ milestones }: { milestones: MobileProgressViewModel['miles
     </SectionCard>
   )
 }
-
 export function ProgressScreen({
   viewModel,
   rangePreset,
@@ -418,7 +435,7 @@ export function ProgressScreen({
             router.push({ pathname: '/deck/[deckId]', params: { deckId } })
           }
         />
-        <Milestones milestones={viewModel.milestones} />
+        <Achievements achievements={viewModel.achievements} />
       </ScrollView>
     </SafeAreaView>
   )
@@ -483,10 +500,13 @@ const styles = StyleSheet.create({
   metaSeparator: { color: fliptapColors.mutedLight, fontSize: 12 },
   successText: { color: fliptapColors.success, fontSize: 13, fontWeight: '600' },
   dueText: { color: fliptapColors.accent, fontSize: 13, fontWeight: '600' },
-  milestoneRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  achievementRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 16 },
+  achievementHeading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 4 },
+  achievementCaption: { color: fliptapColors.muted, fontSize: 12, lineHeight: 17, marginTop: 6 },
+  achievementTrack: { height: 4, borderRadius: 2, overflow: 'hidden', backgroundColor: fliptapColors.navySoft, marginTop: 10 },
+  achievementFill: { height: 4, borderRadius: 2, backgroundColor: fliptapColors.inkBrand },
   milestoneIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   pressed: {
     opacity: 0.65,
   },
-  milestoneDate: { color: fliptapColors.muted, fontSize: 12 },
 })

@@ -1,8 +1,9 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
-import { fliptapColors, fliptapRadii, type Rating } from '@fliptap/core'
+import { fliptapColors, fliptapRadii, type Achievement, type Rating } from '@fliptap/core'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { AchievementIcon } from '@/src/components/icons/AchievementIcon'
 import type { GradedCardRecord } from './DemoReviewSession'
 
 // The end of a session, plus one level of Undo.
@@ -25,11 +26,13 @@ const RATING_LABELS: Record<Rating, string> = {
 
 export function SessionCompleteScreen({
   graded,
+  achievements = [],
   total,
   onExit,
   onUndo,
 }: {
   graded: GradedCardRecord[]
+  achievements?: Achievement[]
   total: number
   onExit: () => void
   onUndo?: () => void
@@ -69,6 +72,18 @@ export function SessionCompleteScreen({
                 <View key={entry.rating} style={styles.breakdownRow}>
                   <Text style={styles.breakdownLabel}>{entry.label}</Text>
                   <Text style={styles.breakdownCount}>{entry.count}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {achievements.length > 0 && (
+            <View accessibilityLiveRegion="polite" style={styles.breakdown}>
+              <Text style={styles.achievementTitle}>Achievements earned</Text>
+              {achievements.map((item) => (
+                <View key={item.id} style={styles.achievementRow}>
+                  <AchievementIcon id={item.id} size={24} color={fliptapColors.inkBrand} />
+                  <Text style={styles.achievementName}>{item.title}</Text>
                 </View>
               ))}
             </View>
@@ -167,6 +182,9 @@ const styles = StyleSheet.create({
   },
   breakdownLabel: { color: fliptapColors.muted, fontSize: 14, fontWeight: '600' },
   breakdownCount: { color: fliptapColors.inkBrand, fontSize: 15, fontWeight: '800' },
+  achievementTitle: { color: fliptapColors.muted, fontSize: 12, fontWeight: '600', marginVertical: 8 },
+  achievementRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  achievementName: { flex: 1, color: fliptapColors.inkBrand, fontSize: 14, fontWeight: '600' },
   primary: {
     alignSelf: 'stretch',
     minHeight: 54,

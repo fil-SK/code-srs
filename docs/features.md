@@ -23,7 +23,7 @@ Boundaries: for *implementation status detail* (real vs. placeholder numbers, kn
 | `/decks/:deckId/cards/new` | `CardCreatePage` → `CardTypeChooser` / one `*EditorShell` per type | FlipTap Create/Edit (Phase F): the `add-new-card.png` composition as one bordered three-section form. Recall is selected by default; all six interaction types remain switchable with their existing icons. Card content is type-specific; shared Organize controls preserve Deck + comma-separated Tags and add identifying icons. Save/Cancel sit in the footer, while the real production interaction preview remains available as a desktop drawer or narrow-screen tab. Saves a `Card` into the one card store, immediately schedulable in `/review`. | **FlipTap redesign, production.** All six interaction types are wired up and every pre-existing authoring field remains available. |
 | `/cards/:id/edit` | `CardEditEntry` | One switch on `interaction.type` picking the matching editor shell. Saving reuses the card's id/createdAt/scheduling/suspended, so `ReviewLog` history survives an edit. The switch covers every union member, so the fallthrough is a **"Card not found"** state reachable only for an id that resolves to no card. | **FlipTap redesign, production.** |
 | `/cards/:id/study` | `CardStudyPreviewPage` | The Deck row's primary click target: the real Review experience for the card's actual interaction type, against a fresh scheduling baseline — nothing is persisted. Also the closest thing to a "Card detail" view, per `fliptap-decisions.md` D69. | **FlipTap redesign, production**, non-committing preview only. |
-| `/progress` | `ProgressPage` (`apps/web/src/features/progress/`) | The real FlipTap Progress page (mockup-driven): a local sidebar (only "Overview" and "Review history" are live), and exactly five headline KPIs — **Learned, Due, Reviews, Retention, Current streak**. Learned/Due/Streak are current-state values; Reviews/Retention follow the selected date range, and retention changes use percentage points. The page retains the review-activity heat map, a deck-scopable retention-over-time chart with visible null gaps, and derived recent milestones. Deck Performance shows **Deck · Learned · Due · Retention** for leaf/actionable decks, includes due decks with no period reviews, and orders due work first; due rows open their `/review?deck=` scope. | **FlipTap redesign, production.** Retention uses required pre-grade `ReviewLog.stateBefore`, and Today imports the same definition. The misleading review-count-chunk Trend column was removed. The other seven sidebar rows remain focusable `aria-disabled` "Soon" placeholders; no planned sub-page was added. |
+| `/progress` | `ProgressPage` (`apps/web/src/features/progress/`) | The real FlipTap Progress page (mockup-driven): a local sidebar (only "Overview" and "Review history" are live), and exactly five headline KPIs — **Learned, Due, Reviews, Retention, Current streak**. Learned/Due/Streak are current-state values; Reviews/Retention follow the selected date range, and retention changes use percentage points. The page retains the review-activity heat map, a deck-scopable retention-over-time chart with visible null gaps, and four lifetime study achievements with progress and earned dates (D473). Deck Performance shows **Deck · Learned · Due · Retention** for leaf/actionable decks, includes due decks with no period reviews, and orders due work first; due rows open their `/review?deck=` scope. | **FlipTap redesign, production.** Retention uses required pre-grade `ReviewLog.stateBefore`, and Today imports the same definition. The misleading review-count-chunk Trend column was removed. The other seven sidebar rows remain focusable `aria-disabled` "Soon" placeholders; no planned sub-page was added. |
 | `/progress/history` | `ReviewHistoryPage` (`apps/web/src/features/progress/`) | **Review history**: one row per `ReviewLog`, newest first — card, deck, rating, resulting interval, timestamp — filterable by range (30D/3M/1Y/All), deck (including its subtree) and rating, paginated 25 at a time. The chronological record behind Progress's aggregates. | **Production.** Records are immutable; the card/deck metadata beside them reflects the card's *current* metadata, so this is a history view, not a forensic audit trail. |
 | `/settings`, `/settings/:section` | `AccountSettingsPage` (`apps/web/src/features/settings/`) + `SettingsNav` + `sections/*` | The full Account settings page the avatar menu opens, mockup-driven: a local section nav (Profile · Email & password · Appearance · Notifications · Privacy · Connected devices — divider — Import / Export) beside the active section. Two sections are real: **Appearance** (Light / Dark / System) and **Import / Export** (the JSON backup, moved here verbatim from the old `SettingsPage`, now confirming through `useDialogs` instead of `window.confirm`). Import offers **Merge** and **Replace**; every entity in the file is validated before anything is written, and on the local backend Replace is all-or-nothing, so a failed import leaves the existing workspace exactly as it was. Replace is offered as an `aria-disabled` option with its reason when the cloud backend is active, which cannot roll a failed replace back. The remaining sections, including the Profile form/statistics/danger zone, are inert greyed placeholders that state what they will hold. Billing and Plan & usage from the mockup were dropped outright — there is no billing concept in this product. Unknown or missing `:section` falls back to Profile — which is why the account menu no longer links "Spaced repetition (FSRS)" to `/settings/card-scheduling`: that slug does not exist, so the row silently opened Profile. It is now an `aria-disabled` "Soon" row like every other unbuilt destination. | **FlipTap redesign, production**, with the pre-existing Import / Export carried over unchanged. `SettingsPage.tsx` was deleted, not left unrouted, since its content moved wholesale. |
 | `/design-preview/*` | `apps/web/src/features/design-preview/**` | Chrome-free preview routes exercising the real, reusable v2 Review components against fixture data: `review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}`. | **FlipTap redesign infrastructure.** A structurally separate top-level route array entry, not nested under `AppShell` — chrome-free by construction, not by hiding chrome with CSS. Each page imports the **production** `ReviewSessionScreen`, so a preview cannot drift from `/review` — which is why these survived while the Library previews (an adapted-not-imported fork) were deleted. |
@@ -117,14 +117,45 @@ The account menu's About FlipTap row opens `/about` in the shared app shell. The
 
 The form validates email and accepts one optional learning-goal answer. It has **no configured persistence in V1**: its isolated adapter rejects, and the visitor is told that nothing was sent or stored. There is no email provider, Supabase use, analytics, tracking, auth, pricing, billing, blog, or product route in this application.
 
+## Study achievements (D473)
+
+Progress on web and native Demo shows exactly four achievements:
+
+- **First step:** finish a nonempty scheduled review queue. One card is enough;
+  the rating does not need to be successful. Leaving early or a failed write
+  cannot earn it.
+- **Finding your rhythm:** scheduled reviews on five distinct local days in any
+  rolling seven-day period. Pending progress describes the current last seven days.
+- **Here to stay:** scheduled reviews in four distinct local Monday-Sunday weeks;
+  the weeks do not have to be consecutive.
+- **It clicked:** rate a previously missed card Hard, Good or Easy on a later
+  local day when the card is due. Same-day retries and early reviews do not count.
+
+These are lifetime achievements outside the reporting range. Earned dates remain
+after the qualifying period passes. Completion screens acknowledge only new
+unlocks. There is no new page, achievement entity or scoring system. Historical
+logs without due evidence cannot be guessed into scheduled reviews, and older
+sessions cannot be backfilled as complete. Undo or replacing history can remove
+the evidence; backups preserve the optional facts. Native Demo awards live only
+for the process and reset with its workspace.
+
 ## Planned (specified, not built)
+
+Release-readiness proposals are tracked in
+[TODO.md](TODO.md#publishing-readiness-priorities-2026-10-08) (D474): first-use
+starter content and honest local entry, authoring-loss protection, visible
+backup/recovery, support, and production/accessibility acceptance. These are
+pending work, not shipped capabilities or permission to enable cloud. Durable
+native data is required before a dependable native release; the current Demo
+lifecycle is unchanged. Conditional intake/reminder ideas remain evidence-led.
+
 
 Do not describe any of these as shipped, and do not build against them as though they exist.
 
 | Feature | State |
 |---|---|
 | **Weekly Goal** | Removed from Today rather than fabricated. There is no persisted or configurable weekly target anywhere in the product, and none was added — a real one needs a goal entity, a settings surface, and a definition of what counts toward it. |
-| **Richer milestones / achievements** | Today's Next milestone is a *derived* in-progress-deck continuation, recomputed each render. There is no milestone or achievement entity, no mastery milestones, no topic completion, no streak or review-volume awards, no custom goals. Progress's Recent milestones are likewise derived from `ReviewLog` thresholds. |
+| **Richer milestones / achievements** | Today's Next milestone is a *derived* in-progress-deck continuation, recomputed each render. There is no milestone or achievement entity, no mastery milestones, no topic completion, no streak or review-volume awards, no custom goals. Progress now has four evidence-based achievements (D473); richer awards and goals remain deferred. |
 | **Advanced session customization** | Adjust session covers deck scope and card count only. Time-boxed sessions ("15 minutes"), weak-cards-only, new-vs-review splits, difficulty filters, interaction-type filters, tag filters and custom FSRS parameters are all deferred, and nothing is abstracted in anticipation of them. See [`TODO.md`](TODO.md). |
 | **Collection as a real entity** | "Collection" is derived in the UI from `Deck.parentId`. There is no `Collection` type, table or migration — see [`fliptap-migration-plan.md`](fliptap-migration-plan.md) §6. |
 | **Onboarding and full empty-state coverage** | No onboarding flow exists. Empty states exist for Library and Progress; the full audited set does not. |
