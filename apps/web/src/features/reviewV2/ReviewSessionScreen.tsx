@@ -48,6 +48,7 @@ function ReviewCardScreen<T extends InteractionType>({
   initialResponse,
   hideTopBar,
   hideRating,
+  enableShortcuts = true,
   onPrevious,
   onNext,
   previousDisabled,
@@ -76,14 +77,12 @@ function ReviewCardScreen<T extends InteractionType>({
   // non-empty starting response. Callers still reset via `key={...}`, not by
   // changing this prop after mount.
   initialResponse?: InteractionResponse
-  // Optional, both default false — every existing caller (real Review,
-  // /design-preview/review/*) omits them and is unaffected. Set by
-  // WalkthroughLivePreview only, whose step-jump authoring preview still
-  // needs this shell's real phase/grading machinery (unlike the other five
-  // types' simplified InteractionAnswerPreview) but not its session-only
-  // chrome — see docs/fliptap-decisions.md.
+  // Embedded authoring and About previews reuse the real phase and grading
+  // machinery without session-only chrome. Production sessions omit these.
   hideTopBar?: boolean
   hideRating?: boolean
+  // Embedded demos keep page scrolling and shortcuts local to focused controls.
+  enableShortcuts?: boolean
   // Deck flip-through adds navigation around the position in the shared
   // strip. Real review sessions omit it because their queue advances only
   // after grading.
@@ -201,6 +200,7 @@ function ReviewCardScreen<T extends InteractionType>({
   }
 
   useEffect(() => {
+    if (!enableShortcuts) return
     function onKeyDown(e: KeyboardEvent) {
       if (e.repeat) return
       const interactiveTarget = isInteractiveTarget(e.target)
@@ -234,7 +234,7 @@ function ReviewCardScreen<T extends InteractionType>({
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, response, definition])
+  }, [phase, response, definition, enableShortcuts])
 
   const feedbackHint: { key?: string; label: string } = hideRating
     ? { label: 'Answer revealed' }

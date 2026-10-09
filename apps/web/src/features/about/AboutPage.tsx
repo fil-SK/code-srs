@@ -1,17 +1,8 @@
 import { ArrowRight, Check, Cloud, HardDrive, Repeat2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useAuth, type InteractionType } from '@fliptap/core'
+import { useAuth } from '@fliptap/core'
 import { FlipTapMark } from '@/components/brand/FlipTapMark'
-import { INTERACTION_META } from '@/features/cards/shared/interactionTypeMeta'
-
-const formats: { type: InteractionType; description: string }[] = [
-  { type: 'recall', description: 'Think it through, reveal the answer, and check your understanding.' },
-  { type: 'multiple_choice', description: 'Choose the right answers and get immediate feedback.' },
-  { type: 'write_code', description: 'Write an answer and compare it with your accepted solutions.' },
-  { type: 'ordering', description: 'Put an algorithm, process, or sequence in the right order.' },
-  { type: 'matching', description: 'Connect related concepts, definitions, and examples.' },
-  { type: 'walkthrough', description: 'Work through a problem one step at a time.' },
-]
+import { CardFormatDemo } from './CardFormatDemo'
 
 const learningLoop = [
   { icon: Repeat2, title: 'Recall', description: 'Try to find the answer before you reveal it.' },
@@ -88,22 +79,7 @@ export function AboutPage() {
         <p className="mt-2 text-sm leading-6 text-fliptap-muted">
           Six card formats, with code snippets, optional tips, and explanations where you need them.
         </p>
-        <div className="mt-7 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-          {formats.map(({ type, description }) => {
-            const { label, icon: Icon } = INTERACTION_META[type]
-            return (
-              <div key={type} className="flex items-start gap-3">
-                <span aria-hidden="true" className="grid h-10 w-10 flex-none place-items-center rounded-fliptap-control border border-fliptap-border bg-fliptap-surface text-fliptap-ink-brand">
-                  <Icon size={19} />
-                </span>
-                <div>
-                  <h3 className="text-sm font-semibold text-fliptap-ink-brand">{label}</h3>
-                  <p className="mt-1 text-sm leading-6 text-fliptap-muted">{description}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <CardFormatDemo />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">

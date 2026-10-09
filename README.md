@@ -34,7 +34,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Four study achievements**: your first finished session, five study days in seven, reviews across four weeks, and recalling a missed card on a later due review. Progress shows lifetime progress and earned dates; review completion acknowledges new unlocks. Available on web and native Demo (whose state still resets on restart).
 - **Import / Export** your whole collection as JSON.
 - **Light, dark and system themes** in Account settings → Appearance, saved on this browser; responsive, mobile-friendly and installable (PWA).
-- **About FlipTap** in the account menu: a guide to the six study formats, FSRS ratings, and where your current workspace stores its data.
+- **About FlipTap** in the account menu: playable samples of all six study formats, starting with Recall, plus FSRS ratings and storage details for your workspace.
 - **Two storage modes**: local-only (IndexedDB, zero setup) or cloud sync (Supabase Postgres + magic-link auth).
 
 ---
@@ -76,7 +76,7 @@ Grading model: interactive interactions (Multiple Choice, Write Code, Ordering, 
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
 - **Progress** (`/progress`) — Learned, Due, Reviews, mature Retention, and Current streak; activity and retention charts; actionable leaf-deck rows ordered around work due now. Today, navigation, Progress, and Review share the same due/streak/retention definitions.
 - **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The avatar menu also links those two working sections directly and shows Study settings, What's new, keyboard/help and profile destinations as clearly marked upcoming items. Sign-out is available there for local, demo and cloud sessions.
-- **About FlipTap** (`/about`, from the avatar menu) — the product story, six card formats, review scheduling, and storage details for your active workspace, with shortcuts to Library and Import / Export.
+- **About FlipTap** (`/about`, from the avatar menu) — the product story, six interactive sample cards, review scheduling, and storage details for your active workspace, with shortcuts to Library and Import / Export.
 
 **Markdown** works in every card's prose: `` `inline code` ``, `**bold**`, `*italic*`, and:
 

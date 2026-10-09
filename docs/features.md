@@ -113,7 +113,7 @@ Account settings → Appearance offers Light, Dark and System. Preferences in th
 
 ## About FlipTap — implemented on web
 
-The account menu's About FlipTap row opens `/about` in the shared app shell. The page explains the product's purpose, six card interactions, learning loop and FSRS ratings. Library and JSON Import / Export links open the existing product routes; Icon licenses opens the distributed license notice. The storage explanation reflects the active workspace: browser-local and offline-capable in local mode, cloud storage requiring a connection in Supabase mode. It contains no sample learner metrics or promises about native persistence.
+The account menu's About FlipTap row opens `/about` in the shared app shell. The page explains the product's purpose, learning loop and FSRS ratings. Its six card interactions are playable samples using the real web Review views, with Recall selected first. Each sample can be solved or revealed, inspected and retried without creating cards, recording reviews or changing scheduling. Library and JSON Import / Export links open the existing product routes; Icon licenses opens the distributed license notice. The storage explanation reflects the active workspace: browser-local and offline-capable in local mode, cloud storage requiring a connection in Supabase mode. It contains no sample learner metrics or promises about native persistence.
 
 ## Public marketing site — implemented
 

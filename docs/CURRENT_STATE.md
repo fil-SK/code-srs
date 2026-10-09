@@ -128,6 +128,8 @@
 > Physical-device verification remains pending; browser verification cannot
 > establish native device appearance.
 
+> **Interactive About cards (2026-10-09, D490).** The six formats now select real web Review cards with sample content, starting with Recall. Visitors can reveal, answer, inspect feedback and retry without saving cards, reviews or scheduling changes. Desktop puts the selector beside the preview; phones use a compact two-column selector above it. Embedded cards retain focused keyboard controls without capturing page-level review shortcuts. Verification: 123 files / 1,157 tests, forced TypeScript, lint and web build pass; Chromium checks both themes/widths, all six solving flows, reset, focus, reduced motion and page scrolling without errors or document overflow.
+
 > **About FlipTap on web (2026-10-05, D471).** `/about` is a live page in the shared app shell, reached from the account menu's About FlipTap row. It introduces the product, the six card interactions and FSRS review ratings, with working Library, Import / Export and icon-license links. Its storage explanation follows the active auth mode: browser-local/offline in local mode, cloud/connection-required in Supabase mode. Light and Dark use the existing semantic palette. No persisted data or mobile behavior changes.
 
 > **Today stack color (2026-10-05, D470).** The furthest-back hero card now uses dark gray in dark mode, keeping its pale gray light-mode fill and the tuned geometry. It remains hidden below 640px.
