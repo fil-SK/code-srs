@@ -1,3 +1,4 @@
+import { OnboardingHost } from '@/src/components/onboarding/OnboardingTour'
 import { AuthProvider, fliptapColors } from '@fliptap/core'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { StatusBar } from 'expo-status-bar'
@@ -75,7 +76,7 @@ export default function RootLayout() {
   const navigator =
     mobileRuntimeMode === 'demo' ? (
       <DemoWorkspaceProvider>
-        <RootNavigator />
+        <OnboardingHost><RootNavigator /></OnboardingHost>
       </DemoWorkspaceProvider>
     ) : (
       <RootNavigator />

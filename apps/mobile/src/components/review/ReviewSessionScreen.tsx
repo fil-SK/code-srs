@@ -1,3 +1,5 @@
+import { TourScrollView, TourTarget } from '@/src/components/onboarding/TourTarget'
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
 import {
   formatInterval,
   fliptapColors,
@@ -11,8 +13,8 @@ import {
   type SchedulingState,
   type SubmitReviewResult,
 } from '@fliptap/core'
-import { useMemo, useReducer, useState } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useMemo, useReducer, useState } from 'react'
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { RatingControls } from './RatingControls'
@@ -162,6 +164,10 @@ export function ReviewSessionScreen<T extends InteractionType>(
     await review.onGraded(result)
   }
 
+  useEffect(() => {
+    if (phase.kind === 'feedback') onboardingTour.event({ type: 'answer-revealed', cardId: card.id })
+  }, [phase.kind, card.id])
+
   const revealed = phase.kind === 'feedback' || phase.kind === 'transitioning'
 
   const hint = revealed
@@ -198,13 +204,13 @@ export function ReviewSessionScreen<T extends InteractionType>(
         keyboardVerticalOffset={8}
         style={styles.keyboardView}
       >
-        <ScrollView
+        <TourScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           scrollEnabled={scrollEnabled}
           showsVerticalScrollIndicator={false}
         >
-          <definition.View
+          <TourTarget id="reveal"><definition.View
             card={card}
             onPrimaryAction={primaryAction}
             phase={phase}
@@ -212,13 +218,13 @@ export function ReviewSessionScreen<T extends InteractionType>(
             responseReady={responseReady}
             setResponse={setResponse}
             setScrollEnabled={setScrollEnabled}
-          />
+          /></TourTarget>
 
           {phase.kind === 'presenting' && <TipPanel tip={card.tip} />}
           {revealed && <ExplanationPanel explanation={card.explanation} />}
 
           {revealed && review && ratingIntervals && (
-            <View>
+            <TourTarget id="rate">
               <RatingControls
                 disabled={phase.kind !== 'feedback'}
                 intervals={ratingIntervals}
@@ -226,7 +232,7 @@ export function ReviewSessionScreen<T extends InteractionType>(
                 selected={selectedRating}
                 suggested={suggested}
               />
-            </View>
+            </TourTarget>
           )}
 
           {/*
@@ -242,7 +248,7 @@ export function ReviewSessionScreen<T extends InteractionType>(
               </Text>
             </View>
           )}
-        </ScrollView>
+        </TourScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   )

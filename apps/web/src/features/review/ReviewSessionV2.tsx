@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { onboardingTour } from '@/features/onboarding/tourStore'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sessionAchievementUnlocks, summarizeSession, withSessionCompletion } from '@fliptap/core'
@@ -46,6 +48,9 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
   const undo = useUndoGrade()
   const history = useReviewLogs()
 
+  useEffect(() => {
+    if (queue[0]) onboardingTour.event({ type: 'review-opened', deckId: queue[0].deckId })
+  }, [queue])
   const current = queue[index]
   const isComplete = index >= queue.length
   const busy = persist.isPending || undo.isPending
@@ -61,6 +66,7 @@ export function ReviewSessionV2({ cards }: { cards: Card[] }) {
     // A failed commit or Undo cannot leave a phantom completed session behind.
     const log = withSessionCompletion(result.log, sessionLogs, index === queue.length - 1)
     await persist.mutateAsync({ card: original, after: result.after, log })
+    onboardingTour.event({ type: 'review-saved', cardId: original.id })
     setUndoStack((s) => [...s, { card: original, logId: log.id }])
     setSessionLogs((s) => [...s, log])
     setIndex((i) => i + 1)

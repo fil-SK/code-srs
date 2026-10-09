@@ -131,12 +131,12 @@ export function TodayPage() {
   const emptyWorkspace = !deckData?.length && !cardData?.length
 
   const greeting = (
-    <>
+    <div data-tour="today">
       <h1 className="text-3xl font-bold tracking-tight text-fliptap-ink-brand">
         {message.mainText}
       </h1>
       <p className="mt-1 text-fliptap-muted">{message.subtext}</p>
-    </>
+    </div>
   )
 
   // Nothing is rendered against half-loaded data. An empty `dueCards` result

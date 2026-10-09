@@ -1,3 +1,5 @@
+import { useTourState } from '@/src/components/onboarding/tourStore'
+import { TourScrollView, TourTarget } from '@/src/components/onboarding/TourTarget'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { fliptapColors, fliptapRadii, type DeckSortKey } from '@fliptap/core'
 import { useRouter } from 'expo-router'
@@ -71,6 +73,7 @@ function CollectionPill({
 }
 
 export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryViewModel }) {
+  const tour = useTourState()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [dueOnly, setDueOnly] = useState(false)
@@ -94,7 +97,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
         <View style={styles.decorativeShapeSmall} />
       </View>
 
-      <ScrollView
+      <TourScrollView
         alwaysBounceVertical={false}
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="never"
@@ -116,12 +119,12 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
           IS a deck and the only thing that differs is the parentId the new deck
           is given.
         */}
-        <FlipTapButton
+        <TourTarget id="new-deck"><FlipTapButton
           accessibilityHint="Creates a new top-level deck"
           label="New Deck"
           onPress={() => router.push('/deck/new')}
           style={styles.newDeck}
-        />
+        /></TourTarget>
 
         <Text style={styles.sectionLabel}>Collections</Text>
         <ScrollView
@@ -189,7 +192,9 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
 
         <View style={styles.deckList}>
           {visibleDecks.map((deck) => (
-            <LibraryDeckRow key={deck.id} deck={deck} onPress={() => openDeck(deck.id)} />
+            tour?.deckId === deck.id
+              ? <TourTarget key={deck.id} id="open-deck"><LibraryDeckRow deck={deck} onPress={() => openDeck(deck.id)} /></TourTarget>
+              : <LibraryDeckRow key={deck.id} deck={deck} onPress={() => openDeck(deck.id)} />
           ))}
         </View>
 
@@ -200,7 +205,7 @@ export function LibraryAllDecksScreen({ viewModel }: { viewModel: MobileLibraryV
             <Text style={styles.emptyText}>Try another search or turn off Due only.</Text>
           </View>
         ) : null}
-      </ScrollView>
+      </TourScrollView>
 
       <SortSheet
         onChange={setSort}

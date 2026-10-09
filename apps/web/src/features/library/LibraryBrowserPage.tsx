@@ -1,3 +1,4 @@
+import { onboardingTour, useTourState } from '@/features/onboarding/tourStore'
 import { useEffect, useMemo, useState } from 'react'
 import { checkDeckDeletion, childDeckCount } from '@fliptap/core'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -35,6 +36,7 @@ const ALL_DECKS_PAGE_SIZE = 10
 // preview it came from has since been deleted). Collections are UI-only,
 // derived from Deck.parentId (see collectionTree.ts) — no schema change.
 export function LibraryBrowserPage() {
+  const tour = useTourState()
   const dialogs = useDialogs()
   const now = useMemo(() => Date.now(), [])
   const [searchParams] = useSearchParams()
@@ -106,10 +108,16 @@ export function LibraryBrowserPage() {
     : filtered
 
   useEffect(() => setPage(1), [search, sort, dueOnly, selection])
+  useEffect(() => {
+    if (tour?.step !== 'open-deck') return
+    const index = filtered.findIndex(deck => deck.id === tour.deckId)
+    if (index >= 0) setPage(Math.floor(index / ALL_DECKS_PAGE_SIZE) + 1)
+  }, [tour?.step, tour?.deckId, filtered])
   useEffect(() => setPage((current) => Math.min(current, totalPages)), [totalPages])
 
   function newDeck() {
     openCreateDeck()
+    onboardingTour.event({ type: 'deck-form-opened' })
   }
 
   async function rename(deck: Deck) {
@@ -182,6 +190,7 @@ export function LibraryBrowserPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
+                  data-tour="new-deck"
                   onClick={newDeck}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-fliptap-control fliptap-button fliptap-button-primary px-5 text-sm font-semibold text-white"
                 >

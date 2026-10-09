@@ -356,6 +356,12 @@ export function ProfileSettingsScreen({ initialSection }: { initialSection?: str
           </>
         )}
 
+        <Pressable accessibilityRole="button" onPress={() => router.push('/onboarding')} style={({ pressed }) => [styles.devRow, pressed && styles.pressed]}>
+          <MaterialCommunityIcons color={fliptapColors.inkBrand} name="school-outline" size={21} />
+          <Text style={styles.devRowLabel}>Getting started</Text>
+          <MaterialCommunityIcons color={fliptapColors.muted} name="chevron-right" size={22} />
+        </Pressable>
+
         {__DEV__ ? (
           <Pressable
             accessibilityRole="button"

@@ -731,3 +731,36 @@ makes a network request. Delivery is unconfigured by owner decision and tracked
 in TODO.md; no entity, table, repository method or fake success state is added.
 `StudySection` at `/settings/study` explains the existing default FSRS scheduling
 and transient session choices. It does not configure or duplicate the scheduler.
+## Interactive onboarding (D505, supersedes D504)
+
+Core's `onboarding/tour.ts` owns the platform-neutral scenario and guarded
+transitions. It contains no entities or repository calls. Each app owns an
+in-memory tour instance. The normal create/save/review paths publish success
+events; the tour only advances matching deck/card IDs. Use example changes form
+state, and the user explicitly saves each entity and chooses their own rating.
+
+Web `/onboarding` starts the tour and returns to Today. Subsequent navigation
+is performed by the user, including opening Library, selecting the created deck,
+leaving the completed session and opening Progress (D506). Hosts observe actual
+route arrival; they do not navigate on scenario transitions. The authenticated host
+renders a portal above both AppShell and immersive Review. Existing controls
+carry `data-tour` anchors; the overlay measures them, scrolls them into view,
+masks their surroundings and makes sibling branches inert. Tab cycles between
+the target and coach; Escape stops the tour. Observers track layout and scrolling,
+and cleanup restores inert state. Help Center replays the same route.
+
+`onboardingPreference.ts` owns the browser-only `fliptap-onboarding-v2`
+dismissal key, separate from auth storage, with storage-event updates and an
+in-memory fallback. The new key allows users of D504's discarded guide to see
+the replacement invitation. Reload abandons the tour, retaining any real saves.
+
+Native Demo mounts OnboardingHost above its navigator. TourTarget registers the
+active real View, a scroll reveal callback and optional example action. The
+coach measures native coordinates, tracks the keyboard's top edge, respects
+safe areas and remeasures opening transitions. The card chooser hosts its coach
+inside the native Modal. A cold deep link waits for the navigation ref to be
+ready. Today invites and Profile replays; dismissal lasts for this process.
+During the tour, native New Deck saves return to the originating Library so
+the user can select the created row; ordinary authoring keeps its usual outcome.
+Cloud remains deferred and honestly reports that this authoring tour requires
+Demo. This changes no persistence, schema, backend or auth policy.

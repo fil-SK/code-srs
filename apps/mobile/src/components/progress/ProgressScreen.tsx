@@ -1,3 +1,4 @@
+import { TourScrollView, TourTarget } from '@/src/components/onboarding/TourTarget'
 import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   DATE_RANGE_PRESETS,
@@ -400,7 +401,7 @@ export function ProgressScreen({
 
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <TourScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <MobileHeader />
         <View style={styles.intro}>
           <Text style={styles.title}>Progress</Text>
@@ -419,10 +420,10 @@ export function ProgressScreen({
           </View>
           <RangeControl onChange={onRangePresetChange} preset={rangePreset} />
         </View>
-        <View style={styles.metricsSection}>
+        <TourTarget id="progress"><View style={styles.metricsSection}>
           <Text style={styles.sectionTitle}>{viewModel.metricsHeading}</Text>
           <View style={styles.metricGrid}>{viewModel.metrics.map((metric) => <MetricCard key={metric.id} metric={metric} />)}</View>
-        </View>
+        </View></TourTarget>
         <Activity days={viewModel.activityDays} />
         <RetentionChart
           labels={viewModel.retentionLabels}
@@ -436,7 +437,7 @@ export function ProgressScreen({
           }
         />
         <Achievements achievements={viewModel.achievements} />
-      </ScrollView>
+      </TourScrollView>
     </SafeAreaView>
   )
 }

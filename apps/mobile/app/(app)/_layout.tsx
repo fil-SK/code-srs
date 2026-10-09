@@ -24,6 +24,7 @@ export default function AppLayout() {
       <Stack.Screen name="deck/[deckId]/index" />
       <Stack.Screen name="card/[cardId]/study" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="onboarding" />
       <Stack.Screen name="diagnostics" />
     </Stack>
   )

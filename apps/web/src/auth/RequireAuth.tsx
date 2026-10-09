@@ -1,3 +1,4 @@
+import { OnboardingTour } from '@/features/onboarding/OnboardingTour'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './AuthProvider'
 
@@ -24,5 +25,5 @@ export function RequireAuth() {
     )
   }
 
-  return <Outlet />
+  return <><Outlet /><OnboardingTour /></>
 }

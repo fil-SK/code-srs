@@ -1,3 +1,5 @@
+import { tourExample } from '@fliptap/core'
+import { onboardingTour, useTourField } from '@/features/onboarding/tourStore'
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
@@ -35,6 +37,7 @@ export function DeckCreateDialog({
   const panelRef = useRef<HTMLFormElement>(null)
   const opener = useRef(returnFocusTo)
   const [name, setName] = useState('')
+  useTourField('deck-name', name, () => setName(tourExample.deckName))
   const [iconId, setIconId] = useState<DeckIconId>(DEFAULT_DECK_ICON)
   const canSave = validateDeckForm({ name, description: '', iconId }).canSave
 
@@ -103,7 +106,7 @@ export function DeckCreateDialog({
           onSubmit={(event) => {
             event.preventDefault()
             if (canSave && !create.isPending) {
-              create.mutate({ name: name.trim(), parentId, iconId }, { onSuccess: onClose })
+              create.mutate({ name: name.trim(), parentId, iconId }, { onSuccess: (deck) => { onboardingTour.event({ type: 'deck-created', deckId: deck.id }); onClose() } })
             }
           }}
         >
@@ -112,7 +115,7 @@ export function DeckCreateDialog({
             {parentName ? `Create inside “${parentName}”.` : 'Give your next topic a name and an icon.'}
           </p>
           <fieldset disabled={create.isPending} className="mt-5 space-y-5">
-            <Field label="Deck name">
+            <Field label="Deck name" tourId="deck-name">
               <input className={fieldClass} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Algorithms" />
             </Field>
             <DeckIconPicker value={iconId} onChange={setIconId} />
@@ -120,7 +123,7 @@ export function DeckCreateDialog({
           {create.isError && <p role="alert" className="mt-4 text-sm text-fliptap-error">Could not create the deck. Please try again.</p>}
           <div className="mt-6 flex justify-end gap-2">
             <Button type="button" onClick={close} disabled={create.isPending}>Cancel</Button>
-            <Button type="submit" variant="primary" disabled={!canSave || create.isPending}>{create.isPending ? 'Creating…' : 'Create deck'}</Button>
+            <Button data-tour="deck-save" type="submit" variant="primary" disabled={!canSave || create.isPending}>{create.isPending ? 'Creating…' : 'Create deck'}</Button>
           </div>
         </form>
       </div>

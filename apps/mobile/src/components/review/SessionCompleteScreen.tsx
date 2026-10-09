@@ -1,6 +1,8 @@
+import { TourTarget, TourScrollView } from '@/src/components/onboarding/TourTarget'
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { fliptapColors, fliptapRadii, type Achievement, type Rating } from '@fliptap/core'
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { AchievementIcon } from '@/src/components/icons/AchievementIcon'
@@ -49,7 +51,7 @@ export function SessionCompleteScreen({
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <TourScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <View style={styles.mark}>
             <MaterialCommunityIcons
@@ -89,13 +91,13 @@ export function SessionCompleteScreen({
             </View>
           )}
 
-          <Pressable
+          <TourTarget id="finish-review" style={{ alignSelf: 'stretch' }}><Pressable
             accessibilityRole="button"
-            onPress={onExit}
+            onPress={() => { onboardingTour.event({ type: 'session-exited' }); onExit() }}
             style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
           >
             <Text style={styles.primaryText}>Done</Text>
-          </Pressable>
+          </Pressable></TourTarget>
 
           {onUndo && (
             <Pressable
@@ -114,7 +116,7 @@ export function SessionCompleteScreen({
             </Pressable>
           )}
         </View>
-      </ScrollView>
+      </TourScrollView>
     </SafeAreaView>
   )
 }

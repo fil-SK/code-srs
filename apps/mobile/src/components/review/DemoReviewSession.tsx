@@ -1,3 +1,4 @@
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
 import {
   sessionAchievementUnlocks,
   withSessionCompletion,
@@ -10,7 +11,7 @@ import {
   type SchedulingState,
   type SubmitReviewResult,
 } from '@fliptap/core'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { createDemoQueue } from '@/src/demo/demoQueue'
 import type { DemoEntities } from '@/src/demo/demoEntities'
@@ -72,6 +73,7 @@ export function DemoReviewSession({
   const [index, setIndex] = useState(0)
   const [graded, setGraded] = useState<GradedCardRecord[]>([])
 
+  useEffect(() => { if (queue[0]) onboardingTour.event({ type: 'review-opened', deckId: queue[0].deckId }) }, [queue])
   const card = queue[index]
 
   if (!card) {
@@ -110,6 +112,7 @@ export function DemoReviewSession({
   async function handleGraded(result: SubmitReviewResult) {
     const log = withSessionCompletion(result.log, graded.map((record) => record.log), index === queue.length - 1)
     await persist.mutateAsync({ card, after: result.after, log })
+    onboardingTour.event({ type: 'review-saved', cardId: card.id })
     setGraded((current) => [
       ...current,
       {

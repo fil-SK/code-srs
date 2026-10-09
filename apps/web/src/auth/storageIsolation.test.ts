@@ -26,6 +26,7 @@ const SRC = fileURLToPath(new URL('..', import.meta.url))
 // Every non-test module that may touch web storage, and why. A new entry here
 // is a deliberate decision, not a detail: read the note on each before adding.
 const ALLOWED = new Map([
+  ['features/onboarding/onboardingPreference.ts', 'browser-only guidance dismissal, independent of auth'],
   ['auth/localSession.ts', 'the auth session seam itself - the whole point of this test'],
   ['app/theme.tsx', 'the remembered theme preference, under its own key'],
   ['app/RouteError.tsx', 'the one-shot reload throttle after a stale-chunk failure'],

@@ -35,6 +35,9 @@ production release before inviting a small group of target developers.
 ### First-use acceptance
 
 The empty web demo remains unseeded; its earlier deferral is not implemented.
+D505 provides an optional interactive spotlight tour on web and native Demo,
+through real deck/card creation, review, rating and Progress. The separate
+starter-content milestone below is still deferred.
 The first-use milestone should let a new visitor:
 
 - Start a short technical review within roughly two minutes, without creating
@@ -269,6 +272,13 @@ by the owner's decision.
 ## Dark mode
 
 ## Onboarding demo in the app
+
+**Interactive guidance implemented (2026-10-09, D505) on web and native Demo.**
+A dismissible Today invitation launches spotlights through the real deck/card
+forms, Recall review and Progress result. Intermediate navigation also requires user clicks (D506). Explicit saves and grades use
+normal storage; Skip and replay are available. Web demo seeding remains deferred
+separately. Physical-device acceptance of native keyboard, touch and safe-area
+behavior remains pending.
 
 ## Icons
 
@@ -611,6 +621,8 @@ are implemented by D468.
 ## Share cards.
 
 ## Onboarding.
+
+Interactive tour ships on web and native Demo under D505; see the entry above.
 
 ## Responsive table redesign.
 

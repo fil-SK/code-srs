@@ -1,3 +1,4 @@
+import { onboardingTour } from '@/features/onboarding/tourStore'
 import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { Rating, SchedulingState } from '@/types'
 import type { CardInteraction, Card, InteractionType } from '@/types/card'
@@ -96,6 +97,9 @@ function ReviewCardScreen<T extends InteractionType>({
   persistErrorMessage?: string
 }) {
   const [phase, dispatch] = useReducer(reviewPhaseReducer, initialReviewPhase)
+  useEffect(() => {
+    if (phase.kind === 'feedback') onboardingTour.event({ type: 'answer-revealed', cardId: card.id })
+  }, [phase.kind, card.id])
   const [response, setResponse] = useState<InteractionResponse>(initialResponse)
   const [presentedAt] = useState(() => Date.now())
   const [selectedRating, setSelectedRating] = useState<Rating | null>(null)
@@ -330,7 +334,7 @@ function ReviewCardScreen<T extends InteractionType>({
         )}
       >
         <CardHintScope text={card.tip?.value} active={phase.kind === 'presenting'}>
-          <div ref={cardRef}>
+          <div ref={cardRef} data-tour="reveal">
             <definition.View
               card={card}
               phase={phase}
@@ -350,7 +354,7 @@ function ReviewCardScreen<T extends InteractionType>({
         {showExplanation && <ExplanationPanel text={card.explanation?.value} />}
 
         {showRating && !hideRating && (
-          <>
+          <div data-tour="rate">
             <RatingControls
               selected={selectedRating}
               suggested={suggested}
@@ -372,7 +376,7 @@ function ReviewCardScreen<T extends InteractionType>({
             {phase.kind === 'persistFailed' && (
               <ReviewPersistError message={persistErrorMessage} onRetry={retryPersist} />
             )}
-          </>
+          </div>
         )}
         </div>
       </div>

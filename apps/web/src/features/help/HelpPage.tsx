@@ -65,6 +65,7 @@ export function HelpPage() {
 function HelpCenter() {
   return (
     <section aria-labelledby="help-center-title" className="space-y-5">
+      <div className="help-panel p-5"><h3 className="text-lg font-semibold text-fliptap-ink-brand">Make your first flip</h3><p className="mt-2 text-sm leading-6 text-fliptap-muted">Follow the highlights to create a card, review it and see your progress.</p><Link to="/onboarding" className={linkClass}>Replay interactive tour →</Link></div>
       <div><h2 id="help-center-title" className="text-xl font-bold tracking-tight text-fliptap-ink-brand">Help Center</h2><p className="mt-1 text-sm text-fliptap-muted">Practical guides to getting more from FlipTap.</p></div>
       <div className="help-categories">
         {categories.map(({ name, description, icon: Icon }) => (

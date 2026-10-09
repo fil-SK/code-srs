@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import { DeckFormScreen } from '@/src/components/cards/DeckFormScreen'
@@ -16,6 +18,7 @@ import { useDemoScreen } from '@/src/demo/useDemoScreen'
 // an unresolvable scope on a create screen.
 export default function NewDeckRoute() {
   const router = useRouter()
+  useEffect(() => { onboardingTour.event({ type: 'deck-form-opened' }) }, [])
   const { parentId } = useLocalSearchParams<{ parentId?: string }>()
   const { entities } = useDemoScreen()
   const parent = findDemoDeck(entities, parentId) ?? undefined
@@ -23,11 +26,16 @@ export default function NewDeckRoute() {
   return (
     <DeckFormScreen
       onCancel={() => (router.canGoBack() ? router.back() : router.replace('/library'))}
-      onSaved={(deck) =>
+      onSaved={(deck) => {
+        if (onboardingTour.getSnapshot()?.step === 'open-deck') {
+          if (router.canGoBack()) router.back()
+          else router.replace('/library')
+          return
+        }
         // Replace rather than push, so the form leaves the stack and Back from
         // the new deck returns to the list it was created from.
         router.replace({ pathname: '/deck/[deckId]', params: { deckId: deck.id } })
-      }
+      }}
       target={{ kind: 'create', parent }}
     />
   )

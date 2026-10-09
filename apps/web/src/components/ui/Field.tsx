@@ -11,12 +11,14 @@ export const selectClass =
 export function Field({
   label,
   children,
+  tourId,
 }: {
   label: string
   children: ReactNode
+  tourId?: string
 }) {
   return (
-    <label className="block">
+    <label className="block" data-tour={tourId}>
       <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted">
         {label}
       </span>

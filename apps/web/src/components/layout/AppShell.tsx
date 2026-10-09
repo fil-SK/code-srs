@@ -4,6 +4,7 @@ import { cn } from '@/lib/cn'
 import { TopNav } from './TopNav'
 import { AccountMenu } from './AccountMenu'
 import { StreakBadge } from './StreakBadge'
+import { OnboardingPrompt } from '@/features/onboarding/OnboardingPrompt'
 import { primaryNavLinks } from './primaryNavLinks'
 
 // The one shared shell for every standard product route (Today, Library,
@@ -42,6 +43,7 @@ export function AppShell() {
               : 'mx-auto max-w-[1280px] px-4 py-8 sm:px-6',
         )}
       >
+        {pathname === '/' && <OnboardingPrompt />}
         <Outlet />
       </main>
     </FlipTapSurface>

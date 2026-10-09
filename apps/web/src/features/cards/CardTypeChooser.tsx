@@ -1,3 +1,4 @@
+import { onboardingTour } from '@/features/onboarding/tourStore'
 import type { InteractionType } from '@/types/card'
 import { INTERACTION_META, INTERACTION_TYPES } from './shared/interactionTypeMeta'
 import { cn } from '@/lib/cn'
@@ -36,7 +37,8 @@ export function CardTypeChooser({
               key={type}
               type="button"
               disabled={!enabled}
-              onClick={() => onSelect(type)}
+              data-tour={type === 'recall' ? 'card-type' : undefined}
+              onClick={() => { onSelect(type); if (type === 'recall') onboardingTour.event({ type: 'card-type-selected' }) }}
               aria-pressed={isSelected}
               className={cn(
                 'flex min-h-[90px] flex-col items-center justify-center gap-2 rounded-fliptap-control border bg-fliptap-surface px-2 py-3 text-center transition-colors',

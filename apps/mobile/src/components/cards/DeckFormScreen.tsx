@@ -1,3 +1,6 @@
+import { TourTarget } from '@/src/components/onboarding/TourTarget'
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
+import { tourExample } from '@fliptap/core'
 import {
   useCreateDeck,
   useSaveDeck,
@@ -61,6 +64,7 @@ export function DeckFormScreen({
         description,
         parentId: target.parent?.id,
       })
+      onboardingTour.event({ type: 'deck-created', deckId: deck.id })
       onSaved(deck)
       return
     }
@@ -83,7 +87,7 @@ export function DeckFormScreen({
       }
       title={target.kind === 'create' ? 'New deck' : 'Edit deck'}
     >
-      <FormField label="Name" labelId="deck-name-label">
+      <TourTarget id="deck-name" ready={form.name.trim().length > 0} onExample={() => setForm(current => ({ ...current, name: tourExample.deckName }))}><FormField label="Name" labelId="deck-name-label">
         <FormTextInput
           labelId="deck-name-label"
           onChangeText={(name) => setForm((current) => ({ ...current, name }))}
@@ -92,7 +96,7 @@ export function DeckFormScreen({
           testID="deck-name-input"
           value={form.name}
         />
-      </FormField>
+      </FormField></TourTarget>
 
       <FormField label="Description" labelId="deck-description-label" optional>
         <FormTextInput

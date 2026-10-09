@@ -1,7 +1,8 @@
+import { TourScrollView, TourTarget } from '@/src/components/onboarding/TourTarget'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import type { ReactNode } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 // The shell every authoring form renders inside.
@@ -66,7 +67,7 @@ export function EditorScreen({
             <Text style={styles.cancelText}>Cancel</Text>
           </Pressable>
 
-          <Pressable
+          <TourTarget id={saveLabel === 'Create deck' ? 'deck-save' : 'card-save'}><Pressable
             // The accessible name is the action, never the transient state, so
             // it does not change under a screen reader or a test mid-save.
             accessibilityLabel={saveLabel}
@@ -83,7 +84,7 @@ export function EditorScreen({
             testID="editor-save"
           >
             <Text style={styles.saveText}>{isSaving ? 'Saving…' : saveLabel}</Text>
-          </Pressable>
+          </Pressable></TourTarget>
         </View>
 
         <View style={styles.headerTitleWrap}>
@@ -103,7 +104,7 @@ export function EditorScreen({
         keyboardVerticalOffset={8}
         style={styles.keyboardView}
       >
-        <ScrollView
+        <TourScrollView
           alwaysBounceVertical={false}
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
@@ -120,7 +121,7 @@ export function EditorScreen({
               ))}
             </View>
           ) : null}
-        </ScrollView>
+        </TourScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   )

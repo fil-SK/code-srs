@@ -1,3 +1,4 @@
+import { TourTarget } from '@/src/components/onboarding/TourTarget'
 import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors } from '@fliptap/core'
 import { Tabs } from 'expo-router'
@@ -66,7 +67,7 @@ export function FlipTapTabBar({ state, descriptors, navigation }: FlipTapTabBarP
           navigation.emit({ type: 'tabLongPress', target: route.key })
         }
 
-        return (
+        const item = (
           <Pressable
             key={route.key}
             accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
@@ -104,6 +105,8 @@ export function FlipTapTabBar({ state, descriptors, navigation }: FlipTapTabBarP
             </Text>
           </Pressable>
         )
+        const tourId = route.name === 'library' ? 'library' : route.name === 'progress' ? 'open-progress' : null
+        return tourId ? <TourTarget key={route.key} id={tourId} style={{ flex: 1 }}>{item}</TourTarget> : item
       })}
     </View>
   )

@@ -18,6 +18,7 @@ import { ProgressPage } from '@/features/progress/ProgressPage'
 import { ReviewHistoryPage } from '@/features/progress/ReviewHistoryPage'
 import { AccountSettingsPage } from '@/features/settings/AccountSettingsPage'
 import { AboutPage } from '@/features/about/AboutPage'
+import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 import { HelpPage } from '@/features/help/HelpPage'
 import { DesignPreviewIndex } from '@/features/design-preview/DesignPreviewIndex'
 import { RecallPreviewPage } from '@/features/design-preview/review-recall/RecallPreviewPage'
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
       // not by hiding AppShell's chrome with CSS" pattern design-preview uses
       // below — not a child of AppShell.
       { path: 'review', element: <ReviewPage /> },
+      { path: 'onboarding', element: <OnboardingPage /> },
     ],
   },
   // Login is chrome-free by construction too: no AppShell ancestor, and

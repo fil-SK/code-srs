@@ -2573,3 +2573,125 @@ There are no page errors or document overflow. Help Center, articles, Contact
 and Study settings screenshots were inspected in both themes.
 
 Production web build passes with the existing chunk-size advisory and 26-entry PWA precache.
+
+## 2026-10-09 — optional onboarding on web and native
+
+**D504. Ship optional practice and an authoring handoff on both platforms.**
+The owner asks to add onboarding and explicitly selects both web and mobile.
+This reopens the guidance portion of D45/D474's deferral. A dismissible Today
+welcome prompt leads to three original examples shared in core: a Python
+negative-index Recall, stack Multiple Choice and a small Python Write Code
+exercise. The code exercise names accepted-text comparison and the learner's
+final choice of rating. Both platforms use their existing interaction Views,
+shared graders and FSRS interval previews, with contextual rating descriptions.
+
+Practice cards stay in component state. Grade callbacks advance practice and
+discard results; they never write to the Repository. No seeded history,
+achievement unlock, new learning entity, schema, migration or backend is added.
+This deliberately leaves web workspace demo seeding and honest local entry as
+separate backlog work. Existing learning data is never rewritten.
+
+Web `/onboarding` uses an authenticated route outside AppShell, following the
+existing immersive-route pattern, with one branded FlipTapSurface. Completion
+uses shared deck validation and query hooks to create a real deck or select an
+existing one, then opens the existing card editor. Save/load failures stay
+actionable. Help Center replays the guide. The browser-only
+`fliptap-onboarding-v1` dismissal preference has one owner, cross-tab updates
+and a blocked-storage in-memory fallback; it does not read auth storage.
+Native places its guide above the tabs, keeps Skip at the top, and replays from
+Profile & Settings. Its welcome dismissal lasts for the process. Demo hands
+off to the existing New Deck / Add Card / Card study journey, and clearly
+states that edits and reviews disappear on full restart or Reset Demo. Cloud
+retains a library handoff and its truthful connection requirement; no live cloud
+work or deferred cloud authoring is enabled by this change.
+
+Verification: 127 root files / 1,177 tests and 43 native suites / 573 tests.
+Shared content tests check original answers through production graders; both
+platform integration tests drive all three interactions and prove no practice
+write. Web also checks real deck/editor handoff; skip/storage-mode paths are
+covered. Forced root and native TypeScript, root/native lint and the production
+web build pass (existing chunk-size advisory; 26 PWA precache entries).
+Chromium verifies Light/Dark at 1440x900 and 390x844, keyboard reveal/rating
+navigation, hover/focus, completion, IndexedDB preservation, saved cue dismissal,
+replay and real editor handoff. Expo web preview verifies native guidance,
+practice and New Deck handoff at 390x844. Physical-device verification remains
+pending. The first full native run passes all tests but retains Jest's known
+teardown warning; the diagnostic run is recorded with its final result below.
+
+Native runner follow-up: the diagnostic full run also passes 43 suites / 573
+tests and reports no open handle, but still does not terminate. A bounded
+`--runInBand --forceExit` rerun exits 0 with all 573 tests passing.
+The focused onboarding suite exits normally. The existing Jest teardown
+limitation is recorded, not treated as a clean ordinary-run exit.
+
+Additional Chromium checks pass: Maybe later survives reload, reduced-motion
+flip faces have zero-duration transitions, and blocking preference writes
+still dismisses guidance in memory without saving the preference.
+
+## 2026-10-09 — Interactive onboarding in the live app
+
+**D505 (supersedes D504). Onboarding means spotlighting real controls and learning by doing.**
+The owner explicitly rejects the text/practice guide and asks for a dimmed
+screen with the current action highlighted, plus a concrete scenario. Web and
+mobile remain in scope. The replacement walks through creating a deck and a
+Recall card, reviewing it, choosing a rating and seeing Progress. Each prompt
+explains one action. Fields offer optional example text, and control steps
+advance through their actual action, not a substitute Next button.
+
+The user explicitly saves the deck and card and chooses the review rating.
+These are ordinary learning records, using the existing shared validators,
+hooks, FSRS and atomic review persistence. Success events advance only the
+matching scenario IDs; pending or failed writes cannot advance. Skip stops UI
+guidance and never deletes what the user saved. The former throwaway practice
+cards and practice-only Review props are removed. No fake history, achievement
+or progress is added, and no existing row is rewritten by the tour.
+
+Core owns only the guarded scenario transitions and short prompts. Each app
+owns its UI state and measurements. Web targets actual DOM controls, masks
+surroundings, makes sibling branches inert, confines Tab to the target/coach
+and restores isolation on cleanup. Its authenticated host spans AppShell and
+immersive Review. Native registers actual Views, scrolls fields into view,
+tracks keyboard/safe-area geometry and remeasures native opening transitions.
+Its card-type coach renders inside the existing native Modal. Cold deep links
+wait for the navigation container to be ready. There are no new dependencies.
+
+Today invites; Help Center (web) and Profile (native) replay. The web dismissal
+key becomes fliptap-onboarding-v2 so dismissal of D504 does not hide the new
+experience. Native dismissal and tour state are process-local. Native Demo is
+the functional authoring runtime; cloud honestly reports that the tour requires
+Demo, preserving the owner’s cloud deferral. Schema, auth policy and storage
+semantics are unchanged. No automatic onboarding launch or persistence is added.
+
+## 2026-10-09 — Guide intermediate navigation too
+
+**D506 (refines D505). A tour points at navigation; the user performs it.**
+The owner accepts the spotlight presentation but rejects automatic transitions
+that skip using the app, specifically opening the newly created deck before
+Add Card. Both tour hosts now observe route arrival instead of navigating on
+step changes. New control steps highlight Library, the created deck row, the
+completion return control and Progress. Native also highlights Back when the
+main tabs are not yet available. A navigation step already satisfied by the
+current screen is skipped without navigating. Normal form saves and user
+clicks remain responsible for changing routes.
+
+During the native tour, New Deck returns to the originating Library after a
+successful save, making selecting the created row a real learner action. Its
+ordinary authoring flow still opens the created deck. Web brings the created
+row’s pagination page into view; scrolling and spotlight placement may reveal
+a target but never activate it. The entry route still starts on Today.
+
+Chromium drives the entire manual flow in both web themes at 1440x900 and
+390x844 and asserts that Library, deck and Progress routes do not change before
+their respective user clicks. The Expo web preview drives the same navigation
+and real saves. Core guards reject Next shortcuts and incorrect deck arrivals.
+Physical native touch/keyboard acceptance remains pending.
+
+Final D505-D506 gates: root Vitest with two workers passes 127 files / 1,176
+tests at the default timeout; native Jest with --runInBand --forceExit passes
+43 suites / 576 tests. Forced root and native TypeScript, root/native lint and
+web production build pass (existing chunk-size advisory, 26 PWA entries).
+The native runner retains its documented teardown workaround. A parallel
+validation run with default root workers timed out in the unmodified Matching
+editor test; the complete bounded-worker rerun passes. Web browser checks also
+verify input gating, target/coach clearance, keyboard focus, Skip/replay and
+exactly one created deck, card and review. No physical-device claim is made.

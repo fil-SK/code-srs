@@ -39,6 +39,7 @@ export function TopNav({
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
+              data-tour={link.to === '/decks' ? 'library' : link.to === '/progress' ? 'open-progress' : undefined}
               to={link.to}
               end={link.end}
               className={({ isActive }) =>

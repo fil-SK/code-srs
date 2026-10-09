@@ -165,7 +165,7 @@ Do not describe any of these as shipped, and do not build against them as though
 | **Richer milestones / achievements** | Four evidence-based achievements ship on web/native Demo (D473). Web Momentum shows the next pending catalog achievement and links to Progress (D475), replacing its prior deck milestone. The dedicated web page ships under D500. Mastery/topic awards, custom goals and a scoring subsystem remain deferred. |
 | **Advanced session customization** | Adjust session covers deck scope and card count only. Time-boxed sessions ("15 minutes"), weak-cards-only, new-vs-review splits, difficulty filters, interaction-type filters, tag filters and custom FSRS parameters are all deferred, and nothing is abstracted in anticipation of them. See [`TODO.md`](TODO.md). |
 | **Collection as a real entity** | "Collection" is derived in the UI from `Deck.parentId`. There is no `Collection` type, table or migration — see [`fliptap-migration-plan.md`](fliptap-migration-plan.md) §6. |
-| **Onboarding and full empty-state coverage** | No onboarding flow exists. Empty states exist for Library and Progress; the full audited set does not. |
+| **Full empty-state coverage** | Interactive web/native onboarding ships under D505. Empty states exist for Library and Progress; the full audited set does not. |
 | **Progress sub-pages** | Decks, Activity, Review lag, Milestones, Stats and Reports remain hidden placeholders. Overview, Review history and Achievements are live. "Activity" is kept free on purpose for a broader feed (cards created, decks edited, imports) rather than being consumed by review history. |
 | **Settings sections** | Profile, Email & password, Notifications, Privacy, Connected devices are inert placeholders. Appearance and Import/Export are real. |
 | **Mobile navigation pattern** | The shared top nav simply scrolls horizontally; no dedicated mobile navigation exists. Matching's stepwise mobile pairing flow is likewise unbuilt. |
@@ -206,4 +206,19 @@ message and optional reply email. The support destination is deliberately a
 TODO: messages cannot be sent or persisted, the UI says so, and no success is
 fabricated. A draft survives help-section switching until reload/unmount.
 The account menu now links Help & Support, consolidates FSRS into Study settings,
-and removes the separate Keyboard shortcuts and What's new rows.
+and removes the separate Keyboard shortcuts and What's new row## Interactive getting started (D505)
+
+Today offers Get started. A spotlight dims the surrounding app and highlights
+the next real control. The scenario creates a deck, authors a Recall card,
+reviews it and highlights its result in Progress. Brief prompts explain each
+action; examples can fill fields, and the user chooses the saves and rating.
+These are real learning records, with the ordinary FSRS and Progress behavior.
+Intermediate navigation is guided too: open Library, select the new deck, leave
+the completed session and open Progress. The user performs these actions.
+Skip is always available; web Help Center and mobile Profile replay the tour.
+
+Web remembers dismissal on this browser; native Demo remembers it for this
+process. Demo learning changes still disappear on a full restart or Reset Demo.
+Native cloud authoring remains deferred. There is no practice-card seeding,
+automatic grade, onboarding entity or data migration. Physical-device acceptance
+of the native spotlight and keyboard behavior remains pending.

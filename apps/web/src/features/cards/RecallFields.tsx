@@ -1,3 +1,5 @@
+import { tourExample } from '@fliptap/core'
+import { useTourField } from '@/features/onboarding/tourStore'
 import type { AuthoringPreset } from '@/types/card'
 import type { RecallFormState } from '@/domain/cards/recallForm'
 import { Field, fieldClass } from '@/components/ui/Field'
@@ -25,6 +27,9 @@ export function RecallFields({
     onChange({ ...form, [key]: value })
   }
 
+  useTourField('prompt', form.prompt, () => set('prompt', tourExample.prompt))
+  useTourField('answer', form.answer, () => set('answer', tourExample.answer))
+
   return (
     <div className="space-y-4">
       <div>
@@ -50,7 +55,7 @@ export function RecallFields({
         </div>
       </div>
 
-      <Field label="Prompt">
+      <Field label="Prompt" tourId="prompt">
         <textarea
           className={fieldClass}
           rows={3}
@@ -60,7 +65,7 @@ export function RecallFields({
         />
       </Field>
 
-      <Field label="Answer">
+      <Field label="Answer" tourId="answer">
         <textarea
           className={fieldClass}
           rows={3}

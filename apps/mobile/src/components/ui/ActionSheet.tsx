@@ -1,3 +1,9 @@
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
+import { dismissOnboardingPrompt } from '@/src/components/onboarding/onboardingPromptState'
+import { refreshTourTargets } from '@/src/components/onboarding/tourTargets'
+import { TourTarget } from '@/src/components/onboarding/TourTarget'
+import { OnboardingTour } from '@/src/components/onboarding/OnboardingTour'
+import type { TourStepId } from '@fliptap/core'
 import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import { fliptapColors, fliptapRadii } from '@fliptap/core'
 import type { ComponentProps } from 'react'
@@ -19,6 +25,7 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name']
 
 export interface ActionSheetItem {
   label: string
+  tourId?: TourStepId
   icon: IconName
   onPress: () => void
   danger?: boolean
@@ -39,7 +46,10 @@ export function ActionSheet({
   onClose: () => void
 }) {
   return (
-    <Modal animationType="slide" onRequestClose={onClose} transparent visible={visible}>
+    <Modal onShow={refreshTourTargets} animationType="slide" onRequestClose={() => {
+      onClose()
+      if (onboardingTour.getSnapshot()?.step === 'card-type') { dismissOnboardingPrompt(); onboardingTour.stop() }
+    }} transparent visible={visible}>
       <Pressable
         accessibilityLabel="Close actions"
         accessibilityRole="button"
@@ -55,7 +65,8 @@ export function ActionSheet({
           </Text>
         ) : null}
 
-        {items.map((item) => (
+        {items.map((item) => {
+          const action = (
           <Pressable
             key={item.label}
             accessibilityHint={item.hint}
@@ -78,7 +89,9 @@ export function ActionSheet({
               {item.label}
             </Text>
           </Pressable>
-        ))}
+          )
+          return item.tourId ? <TourTarget key={item.label} id={item.tourId} inModal>{action}</TourTarget> : action
+        })}
 
         <Pressable
           accessibilityLabel="Cancel"
@@ -89,6 +102,7 @@ export function ActionSheet({
           <Text style={styles.cancelText}>Cancel</Text>
         </Pressable>
       </View>
+      <OnboardingTour inModal />
     </Modal>
   )
 }

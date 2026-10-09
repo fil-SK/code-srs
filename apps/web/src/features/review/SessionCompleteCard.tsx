@@ -1,3 +1,4 @@
+import { onboardingTour } from '@/features/onboarding/tourStore'
 import { CalendarMetricIcon as CalendarClock } from '@/components/icons/ApprovedIcons'
 import { useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -219,6 +220,8 @@ export function SessionCompleteCard({
             </button>
           )}
           <Link
+            data-tour="finish-review"
+            onClick={() => onboardingTour.event({ type: 'session-exited' })}
             to="/"
             className="inline-flex min-h-11 items-center justify-center rounded-fliptap-control fliptap-button fliptap-button-primary px-6 text-sm font-semibold text-white"
           >

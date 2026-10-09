@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { onboardingTour } from '@/features/onboarding/tourStore'
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -22,6 +24,7 @@ import { WalkthroughEditorShell } from './WalkthroughEditorShell'
 export function CardCreatePage() {
   const { deckId } = useParams<{ deckId: string }>()
   const navigate = useNavigate()
+  useEffect(() => { if (deckId) onboardingTour.event({ type: 'card-chooser-opened', deckId }) }, [deckId])
   // Recall is the reference's default interaction and the most common card.
   // Keeping one type selected also makes create a complete, continuous form
   // on first paint instead of an empty chooser-only state.

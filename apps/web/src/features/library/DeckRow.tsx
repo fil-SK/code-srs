@@ -1,3 +1,4 @@
+import { useTourState } from '@/features/onboarding/tourStore'
 import { useNavigate } from 'react-router-dom'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { Deck } from '@/types'
@@ -50,10 +51,12 @@ export function DeckRow({
   allDecks?: boolean
 }) {
   const navigate = useNavigate()
+  const tour = useTourState()
   const pct = Math.round(metrics.masteryFraction * 100)
 
   return (
     <div
+      data-tour={tour?.deckId === deck.id ? 'open-deck' : undefined}
       role="button"
       tabIndex={0}
       onClick={() => navigate(`/decks/${deck.id}`)}

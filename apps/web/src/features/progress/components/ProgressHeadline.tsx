@@ -49,11 +49,11 @@ export function DueCard({ due }: { due: number }) {
   )
 }
 
-function CompactMetric({ label, value, icon: Icon, footer }: {
-  label: string; value: number; icon: typeof GraduationCap; footer: ReactNode
+function CompactMetric({ label, value, icon: Icon, footer, tourId }: {
+  label: string; value: number; icon: typeof GraduationCap; footer: ReactNode; tourId?: 'progress'
 }) {
   return (
-    <section role="group" aria-label={label} className="progress-panel progress-compact-metric">
+    <section data-tour={tourId} role="group" aria-label={label} className="progress-panel progress-compact-metric">
       <span className="progress-metric-icon bg-fliptap-navy-soft text-fliptap-ink-brand"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span>
       <div className="min-w-0">
         <h2 className="progress-metric-label">{label}</h2>
@@ -74,7 +74,7 @@ export function SecondaryMetrics({ kpis, comparisonLabel }: { kpis: KpiSet; comp
     <div className="progress-secondary">
       <CompactMetric label="Learned" value={kpis.learned.value} icon={GraduationCap}
         footer={`of ${kpis.learned.total.toLocaleString()} active cards`} />
-      <CompactMetric label="Reviews" value={kpis.reviews.value} icon={Copy}
+      <CompactMetric tourId="progress" label="Reviews" value={kpis.reviews.value} icon={Copy}
         footer={<KpiDelta delta={kpis.reviews.deltaPct} comparisonLabel={comparisonLabel} />} />
     </div>
   )

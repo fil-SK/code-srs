@@ -1,3 +1,5 @@
+import { TourScrollView, TourTarget } from '@/src/components/onboarding/TourTarget'
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
 import { AppIcon as MaterialCommunityIcons } from '@/src/components/icons/AppIcon'
 import {
   checkDeckDeletion,
@@ -9,7 +11,7 @@ import {
 import { useRouter } from 'expo-router'
 import type { ComponentProps } from 'react'
 import { useMemo, useState } from 'react'
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import {
@@ -129,14 +131,14 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
   ]
 
   const cardTypeActions: ActionSheetItem[] = AUTHORABLE_INTERACTION_TYPES.map((type) => ({
+    tourId: type === 'recall' ? 'card-type' : undefined,
     label: AUTHORABLE_INTERACTION_LABELS[type],
     icon: interactionVisuals[type].icon,
     hint: AUTHORABLE_INTERACTION_DESCRIPTIONS[type],
-    onPress: () =>
-      router.push({
-        pathname: '/deck/[deckId]/card-new',
-        params: { deckId: viewModel.id, type },
-      }),
+    onPress: () => {
+      router.push({ pathname: '/deck/[deckId]/card-new', params: { deckId: viewModel.id, type } })
+      if (type === 'recall') onboardingTour.event({ type: 'card-type-selected' })
+    },
   }))
 
   const caughtUpText =
@@ -160,7 +162,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         <View style={styles.decorativeShapeSmall} />
       </View>
 
-      <ScrollView
+      <TourScrollView
         alwaysBounceVertical={false}
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="never"
@@ -168,7 +170,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         showsVerticalScrollIndicator={false}
         style={styles.scroll}
       >
-        <Pressable
+        <TourTarget id="return-navigation"><Pressable
           accessibilityLabel="Back"
           accessibilityRole="button"
           hitSlop={8}
@@ -177,7 +179,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         >
           <MaterialCommunityIcons color="#49658e" name="chevron-left" size={27} />
           <Text style={styles.backText}>Back</Text>
-        </Pressable>
+        </Pressable></TourTarget>
 
         <View style={styles.identityRow}>
           <View style={styles.deckMark}>
@@ -252,7 +254,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
         </View>
 
         {viewModel.dueCount > 0 ? (
-          <Pressable
+          <TourTarget id="study"><Pressable
             accessibilityLabel={`Study now, ${viewModel.dueCount} ${
               viewModel.dueCount === 1 ? 'card' : 'cards'
             } due`}
@@ -264,7 +266,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           >
             <MaterialCommunityIcons color={fliptapColors.surface} name="play-outline" size={25} />
             <Text style={styles.studyButtonText}>Study Now</Text>
-          </Pressable>
+          </Pressable></TourTarget>
         ) : (
           /*
             Nothing due is a real state of the product, so it is stated here
@@ -288,13 +290,13 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
           is the first authoring decision. The chooser lists only what this
           platform can author today.
         */}
-        <FlipTapButton
+        <TourTarget id="add-card"><FlipTapButton
           accessibilityHint="Choose a card type to author"
           label="Add Card"
-          onPress={() => setTypeChooserOpen(true)}
+          onPress={() => { setTypeChooserOpen(true); onboardingTour.event({ type: 'card-chooser-opened', deckId: viewModel.id }) }}
           style={styles.addCard}
           variant="secondary"
-        />
+        /></TourTarget>
 
         <View style={styles.cardsSection}>
           <Text style={styles.cardsHeading}>Cards</Text>
@@ -364,7 +366,7 @@ export function LibraryDeckScreen({ viewModel }: { viewModel: MobileDeckViewMode
             </View>
           ) : null}
         </View>
-      </ScrollView>
+      </TourScrollView>
 
       <CardStatusSheet
         filter={statusFilter}

@@ -4,6 +4,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { AuthProvider } from '@/auth/AuthProvider'
+import { ThemeProvider } from '@/app/theme'
 import { createWebAuthConfig } from '@/auth/webAuthConfig'
 import { isSupabaseConfigured } from '@/data/supabase/client'
 import { getRepository } from '@/data'
@@ -35,11 +36,13 @@ function renderAt(path: string) {
     { initialEntries: [path] },
   )
   return render(
-    <QueryClientProvider client={qc}>
-      <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <AuthProvider config={createWebAuthConfig(isSupabaseConfigured)}>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>,
   )
 }
 

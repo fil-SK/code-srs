@@ -14,6 +14,10 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 
 ## Highlights
 
+- **Interactive onboarding on web and mobile Demo:** follow spotlights through
+  creating a deck and card, reviewing it and seeing Progress. Skip anytime;
+  replay from web Help Center or mobile Profile. Your explicit saves are real.
+
 - **Tactile web buttons** with subtle depth, a smooth hover lift and press feedback, matching both themes and honoring reduced motion.
 
 - **Consistent reviewed icons across web and mobile** for learning metrics, navigation identities and all six card types, using shared SVG drawings. Deck choices retain their existing artwork.

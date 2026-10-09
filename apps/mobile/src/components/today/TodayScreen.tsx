@@ -1,12 +1,14 @@
+import { TourScrollView, TourTarget } from '@/src/components/onboarding/TourTarget'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import { fliptapColors } from '@fliptap/core'
 import { useRouter } from 'expo-router'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import type { MobileTodayViewModel } from '@/src/types/today'
 import { ContinueLearningRow } from './ContinueLearningRow'
 import { MobileHeader } from './MobileHeader'
+import { OnboardingPrompt } from '@/src/components/onboarding/OnboardingPrompt'
 import { TodayHero } from './TodayHero'
 
 export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) {
@@ -19,7 +21,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
         <View style={styles.decorativeShapeSmall} />
       </View>
 
-      <ScrollView
+      <TourScrollView
         alwaysBounceVertical={false}
         contentContainerStyle={styles.scrollContent}
         contentInsetAdjustmentBehavior="never"
@@ -28,10 +30,12 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
       >
         <MobileHeader />
 
-        <View style={styles.greeting}>
+        <TourTarget id="today"><View style={styles.greeting}>
           <Text style={styles.greetingTitle}>{viewModel.greeting.mainText}</Text>
           <Text style={styles.greetingSubtitle}>{viewModel.greeting.subtext}</Text>
-        </View>
+        </View></TourTarget>
+
+        <OnboardingPrompt />
 
         <TodayHero
           dueToday={viewModel.dueToday}
@@ -76,7 +80,7 @@ export function TodayScreen({ viewModel }: { viewModel: MobileTodayViewModel }) 
             Nothing in progress right now. Open your library to pick a deck.
           </Text>
         ) : null}
-      </ScrollView>
+      </TourScrollView>
     </SafeAreaView>
   )
 }

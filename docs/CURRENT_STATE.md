@@ -1,6 +1,31 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; Help & Support and consolidated account menu).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; optional onboarding on web and native).
+
+> **Interactive web and native onboarding (2026-10-09, D505-D506, supersedes D504).**
+> Today’s Get started launches a spotlight over the real app: create a deck,
+> choose Recall, enter a prompt and answer, save, review, rate and see Progress.
+> The surrounding screen is dimmed while the active control remains usable.
+> D506 makes intermediate navigation explicit: the user opens Library, selects
+> the created deck row, exits the finished session and opens Progress. The tour
+> observes these arrivals; it no longer navigates automatically between steps.
+> Short prompts, optional field examples, Skip and replay replace the discarded
+> text/practice guide. Saves and the chosen rating use normal shared hooks,
+> so the resulting deck, card, history and schedule are real. No seeding occurs.
+> Web /onboarding starts on Today; Help Center replays. Native Demo follows the
+> same scenario, including its card-type Modal, and Profile replays. Web tracks
+> layout and keyboard focus with a portal, inert siblings and observer cleanup;
+> native tracks measured targets, safe areas, keyboard and opening transitions.
+> Web dismissal uses fliptap-onboarding-v2; native remains process-local.
+> A reload abandons the tour while preserving normal web saves. Demo changes
+> remain temporary; native cloud authoring is still deferred. Schema, backend,
+> auth and preexisting learning data are unchanged. Physical-device verification
+> remains pending; Expo web preview does not establish native behavior.
+> Verification: 127 root files / 1,176 tests and 43 native suites / 576 tests;
+> forced root and native TypeScript, both lint checks and web production build
+> pass. Chromium completes the manual flow in both web themes at desktop/phone
+> widths and Expo web preview. Native Jest uses its documented forced-exit
+> workaround; details and the recovered root timeout are recorded in D506.
 
 > **Web Help & Support (2026-10-09, D503).** `/help` has two local navigation
 > panels: Help Center and Contact & Feedback. Six categorized, addressable
@@ -571,9 +596,22 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 ## 16. Tests / build status
 
+**Latest web/native verification (2026-10-09, interactive onboarding D505-D506):**
+Root `vitest run --maxWorkers=2` passes 127 files / 1,176 tests with the default
+timeout. Native `jest --runInBand --forceExit` passes 43 suites / 576 tests;
+the existing runner teardown issue still requires that workaround. Forced root
+TypeScript, native typecheck, both lint checks and the production web build
+pass. Chromium checks the full manual flow, focus isolation, input gating,
+Skip/replay, target/coach clearance and exactly one deck/card/review save in both
+web themes at 1440x900 and 390x844. Expo web preview completes the native flow,
+including the sheet and explicit deck selection. Physical-device acceptance is
+pending. A default-worker run during concurrent validation timed out in an
+unmodified Matching editor test; the complete bounded-worker rerun passes.
+
+
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Latest web verification (2026-10-09, Help & Support D503):** `npx vitest run --maxWorkers=2 --testTimeout=20000` passes 125 files / 1,172 tests; `npx tsc -b --force`, `npm run lint` and `npm run build` pass. Build retains the existing chunk-size advisory; PWA precaches 26 entries. Chromium verifies Light/Dark at 1440x900 and 390x844, the simplified menu, article focus/links, direct routes, invalid/optional email, honest non-delivery, memory-only draft retention, reload and reduced motion without page errors or document overflow. Native and marketing were not changed or reverified.
+**Previous web verification (2026-10-09, Help & Support D503):** `npx vitest run --maxWorkers=2 --testTimeout=20000` passes 125 files / 1,172 tests; `npx tsc -b --force`, `npm run lint` and `npm run build` pass. Build retains the existing chunk-size advisory; PWA precaches 26 entries. Chromium verifies Light/Dark at 1440x900 and 390x844, the simplified menu, article focus/links, direct routes, invalid/optional email, honest non-delivery, memory-only draft retention, reload and reduced motion without page errors or document overflow. Native and marketing were not changed or reverified.
 
 **Previous verification (2026-10-08, achievements D473):** root Vitest passes 120 files / 1146 tests with two workers; forced root TypeScript, root lint, mobile typecheck and mobile lint are clean. Native Jest passes 42 suites / 571 tests with `--runInBand --forceExit`, retaining the existing font `act` warnings and open-timer limitation. The production web build and Expo web export pass. Browser QA covers the four achievement icons, empty/partial/earned states, lifetime range independence (also component-tested), real scheduled reviews, multiple new unlocks, First step even after Again, Undo/regrade, reload persistence, completion-link hover/focus and navigation in Light/Dark at desktop/phone sizes. Native Progress, completion acknowledgment and Undo are checked in the Expo web preview; physical-device verification is pending. The first broad runs hit existing five-second test timeouts under concurrent load; reruns with limited workers pass.
 
@@ -735,7 +773,7 @@ Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither
 | `/settings`, `/settings/:section` | Account settings |
 | `/about` | About FlipTap |
 
-**Behind `RequireAuth`, outside `AppShell`:** `/review` (immersive, chrome-free by construction).
+**Behind `RequireAuth`, outside `AppShell`:** `/review` (immersive) and `/onboarding` (starts the interactive tour on Today). Review remains chrome-free.
 
 **Outside `RequireAuth`:** `/login`; `/design-preview` and `/design-preview/review/{recall,multiple-choice,write-code,ordering,matching,walkthrough}`.
 
@@ -1221,7 +1259,7 @@ Mobile coverage is **32 suites / 436 tests** (was 30 / 417). The new and rewritt
 
 - **Mobile authoring.** New Deck, Add Card, Edit, Delete, Duplicate, Move, and the Matching and Walkthrough editors remain absent. This is current product scope, not a technical TODO.
 - **Any cloud or persistence work.** No Supabase, no `Repository`, no OTP, no SQLite, no AsyncStorage, no sync. M1A is untouched.
-- **Import / Export**, push notifications, Review History, Roadmaps, onboarding and dark mode.
+- **Import / Export**, push notifications, Review History, Roadmaps and dark mode. Interactive onboarding subsequently ships under D505; physical-device acceptance remains pending.
 - **A redesign.** No new visual system, no new section, no change to the Today hero composition or the tab architecture, no Progress redesign. What changed is removals, the spacing that closed behind them, copy, touch targets and one control's destination.
 
 ### Gates

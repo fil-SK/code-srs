@@ -107,6 +107,7 @@ export function CardEditorShell({
           <Button
             variant="primary"
             className="min-w-[92px]"
+            data-tour="card-save"
             onClick={onSave}
             disabled={!canSave || isSaving}
           >

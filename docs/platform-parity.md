@@ -44,6 +44,7 @@ Update it in the same commit as any change to a listed capability.
 
 | Capability | Shared logic (packages/core) | Web | Native | Status / reason |
 |---|---|---|---|---|
+| Interactive onboarding | onboarding/tour | Today cue, live deck/card/review spotlight, Progress result, Help replay | Today cue, live Demo spotlight including card-type sheet, Profile replay | implemented (D505-D506); guided navigation requires user clicks; native device verification pending; explicit saves and ratings are real records |
 | Greeting | today/greetings | yes | yes | implemented |
 | Due count, streak, retention | domain/stats/* | yes | demo workspace | implemented (demo/local) — all three derive from canonical Cards + ReviewLogs through shared semantics; current activity reacts in memory |
 | Continue Learning | domain/stats/deckMetrics, todayMetrics | yes | demo workspace | implemented (demo/local) — shared ordering and metrics over current cards; each row opens its own deck |

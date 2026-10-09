@@ -1,3 +1,4 @@
+import { onboardingTour } from '@/features/onboarding/tourStore'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { buildDeckTree, flattenDeckTree } from '@/domain/decks/tree'
@@ -40,6 +41,7 @@ export function RecallEditorShell({
 
   async function handleSave() {
     const record = await saveRecall.mutateAsync({ form, target })
+    onboardingTour.event({ type: 'card-created', deckId: record.deckId, cardId: record.id })
     onSaved(record)
   }
 

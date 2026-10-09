@@ -632,3 +632,22 @@ retained. Unconfigured delivery is explicit, with a focusable aria-disabled Send
 message control and Soon pill; activation can only explain that nothing was
 sent. Drafts survive section switching in memory and are never persisted.
 Existing Light/Dark tokens supply all colors. No new motion or artwork is added.
+## Interactive onboarding presentation (D505)
+
+The production screen stays visible behind a dark translucent mask, with one
+clear rectangular spotlight and a restrained orange outline. A small themed
+coach sits beside the highlighted control, avoiding overlap where space allows.
+Its copy explains only the current action; fields offer Use example and Continue.
+Control steps advance through the actual action instead of a substitute button.
+Intermediate navigation is highlighted too: Library, the new deck row, the
+session return control and Progress. The tour never presses those for the user.
+Skip tour stays reachable at every step. There is no added animation or artwork,
+and Today hero geometry and illustration remain unchanged.
+
+Web uses existing Light/Dark tokens, responsive placement and keyboard isolation
+between the live target and the coach. Native uses its existing light palette,
+safe areas, measured targets and keyboard-aware placement; input actions share
+a row to preserve room for the highlighted field. Native sheets host their own
+coach, and spotlight measurements follow their opening transition. Touch
+controls remain at least 44px. Chromium verifies desktop/phone web and Expo web
+preview; it does not establish physical native touch or keyboard behavior.

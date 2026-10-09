@@ -1,3 +1,6 @@
+import { TourTarget } from '@/src/components/onboarding/TourTarget'
+import { onboardingTour } from '@/src/components/onboarding/tourStore'
+import { tourExample } from '@fliptap/core'
 import {
   cardRecordToForm,
   emptyRecallForm,
@@ -69,6 +72,7 @@ export function RecallEditorScreen({
   async function handleSave() {
     if (!validation.canSave) return
     const record = await save.mutateAsync({ form, target })
+    onboardingTour.event({ type: 'card-created', deckId: record.deckId, cardId: record.id })
     onSaved(record)
   }
 
@@ -92,7 +96,7 @@ export function RecallEditorScreen({
         />
       </FormField>
 
-      <FormField label="Prompt" labelId="recall-prompt-label">
+      <TourTarget id="prompt" ready={form.prompt.trim().length > 0} onExample={() => patch({ prompt: tourExample.prompt })}><FormField label="Prompt" labelId="recall-prompt-label">
         <FormTextInput
           labelId="recall-prompt-label"
           minHeight={104}
@@ -102,9 +106,9 @@ export function RecallEditorScreen({
           testID="recall-prompt-input"
           value={form.prompt}
         />
-      </FormField>
+      </FormField></TourTarget>
 
-      <FormField label="Answer" labelId="recall-answer-label">
+      <TourTarget id="answer" ready={form.answer.trim().length > 0} onExample={() => patch({ answer: tourExample.answer })}><FormField label="Answer" labelId="recall-answer-label">
         <FormTextInput
           labelId="recall-answer-label"
           minHeight={104}
@@ -114,7 +118,7 @@ export function RecallEditorScreen({
           testID="recall-answer-input"
           value={form.answer}
         />
-      </FormField>
+      </FormField></TourTarget>
 
       <CardCommonFields
         explanation={form.explanation}

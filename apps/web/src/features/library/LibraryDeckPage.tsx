@@ -423,7 +423,7 @@ export function LibraryDeckPage() {
 
         <div className="flex w-full flex-none flex-col items-stretch gap-3 sm:w-56">
           {totalCards > 0 && (
-            <Link to={`/review?deck=${id}`}>
+            <Link data-tour="study" to={`/review?deck=${id}`}>
               <Button variant="primary" className="w-full justify-center py-3 text-sm">
                 <Play size={16} strokeWidth={1.8} /> Study Now
               </Button>
@@ -436,7 +436,7 @@ export function LibraryDeckPage() {
               </Button>
             </Link>
           )}
-          <Link to={`/decks/${id}/cards/new`}>
+          <Link data-tour="add-card" to={`/decks/${id}/cards/new`}>
             <Button variant="secondary" className="w-full justify-center py-3 text-sm">
               <Plus size={17} strokeWidth={1.8} /> Add Card
             </Button>
