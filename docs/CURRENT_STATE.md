@@ -2,6 +2,13 @@
 
 **Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; balanced web action hierarchy).
 
+> **Shared web settings-button styling (2026-10-09, D493).** Deck settings
+> and Collection settings now use the shared secondary Button, retaining
+> existing sizing, expanded-state indication and open/Save/Cancel behavior.
+> Chromium verifies both themes at 1440x900 and 390x844, hover/press/focus,
+> toggle/Cancel/real saves, reduced motion and touch. All 123 files / 1,157
+> tests, forced TypeScript and root lint pass.
+
 > **Animated web deck mastery (2026-10-09, D492).** Opening a deck fills its mastery ring clockwise from 12 o'clock over 600ms with quiet ease-out. The actual percentage remains visible immediately. Switching decks replays the entrance; filtering and data refreshes do not. Reduced motion shows the final ring immediately. Chromium verifies Light/Dark at 1440x900 and 390x844, partial/full mastery, filtering and client-side deck switching without page errors or document overflow. All 123 files / 1,157 tests, forced TypeScript and root lint pass.
 
 > **Curated web deck icons (2026-10-09, D488).** New Deck and Deck/Collection settings now offer 15 broad software engineering choices. Git-specific and other narrow choices are retired from selection. Existing saved selections still render, save and round-trip through backups without rewriting rows. Native presentation is unchanged. Verification results recorded in D488.

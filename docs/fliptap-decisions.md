@@ -2303,3 +2303,22 @@ Verification: all 123 files / 1,157 tests, forced TypeScript and root lint pass.
 **D492 (extends D487).** The owner requested a restrained clockwise fill when opening a specific deck. The existing SVG ring now animates its dash offset from empty to actual mastery over 600ms, starting at 12 o'clock and using the established quiet ease-out. Text and the accessible percentage remain at the actual value throughout. The ring is keyed by deck id, so client-side deck changes replay the entrance while card filtering and data refreshes do not. CSS owns the one-time entrance and skips it under reduced motion; later metric updates use the actual SVG offset. Geometry, palette and the mastery calculation retain their existing definitions.
 
 Verification: all 123 files / 1,157 tests, forced TypeScript and root lint pass. Isolated Chromium checks Light/Dark at 1440x900 and 390x844, measured intermediate/final offsets for partial and full mastery, immediate reduced-motion rendering, filtering without replay and client-side deck navigation with replay. Screenshots were visually inspected; no page errors or document overflow occurred.
+
+## 2026-10-09 - Shared settings action styling
+
+**D493 (extends D485). Deck and Collection settings use the shared secondary Button.**
+The owner found Deck settings still using the old flat standalone style.
+Both settings triggers now use the shared Button rather than duplicating
+neutral button classes. Existing heights, padding, icons, aria-expanded and
+the warm expanded-state border/background remain. Shared depth, stable 1px
+hover lift, press feedback, focus, coarse-pointer targets and reduced-motion
+behavior follow D483/D485. Open, toggle, Save and Cancel behavior is unchanged.
+No layout, entity, scheduling, native or marketing change is introduced.
+
+Verification: all 123 files / 1,157 tests, forced TypeScript and root lint
+pass. Isolated Chromium verifies Light/Dark at 1440x900 and 390x844 for
+Deck and Collection triggers, smooth hover/press, stable edge hover, visible
+keyboard focus and expanded state. Toggle, Cancel and actual Save/reopen
+checks pass using generated data. Reduced motion, 44px touch targets and
+touch open/Cancel pass. Screenshots were visually inspected; no page errors
+or document overflow were found.

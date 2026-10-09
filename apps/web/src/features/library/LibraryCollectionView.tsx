@@ -213,19 +213,20 @@ export function LibraryCollectionView({
             ariaLabel="More collection actions"
             items={[{ label: 'Delete collection', icon: Trash2, danger: true, onClick: deleteCollection }]}
           />
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setSettingsOpen((o) => !o)}
             aria-expanded={settingsOpen}
             className={cn(
-              'inline-flex h-10 items-center gap-1.5 rounded-fliptap-control border px-3.5 text-sm font-semibold transition-colors',
+              'h-10 gap-1.5 px-3.5',
               settingsOpen
                 ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
-                : 'border-fliptap-border-strong text-fliptap-ink hover:border-fliptap-accent hover:text-fliptap-ink-brand',
+                : undefined,
             )}
           >
             <Settings size={15} /> Collection settings
-          </button>
+          </Button>
         </div>
       </div>
 

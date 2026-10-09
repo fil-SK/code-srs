@@ -358,19 +358,20 @@ export function LibraryDeckPage() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setSettingsOpen((o) => !o)}
             aria-expanded={settingsOpen}
             className={cn(
-              'inline-flex h-11 items-center gap-2 rounded-fliptap-control border px-4 text-sm font-semibold transition-colors',
+              'h-11 gap-2 px-4',
               settingsOpen
                 ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
-                : 'border-fliptap-border-strong text-fliptap-ink hover:border-fliptap-accent hover:text-fliptap-ink-brand',
+                : undefined,
             )}
           >
             <Settings size={17} strokeWidth={1.8} /> Deck settings
-          </button>
+          </Button>
         </div>
       </div>
 
