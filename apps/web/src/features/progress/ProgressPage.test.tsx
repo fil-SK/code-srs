@@ -183,28 +183,16 @@ describe('Progress deck actionability', () => {
   })
 })
 
-describe('Progress achievements', () => {
-  it('shows all four achievements and keeps lifetime awards outside the reporting filter', async () => {
-    const user = userEvent.setup()
-    await repo.reviews.bulkPut([
-      { ...log('completed-session', 'mature-card', daysAgo(Date.now(), 40), 3, 'review'),
-        dueBefore: 0, sessionCompleted: true },
-    ])
+describe('Progress achievements navigation', () => {
+  it('moves the collection out of Overview and exposes its own sidebar destination', async () => {
     renderProgress()
-    const section = await screen.findByRole('region', { name: 'Achievements' })
-    expect(within(section).getAllByRole('listitem')).toHaveLength(4)
-    for (const title of ['First step', 'Finding your rhythm', 'Here to stay', 'It clicked']) {
-      expect(within(section).getByRole('heading', { name: title })).toBeTruthy()
-    }
-    expect(within(section).getByText('1 of 4 earned')).toBeTruthy()
-    expect(within(section).getByText('Next up')).toBeTruthy()
-    await user.click(screen.getByRole('button', { name: 'Select progress date range' }))
-    await user.click(screen.getByRole('option', { name: 'Last 7 days' }))
-    expect(within(section).getByText('1 of 4 earned')).toBeTruthy()
-    expect(within(section).getByRole('progressbar', { name: 'Here to stay' }).getAttribute('aria-valuemax')).toBe('4')
+    await screen.findByRole('group', { name: 'Learned' })
+    expect(screen.queryByRole('region', { name: 'Achievements' })).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'First step' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Achievements' }).getAttribute('href')).toBe('/progress/achievements')
+    expect(screen.getByRole('link', { name: 'Overview' }).getAttribute('aria-current')).toBe('page')
   })
 })
-
 describe('Progress reference layout behavior', () => {
   it('shows one retention chart in the headline and a real due-review action', async () => {
     await repo.reviews.append(log('earlier-mature', 'mature-card', daysAgo(Date.now(), 5), 3, 'review'))

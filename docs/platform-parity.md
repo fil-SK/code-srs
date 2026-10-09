@@ -109,7 +109,8 @@ Update it in the same commit as any change to a listed capability.
 | New-achievement completion feedback | domain/stats/achievements (sessionAchievementUnlocks, withSessionCompletion) | yes | demo session | implemented (demo/local) — completion commits with the final grade; newly earned awards shown once per session, Undo removes evidence; Demo still resets with the process; D473 |
 | Date range selection | domain/stats/dateRange | yes | 30D / 3M / 1Y | implemented (demo/local) — the mobile group is real again now that a year renders honestly: one `DateRangePreset` held by the Progress route drives the KPI block and its deltas, the heat map, the retention buckets and the date label together. Web additionally offers 7D and a separate heat-map-only range; mobile offers neither. D440 supersedes D411 |
 | Review history | domain/stats/reviewHistory | yes | no | deferred — master plan Phase 8 |
-| Progress sub-pages | — | "Soon" placeholders | no | deferred — unbuilt on both; features.md "Planned" |
+| Dedicated Achievements view and status filters | domain/stats/achievements | yes | no (achievements stay in Progress) | web-only presentation (D500); same four shared rules |
+| Progress sub-pages | — | Overview, Review history, Achievements | no | other destinations remain deferred; features.md "Planned" |
 
 ## Account and data
 

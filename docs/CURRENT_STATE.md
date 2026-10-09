@@ -1,6 +1,39 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; blue learned-card coverage).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; redrawn trophy and corrected achievement panel lighting).
+
+> **Trophy redraw and reference lighting (2026-10-09, D502).** The owner keeps
+> the mountain and asks for a polished hand-authored trophy SVG and a closer
+> background match. The trophy now has a rolled elliptical rim, continuous
+> curved handles, consistent copper reflections, a raised star and stepped base.
+> The floating cards are removed. Panel bases remain neutral; localized muted
+> warm lighting replaces D501's broad brown wash. Mountain and badge SVGs are
+> preserved exactly. Both web themes use existing palette colors. All 124 files /
+> 1,168 tests, forced TypeScript and lint pass. Chromium checks both themes at
+> four widths, focus, filters and paint servers; details in D502.
+
+> **Refined achievement artwork and lighting (2026-10-09, D501).** The owner's
+> feedback replaces the initial flat silhouettes with curved trophy/mountain
+> artwork, copper shading and warm orange panel lighting. Web medallions now use
+> checked-flag, calendar and return/check drawings with amber earned rings/halos;
+> pending badges remain muted and the explicit Earned status remains green.
+> Shared compact/native icons and all achievement rules are unchanged. Phone
+> artwork has reserved subtitle space. All 124 files / 1,168 tests, forced
+> TypeScript and lint pass. Chromium verifies both themes, four widths,
+> artwork clearance, paint servers, focus and filters; details in D501.
+
+> **Dedicated web Achievements (2026-10-09, D500).** /progress/achievements
+> is now the third live Progress sidebar destination. Overview retains activity
+> and deck performance; the achievement collection moved out. The owner's new
+> reference guides a lifetime summary, Up next and filterable two-column cards.
+> Original flat SVG trophy/path artwork follows Current streak's icon style,
+> replacing the rejected raster concepts. Existing shared achievement rules,
+> catalog order, progress and earned dates are unchanged. D501 subsequently refines earned badge artwork;
+> pending badges stay muted with blue progress. All-earned, zero-earned,
+> loading and retry states are explicit. Today/completion links open the new view.
+> Native retains its existing Progress panel. All 124 files / 1,168 tests, forced
+> TypeScript and lint pass. Chromium verifies both themes at four widths,
+> navigation, filters, focus and empty/all-earned states; details in D500.
 
 > **Reference-led web Progress (2026-10-09, D495-D499).** The owner's new mockup
 > now guides the wider overview: one retention headline/trend card, seven-day
@@ -8,8 +41,8 @@
 > Learned/Reviews, now matching the mockup with aligned captions, larger
 > values and muted right-side bar glyphs (D497). The duplicate retention
 > panel is removed. Activity and
-> Deck performance now share equal-width desktop columns; Achievements
-> sits below Deck performance. Smaller layouts stack the three panels.
+> Deck performance share equal-width desktop columns. D500 subsequently moves
+> Achievements into its own sidebar view. Smaller layouts stack the two panels.
 > Deck bars now use the blue accent and the Cards learned label, including
 > at full coverage, so they do not signal finished study (D498-D499).
 > Retention's moved deck filter controls both its percentage and chart.
@@ -344,6 +377,7 @@ Real data, real behavior, production-routed:
 | Card edit | `/cards/:id/edit` | `apps/web/src/features/cards/CardEditEntry.tsx` |
 | Card study preview (non-committing) | `/cards/:id/study` | `apps/web/src/features/cards/CardStudyPreviewPage.tsx` |
 | Progress | `/progress` | `apps/web/src/features/progress/ProgressPage.tsx` |
+| Achievements | `/progress/achievements` | `apps/web/src/features/progress/AchievementsPage.tsx` |
 | Review history | `/progress/history` | `apps/web/src/features/progress/ReviewHistoryPage.tsx` |
 | Account settings | `/settings`, `/settings/:section` | `apps/web/src/features/settings/AccountSettingsPage.tsx` |
 | About FlipTap | `/about` | `apps/web/src/features/about/AboutPage.tsx` |
@@ -362,7 +396,7 @@ Real data, real behavior, production-routed:
 | **Mobile Notifications** (`/notifications`, `apps/mobile/src/components/notifications/`) | Mobile-only native inbox reached from the shared header bell: All/Unread filtering, grouped Today/Earlier updates, Mark all as read, an honest empty state, and a direct link to the existing Notifications settings placeholder. Read state lives in the demo workspace, so **the bell's dot reflects the real unread count** and **Mark all as read is reachable when only Earlier has unread items**. Every notification marks itself read and opens its explicit honest destination (§28), while its separate 44-point status action can mark it Read or Unread without opening it (§30). Read rows use a light neutral surface rather than a gray overlay. The settings shortcut is hidden in demo mode, where the Profile section it opened no longer renders. The nested route hides the persistent tab bar and supplies an explicit back affordance. | Values live in the demo workspace (§24), and read state resets on a full app restart by design. There is no push registration, scheduler, notification repository, persistence or fabricated production event stream. Physical-device review is pending. |
 | **Mobile Review session** (`/review`, `/review/session`, `apps/mobile/src/components/review/`) | A real local demo study session (§25). One immersive shell (`ReviewSessionScreen.tsx`) owns the phase machine, the response, timing, the FSRS interval preview and the objective-result-to-suggested-rating mapping; the six native Views under `interactions/<type>/` render card content only, bound to the shared behaviors by one native registry. The queue is a per-mount snapshot of due demo cards; `reviewService.submit` computes the grade; the resulting `SchedulingState` and canonical `ReviewLog` are committed through the shared review hooks to the demo repository. Real next-due intervals on every rating button, a recommendation the learner may override, session progress, completion, one-level Undo, an honest caught-up state, and exit back to the origin. The tab bar hides for the session only. | Demo/local, in memory (§31): the session writes through the shared `usePersistReviewResult` / `useUndoGrade` hooks onto the demo `InMemoryRepository`, so a graded card and its ReviewLog commit as one operation, but nothing is persisted and the session resets on a full app restart, by decision. There is still no persist-failure state, because a demo write cannot fail - the awaited `onGraded` seam is where cloud adds one. Physical-device review is pending. |
 | **Mobile Review entry** (`/review`, `ReviewStartScreen.tsx`) | The Review tab's landing surface: heading, due count, contributing deck names, one primary Start action, and an honest caught-up state. Its shared header and prominent 34px title now sit in the same padded scrolling frame as Progress, correcting the horizontal misalignment visible on device when the header was mounted outside that frame. Deliberately minimal - no charts, filters, streak tiles or session customisation - and built from Today's existing tokens, card surface and header. Keeps the persistent tab bar. | Reads the demo repository through the shared hooks (§31). Physical-device review is pending. |
-| **Progress** (`/progress`, `/progress/history`) | Headline KPIs are exactly **Learned · Due · Reviews · Retention · Current streak**. Learned/Due/Streak are current-state values with no invented period delta; Reviews/Retention follow the selected period, with retention comparison in percentage points. The heat map, gap-aware deck-scopable retention chart, leaf-deck actionable performance table and milestones are all computed from real `ReviewLog`/`Card`/`Deck` data. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | The seven unbuilt sidebar rows (Decks, Activity, Review lag, Milestones, Achievements, Stats, Reports) are **hidden for the validation build** behind `SHOW_UNBUILT_DESTINATIONS` in `ProgressNav.tsx` - D409 applied to web (D458). `NAV_GROUPS` is kept verbatim, so the intended IA is still in code and restoring them is a one-line change. Overview and Review history are the two live destinations. |
+| **Progress** (`/progress`, `/progress/history`, `/progress/achievements`) | Headline KPIs are exactly **Learned · Due · Reviews · Retention · Current streak**. Learned/Due/Streak are current-state values with no invented period delta; Reviews/Retention follow the selected period, with retention comparison in percentage points. The heat map, gap-aware deck-scopable retention chart, leaf-deck actionable performance table are all computed from real `ReviewLog`/`Card`/`Deck` data. **Review history** (`/progress/history`) is a real chronological per-review record, filterable by range/deck/rating. | The six unbuilt sidebar rows (Decks, Activity, Review lag, Milestones, Stats, Reports) are **hidden for the validation build** behind `SHOW_UNBUILT_DESTINATIONS` in `ProgressNav.tsx` - D409 applied to web (D458). `NAV_GROUPS` is kept verbatim, so the intended IA is still in code and restoring them is a one-line change. Overview, Review history and Achievements are the three live destinations (D500). |
 | **Account settings** (`/settings`) | **Import / Export** (JSON backup) and **Appearance** (Light / Dark / System) are fully functional. | Profile, Email & password, Notifications, Privacy, Connected devices are inert greyed placeholders. Profile statistics render em dashes on purpose (D137). |
 | **Login** (`/login`) | Page, session minting, redirect-back-to-requested-route, Supabase magic link. | In local mode the password is a dev/demo shell: never stored, sent, or verified. "Forgot password" is a deliberate `aria-disabled` placeholder — no reset backend. |
 | **Roadmaps** (`/roadmaps`, `/roadmaps/:id`) | Create / rename / delete / canvas editing all work, now through `useDialogs()` rather than `window.prompt`, and the list page has a real `<h1>`. | Still **reskinned only** — pre-redesign layout and density, carrying FlipTap colors solely through `.fliptap-scope`'s token re-point. Deliberately out of primary nav (D11/D17), reachable by direct URL. |
@@ -424,7 +458,7 @@ All three views render inside `LibraryShell` + `CollectionNav`: a centered, bord
 
 ## 9. Progress state
 
-Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. The five headline tiles are exactly **Learned · Due · Reviews · Retention · Current streak**. Streak copy is singular at one day (`Best: 1 day`), through the shared `formatDayCount` in `packages/core/src/domain/stats/streak.ts` that Today's Momentum panel uses too. Learned is unique current non-suspended cards with at least one log; Due reuses `useDueCards`; Reviews is the number of logs in the selected period; Retention is successful mature attempts (`stateBefore` Review/Relearning and rating Hard or better) divided by all mature attempts; Current streak reuses `computeStreak`. Only Reviews and Retention receive period comparisons, and Retention renders that change in percentage points (`pp`). The page retains the activity heat map, deck-scopable retention chart and derived recent milestones. The heat map's week bucketing and month labelling are core's `toHeatmapWeeks`/`heatmapMonthLabels`, shared with native since §33 (D441); `ActivityHeatmap.tsx` renders them and its own 7D/30D/3M/1Y toggle. Missing retention buckets break the SVG into separate path segments instead of implying observations across gaps, and an observed bucket with no observed neighbour is drawn as a point rather than dropped — `retentionChartPath.ts` owns the projection and returns both, so lines and markers cannot disagree. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.** Every local-day calculation on this page — streak, heat-map cells, milestone runs and dates, selected/previous period boundaries, and the Today/Yesterday labels — uses the calendar arithmetic in `packages/core/src/domain/stats/calendarDay.ts` and is DST-safe.
+Real, mockup-driven, production. `ProgressShell` + `ProgressNav` + `components/*`. The five headline tiles are exactly **Learned · Due · Reviews · Retention · Current streak**. Streak copy is singular at one day (`Best: 1 day`), through the shared `formatDayCount` in `packages/core/src/domain/stats/streak.ts` that Today's Momentum panel uses too. Learned is unique current non-suspended cards with at least one log; Due reuses `useDueCards`; Reviews is the number of logs in the selected period; Retention is successful mature attempts (`stateBefore` Review/Relearning and rating Hard or better) divided by all mature attempts; Current streak reuses `computeStreak`. Only Reviews and Retention receive period comparisons, and Retention renders that change in percentage points (`pp`). The overview retains the activity heat map, its single deck-scopable retention chart and deck performance. Achievements now lives at /progress/achievements (D500). The heat map's week bucketing and month labelling are core's `toHeatmapWeeks`/`heatmapMonthLabels`, shared with native since §33 (D441); `ActivityHeatmap.tsx` renders them and its own 7D/30D/3M/1Y toggle. Missing retention buckets break the SVG into separate path segments instead of implying observations across gaps, and an observed bucket with no observed neighbour is drawn as a point rather than dropped — `retentionChartPath.ts` owns the projection and returns both, so lines and markers cannot disagree. Every chart is hand-rolled SVG/CSS; **no charting library is a dependency and none should be added.** Every local-day calculation on this page — streak, heat-map cells, achievement dates, selected/previous period boundaries, and the Today/Yesterday labels — uses the calendar arithmetic in `packages/core/src/domain/stats/calendarDay.ts` and is DST-safe.
 
 Deck Performance contains **Deck · Learned · Due · Retention** and no misleading Trend. It intentionally lists **leaf/actionable decks only**, so every column in a row has one direct-card scope and parent/child work is not double-counted. A deck with active cards remains visible even with zero reviews in the selected period. Ordering is: has due work, larger due count, weaker valid retention, most recently studied, then name. Rows with work due open `/review?deck=<id>`; the others open the deck. The accepted leaf rule means cards filed directly on a deck-with-children do not get their own row, matching Continue Learning's existing tradeoff; they still contribute to global KPIs and the parent-scoped Review route.
 
@@ -677,6 +711,7 @@ Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither
 | `/cards/:id/edit` | Card editor entry — one switch over the six `interaction.type` members; a "Card not found" state otherwise |
 | `/cards/:id/study` | Non-committing study preview |
 | `/progress` | Progress |
+| `/progress/achievements` | Achievements |
 | `/progress/history` | Review history |
 | `/settings`, `/settings/:section` | Account settings |
 | `/about` | About FlipTap |

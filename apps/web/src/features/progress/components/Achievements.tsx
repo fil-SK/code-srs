@@ -1,48 +1,110 @@
-import { Check } from 'lucide-react'
+import { useState } from 'react'
+import { Check, LockKeyhole, ChartNoAxesColumnIncreasing } from 'lucide-react'
 import { selectNextAchievement, type Achievement } from '@fliptap/core'
-import { AchievementIcon } from '@/components/icons/AchievementIcon'
 import { cn } from '@/lib/cn'
+import { DeckScopeDropdown } from './DeckScopeDropdown'
+import { AchievementEmblem, AchievementPath, AchievementTrophy } from './AchievementArtwork'
+
+const FILTERS = [
+  { value: 'all', label: 'All achievements' },
+  { value: 'earned', label: 'Earned' },
+  { value: 'pending', label: 'Not yet earned' },
+]
+
+function MilestoneProgress({ item, label = item.title }: { item: Achievement; label?: string }) {
+  return (
+    <div className="mt-3 space-y-2">
+      <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={item.target}
+        aria-valuenow={item.progress} aria-valuetext={item.progressLabel} className="achievement-track">
+        <div className="h-full rounded-full bg-fliptap-selection-border" style={{ width: `${item.progress / item.target * 100}%` }} />
+      </div>
+      <p className="text-xs leading-relaxed text-fliptap-muted">{item.progressLabel}</p>
+    </div>
+  )
+}
 
 export function Achievements({ achievements }: { achievements: Achievement[] }) {
-  const earned = achievements.filter((item) => item.unlockedAt !== undefined).length
-  const next = selectNextAchievement(achievements)?.id
+  const [filter, setFilter] = useState('all')
+  const earnedCount = achievements.filter((item) => item.unlockedAt !== undefined).length
+  const percent = achievements.length ? Math.round(earnedCount / achievements.length * 100) : 0
+  const next = selectNextAchievement(achievements)
+  const visible = achievements.filter((item) => filter === 'all' || (filter === 'earned' ? item.unlockedAt !== undefined : item.unlockedAt === undefined))
+
   return (
-    <section aria-labelledby="achievements-heading" className="progress-panel p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="achievements-heading" className="text-base font-semibold text-fliptap-ink-brand">Achievements</h2>
-        <span className="text-xs font-medium text-fliptap-muted">{earned} of 4 earned</span>
-      </div>
-      <p className="mt-1 text-xs leading-relaxed text-fliptap-muted">Small steps. Lasting habits. Based on your scheduled reviews, across all time.</p>
-      <ul className="mt-3 space-y-1.5">
-        {achievements.map((item) => {
-          const unlocked = item.unlockedAt !== undefined
-          return (
-            <li key={item.id} className={cn('flex items-start gap-3 rounded-fliptap-control border px-2.5 py-2',
-              unlocked ? 'border-fliptap-success/30 bg-fliptap-success-soft/60' : 'border-transparent')}>
-              <span className={cn('grid size-9 shrink-0 place-items-center rounded-fliptap-control',
-                unlocked ? 'bg-fliptap-success-soft text-fliptap-success' : 'bg-fliptap-navy-soft text-fliptap-muted')}>
-                <AchievementIcon id={item.id} size={25} />
-              </span>
+    <div className="space-y-4">
+      <section aria-labelledby="achievement-summary-heading" className="progress-panel achievement-summary">
+        <div className="achievement-summary-copy">
+          <h2 id="achievement-summary-heading" className="progress-metric-label">Your progress</h2>
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="font-semibold leading-none tracking-tight text-fliptap-ink-brand">
+              <span className="text-[42px] tabular-nums">{earnedCount}</span><span className="ml-2 text-2xl text-fliptap-muted">of {achievements.length}</span>
+            </p>
+            <p className="text-xs text-fliptap-muted">milestones earned</p>
+          </div>
+          <div className="mt-4 flex items-center gap-3">
+            <div role="progressbar" aria-label="Milestones earned" aria-valuemin={0} aria-valuemax={achievements.length}
+              aria-valuenow={earnedCount} aria-valuetext={`${earnedCount} of ${achievements.length} milestones earned`} className="achievement-track flex-1">
+              <div className="h-full rounded-full bg-fliptap-accent" style={{ width: `${percent}%` }} />
+            </div>
+            <span className="text-xs font-medium tabular-nums text-fliptap-muted">{percent}%</span>
+          </div>
+        </div>
+        <AchievementTrophy />
+        <p className="achievement-summary-note text-sm leading-relaxed text-fliptap-muted">Small steps.<br />Lasting knowledge.</p>
+      </section>
+
+      <section aria-labelledby="achievement-next-heading" className="progress-panel achievement-next">
+        <div className="achievement-next-copy">
+          <h2 id="achievement-next-heading" className="text-lg font-semibold text-fliptap-ink-brand">{next ? 'Up next' : 'Every milestone earned'}</h2>
+          <p className="mt-1 text-xs leading-relaxed text-fliptap-muted">{next ? 'Your next milestone, one study session at a time.' : 'All four milestones are part of your story. Keep building on them.'}</p>
+          {next && (
+            <div className="mt-4 flex items-start gap-4">
+              <span className="achievement-mark shrink-0"><AchievementEmblem id={next.id} /></span>
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                  <h3 className="text-xs font-semibold text-fliptap-ink-brand">{item.title}</h3>
-                  {unlocked ? <span className="inline-flex items-center gap-1 text-[10px] font-medium text-fliptap-success"><Check size={12} aria-hidden="true" /> Earned</span>
-                    : item.id === next ? <span className="rounded-fliptap-pill bg-fliptap-navy-soft px-2 py-0.5 text-[10px] font-semibold text-fliptap-muted">Next up</span> : null}
-                </div>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-fliptap-muted">{item.description}</p>
-                {unlocked ? <p className="mt-1 text-[10px] text-fliptap-muted">Earned {new Date(item.unlockedAt!).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                  : <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <div role="progressbar" aria-label={item.title} aria-valuemin={0} aria-valuemax={item.target} aria-valuenow={item.progress} aria-valuetext={item.progressLabel}
-                      className="h-1 min-w-16 flex-1 overflow-hidden rounded-full bg-fliptap-navy-soft">
-                      <div className="h-full rounded-full bg-fliptap-muted-light" style={{ width: `${item.progress / item.target * 100}%` }} />
-                    </div>
-                    <p className="text-[10px] text-fliptap-muted">{item.progressLabel}</p>
-                  </div>}
+                <h3 className="text-sm font-semibold text-fliptap-ink-brand">{next.title}</h3>
+                <p className="mt-1 text-xs leading-relaxed text-fliptap-muted">{next.description}</p>
+                <MilestoneProgress item={next} label={`Next milestone: ${next.title}`} />
               </div>
-            </li>
-          )
-        })}
-      </ul>
-    </section>
+            </div>
+          )}
+        </div>
+        <AchievementPath />
+      </section>
+
+      <section aria-labelledby="achievement-collection-heading">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="achievement-collection-heading" className="text-lg font-semibold text-fliptap-ink-brand">All achievements</h2>
+            <p className="mt-1 text-xs text-fliptap-muted">Small steps. Lasting habits. Based on your scheduled reviews, across all time.</p>
+          </div>
+          <DeckScopeDropdown options={FILTERS} value={filter} onChange={setFilter} />
+        </div>
+        <ul className="achievement-grid">
+          {visible.map((item) => {
+            const earned = item.unlockedAt !== undefined
+            const inProgress = !earned && item.progress > 0
+            const StatusIcon = earned ? Check : inProgress ? ChartNoAxesColumnIncreasing : LockKeyhole
+            return (
+              <li key={item.id} className="progress-panel achievement-card" data-earned={earned}>
+                <span className={cn('achievement-mark', earned && 'achievement-mark-earned')}><AchievementEmblem id={item.id} /></span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h3 className="pt-1 text-sm font-semibold text-fliptap-ink-brand">{item.title}</h3>
+                    <span className={cn('inline-flex items-center gap-1 rounded-fliptap-control border px-2 py-1 text-[10px] font-medium',
+                      earned ? 'border-fliptap-success/20 bg-fliptap-success-soft text-fliptap-success' : 'border-fliptap-border bg-fliptap-surface-subtle text-fliptap-muted')}>
+                      <StatusIcon size={12} aria-hidden="true" />{earned ? 'Earned' : inProgress ? 'In progress' : 'Locked'}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-fliptap-muted">{item.description}</p>
+                  {earned ? <p className="mt-3 text-xs text-fliptap-muted">Earned <time dateTime={new Date(item.unlockedAt!).toISOString()}>{new Date(item.unlockedAt!).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</time></p>
+                    : <MilestoneProgress item={item} />}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        {visible.length === 0 && <p role="status" className="progress-panel px-6 py-8 text-sm text-fliptap-muted">{filter === 'earned' ? 'No milestones earned yet. Your first scheduled session is a good place to start.' : 'All four milestones earned. Your collection is complete.'}</p>}
+      </section>
+    </div>
   )
 }

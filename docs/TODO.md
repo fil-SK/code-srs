@@ -244,7 +244,8 @@ native Demo, superseding the blanket deferral under D210 for this bounded set.
 Progress shows lifetime progress and earned dates; completion acknowledges new
 unlocks. D475 replaces web Momentum's deck milestone with one pending shared achievement and a link to Progress; native Today keeps its existing presentation.
 
-Still deferred: a separate achievements page, mastery/topic awards, custom goals,
+D500 adds the separate web Achievements view; native retains its Progress panel.
+Still deferred: mastery/topic awards, custom goals,
 XP, currency, levels and leaderboards. No achievement entity or scoring subsystem
 was introduced. Native physical-device verification is pending.
 

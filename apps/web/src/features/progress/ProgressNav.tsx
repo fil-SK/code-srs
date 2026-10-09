@@ -17,7 +17,7 @@ import { cn } from '@/lib/cn'
 interface NavItem {
   label: string
   icon: LucideIcon
-  to?: string // present only for the one live destination (Overview)
+  to?: string // Present for destinations backed by real data.
 }
 
 interface NavGroup {
@@ -25,11 +25,7 @@ interface NavGroup {
   items: NavItem[]
 }
 
-// Mirrors the locked mockup's full sidebar IA (see docs/fliptap-decisions.md).
-// Only "Overview" has real data behind it today — the rest render as
-// visibly disabled rows with a "Soon" pill rather than being omitted, so the
-// sidebar's composition/hierarchy matches the reference without fabricating
-// pages that have no data source yet.
+// Keep future destinations recorded while exposing only real Progress views.
 const NAV_GROUPS: NavGroup[] = [
   { heading: 'Overview', items: [{ label: 'Overview', icon: TrendingUp, to: '/progress' }] },
   {
@@ -48,7 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
     heading: 'Achievements',
     items: [
       { label: 'Milestones', icon: Flag },
-      { label: 'Achievements', icon: Trophy },
+      { label: 'Achievements', icon: Trophy, to: '/progress/achievements' },
     ],
   },
   {
@@ -78,7 +74,7 @@ export function ProgressNav({ compact = false }: { compact?: boolean }) {
       <nav aria-label="Progress" className="flex flex-wrap items-center gap-1 p-2">
         {VISIBLE_GROUPS.flatMap((group) => group.items).filter((item) => item.to).map((item) => (
           <NavLink key={item.label} to={item.to!} end
-            className={({ isActive }) => cn('flex min-h-10 items-center gap-2 rounded-fliptap-control px-3 text-xs font-semibold',
+            className={({ isActive }) => cn('flex min-h-10 items-center gap-2 rounded-fliptap-control px-3 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent',
               isActive ? 'bg-fliptap-accent-soft text-fliptap-ink-brand' : 'text-fliptap-muted hover:bg-fliptap-surface-subtle')}>
             <item.icon size={15} aria-hidden="true" />{item.label}
           </NavLink>
@@ -104,7 +100,7 @@ export function ProgressNav({ compact = false }: { compact?: boolean }) {
                     end
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-2 rounded-r-[9px] border-l-2 px-2.5 py-2 text-sm font-semibold',
+                        'flex items-center gap-2 rounded-r-[9px] border-l-2 px-2.5 py-2 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-fliptap-accent',
                         isActive
                           ? 'border-fliptap-accent bg-fliptap-accent-soft text-fliptap-ink-brand'
                           : 'border-transparent text-fliptap-ink hover:bg-fliptap-surface-subtle hover:text-fliptap-ink-brand',

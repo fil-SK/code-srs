@@ -70,6 +70,7 @@ export function DeckScopeDropdown({
               onClick={() => {
                 onChange(option.value)
                 setOpen(false)
+                ref.current?.querySelector('button')?.focus()
               }}
               className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-sm text-fliptap-ink hover:bg-fliptap-surface-subtle"
             >

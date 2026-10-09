@@ -698,3 +698,21 @@ Component tests are the exception: opt into a DOM per-file with `// @vitest-envi
 The earlier entries here are **resolved, not open**: the v1 `ReviewSession`/`useReviewSession` and `apps/web/src/components/ui/FlipCard.tsx` were deleted on 2026-08-17, and the **two card models** converged into one on 2026-08-18. There is one Review surface, one flip primitive, and one card model.
 
 See `fliptap-decisions.md` before "cleaning up" anything above.
+
+### Web achievement view (D500)
+
+`/progress/achievements` renders `AchievementsPage` inside the same AppShell and
+ProgressShell as Overview and Review history. Only `useReviewLogs` fetches data;
+`computeAchievements` and `selectNextAchievement` remain core-owned. No current
+Card/Deck query, independent award store or backend import is needed. The page
+owns loading/retry and the collection's transient status filter. The summary and
+next target remain lifetime-scoped regardless of that filter. Overview no longer
+renders achievements. Today Momentum and completion links open the new route.
+The existing cross-platform achievement drawings remain shared; the web-only
+decorative trophy/path are original SVGs in `AchievementArtwork.tsx`, using web
+semantic palette roles. No dependency, schema or native presentation changes.
+D501 refines the web page's illustration paint servers and adds web-only
+medallion drawings in `AchievementArtwork.tsx`. `useId` isolates gradients per
+mount. Existing shared compact achievement icons, native rendering and all
+achievement evidence remain unchanged. Panel lighting uses CSS radial gradients;
+there is no bitmap, SVG filter, motion or data operation involved.

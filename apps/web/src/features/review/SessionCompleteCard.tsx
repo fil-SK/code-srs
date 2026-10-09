@@ -195,8 +195,8 @@ export function SessionCompleteCard({
                 </li>
               ))}
             </ul>
-            <Link to="/progress" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-fliptap-ink-brand underline decoration-fliptap-border-strong underline-offset-4 hover:text-fliptap-accent">
-              View in Progress
+            <Link to="/progress/achievements" className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-fliptap-ink-brand underline decoration-fliptap-border-strong underline-offset-4 hover:text-fliptap-accent">
+              View achievements
             </Link>
           </div>
         )}

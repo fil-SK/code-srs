@@ -211,7 +211,7 @@ describe('Today — due cards but no review history', () => {
     await screen.findByText('2 cards')
     const momentum = within(screen.getByRole('region', { name: 'Momentum' }))
     expect(momentum.getByText('First step')).toBeTruthy()
-    expect(momentum.getByRole('link', { name: /View achievements/ }).getAttribute('href')).toBe('/progress')
+    expect(momentum.getByRole('link', { name: /View achievements/ }).getAttribute('href')).toBe('/progress/achievements')
   })
 
   it('shows an honest empty pace chart', async () => {

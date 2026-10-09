@@ -2458,3 +2458,74 @@ root lint pass. Isolated Chromium checks Light/Dark at 1440x900 and 390x844,
 zero/half/full coverage, the blue token at every fraction, Cards learned
 heading and accessible names, hover/focus and phone visibility. Both theme
 screenshots were inspected; no page errors or document overflow were found.
+
+## 2026-10-09 - Dedicated web Achievements view
+
+**D500 (supersedes D473's separate-page deferral and D496's embedded placement).**
+The owner requests a Progress sidebar destination for the existing achievements,
+using the attached Achievements image as composition direction. The subsequent
+feedback rejects generated raster trophy/mountain concepts and asks for artwork
+like Progress's Current streak icon. The delivered trophy and flag/path are
+original flat SVGs with semantic colors and rounded contours. Rejected bitmaps
+are not shipped, and the shared per-achievement drawings remain unchanged.
+
+/progress/achievements is protected by the existing auth layout and uses the
+same ProgressShell. Overview, Review history and Achievements are live in both
+desktop sidebar and compact navigation. Overview removes the embedded collection;
+Today Momentum and session-completion links lead to the new view. No other
+placeholder destination, new achievement or native presentation is introduced.
+
+The lifetime summary derives earned count/percentage from computeAchievements.
+Up next reuses selectNextAchievement's catalog order rather than inventing a new
+priority. Exact rules, progress and first earned dates remain canonical. All /
+Earned / Not yet earned filters affect only the card collection. Earned badges
+are green; pending badges muted; explicit Earned / In progress / Locked text
+keeps status independent of color. Pending bars use selectionBorder blue. The
+summary bar and two illustration accents are orange. No fabricated partial
+progress is added to binary milestones. Empty/all-earned, loading and retry
+states are explicit, with keyboard focus restored on selection and Escape.
+No storage, scheduler, migration, cloud work or dependencies change.
+
+Verification: all 124 root test files / 1,168 tests, forced TypeScript and root lint pass. Chromium checks Light/Dark at 1440x900, 1000px, 768px and 390x844: sidebar activation, Overview removal, all status filters, selection/Escape focus, responsive card grids, hover and no document overflow/page errors. Phone checks also cover zero/all-earned, saved reload and reduced motion. Both theme screenshots were inspected. Six page regressions cover exact lifetime dates/progress, stable next-target selection, empty/completed collections and history failure/retry.
+## 2026-10-09 - Refined achievement icons and warm lighting
+
+**D501 (refines D500's artwork and supersedes its green earned-medallion fill).**
+The owner approves the page's overall idea but rejects the initial SVG style,
+requesting improved icons and the reference's orange lighting. The trophy now
+has curved contours, layered copper shading, a rim highlight and study-card
+companions. The mountain has softened layered ridges, warm summit shading and
+a winding trail. The four web medallions now use dedicated checked-flag,
+five-day-calendar, four-week-calendar and return/check drawings; compact shared
+icons and native presentation remain unchanged.
+
+Static radial orange washes sit behind the summary and next-milestone artwork.
+Earned medallions gain amber borders, inset highlights and a restrained halo.
+The explicit Earned status remains green; pending marks stay muted and pending
+progress remains blue. All shades derive from the existing theme palettes.
+Unique gradient ids come from useId. Decorations ignore input; rounded lighting
+bounds preserve content and focus visibility. Phone subtitle spacing reserves
+room for the small mountain illustration. No motion, new palette, raster assets,
+dependency, scheduling or achievement-evidence changes are introduced.
+
+Verification: all 124 root test files / 1,168 tests, forced TypeScript and root lint pass. Chromium verifies Light/Dark at 1440x900, 1000px, 768px and 390x844, all filters, keyboard selection/Escape focus, zero/all-earned and reduced-motion states without overflow or page errors. Final phone checks confirm subtitle/artwork clearance and valid SVG gradient references in both themes. Desktop/phone artwork screenshots were inspected.
+
+## 2026-10-09 - Hand-authored trophy and closer reference lighting
+
+**D502 (supersedes D501's trophy and broad panel-wash treatment).** The owner
+accepts the mountain, rejects the trophy's polish and explicitly asks for a
+self-authored SVG and backgrounds closer to the mockup. The trophy is redrawn
+as one cup with a rolled elliptical rim, continuous curved handles, raised star,
+consistent copper reflection/shadow gradients and a stepped base. Floating
+study cards are removed. The existing orange/navy palette plus its white highlight
+color define the material independently of page theme. Unique gradient ids
+remain per mount. The approved mountain and medallion source is preserved exactly.
+
+The summary retains its neutral surface/canvas base and gets a compact glow
+behind the trophy. Up next removes the broad accent-softer base, keeping a
+neutral center with restrained upper-left warmth and a muted warmer upper-right
+pool around the summit. Accent/muted mixes desaturate the light to resemble the
+reference rather than tinting the whole card brown. Phone lights follow the
+smaller artwork. Existing values, progress fills, navigation, badge states and
+Light/Dark preference remain unchanged. No dependency or data change is added.
+
+Verification: all 124 root test files / 1,168 tests, forced TypeScript and root lint pass. Chromium verifies Light/Dark at 1440x900, 1000px, 768px and 390x844, filters, keyboard selection/Escape focus, zero/all-earned states and reduced motion without overflow or page errors. Final checks validate phone artwork/text clearance and SVG paint-server references; both theme screenshots were inspected. The approved mountain and medallion source is checked for exact preservation.

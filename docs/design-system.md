@@ -479,11 +479,12 @@ The page alternates generous white sections with deep-navy storytelling surfaces
 
 ## Study achievement presentation (D473, 2026-10-08)
 
-The four achievements live inside Progress's existing milestone-panel position,
-with no separate route or navigation item. D495 gives web rows a 36px rounded-square mark with a 25px original SVG;
+The four achievements live in web's dedicated Progress sidebar view at
+/progress/achievements (D500), with a summary, next milestone and two-column
+collection. Web uses 60px circular marks with 34px original SVGs;
 native retains its 42-point circle and 28px SVG. Each row has a short title,
-the exact earning rule, and either an earned date or a thin neutral progress bar
-with a readable progress label. The first unearned row says Next up. Earned is
+the exact earning rule, and either an earned date or a thin progress bar
+with a readable progress label. The first unearned item supplies web's Up next panel; native retains Next up. Earned is
 also stated in text with a green check on web, so neither color nor shape carries
 status alone. Rows wrap instead of truncating; the palette follows semantic
 surface, muted, inkBrand, navySoft and success roles in both web themes.
@@ -494,7 +495,7 @@ live as original plain SVG data in core's `design/achievementIcons.ts`. Rounded
 icon system; they use no raster assets, remote resources or new library.
 
 Session completion adds a quiet neutral inset for newly earned achievements,
-using the same drawings and titles. Web's View in Progress link has ordinary
+using the same drawings and titles. Web's View achievements link has ordinary
 keyboard focus and hover; Back to Today remains the primary orange action.
 No confetti, animation, points, new theme token or extra orange status fill is
 introduced. Native retains its existing theme, scroll container and tab geometry.
@@ -535,8 +536,8 @@ with the owner's exceptions: replace Cards due artwork and remove the middle
 duplicate retention chart. The top hierarchy is one green retention headline
 and trend, a warm streak card, a blue-toned due card with the sole primary
 action, and two stacked compact Learned/Reviews cards. At 1000px of content
-width, the heat map and deck performance share equal-width columns, with
-Achievements below Deck performance. Smaller layouts stack all three. Surfaces,
+width, the heat map and deck performance share equal-width columns, while
+Achievements moved to its own sidebar view (D500). Smaller layouts stack the two overview panels. Surfaces,
 tints, borders, shadows and text use the existing palette in both themes.
 
 Progress routes have a 1600px maximum frame, 220px sidebar and 14px panel gaps.
@@ -564,3 +565,51 @@ are decorative, not a measured trend; the line sparkline is removed. Learned's
 caption is "of N active cards", and Reviews retains its actual period comparison.
 Phone cards tighten badge size and spacing without moving captions beneath
 the icon row.
+## Web Achievements view (D500, 2026-10-09)
+
+The owner's attached Achievements image guides summary / Up next / collection
+composition. The subsequent requests replace its raster scenery with original
+SVG illustrations matching Current streak: a trophy and a winding path
+ending at a flag. D501 refines their curved silhouettes, layered gradients and warm edge highlights.
+Panel lighting uses static orange radial washes behind the artwork. No generated
+bitmap is shipped.
+The shared catalog's first pending item supplies Up next, with exact rule and
+progress text. Zero-earned and all-earned states use real counts; all-earned
+replaces Up next with Every milestone earned. All / Earned / Not yet earned
+filters affect only the collection. Status is stated as Earned, In progress or
+Locked, with real earned dates. Badges remain muted until earned, then use warm amber rings and glow (D501); the explicit Earned status stays green.
+The summary bar is orange; pending bars use selectionBorder blue. The illustration
+and flag are the two minor orange accents. All four cards stay in catalog order.
+At narrow content widths cards stack, the trophy shrinks and the path becomes
+a quiet corner drawing. Filters retain keyboard focus after selection and Escape.
+### Achievement artwork and warm lighting (D501)
+
+The summary trophy now has a rolled elliptical rim, curved continuous handles,
+raised star, coherent copper gradients and a stepped base (D502). The floating
+study-card companions are removed. The mountain uses layered ridges,
+a winding trail that warms toward its summit, and a curved orange flag. The
+web medallions have dedicated 48-unit drawings: a checked flag, five-day calendar,
+four-week calendar and return/check symbol. Compact shared/native drawings stay
+unchanged. The page's circles use inset highlights; earned circles have amber
+color and a soft 20px halo. Status text/checks stay green. Pending progress stays
+blue, so orange lighting does not change what any value means.
+Gradients mix existing palette roles. `useId` keeps illustration paint servers
+unique. Lighting is static, pointer-transparent and confined to rounded panel
+bounds without clipping focus rings. Phone layouts shrink the artwork and reserve
+subtitle space for the path rather than drawing over text.
+
+### Trophy finish and reference panel backgrounds (D502)
+
+The approved mountain and badge drawings remain unchanged. The trophy is a
+hand-authored SVG with a consistent metal finish in both themes: orange/navy
+mixes form the copper shadows and existing palette white supplies fixed material
+highlights. Light/Dark do not invert the star or metal reflections. Paint-server
+ids remain isolated with useId. There are no bitmap or SVG filter dependencies.
+
+Both headline panels keep a neutral surface base. The summary darkens slightly
+toward canvas, with a small local glow centered behind its cup. Up next removes
+the full-width accent-softer wash; muted warm corner light fades into a neutral
+middle, with a stronger upper-right pool around the summit. The lighting mixes
+accent and muted roles to match the reference's desaturated warmth instead of
+painting the panel orange-brown. Small-screen glow placement follows the art.
+These changes preserve all progress colors, data, focus and navigation behavior.

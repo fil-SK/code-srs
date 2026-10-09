@@ -70,7 +70,7 @@ export function MomentumPanel({ momentum, retention }: MomentumPanelProps) {
           <h3 className="text-xs font-semibold text-fliptap-ink-brand">{nextAchievement ? 'Next achievement' : 'Your achievements'}</h3>
           <span className="text-[11px] text-fliptap-muted">{earnedCount} of 4 earned</span>
         </div>
-        <Link to="/progress" className="group -mx-2 flex items-start gap-3 rounded-fliptap-control px-2 py-1.5 outline-none transition-colors hover:bg-fliptap-surface-subtle focus-visible:ring-2 focus-visible:ring-fliptap-accent">
+        <Link to="/progress/achievements" className="group -mx-2 flex items-start gap-3 rounded-fliptap-control px-2 py-1.5 outline-none transition-colors hover:bg-fliptap-surface-subtle focus-visible:ring-2 focus-visible:ring-fliptap-accent">
           <span className="grid size-12 shrink-0 place-items-center rounded-full border border-fliptap-border bg-fliptap-navy-soft text-fliptap-ink-brand">
             <AchievementIcon id={nextAchievement?.id ?? 'four-weeks'} size={32} />
           </span>

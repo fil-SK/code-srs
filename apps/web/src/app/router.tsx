@@ -13,6 +13,7 @@ import { PreviewPage } from '@/features/preview/PreviewPage'
 import { CardCreatePage } from '@/features/cards/CardCreatePage'
 import { CardEditEntry } from '@/features/cards/CardEditEntry'
 import { CardStudyPreviewPage } from '@/features/cards/CardStudyPreviewPage'
+import { AchievementsPage } from '@/features/progress/AchievementsPage'
 import { ProgressPage } from '@/features/progress/ProgressPage'
 import { ReviewHistoryPage } from '@/features/progress/ReviewHistoryPage'
 import { AccountSettingsPage } from '@/features/settings/AccountSettingsPage'
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
           { path: 'cards/:id/study', element: <CardStudyPreviewPage /> },
           { path: 'progress', element: <ProgressPage /> },
           { path: 'progress/history', element: <ReviewHistoryPage /> },
+          { path: 'progress/achievements', element: <AchievementsPage /> },
           { path: 'settings', element: <AccountSettingsPage /> },
           { path: 'settings/:section', element: <AccountSettingsPage /> },
           { path: 'about', element: <AboutPage /> },
