@@ -408,7 +408,7 @@ export function LibraryDeckPage() {
                 <Stat icon={Clock3} label="last studied" value={formatLastStudied(metrics.lastStudied, now)} />
               </div>
               <div className="flex items-center gap-3.5 @[30rem]:pl-2">
-                <MasteryRing value={metrics.masteryFraction} />
+                <MasteryRing key={id} value={metrics.masteryFraction} />
                 <div>
                   <div className="font-fliptap-display text-lg font-bold text-fliptap-ink-brand">
                     {Math.round(metrics.masteryFraction * 100)}%

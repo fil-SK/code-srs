@@ -701,3 +701,18 @@ body {
     }
   }
 }
+
+/* Run only on deck entry; subsequent metric updates use the actual SVG offset. */
+@keyframes fliptap-mastery-fill {
+  from {
+    stroke-dashoffset: var(--mastery-circumference);
+  }
+}
+.fliptap-mastery-fill {
+  animation: fliptap-mastery-fill 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fliptap-mastery-fill {
+    animation: none;
+  }
+}

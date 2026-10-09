@@ -1,6 +1,8 @@
 // Small single-value circular progress ring for the deck header's mastery
 // stat. Hand-rolled SVG with CSS-var strokes, matching PaceChart.tsx's
 // existing "no charting library" technique.
+import type { CSSProperties } from 'react'
+
 const SIZE = 56
 const STROKE = 6
 const RADIUS = (SIZE - STROKE) / 2
@@ -36,6 +38,8 @@ export function MasteryRing({ value }: { value: number }) {
         strokeLinecap="round"
         strokeDasharray={CIRCUMFERENCE}
         strokeDashoffset={offset}
+        className="fliptap-mastery-fill"
+        style={{ '--mastery-circumference': CIRCUMFERENCE } as CSSProperties}
         transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
       />
     </svg>
