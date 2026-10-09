@@ -9,7 +9,7 @@ import { CardPrompt } from '../../components/CardPrompt'
 import { CardPanel } from '../../components/CardPanel'
 import { ExplanationPanel } from '../../components/ExplanationPanel'
 import { InteractionLabel } from '../../components/InteractionLabel'
-import { TipPanel } from '../../components/TipPanel'
+import { CardHintScope, HintToggle } from '../../components/CardHintScope'
 import type { InteractionViewProps } from '../types'
 import { focusToHighlightLines } from './focusLines'
 import { StepResponse } from './StepResponse'
@@ -150,19 +150,19 @@ export function WalkthroughView({
             text={step.prompt.value}
             className="text-sm font-semibold leading-snug text-fliptap-ink-brand"
           />
-          <div className="mt-3">
-            <StepResponse
-              key={step.id}
-              step={step}
-              answer={state.answers[step.id]}
-              result={state.results[step.id]}
-              readOnly={locked || stepAnswered}
-              onSubmit={(answer) => submitStep(step.id, answer)}
-            />
-          </div>
-          {!stepAnswered && !locked && (
-            <TipPanel text={step.tip?.value} title="Tip for this step" />
-          )}
+          <CardHintScope key={step.id} text={step.tip?.value} active={!stepAnswered && !locked} title="Hint for this step">
+            <div className="mt-3">
+              <StepResponse
+                key={step.id}
+                step={step}
+                answer={state.answers[step.id]}
+                result={state.results[step.id]}
+                readOnly={locked || stepAnswered}
+                onSubmit={(answer) => submitStep(step.id, answer)}
+              />
+            </div>
+            <HintToggle />
+          </CardHintScope>
           {(stepAnswered || locked) && (
             <ExplanationPanel
               text={step.explanation?.value}

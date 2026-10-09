@@ -5,7 +5,7 @@ import type {
   WebInteractionDefinition,
 } from '@/features/reviewV2/interactions/types'
 import type { ReviewPhase } from '@/features/reviewV2/reviewPhase'
-import { TipPanel } from '@/features/reviewV2/components/TipPanel'
+import { CardHintScope } from '@/features/reviewV2/components/CardHintScope'
 import { ExplanationPanel } from '@/features/reviewV2/components/ExplanationPanel'
 import { FlipTapSurface } from '@/features/reviewV2/components/FlipTapSurface'
 import { cn } from '@/lib/cn'
@@ -55,17 +55,18 @@ export function InteractionAnswerPreview<T extends InteractionType>({
         ))}
       </div>
 
-      <View
-        card={card}
-        phase={phase}
-        response={response}
-        setResponse={setResponse}
-        onPrimaryAction={() => setRevealed((v) => !v)}
-        responseReady
-        hideActions
-      />
+      <CardHintScope text={card.tip?.value} active={!revealed}>
+        <View
+          card={card}
+          phase={phase}
+          response={response}
+          setResponse={setResponse}
+          onPrimaryAction={() => setRevealed((v) => !v)}
+          responseReady
+          hideActions
+        />
 
-      {phase.kind === 'presenting' && <TipPanel text={card.tip?.value} />}
+      </CardHintScope>
       {phase.kind !== 'presenting' && <ExplanationPanel text={card.explanation?.value} />}
     </FlipTapSurface>
   )

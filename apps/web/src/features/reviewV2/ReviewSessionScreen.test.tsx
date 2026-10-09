@@ -105,11 +105,39 @@ describe('ReviewSessionScreen (via Recall)', () => {
   it('the Tip disappears once revealed', async () => {
     const user = userEvent.setup()
     renderScreen()
+    expect(screen.queryByText(fixture.tip!.value)).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Show hint' }))
+    expect(answerFaceHidden()).toBe(true)
     expect(screen.getByText(fixture.tip!.value)).toBeTruthy()
-    await user.keyboard(' ')
+    await user.click(screen.getByRole('button', { name: 'Recall card, click or press Space to reveal the answer' }))
+    expect(answerFaceHidden()).toBe(false)
     expect(screen.queryByText(fixture.tip!.value)).toBeNull()
   })
 
+  it('toggles the hint without answering and resets it for the next card', async () => {
+    const user = userEvent.setup()
+    const props = { card: fixture, definition: recallDefinition, current: 1, total: 2,
+      onExit: () => {}, schedulingBefore: initialSchedulingState() }
+    const { rerender } = render(<ReviewSessionScreen {...props} />)
+    const toggle = screen.getByRole('button', { name: 'Show hint' })
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    await user.click(toggle)
+    expect(screen.getByRole('button', { name: 'Hide hint' }).getAttribute('aria-expanded')).toBe('true')
+    expect(answerFaceHidden()).toBe(true)
+    expect(screen.queryByRole('button', { name: /Good/ })).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Hide hint' }))
+    expect(screen.queryByText(fixture.tip!.value)).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Show hint' }))
+    rerender(<ReviewSessionScreen {...props} card={{ ...fixture, id: 'next-hint-card' }} current={2} />)
+    expect(screen.queryByText(fixture.tip!.value)).toBeNull()
+    expect(screen.getByRole('button', { name: 'Show hint' }).getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('omits the hint action when there is no authored hint', () => {
+    render(<ReviewSessionScreen card={{ ...fixture, tip: undefined }} definition={recallDefinition}
+      current={1} total={1} onExit={() => {}} schedulingBefore={initialSchedulingState()} />)
+    expect(screen.queryByRole('button', { name: 'Show hint' })).toBeNull()
+  })
   it('the Explanation and rating controls appear only after reveal', async () => {
     const user = userEvent.setup()
     renderScreen()

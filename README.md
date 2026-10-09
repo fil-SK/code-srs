@@ -26,7 +26,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Nested decks** of arbitrary depth, with drag-and-drop **card reordering**, deck **reparenting**, and **move-card-between-decks**.
 - **Light markdown** in every card: inline `` `code` ``, **bold**, *italic*, and fenced ```code``` blocks rendered with real syntax highlighting.
 - **Decks tab, per-deck view, Browse, and an interactive Preview** — try cards (answer + check yourself) with no scheduling impact.
-- **Optional Explanation** on every card type, shown on reveal.
+- **Hint and Explanation panels** on web: illustrated folded-paper panels with bulb/brain motifs and matching Light/Dark styling. Show hint on the card opens pre-answer guidance and fills its bulb orange. Explanation is optional on every card type and appears on reveal.
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
 - **Adjust session from Today**: choose all due cards or a deck and a card count, with a clear queue preview in a desktop modal or phone sheet. Choices apply only to that session.
 - **Today Momentum**: a focal streak, seven actual study days, mature retention and your next achievement, linked to Progress.

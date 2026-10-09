@@ -6,7 +6,7 @@ import { reviewService, type SubmitReviewResult } from '@/domain/scheduling/revi
 import { formatInterval } from '@/domain/scheduling/format'
 import { ReviewProgress } from './components/ReviewProgress'
 import { ReviewTopBar } from './components/ReviewTopBar'
-import { TipPanel } from './components/TipPanel'
+import { CardHintScope } from './components/CardHintScope'
 import { ExplanationPanel } from './components/ExplanationPanel'
 import { RatingControls } from './components/RatingControls'
 import { ReviewPersistError } from './components/ReviewPersistError'
@@ -329,18 +329,19 @@ function ReviewCardScreen<T extends InteractionType>({
           entered && 'fliptap-card-enter-active',
         )}
       >
-        <div ref={cardRef}>
-          <definition.View
-            card={card}
-            phase={phase}
-            response={response}
-            setResponse={setResponse}
-            onPrimaryAction={primaryAction}
-            responseReady={responseReady}
-          />
-        </div>
+        <CardHintScope text={card.tip?.value} active={phase.kind === 'presenting'}>
+          <div ref={cardRef}>
+            <definition.View
+              card={card}
+              phase={phase}
+              response={response}
+              setResponse={setResponse}
+              onPrimaryAction={primaryAction}
+              responseReady={responseReady}
+            />
+          </div>
 
-        {phase.kind === 'presenting' && <TipPanel text={card.tip?.value} />}
+        </CardHintScope>
 
         {/* One step, not a cascade: everything the reveal adds arrives
             together on the existing `.reveal-in` (250ms, reduced-motion-aware

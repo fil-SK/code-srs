@@ -702,6 +702,106 @@ body {
   }
 }
 
+/* The cut corner and local artwork follow the owner's folded-paper reference. */
+.fliptap-study-guidance {
+  --guidance-color: var(--fliptap-success);
+  --guidance-tint: var(--fliptap-success-soft);
+  filter: drop-shadow(0 4px 9px color-mix(in srgb, var(--fliptap-ink) 5%, transparent));
+}
+
+.fliptap-study-guidance-hint {
+  --guidance-color: var(--fliptap-accent);
+  --guidance-tint: var(--fliptap-accent-soft);
+}
+
+.fliptap-guidance-paper {
+  position: relative;
+  min-height: 124px;
+  border: 1px solid color-mix(in srgb, var(--guidance-color) 12%, var(--fliptap-border));
+  border-radius: var(--fliptap-radius-card, 14px);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--guidance-tint) 48%, var(--fliptap-surface)), color-mix(in srgb, var(--guidance-tint) 72%, var(--fliptap-surface)));
+  clip-path: polygon(0 0, calc(100% - 21px) 0, 100% 21px, 100% 100%, 0 100%);
+  padding: 24px 28px;
+}
+
+.fliptap-guidance-content {
+  position: relative;
+  z-index: 1;
+  padding-right: 140px;
+}
+
+.fliptap-study-guidance-label {
+  color: var(--fliptap-success);
+}
+
+.fliptap-study-guidance-hint .fliptap-study-guidance-label {
+  color: var(--fliptap-warning);
+}
+
+.fliptap-guidance-art {
+  position: absolute;
+  pointer-events: none;
+  right: 15px;
+  top: 8px;
+  width: 145px;
+  height: 109px;
+  color: var(--guidance-color);
+}
+
+.fliptap-guidance-fold {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 21px;
+  height: 21px;
+  border-bottom-left-radius: 4px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--guidance-color) 27%, var(--fliptap-surface)), var(--guidance-tint) 85%);
+  box-shadow: -2px 3px 5px color-mix(in srgb, var(--guidance-color) 12%, transparent);
+}
+
+.fliptap-study-guidance-copy {
+  overflow-wrap: anywhere;
+}
+
+.fliptap-study-guidance-copy code {
+  color: var(--fliptap-ink-brand);
+  background: color-mix(in srgb, var(--guidance-tint) 65%, var(--fliptap-surface));
+}
+
+.fliptap-hint-toggle {
+  color: var(--fliptap-muted);
+  transition: color 150ms ease;
+}
+
+.fliptap-hint-toggle[data-open='true'],
+.fliptap-hint-toggle:hover,
+.fliptap-hint-toggle:focus-visible {
+  color: var(--fliptap-accent-active);
+}
+
+@media (max-width: 479px) {
+  .fliptap-guidance-paper {
+    padding: 20px;
+  }
+  .fliptap-guidance-content {
+    padding-right: 0;
+  }
+  .fliptap-study-guidance-label {
+    min-height: 44px;
+  }
+  .fliptap-guidance-art {
+    top: 4px;
+    right: 13px;
+    width: 94px;
+    height: 71px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fliptap-hint-toggle {
+    transition: none;
+  }
+}
 /* Run only on deck entry; subsequent metric updates use the actual SVG offset. */
 @keyframes fliptap-mastery-fill {
   from {

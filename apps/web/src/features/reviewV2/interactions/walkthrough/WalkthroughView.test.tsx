@@ -101,6 +101,9 @@ describe('WalkthroughView', () => {
     const user = userEvent.setup()
     renderScreen()
 
+    expect(screen.queryByText('Think about the type of the expression.')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Show step hint' }))
+    await user.click(screen.getByRole('button', { name: 'Show hint' }))
     expect(screen.getByText('Think about the type of the expression.')).toBeTruthy()
     expect(screen.getByText('Overall walkthrough hint.')).toBeTruthy()
     expect(screen.queryByText('The cast enables overload resolution; it does not move bytes.')).toBeNull()
@@ -112,6 +115,8 @@ describe('WalkthroughView', () => {
     expect(screen.getByText('The cast enables overload resolution; it does not move bytes.')).toBeTruthy()
 
     await user.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(screen.queryByText('It has the same name as the class.')).toBeNull()
+    await user.click(screen.getByRole('button', { name: 'Show step hint' }))
     expect(screen.getByText('It has the same name as the class.')).toBeTruthy()
     expect(screen.queryByText('The cast enables overload resolution; it does not move bytes.')).toBeNull()
     expect(screen.getByText('Overall walkthrough hint.')).toBeTruthy()

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { HintToggle } from './CardHintScope'
 
 // Static (non-flipping) counterpart to FlashcardSurface's own face styling —
 // gives every interactive interaction type (Multiple Choice, Matching,
@@ -9,6 +10,7 @@ export function CardPanel({ children }: { children: ReactNode }) {
   return (
     <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-8 shadow-[var(--fliptap-shadow-card)]">
       {children}
+      <HintToggle />
     </div>
   )
 }

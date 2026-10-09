@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { FlipCard } from './FlipCard'
+import { HintToggle } from './CardHintScope'
 
 // The FlipTap Recall card face: a literal flashcard that flips between front
 // and back. Built on this package's own, keyboard-accessible FlipCard (not
@@ -26,7 +27,7 @@ export function FlashcardSurface({
       flipped={flipped}
       onFlip={onFlip}
       activateOnSurface={activateOnSurface}
-      front={front}
+      front={<>{front}<HintToggle /></>}
       back={back}
       ariaLabel={ariaLabel}
       faceClassName="flex min-h-[22rem] flex-col justify-between rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-8 shadow-[var(--fliptap-shadow-card)]"

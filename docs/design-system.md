@@ -519,3 +519,11 @@ and Today outline, keeping the session hero's primary action dominant. No new
 animation, palette role, dependency or trophy destination is introduced.
 
 **Web cards utility icon (D476).** The selected deck's cards metric and Recall's flip hint share the two tilted, overlapping flashcards in `CardsIcon`. The review hint is 32x28; the metric scales the drawing to 21px wide with proportional borders. Both inherit the surrounding semantic foreground and use the theme's surface fill.
+
+## Web study guidance (D494)
+
+The owner's `C:\Users\SK\Desktop\itera-mockups\mockup hint expl.png` is the locked visual reference for Hint/Explanation only. Match its soft paper surface, clipped/folded top-right corner, tracked uppercase caption and right-side bulb/brain drawing with fine orbital lines, dots and stars. Use the locked app palette: orange Hint and success-green Explanation with lightly mixed surface tints, including Dark. The reference's example/code/diagram content and the main card's extra actions are outside this visual scope.
+
+`StudyGuidancePanel` owns this presentation; `GuidanceIllustration` supplies local decorative SVG artwork hidden from assistive technology. Desktop paper has 24px/28px padding and reserves room for the 145px drawing. At phone widths the 94px drawing occupies the title area and prose/code gets the full inner width. There is no emphasized side border. Long inline content wraps; fenced code uses the existing real code renderer.
+
+`CardHintScope` owns a transient disclosure for each card or Walkthrough step. The real card footer has a Show hint / Hide hint button with a 44px target, `aria-expanded`, `aria-controls` and visible keyboard focus. Its small bulb is muted and outlined while closed and filled orange while open. No hint text or control appears without authored content. Answering removes pre-answer guidance; card/step changes reset it. `FlashcardSurface` and `CardPanel` share the footer, including authoring previews. Step and overall hints are independent. Explanation remains immediately visible after the appropriate answer; its drawing never replaces or adds authored explanation content. Decorative motifs are static; reduced motion removes the toggle's color transition.
