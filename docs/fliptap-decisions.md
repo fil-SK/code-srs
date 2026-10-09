@@ -2529,3 +2529,47 @@ smaller artwork. Existing values, progress fills, navigation, badge states and
 Light/Dark preference remain unchanged. No dependency or data change is added.
 
 Verification: all 124 root test files / 1,168 tests, forced TypeScript and root lint pass. Chromium verifies Light/Dark at 1440x900, 1000px, 768px and 390x844, filters, keyboard selection/Escape focus, zero/all-earned states and reduced motion without overflow or page errors. Final checks validate phone artwork/text clearance and SVG paint-server references; both theme screenshots were inspected. The approved mountain and medallion source is checked for exact preservation.
+
+## 2026-10-09 - Help & Support and consolidated account navigation
+
+**D503 (supersedes D176/D204's separate menu destinations).** The owner removes
+What's new, folds Spaced repetition (FSRS) into Study settings, moves Keyboard
+shortcuts into Help Center, and renames Help & documentation to Help & Support.
+The compact account menu now links Account settings, Preferences, Study settings,
+Import / Export, Help & Support, About FlipTap and Sign out. Existing menu focus,
+Escape, popover and phone-sheet behavior is preserved.
+
+`/settings/study` is a live explanation of the shipped automatic FSRS behavior
+and transient Adjust session choices, with real Today and rating-guide links.
+No custom FSRS parameters, settings persistence or scheduling change is added;
+advanced tuning remains deferred.
+
+`/help` uses two local navigation panels, Help Center and Contact & Feedback,
+following Progress's sidebar language. Six categorized, addressable articles
+cover first decks, daily sessions, review ratings, keyboard shortcuts, backups
+and storage. Plain strings render through React; there is no markup parser.
+Article titles receive focus on entry, missing ids offer recovery, and every
+article connects to Contact through Still need help? Contact us. Search waits
+for a larger collection, as requested. Narrow screens stack category panels and
+put the two navigation choices above content. Both themes use existing tokens.
+
+`/help/contact` contains Bug report / Feature request / General question,
+a message and optional reply email, using shared form primitives. The owner
+explicitly defers choosing the support inbox/API and asks for a TODO entry.
+Delivery therefore remains unconfigured: the Send message action is focusable,
+aria-disabled and marked Soon, and activation explains that nothing was sent.
+Drafts survive section switching in memory but never persist or leave the app.
+No fake success, support entity, table, cloud integration or ticket system is
+introduced. Browser QA prompted explicit stable accessible names on the form
+controls so changing selected/typed content cannot change their labels.
+
+Verification: all 125 root files / 1,172 tests pass with two workers and a
+20-second timeout; forced TypeScript and root lint pass. Chromium verifies
+Light/Dark at 1440x900 and 390x844: menu simplification and Help navigation,
+Escape focus return, hover/keyboard article activation and title focus, active
+section state, contextual contact, native invalid/optional email handling,
+honest non-delivery, draft retention, direct routes, reload and reduced motion.
+There are no page errors or document overflow. Help Center, articles, Contact
+and Study settings screenshots were inspected in both themes.
+
+Production web build passes with the existing chunk-size advisory and 26-entry PWA precache.

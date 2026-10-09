@@ -57,6 +57,7 @@ describe('AccountSettingsPage', () => {
       'Notifications',
       'Privacy',
       'Connected devices',
+      'Study settings',
       'Import / Export',
     ]) {
       expect(screen.getByRole('link', { name: label })).toBeTruthy()
@@ -72,6 +73,14 @@ describe('AccountSettingsPage', () => {
     expect(screen.getByRole('button', { name: /Import JSON/ }).hasAttribute('disabled')).toBe(false)
   })
 
+
+  it('includes the current FSRS behavior within Study settings', () => {
+    renderAt('/settings/study')
+    expect(screen.getByRole('heading', { name: 'Study settings', level: 2 })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Spaced repetition (FSRS)' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /Learn how to rate/ }).getAttribute('href')).toBe('/help/articles/review-ratings')
+    expect(screen.getByText(/Custom FSRS parameters/)).toBeTruthy()
+  })
 
   it('falls back to Profile for an unknown section slug', () => {
     renderAt('/settings/does-not-exist')

@@ -3,6 +3,7 @@ import { useAuth } from '@/auth/AuthProvider'
 import { useIsWideLibrary } from '@/features/library/shared/useIsWideLibrary'
 import { SettingsNav } from './SettingsNav'
 import { resolveSection } from './settingsSections'
+import { StudySection } from './sections/StudySection'
 import { ProfileSection } from './sections/ProfileSection'
 import { AppearanceSection } from './sections/AppearanceSection'
 import {
@@ -76,6 +77,8 @@ function SectionBody({ slug }: { slug: string }) {
       return <PrivacySection />
     case 'devices':
       return <ConnectedDevicesSection />
+    case 'study':
+      return <StudySection />
     case 'import-export':
       return <ImportExportSection />
     default:

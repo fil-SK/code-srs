@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Keyboard } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
-// The real shortcuts that exist today (Review's flip/rate keys, Preview's
-// arrow-key navigation) — a static popover rather than a link to a
-// shortcuts page, since no such page exists in the app yet.
+// A quick in-place reminder of the real Review and Preview keys. Full
+// keyboard guidance lives in Help Center.
 function ShortcutsPopover({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
 

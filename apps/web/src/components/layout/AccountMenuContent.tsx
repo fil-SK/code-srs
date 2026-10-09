@@ -3,13 +3,10 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   ArrowUpDown,
   CircleQuestionMark,
-  Gift,
   GraduationCap,
   Info,
-  Keyboard,
   LogOut,
   SlidersHorizontal,
-  TrendingUp,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/auth/AuthProvider'
@@ -24,15 +21,12 @@ import { cn } from '@/lib/cn'
 // of settings sections still lives inside the Account settings page.
 //
 // Sign out is live whenever any session is (local, demo, or Supabase). Account
-// settings, Preferences (Appearance), Import / Export and About are real routes here.
+// settings, Preferences, Study settings, Import / Export, Help and About are live.
 // Rows without a backing page remain marked "Soon"
 // and focusable (aria-disabled, not `disabled`) so keyboard users hear their
 // state instead of skipping visible content.
 //
-// Spaced repetition (FSRS) is one of those placeholders on purpose: it used to
-// link to /settings/card-scheduling, which is not a section in
-// settingsSections.ts, so resolveSection silently landed the user on Profile.
-// A row that navigates somewhere unrelated is worse than one that says "Soon".
+// FSRS belongs inside Study settings; keyboard shortcuts belong in Help Center.
 
 interface MenuRow {
   label: string
@@ -157,16 +151,13 @@ export function AccountMenuContent({ onNavigate }: { onNavigate: () => void }) {
       { label: 'Preferences', icon: SlidersHorizontal, to: '/settings/appearance' },
     ],
     [
-      { label: 'Study settings', icon: GraduationCap },
-      { label: 'Spaced repetition (FSRS)', icon: TrendingUp },
+      { label: 'Study settings', icon: GraduationCap, to: '/settings/study' },
       { label: 'Import / Export', icon: ArrowUpDown, to: '/settings/import-export' },
     ],
     [
-      { label: 'Keyboard shortcuts', icon: Keyboard },
-      { label: 'Help & documentation', icon: CircleQuestionMark },
+      { label: 'Help & Support', icon: CircleQuestionMark, to: '/help' },
     ],
     [
-      { label: "What's new", icon: Gift },
       { label: 'About FlipTap', icon: Info, to: '/about' },
     ],
     [

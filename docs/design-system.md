@@ -351,7 +351,7 @@ Sidebar styling: quiet text hierarchy, indentation and subtle branches, **no yel
 **IMPLEMENTED:**
 
 - `FloatingPanel.tsx` is the one popover primitive (§3): portaled, viewport-aware, flips above the anchor when it will not fit below, clamps 8px from every edge, re-places on scroll/resize. Opt into real menu keyboard semantics with `manageFocus`.
-- `AccountMenu.tsx` / `AccountMenuContent.tsx` — the avatar popover: a 300px anchored, viewport-height-capped `FloatingPanel` with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger), collapsing below 480px (`useIsNarrowShell`) into a bottom sheet with identical content. Its divider groups follow `profile-menu.png`: Account settings + Preferences; Study settings + Spaced repetition (FSRS) + Import / Export; Keyboard shortcuts + Help; What's new + About FlipTap; Sign out. **Account settings, Preferences (Appearance), Import / Export, About FlipTap and Sign out are live**; every unbuilt destination, Spaced repetition (FSRS) included, stays an `aria-disabled` "Soon" row. Its header block carries the session's real identity — the email, or "Demo workspace" for the demo session — over a line saying where the data lives; there is no profile record, so it shows no display name.
+- `AccountMenu.tsx` / `AccountMenuContent.tsx` — the avatar popover: a 300px anchored, viewport-height-capped `FloatingPanel` with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger), collapsing below 480px (`useIsNarrowShell`) into a bottom sheet with identical content. D503 simplifies the groups to Account settings + Preferences; Study settings + Import / Export; Help & Support; About FlipTap; Sign out. All destinations are live. FSRS belongs inside Study settings, keyboard shortcuts inside Help Center, and What's new is removed. Its header block carries the session's real identity — the email, or "Demo workspace" for the demo session — over a line saying where the data lives; there is no profile record, so it shows no display name.
 - `AdjustSessionDialog.tsx` (`apps/web/src/features/today/`) — **the settled treatment for a small form overlay**, and the pattern to copy for the next one. `useDialogs()` only covers confirm/prompt/alert, and `FloatingPanel` carries `role="menu"` semantics, so neither fits a form with validation. It is a `role="dialog" aria-modal="true"` portal that mirrors `DialogHost`'s structure — `rgba(23,32,51,0.45)` scrim, `rounded-fliptap-dialog` surface, Escape and scrim-click to dismiss, focus into the first control on open, focus returned to the trigger on close — as a **centered modal on desktop and a bottom sheet below 480px** (`useIsNarrowShell`), exactly the split `AccountMenu` established. D478 refines the presentation into a 460px desktop panel, full-width radio scope rows, one unified neutral count selector, a prominent inset session summary, and a separated footer with a quiet Cancel and one orange Start action. A visible close button, explicit keyboard focus rings and Tab containment complement Escape and focus return. The body scrolls independently on short screens while the header and footer stay reachable. Content stays lightweight: a radio scope group, segmented `aria-pressed` size presets, one conditional number field, and a `role="status"` line that always states what Start will actually do. **The summary never advertises a count the Start button will not honor** — an unusable custom value asks for a number instead of silently falling back to the whole queue.
 - **The account menu is quick navigation only.** The requested study/backup shortcuts are the exception that proves the rule; do not mirror the full settings sidebar. New settings belong in `apps/web/src/features/settings/`.
 - Portals sit outside `.fliptap-scope` and must re-apply the class plus cancel its canvas background (§3).
@@ -613,3 +613,22 @@ middle, with a stronger upper-right pool around the summit. The lighting mixes
 accent and muted roles to match the reference's desaturated warmth instead of
 painting the panel orange-brown. Small-screen glow placement follows the art.
 These changes preserve all progress colors, data, focus and navigation behavior.
+
+## Web Help & Support (D503, 2026-10-09)
+
+Help Center and Contact & Feedback use a 220px local sidebar above 880px, with
+neutral icons, a selected orange edge and soft fill, following Progress's local
+navigation. Narrow layouts use two full-width navigation choices above content.
+Help Center has three category panels, each with two linked article summaries;
+at smaller widths they stack. Articles have readable single-column prose, a
+category caption, back link, related product links and the contextual Still need
+help? Contact us action. Opening an article focuses its title. Six articles do
+not yet justify search.
+
+Contact is a single calm form panel with Subject, Message and optional reply
+email. The subject choices are Bug report, Feature request and General question.
+Shared Field/input/Button styles, visible focus and native email validation are
+retained. Unconfigured delivery is explicit, with a focusable aria-disabled Send
+message control and Soon pill; activation can only explain that nothing was
+sent. Drafts survive section switching in memory and are never persisted.
+Existing Light/Dark tokens supply all colors. No new motion or artwork is added.

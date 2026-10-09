@@ -2,6 +2,7 @@ import { ProfileIcon as User } from '@/components/icons/ApprovedIcons'
 import {
   ArrowUpDown,
   Bell,
+  GraduationCap,
   Lock,
   Mail,
   Monitor,
@@ -32,6 +33,7 @@ export const settingsSections: SettingsSection[] = [
   { slug: 'notifications', label: 'Notifications', icon: Bell, group: 1 },
   { slug: 'privacy', label: 'Privacy', icon: Lock, group: 1 },
   { slug: 'devices', label: 'Connected devices', icon: Monitor, group: 1 },
+  { slug: 'study', label: 'Study settings', icon: GraduationCap, group: 2 },
   { slug: 'import-export', label: 'Import / Export', icon: ArrowUpDown, group: 2 },
 ]
 

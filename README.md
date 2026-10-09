@@ -34,6 +34,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Four study achievements**: your first finished session, five study days in seven, reviews across four weeks, and recalling a missed card on a later due review. Web has a dedicated Achievements view with lifetime progress, earned dates and status filters; review completion acknowledges new unlocks. Available on web and native Demo (whose state still resets on restart).
 - **Import / Export** your whole collection as JSON.
 - **Light, dark and system themes** in Account settings → Appearance, saved on this browser; responsive, mobile-friendly and installable (PWA).
+- **Help & Support** (`/help`, from the avatar menu) has categorized guides, keyboard shortcuts, and Contact & Feedback. The form offers a subject, message and optional reply email; delivery is not connected yet and is tracked in `docs/TODO.md`.
 - **About FlipTap** in the account menu: playable samples of all six study formats, starting with Recall, plus FSRS ratings and storage details for your workspace.
 - **Two storage modes**: local-only (IndexedDB, zero setup) or cloud sync (Supabase Postgres + magic-link auth).
 
@@ -76,7 +77,8 @@ Grading model: interactive interactions (Multiple Choice, Write Code, Ordering, 
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
 - **Achievements** (`/progress/achievements`) — Earned summary, your next milestone and a filterable collection of four evidence-based achievements, accessed from the Progress sidebar.
 - **Progress** (`/progress`) — Retention rate with its single trend, Current streak, Cards due, Learned and Reviews; activity heat map; actionable leaf-deck rows ordered around work due now. Today, navigation, Progress, and Review share the same due/streak/retention definitions.
-- **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The avatar menu also links those two working sections directly and shows Study settings, What's new, keyboard/help and profile destinations as clearly marked upcoming items. Sign-out is available there for local, demo and cloud sessions.
+- **Account settings** (`/settings`, from the avatar menu) includes Appearance, JSON Import / Export and Study settings. Study settings explains automatic FSRS scheduling; custom scheduling parameters remain deferred.
+- **Help & Support** (`/help`, from the avatar menu) has categorized guides, keyboard shortcuts, and Contact & Feedback. The form offers a subject, message and optional reply email; delivery is not connected yet and is tracked in `docs/TODO.md`.
 - **About FlipTap** (`/about`, from the avatar menu) — the product story, six interactive sample cards, review scheduling, and storage details for your active workspace, with shortcuts to Library and Import / Export.
 
 **Markdown** works in every card's prose: `` `inline code` ``, `**bold**`, `*italic*`, and:

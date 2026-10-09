@@ -1,6 +1,21 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; redrawn trophy and corrected achievement panel lighting).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; Help & Support and consolidated account menu).
+
+> **Web Help & Support (2026-10-09, D503).** `/help` has two local navigation
+> panels: Help Center and Contact & Feedback. Six categorized, addressable
+> articles cover getting started, studying, keyboard shortcuts, backups and
+> storage; each connects to Contact. Search waits for a larger collection.
+> `/help/contact` has a subject selector, message and optional reply email.
+> Delivery is intentionally unconfigured: Send message is focusable, marked
+> Soon, and never sends or stores a submission. Drafts survive switching help
+> sections for the current mount only. The destination is an owner-requested
+> TODO. The account menu removes What's new, moves FSRS into the live
+> `/settings/study` explanation and keyboard shortcuts into Help Center,
+> and renames Help & documentation to Help & Support. Custom FSRS controls
+> remain deferred. No workspace data, native or marketing behavior changes.
+> All 125 files / 1,172 tests, forced TypeScript, lint and the production build
+> pass. Chromium verifies both themes at desktop/phone sizes; details in D503.
 
 > **Trophy redraw and reference lighting (2026-10-09, D502).** The owner keeps
 > the mountain and asks for a polished hand-authored trophy SVG and a closer
@@ -379,6 +394,7 @@ Real data, real behavior, production-routed:
 | Progress | `/progress` | `apps/web/src/features/progress/ProgressPage.tsx` |
 | Achievements | `/progress/achievements` | `apps/web/src/features/progress/AchievementsPage.tsx` |
 | Review history | `/progress/history` | `apps/web/src/features/progress/ReviewHistoryPage.tsx` |
+| Help & Support | `/help`, `/help/contact`, `/help/articles/:articleId` | `apps/web/src/features/help/HelpPage.tsx` |
 | Account settings | `/settings`, `/settings/:section` | `apps/web/src/features/settings/AccountSettingsPage.tsx` |
 | About FlipTap | `/about` | `apps/web/src/features/about/AboutPage.tsx` |
 | Login | `/login` | `apps/web/src/features/login/LoginPage.tsx` |
@@ -411,7 +427,7 @@ Real data, real behavior, production-routed:
 - Right side of the nav: `StreakBadge` + `AccountMenu`. Nothing else. `StreakBadge` reads the canonical `computeStreak` (`packages/core/src/domain/stats/streak.ts`) — the same calculation Today and Progress use — and the Today link's due badge (`useNavBadges`) has always been a real count.
 - **There is no global Search and no global Create action** — removed as a product call (both are scoped concepts; search lives inside Library, create inside a deck). `CreateMenu.tsx` and `TopNav`'s search affordance were deleted, not hidden.
 - No left sidebar, no bottom nav, no per-route topbar title slot. `Sidebar.tsx` / `BottomNav.tsx` / `navItems.ts` / `PageHeaderOverride.tsx` / `TodayShell.tsx` **were deleted**. A route that needs a heading renders it as ordinary page content.
-- Local (page-level) sidebars do exist and are the convention for section navigation: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`.
+- Local (page-level) sidebars do exist and are the convention for section navigation: `LibraryShell`/`CollectionNav`, `ProgressShell`/`ProgressNav`, `SettingsNav`, and Help & Support's two sections.
 - Roadmaps (`/roadmaps`) is deliberately absent from primary nav but still routed and functional.
 - **Web supports Light, Dark and System** through the one `ThemeProvider` and `/settings/appearance`. Light remains the default. The head script restores the browser-local preference before paint; System responds to device changes and native controls use matching `color-scheme`. `FlipTapSurface` follows the global theme; `ForceLightTheme` is deleted. CodeMirror chooses the corresponding syntax palette and the editable view reconfigures it without replacing its document.
 
@@ -430,10 +446,10 @@ Real data, real behavior, production-routed:
 ## 6. Account / avatar menu state
 
 - `AccountMenu` + `AccountMenuContent` (`apps/web/src/components/layout/`). Built on the existing `FloatingPanel` — **no popover dependency was added.** 300px anchored, viewport-height-capped panel with `manageFocus` (focus enters the menu, arrows/Home/End walk it, Tab closes, Escape returns focus to the trigger). Below 480px (`useIsNarrowShell`) the identical content renders as a bottom sheet.
-- Live rows: **Account settings**, **Preferences** (Appearance), **Import / Export**, **About FlipTap**, and **Sign out** (enabled whenever the active mode has a session - a local/demo one in local mode, a Supabase one in Supabase mode).
-- Placeholder rows: Study settings, **Spaced repetition (FSRS)**, Keyboard shortcuts, Help & documentation, What's new — focusable `aria-disabled` rows with a "Soon" pill (never `disabled`, never hidden). Spaced repetition joined that list on 2026-08-18: it used to link to `/settings/card-scheduling`, which is not a slug in `settingsSections.ts`, so `resolveSection` silently landed the user on Profile.
+- Live rows: **Account settings**, **Preferences** (Appearance), **Study settings**, **Import / Export**, **Help & Support**, **About FlipTap**, and **Sign out** (enabled whenever the active mode has a session).
+- D503 removes What's new and the separate FSRS/keyboard rows. FSRS is explained in Study settings; Keyboard shortcuts is a Help Center article. There are no placeholder destinations in the menu; signed-out Sign out remains focusable and aria-disabled.
 - The header block shows **real identity only**. There is no profile record and no display name in this product, so it renders the session's email (or "Demo workspace" for the demo identity, matching `AccountSettingsPage`'s subtitle) over a line saying where the data lives — "Stored in this browser" / "Synced with Supabase" / "Local data only". Since P1-3 that line cannot contradict the active backend: a `local`/`demo` identity only exists in local mode, so "Stored in this browser" can no longer be shown while the app is reading Supabase. The former hardcoded **"Your name"** line is gone; it read as fabricated account data.
-- The grouped menu follows `profile-menu.png`: account/preferences; a divided study group; keyboard/help; What's new/About; Sign out. **It remains quick navigation only.** New settings still belong in `apps/web/src/features/settings/`; the menu links only the requested high-value shortcuts.
+- The grouped menu is account/preferences; study/import; Help & Support; About; Sign out. It remains quick navigation only, with full settings inside Account settings.
 
 ## 7. Today state
 
@@ -557,7 +573,9 @@ Registry: `apps/web/src/features/reviewV2/interactions/registry.ts` (deliberatel
 
 Measured 2026-08-25 after M-DEMO-4 (§27). The established web/core counts remain unchanged; only the mobile suite grew.
 
-**Latest verification (2026-10-08, achievements D473):** root Vitest passes 120 files / 1146 tests with two workers; forced root TypeScript, root lint, mobile typecheck and mobile lint are clean. Native Jest passes 42 suites / 571 tests with `--runInBand --forceExit`, retaining the existing font `act` warnings and open-timer limitation. The production web build and Expo web export pass. Browser QA covers the four achievement icons, empty/partial/earned states, lifetime range independence (also component-tested), real scheduled reviews, multiple new unlocks, First step even after Again, Undo/regrade, reload persistence, completion-link hover/focus and navigation in Light/Dark at desktop/phone sizes. Native Progress, completion acknowledgment and Undo are checked in the Expo web preview; physical-device verification is pending. The first broad runs hit existing five-second test timeouts under concurrent load; reruns with limited workers pass.
+**Latest web verification (2026-10-09, Help & Support D503):** `npx vitest run --maxWorkers=2 --testTimeout=20000` passes 125 files / 1,172 tests; `npx tsc -b --force`, `npm run lint` and `npm run build` pass. Build retains the existing chunk-size advisory; PWA precaches 26 entries. Chromium verifies Light/Dark at 1440x900 and 390x844, the simplified menu, article focus/links, direct routes, invalid/optional email, honest non-delivery, memory-only draft retention, reload and reduced motion without page errors or document overflow. Native and marketing were not changed or reverified.
+
+**Previous verification (2026-10-08, achievements D473):** root Vitest passes 120 files / 1146 tests with two workers; forced root TypeScript, root lint, mobile typecheck and mobile lint are clean. Native Jest passes 42 suites / 571 tests with `--runInBand --forceExit`, retaining the existing font `act` warnings and open-timer limitation. The production web build and Expo web export pass. Browser QA covers the four achievement icons, empty/partial/earned states, lifetime range independence (also component-tested), real scheduled reviews, multiple new unlocks, First step even after Again, Undo/regrade, reload persistence, completion-link hover/focus and navigation in Light/Dark at desktop/phone sizes. Native Progress, completion acknowledgment and Undo are checked in the Expo web preview; physical-device verification is pending. The first broad runs hit existing five-second test timeouts under concurrent load; reruns with limited workers pass.
 
 **Previous verification (2026-10-08, approved icons D472):** `npx vitest run --maxWorkers=2` passes 119 files / 1133 tests; `npx tsc -b --force`, root lint, mobile typecheck and mobile lint are clean. Mobile Jest passes 42 suites / 570 tests with `--runInBand --forceExit`; the bounded runner accommodates existing open timers and emits the existing asynchronous font `act` warnings. The web production build succeeds with its existing chunk-size advisory, and the offline iOS/Hermes bundle export succeeds. Chromium at 1440x900 and 390x844 in Light/Dark verifies Today, Progress, About, deck metrics, all six chooser glyphs, profile menu, navigation hover/focus, and Recall reveal, grading and completion. No page errors or document overflow were found. Native physical-device appearance remains unverified.
 
@@ -583,7 +601,7 @@ Mobile is intentionally checked outside the root TypeScript solution: Expo's gen
 
 **This is a fully clean baseline.** Treat any new warning as a regression introduced by the change that caused it.
 
-**1064 across 111 files is the current correct count**, up from 1031/109 (the interaction-behavior split added `packages/core/src/interactions/behaviors.test.ts`, 24, and `apps/web/src/features/reviewV2/interactions/registry.test.ts`, 9; the split itself moved no test and the main chunk moved 1,074.39 kB → 1,074.44 kB, gzip 305.87 → 305.95). Before that it was **1031 across 109 files**, up from 914/101. The **+8 files and +117 tests** are all new coverage; the parser extraction itself moved no test, because the parser had none. No dependency was added and the main bundle chunk moved 1,073.22 kB → 1,074.39 kB (gzip 305.32 → 305.87); the design tokens are tree-shaken out of production entirely, since only a test consumes them.
+**The historical Phase 2 baseline was 1064 across 111 files**, up from 1031/109 (the interaction-behavior split added `packages/core/src/interactions/behaviors.test.ts`, 24, and `apps/web/src/features/reviewV2/interactions/registry.test.ts`, 9; the split itself moved no test and the main chunk moved 1,074.39 kB → 1,074.44 kB, gzip 305.87 → 305.95). Before that it was **1031 across 109 files**, up from 914/101. The **+8 files and +117 tests** are all new coverage; the parser extraction itself moved no test, because the parser had none. No dependency was added and the main bundle chunk moved 1,073.22 kB → 1,074.39 kB (gzip 305.32 → 305.87); the design tokens are tree-shaken out of production entirely, since only a test consumes them.
 
 | file | tests | what it protects |
 |---|---|---|
@@ -713,6 +731,7 @@ Collection/Deck Phase G and the Roadmaps reskin remain later candidates. Neither
 | `/progress` | Progress |
 | `/progress/achievements` | Achievements |
 | `/progress/history` | Review history |
+| `/help`, `/help/contact`, `/help/articles/:articleId` | Help & Support |
 | `/settings`, `/settings/:section` | Account settings |
 | `/about` | About FlipTap |
 

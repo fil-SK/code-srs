@@ -88,11 +88,8 @@ describe('AccountMenu', () => {
       'Account settings',
       'Preferences',
       'Study settings',
-      'Spaced repetition (FSRS)',
       'Import / Export',
-      'Keyboard shortcuts',
-      'Help & documentation',
-      "What's new",
+      'Help & Support',
       'About FlipTap',
       'Sign out',
     ])
@@ -108,32 +105,12 @@ describe('AccountMenu', () => {
     expect(document.activeElement).toBe(items[0])
   })
 
-  it('marks every not-yet-built row as disabled and navigates nowhere when one is clicked', async () => {
+  it('keeps Sign out unavailable while signed out', async () => {
     const user = userEvent.setup()
     renderMenu()
-
     await user.click(trigger())
-    const placeholders = [
-      'Study settings',
-      'Spaced repetition',
-      'Keyboard shortcuts',
-      'Help & documentation',
-      "What's new",
-    ]
-    for (const label of placeholders) {
-      const item = screen.getByRole('menuitem', { name: new RegExp(label) })
-      expect(item.getAttribute('aria-disabled')).toBe('true')
-    }
-    // Sign out is disabled while signed out (no local or Supabase session).
-    expect(screen.getByRole('menuitem', { name: /Sign out/ }).getAttribute('aria-disabled')).toBe(
-      'true',
-    )
-
-    await user.click(screen.getByRole('menuitem', { name: /Study settings/ }))
-    expect(screen.getByTestId('pathname').textContent).toBe('/decks')
-    expect(screen.getByRole('menu')).toBeTruthy()
+    expect(screen.getByRole('menuitem', { name: /Sign out/ }).getAttribute('aria-disabled')).toBe('true')
   })
-
   it('opens Appearance from the Preferences shortcut', async () => {
     const user = userEvent.setup()
     renderMenu()
@@ -187,23 +164,19 @@ describe('AccountMenu', () => {
     expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  // /settings/card-scheduling is not a section in settingsSections.ts, so this
-  // row used to navigate to Profile while looking like a real destination.
-  it('offers Spaced repetition as a placeholder, not a link to a section that does not exist', async () => {
+  it('groups FSRS under Study settings and shortcuts under Help & Support', async () => {
     const user = userEvent.setup()
     renderMenu()
-
     await user.click(trigger())
-    const row = screen.getByRole('menuitem', { name: /Spaced repetition/ })
-
-    expect(row.getAttribute('href')).toBeNull()
-    expect(row.getAttribute('aria-disabled')).toBe('true')
-    expect(row.textContent).toContain('Soon')
-
-    await user.click(row)
-    expect(screen.getByTestId('pathname').textContent).toBe('/decks')
+    expect(screen.queryByRole('menuitem', { name: /Spaced repetition|Keyboard shortcuts|What's new/ })).toBeNull()
+    const study = screen.getByRole('menuitem', { name: 'Study settings' })
+    expect(study.getAttribute('href')).toBe('/settings/study')
+    const help = screen.getByRole('menuitem', { name: 'Help & Support' })
+    expect(help.getAttribute('href')).toBe('/help')
+    await user.click(help)
+    expect(screen.getByTestId('pathname').textContent).toBe('/help')
+    expect(screen.queryByRole('menu')).toBeNull()
   })
-
   it('shows a real identity instead of a fabricated display name', async () => {
     const user = userEvent.setup()
     renderMenu()

@@ -109,9 +109,11 @@ not a replacement backup engine:
 
 ### Support and feedback
 
-Add an obvious contact/report-a-problem path and an accurate explanation of what
-the released configuration stores or sends. A contact link is sufficient for a
-small beta; no in-app ticketing system is needed.
+**Page and form implemented on web (2026-10-09, D503).** Help Center has six categorized articles and contextual links to `/help/contact`. Contact & Feedback has Bug report / Feature request / General question, a message and optional reply email.
+
+**TODO, explicitly deferred by the owner:** choose the support inbox or form/API endpoint and connect message delivery. Until then Send message stays focusable with aria-disabled and a Soon pill; nothing is sent or persisted. Drafts are memory-only and do not survive reload. Verify real delivery, validation, pending, success, failure/retry and optional reply-email handling when connected. Preserve messages on failure. No ticketing system is needed.
+
+**Later:** add Help Center search once the collection is large enough to justify it; the current six guides are browseable directly.
 
 A useful report can include version, platform, steps and an optional screenshot.
 Do not attach card contents, code, exported workspaces or account tokens
