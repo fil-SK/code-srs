@@ -12,7 +12,7 @@ export function ProgressShell({ children }: { children: ReactNode }) {
 
   // Match the page ground so its decorative wash stays outside navigation.
   return isWide ? (
-    <div className="grid grid-cols-[240px_1fr] items-stretch gap-8">
+    <div className="grid min-h-[calc(100dvh-112px)] grid-cols-[220px_1fr] items-stretch gap-8">
       <div
         className="border-r border-fliptap-border pr-2"
         style={{ backgroundColor: 'var(--fliptap-canvas)' }}
@@ -24,7 +24,7 @@ export function ProgressShell({ children }: { children: ReactNode }) {
   ) : (
     <div className="flex flex-col gap-4">
       <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface">
-        <ProgressNav />
+        <ProgressNav compact />
       </div>
       <div className="min-w-0">{children}</div>
     </div>

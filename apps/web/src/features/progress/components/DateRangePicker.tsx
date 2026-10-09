@@ -23,8 +23,18 @@ export function DateRangePicker({
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        ref.current?.querySelector('button')?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [open])
 
   return (

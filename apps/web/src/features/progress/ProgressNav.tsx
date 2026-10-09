@@ -71,12 +71,22 @@ const SHOW_UNBUILT_DESTINATIONS: boolean = false
 
 const VISIBLE_GROUPS: NavGroup[] = SHOW_UNBUILT_DESTINATIONS
   ? NAV_GROUPS
-  : NAV_GROUPS.map((group) => ({
-      ...group,
-      items: group.items.filter((item) => item.to),
-    })).filter((group) => group.items.length > 0)
-
-export function ProgressNav() {
+  : [{ heading: 'Learning', items: NAV_GROUPS.flatMap((group) => group.items).filter((item) => item.to) }]
+export function ProgressNav({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <nav aria-label="Progress" className="flex flex-wrap items-center gap-1 p-2">
+        {VISIBLE_GROUPS.flatMap((group) => group.items).filter((item) => item.to).map((item) => (
+          <NavLink key={item.label} to={item.to!} end
+            className={({ isActive }) => cn('flex min-h-10 items-center gap-2 rounded-fliptap-control px-3 text-xs font-semibold',
+              isActive ? 'bg-fliptap-accent-soft text-fliptap-ink-brand' : 'text-fliptap-muted hover:bg-fliptap-surface-subtle')}>
+            <item.icon size={15} aria-hidden="true" />{item.label}
+          </NavLink>
+        ))}
+        <Link to="/settings" aria-label="Settings" className="ml-auto grid size-10 place-items-center rounded-fliptap-control text-fliptap-muted hover:bg-fliptap-surface-subtle"><Settings size={17} aria-hidden="true" /></Link>
+      </nav>
+    )
+  }
   return (
     <div className="flex h-full flex-col p-4">
       <nav aria-label="Progress" className="space-y-5">

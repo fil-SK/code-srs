@@ -30,7 +30,7 @@ This app was developed fully with the assistance of Claude AI. The primary reaso
 - **Draft inbox** for capturing ideas quickly and converting them into cards later.
 - **Adjust session from Today**: choose all due cards or a deck and a card count, with a clear queue preview in a desktop modal or phone sheet. Choices apply only to that session.
 - **Today Momentum**: a focal streak, seven actual study days, mature retention and your next achievement, linked to Progress.
-- **Progress**: learned and due cards, review volume, mature-material retention, current streak, activity, and actionable per-deck metrics.
+- **Progress**: a focal retention card with one deck-filterable trend, seven-day streak activity, Cards due with a review action, compact learned/review metrics, activity, actionable decks with blue learned-card coverage bars, and colored earned achievements.
 - **Four study achievements**: your first finished session, five study days in seven, reviews across four weeks, and recalling a missed card on a later due review. Progress shows lifetime progress and earned dates; review completion acknowledges new unlocks. Available on web and native Demo (whose state still resets on restart).
 - **Import / Export** your whole collection as JSON.
 - **Light, dark and system themes** in Account settings → Appearance, saved on this browser; responsive, mobile-friendly and installable (PWA).
@@ -74,7 +74,7 @@ Grading model: interactive interactions (Multiple Choice, Write Code, Ordering, 
 - **Browse** — all cards across decks with text/type/tag filters; the same per-card actions as the deck page.
 - **Preview** — try cards with **no scheduling impact** through the same card surface as Review. In deck flip-through, Prev and Next flank the position in the white strip; the Left/Right arrow keys perform the same navigation. Ratings are hidden and nothing is recorded.
 - **Drafts** — capture rough notes, then convert each into a fully-formed card.
-- **Progress** (`/progress`) — Learned, Due, Reviews, mature Retention, and Current streak; activity and retention charts; actionable leaf-deck rows ordered around work due now. Today, navigation, Progress, and Review share the same due/streak/retention definitions.
+- **Progress** (`/progress`) — Retention rate with its single trend, Current streak, Cards due, Learned and Reviews; activity heat map and lifetime achievements; actionable leaf-deck rows ordered around work due now. Today, navigation, Progress, and Review share the same due/streak/retention definitions.
 - **Account settings** (`/settings`, from the avatar in the top-right) — JSON import/export and the card-scheduling migration tool. The avatar menu also links those two working sections directly and shows Study settings, What's new, keyboard/help and profile destinations as clearly marked upcoming items. Sign-out is available there for local, demo and cloud sessions.
 - **About FlipTap** (`/about`, from the avatar menu) — the product story, six interactive sample cards, review scheduling, and storage details for your active workspace, with shortcuts to Library and Import / Export.
 

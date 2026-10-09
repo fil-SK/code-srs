@@ -28,28 +28,38 @@ export function DeckScopeDropdown({
     function onClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        ref.current?.querySelector('button')?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKeyDown)
+    }
   }, [open])
 
   const current = options.find((o) => o.value === value)
 
   return (
-    <div ref={ref} className="relative flex-none">
+    <div ref={ref} className="relative min-w-0 max-w-full">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-fliptap-control border border-fliptap-border px-3 py-1.5 text-sm font-medium text-fliptap-ink hover:border-fliptap-border-strong"
+        className="inline-flex min-h-8 max-w-full items-center gap-1.5 whitespace-nowrap rounded-fliptap-control border border-fliptap-border px-3 py-1.5 text-xs font-medium text-fliptap-ink hover:border-fliptap-border-strong"
       >
-        {current?.label ?? 'All decks'}
+        <span className="max-w-28 truncate">{current?.label ?? 'All decks'}</span>
         <ChevronDown size={14} className="text-fliptap-muted" />
       </button>
       {open && (
         <div
           role="listbox"
-          className="absolute right-0 z-20 mt-1 max-h-64 w-56 overflow-y-auto rounded-fliptap-control border border-fliptap-border bg-fliptap-surface py-1 shadow-[var(--fliptap-shadow-float)]"
+          className="absolute right-0 z-20 mt-1 max-h-64 w-56 max-w-[calc(100vw-32px)] overflow-y-auto rounded-fliptap-control border border-fliptap-border bg-fliptap-surface py-1 shadow-[var(--fliptap-shadow-float)]"
         >
           {options.map((option) => (
             <button

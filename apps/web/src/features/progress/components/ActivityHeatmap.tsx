@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Info } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { heatmapMonthLabels, toHeatmapWeeks } from '@fliptap/core'
 import {
   HEATMAP_RANGE_OPTIONS,
@@ -27,7 +28,7 @@ const LEVEL_BG: Record<HeatmapDay['level'], string> = {
   0: 'var(--fliptap-surface-subtle)',
   1: 'var(--fliptap-accent-softer)',
   2: 'var(--fliptap-accent-soft)',
-  3: '#ffb37a', // mid step between accent-soft and the full accent
+  3: 'color-mix(in srgb, var(--fliptap-accent) 55%, var(--fliptap-accent-soft))',
   4: 'var(--fliptap-accent)',
 }
 
@@ -75,7 +76,7 @@ export function ActivityHeatmap({
   }, [hover])
 
   return (
-    <div className="rounded-fliptap-card border border-fliptap-border bg-fliptap-surface p-5 shadow-[var(--fliptap-shadow-card)]">
+    <div className="progress-panel p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
@@ -95,7 +96,7 @@ export function ActivityHeatmap({
         <p className="mt-6 text-sm text-fliptap-muted">No review activity yet.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
-          <div className="inline-flex gap-2">
+          <div className="inline-flex gap-3">
             <div
               className="grid flex-none text-[10px] text-fliptap-muted"
               style={{ gridTemplateRows: `14px repeat(7, ${cell}px)`, rowGap: gap }}
@@ -151,7 +152,7 @@ export function ActivityHeatmap({
             </div>
           </div>
 
-          {hover && (
+          {hover && createPortal(
             <div
               ref={tooltipRef}
               role="tooltip"
@@ -164,7 +165,7 @@ export function ActivityHeatmap({
             >
               <span className="font-semibold">{heatmapCellLabel(hover.day)}</span>
             </div>
-          )}
+            , document.body,)}
 
           <div className="mt-3 flex items-center gap-1.5 text-[10px] text-fliptap-muted">
             Less

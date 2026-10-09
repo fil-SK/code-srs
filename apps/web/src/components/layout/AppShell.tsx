@@ -17,6 +17,7 @@ import { primaryNavLinks } from './primaryNavLinks'
 // ThemeProvider, including the code views inside this shell.
 export function AppShell() {
   const { pathname } = useLocation()
+  const isProgress = pathname.startsWith('/progress')
   const isCardPreview =
     pathname === '/preview' || /^\/cards\/[^/]+\/study$/.test(pathname)
 
@@ -36,7 +37,9 @@ export function AppShell() {
           'w-full',
           isCardPreview
             ? 'py-0'
-            : 'mx-auto max-w-[1280px] px-4 py-8 sm:px-6',
+            : isProgress
+              ? 'mx-auto max-w-[1600px] px-4 py-6 sm:px-6'
+              : 'mx-auto max-w-[1280px] px-4 py-8 sm:px-6',
         )}
       >
         <Outlet />

@@ -210,7 +210,7 @@ Lucide's existing ISC/Feather notices are retained.
 A 32px soft circle for compact grouped metrics. Streak and milestone keep orange; approved Retention and Calendar use green and blue glyphs with matching subtle fills. All drawings inherit `currentColor`, so their surrounding surface controls the tone.
 
 Other conventions seen across `apps/web/src/features/today/*.tsx`:
-- **Sizes**: 14–17px for ordinary inline/list icons and 15px for most nav/action chrome. The branded streak flame is 24px in the top nav, and Progress KPI badges use 17px glyphs inside 36px circles because those are compact data-visualization marks rather than inline controls.
+- **Sizes**: 14–17px for ordinary inline/list icons and 15px for most nav/action chrome. The branded streak flame is 24px in the top nav, and Progress's focal KPI badges use 23–24px glyphs inside 40px rounded squares (D495); compact secondary metrics use 20px glyphs.
 - **Inline chrome icons** (nav search, "Create" button) sit at `gap-1.5`–`gap-2` next to text, not inside a circular badge — badges are reserved for list-row icons, not nav/action chrome.
 - **Trailing affordance**: `ChevronRight` at 14–16px, colored `text-fliptap-muted` (decorative) or `text-fliptap-accent` (a clickable "Continue"/"View more" link).
 - **Deck identity (D468)**: `DeckMark.tsx` renders a chosen generic Lucide glyph in a square `rounded-fliptap-control` navy tile, with white line art at stroke width 1.75. The same component serves Library rows/headers, Today and Progress. Small/medium/collection/large marks preserve their 36/44/80/148px footprint, with 18/22/40/64px glyphs; Today's existing 40px footprint remains. Deck names carry the accessible identity, so the accompanying marks are decorative. Existing decks without `iconId` show Code without a data rewrite. This supersedes web's generated monogram and diagonal ribbon; native still has its existing presentation.
@@ -480,8 +480,8 @@ The page alternates generous white sections with deep-navy storytelling surfaces
 ## Study achievement presentation (D473, 2026-10-08)
 
 The four achievements live inside Progress's existing milestone-panel position,
-with no separate route or navigation item. Each row has a 44px circular mark on
-web (42 points native), an original 32-unit SVG rendered at 28px, a short title,
+with no separate route or navigation item. D495 gives web rows a 36px rounded-square mark with a 25px original SVG;
+native retains its 42-point circle and 28px SVG. Each row has a short title,
 the exact earning rule, and either an earned date or a thin neutral progress bar
 with a readable progress label. The first unearned row says Next up. Earned is
 also stated in text with a green check on web, so neither color nor shape carries
@@ -527,3 +527,40 @@ The owner's `C:\Users\SK\Desktop\itera-mockups\mockup hint expl.png` is the lock
 `StudyGuidancePanel` owns this presentation; `GuidanceIllustration` supplies local decorative SVG artwork hidden from assistive technology. Desktop paper has 24px/28px padding and reserves room for the 145px drawing. At phone widths the 94px drawing occupies the title area and prose/code gets the full inner width. There is no emphasized side border. Long inline content wraps; fenced code uses the existing real code renderer.
 
 `CardHintScope` owns a transient disclosure for each card or Walkthrough step. The real card footer has a Show hint / Hide hint button with a 44px target, `aria-expanded`, `aria-controls` and visible keyboard focus. Its small bulb is muted and outlined while closed and filled orange while open. No hint text or control appears without authored content. Answering removes pre-answer guidance; card/step changes reset it. `FlashcardSurface` and `CardPanel` share the footer, including authoring previews. Step and overall hints are independent. Explanation remains immediately visible after the appropriate answer; its drawing never replaces or adds authored explanation content. Decorative motifs are static; reduced motion removes the toggle's color transition.
+
+## Web Progress overview (D495-D499, 2026-10-09)
+
+The locked reference is `C:\Users\SK\Desktop\itera-mockups\mock progress.png`,
+with the owner's exceptions: replace Cards due artwork and remove the middle
+duplicate retention chart. The top hierarchy is one green retention headline
+and trend, a warm streak card, a blue-toned due card with the sole primary
+action, and two stacked compact Learned/Reviews cards. At 1000px of content
+width, the heat map and deck performance share equal-width columns, with
+Achievements below Deck performance. Smaller layouts stack all three. Surfaces,
+tints, borders, shadows and text use the existing palette in both themes.
+
+Progress routes have a 1600px maximum frame, 220px sidebar and 14px panel gaps.
+Metric labels are quiet uppercase text; the three focal badges are 40px rounded
+squares. Content-container widths determine the metric grid. Narrow screens use
+compact section links, stack focal cards and pair the two secondary metrics.
+Loading placeholders preserve the same structure. Global navigation retains
+its shared sizing.
+
+The retention selector lives in its card and scopes the rate, comparison and
+trend together. Chart focus/hover shows actual bucket spans, missing periods
+stay gaps, and its empty-history state stays honest. Seven streak markers end
+today. Calendar heat maps show exactly the selected actual days rather than
+the illustrative excess cells in the mockup. Deck Cards learned bars measure learned
+active-card coverage with the selectionBorder blue fill on navySoft tracks,
+even at 100% (D499, replacing D498); due work still controls row order and destinations. Earned
+achievement rows and original glyphs are green; pending rows stay neutral.
+No fake achievement detail links are added.
+
+
+Learned and Reviews follow the locked reference's compact card composition
+(D497): a badge at the upper left, uppercase label / 32px number / caption in
+one adjacent text column, and a muted three-bar glyph on the right. The bars
+are decorative, not a measured trend; the line sparkline is removed. Learned's
+caption is "of N active cards", and Reviews retains its actual period comparison.
+Phone cards tighten badge size and spacing without moving captions beneath
+the icon row.

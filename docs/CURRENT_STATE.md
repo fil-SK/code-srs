@@ -1,6 +1,25 @@
 # FlipTap — current repository state
 
-**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; balanced web action hierarchy).
+**Last verified against the working tree: 2026-10-09** (branch `dev/scenario-switcher`; blue learned-card coverage).
+
+> **Reference-led web Progress (2026-10-09, D495-D499).** The owner's new mockup
+> now guides the wider overview: one retention headline/trend card, seven-day
+> streak, Cards due with a clock/check icon and working action, and stacked
+> Learned/Reviews, now matching the mockup with aligned captions, larger
+> values and muted right-side bar glyphs (D497). The duplicate retention
+> panel is removed. Activity and
+> Deck performance now share equal-width desktop columns; Achievements
+> sits below Deck performance. Smaller layouts stack the three panels.
+> Deck bars now use the blue accent and the Cards learned label, including
+> at full coverage, so they do not signal finished study (D498-D499).
+> Retention's moved deck filter controls both its percentage and chart.
+> Earned achievements are green; pending ones remain muted. Phone navigation
+> is compact, and all colors use the existing Light/Dark tokens.
+> All 123 test files / 1,162 tests, forced TypeScript and lint pass.
+> Chromium checks the paired layout in both themes at four widths; filters,
+> keyboard/hover tooltips,
+> actual review navigation, reduced motion and empty states without overflow.
+>
 
 > **Shared web settings-button styling (2026-10-09, D493).** Deck settings
 > and Collection settings now use the shared secondary Button, retaining
@@ -233,7 +252,7 @@
 >
 > **Milestone M1A - the native cloud/auth/data foundation (§23) - remains implemented and intact, and remains unverified.** It has never been run against a live Supabase project, because none exists (see §15), and Supabase integration is **intentionally postponed until after demand validation**. Cloud mode is still reachable with `EXPO_PUBLIC_FLIPTAP_MODE=cloud` and valid configuration; everything in §23 marked *pending live verification* is code-complete and gate-clean but unproven against real Postgres.
 
-The most recent product-correctness milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress's headline row is exactly **Learned · Due · Reviews · Retention · Current streak**, and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`fliptap-decisions.md`](fliptap-decisions.md).
+The most recent product-correctness milestone completed **Progress correctness and KPI definitions** (Milestone 3): every new `ReviewLog` records the scheduling state before grading, mature retention uses that field through one shared calculation, Progress retains exactly five measures, now presented as **Retention rate · Current streak · Cards due · Learned · Reviews** (D495), and Deck Performance now ranks actionable due work. Prototype ReviewLog history was deliberately discarded rather than reconstructed: Dexie version 2 clears only `reviewLogs`, the versioned Supabase migration deletes the same rows before enforcing the new JSON contract, and backup import rejects any nonconforming row. Cards and decks remain intact. See the 2026-08-21 entry in [`fliptap-decisions.md`](fliptap-decisions.md).
 
 This is the agent-neutral "where the project actually stands" document. Any coding agent (Claude, Codex, human) should read this **first**, then go to the deeper docs it links for reasoning and history.
 
@@ -296,7 +315,7 @@ A release-readiness audit on 2026-08-22 ([`audits/audit_22_8_2026.md`](audits/au
 
 The P2 hardening that followed closed the audit's remaining ranked items in two passes. P2-A took §10 items 3, 4, 7, 8, 9 and 11 (Supabase bootstrap rejection, PWA precache, collection cycles, download compatibility, dialog focus, `schema.sql` re-runnability). **P2-B closes §10 items 5 and 6 — review persistence.** Grading wrote the advanced card and its ReviewLog as two independent operations, so a failure between them left a card scheduled forward with no history row: permanently invisible to Progress, retention, streak and the heat map, which all derive from the logs. A rejection was also dropped on the floor — the phase had already advanced past grading and the ratings were disabled, so the session sat frozen with no explanation. Both are fixed: the seam now carries `commitReview`/`revertReview`, each backend writes both stores as one transaction, and a failed write shows an inline retry that re-sends the same computed result rather than grading again (§11, §12, §15, and the newest 2026-08-22 decision entry). **Every P1 and every ranked P2 audit item is now closed.**
 
-Progress now answers five explicit questions with five honest tiles: unique current active cards learned, cards due now, ReviewLog entries in the selected period, mature retention in that period, and the canonical current streak. `stateBefore` is required on every new ReviewLog, so new/learning graduations never contaminate mature retention and a Review → Again remains an eligible failure. The page retains its heat map, deck-scopable retention chart and milestones; gaps in the retention chart are no longer interpolated. Deck Performance shows leaf/actionable decks with Learned, Due and Retention, including due decks with no period history, ordered around due work. No page was redesigned.
+Progress now answers five explicit questions with five honest tiles: unique current active cards learned, cards due now, ReviewLog entries in the selected period, mature retention in that period, and the canonical current streak. `stateBefore` is required on every new ReviewLog, so new/learning graduations never contaminate mature retention and a Review → Again remains an eligible failure. D495 now presents the five measures through focal cards and stacked secondary metrics, with the deck-scopable retention chart embedded in the headline rather than duplicated below. The page retains its heat map and lifetime achievements; gaps in the retention chart are no longer interpolated. Deck Performance shows leaf/actionable decks with Learned, Due and Retention, including due decks with no period history, ordered around due work. The later D495 redesign preserves these definitions.
 
 Today's placeholder content is gone. The hero reads the real due queue, contributing decks and a history-based duration estimate. Momentum leads with the canonical streak and seven local study-day markers, keeps mature retention compact, and shows one pending shared achievement linking to Progress (D475). Continue Learning supplies real deck continuation; Pace shows reviews per local day. Weekly Goal stays deferred. Adjust session and the per-mount Review snapshot remain functional.
 

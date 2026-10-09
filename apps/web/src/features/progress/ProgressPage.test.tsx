@@ -111,7 +111,7 @@ describe('Progress headline contract', () => {
     renderProgress()
     await screen.findByRole('group', { name: 'Learned' })
 
-    for (const label of ['Learned', 'Due', 'Reviews', 'Retention', 'Current streak']) {
+    for (const label of ['Learned', 'Cards due', 'Reviews', 'Retention rate', 'Current streak']) {
       expect(screen.getByRole('group', { name: label })).toBeTruthy()
     }
     expect(screen.queryByRole('group', { name: 'Total sessions' })).toBeNull()
@@ -122,12 +122,12 @@ describe('Progress headline contract', () => {
   it('shows current-state captions without fake deltas and period deltas only where valid', async () => {
     renderProgress()
     const learned = await screen.findByRole('group', { name: 'Learned' })
-    const due = screen.getByRole('group', { name: 'Due' })
+    const due = screen.getByRole('group', { name: 'Cards due' })
     const reviews = screen.getByRole('group', { name: 'Reviews' })
-    const retention = screen.getByRole('group', { name: 'Retention' })
+    const retention = screen.getByRole('group', { name: 'Retention rate' })
     const streak = screen.getByRole('group', { name: 'Current streak' })
 
-    expect(within(learned).getByText('2 of 3 active cards')).toBeTruthy()
+    expect(within(learned).getByText('of 3 active cards')).toBeTruthy()
     expect(within(due).getByText('Due now')).toBeTruthy()
     expect(within(due).getByText('1')).toBeTruthy()
     expect(within(learned).queryByText(/ vs /)).toBeNull()
@@ -202,5 +202,38 @@ describe('Progress achievements', () => {
     await user.click(screen.getByRole('option', { name: 'Last 7 days' }))
     expect(within(section).getByText('1 of 4 earned')).toBeTruthy()
     expect(within(section).getByRole('progressbar', { name: 'Here to stay' }).getAttribute('aria-valuemax')).toBe('4')
+  })
+})
+
+describe('Progress reference layout behavior', () => {
+  it('shows one retention chart in the headline and a real due-review action', async () => {
+    await repo.reviews.append(log('earlier-mature', 'mature-card', daysAgo(Date.now(), 5), 3, 'review'))
+    renderProgress()
+    const retention = await screen.findByRole('group', { name: 'Retention rate' })
+    expect(screen.getAllByRole('img', { name: 'Retention rate over time' })).toHaveLength(1)
+    expect(within(retention).getByRole('img', { name: 'Retention rate over time' })).toBeTruthy()
+    expect(screen.queryByText('Retention over time')).toBeNull()
+    expect(screen.getByRole('link', { name: 'Review now' }).getAttribute('href')).toBe('/review')
+  })
+
+  it('scopes the retention headline and trend together without changing Reviews', async () => {
+    const user = userEvent.setup()
+    renderProgress()
+    const retention = await screen.findByRole('group', { name: 'Retention rate' })
+    expect(within(retention).getByText('50%')).toBeTruthy()
+    await user.click(within(retention).getByRole('button', { name: 'All decks' }))
+    await user.click(screen.getByRole('option', { name: 'Due deck' }))
+    expect(within(retention).getByText('—')).toBeTruthy()
+    expect(within(retention).getByText('No prior data')).toBeTruthy()
+    expect(within(screen.getByRole('group', { name: 'Reviews' })).getByText('3')).toBeTruthy()
+  })
+
+  it('offers the library when there are no cards due', async () => {
+    await repo.cards.put(card('due-card', 'due-deck', Date.now() + DAY))
+    renderProgress()
+    const due = await screen.findByRole('group', { name: 'Cards due' })
+    expect(within(due).getByText('All caught up')).toBeTruthy()
+    expect(within(due).getByRole('link', { name: 'Browse library' }).getAttribute('href')).toBe('/decks')
+    expect(screen.queryByRole('link', { name: 'Review now' })).toBeNull()
   })
 })

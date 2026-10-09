@@ -2341,3 +2341,120 @@ The web guidance panels use soft orange/green paper tints from existing tokens, 
 Hints now start collapsed. `CardHintScope` owns local disclosure state and `HintToggle` renders in `FlashcardSurface`'s question footer or `CardPanel`'s footer. The bulb changes from a muted outline to orange fill on opening. The button exposes Show/Hide hint, expanded state, its controlled region and visible keyboard focus, with a 44px target. Nested activation is handled by the existing flip/shortcut guards and never reveals, submits or grades an answer. Missing/blank tips render no control. Walkthrough has independent overall and step scopes, with step state keyed by step id; answering replaces the step hint with its explanation. Card remounts reset disclosure state. Authoring and study previews use the same presentation and controls.
 
 Verification: all 123 files / 1,159 tests pass with two workers and a 20-second timeout; focused Review regressions pass after tightening the reveal assertion. Forced TypeScript and root lint pass. Isolated Chromium verifies Light/Dark at 1440x900 and 390x844, closed/open/filled bulb states, keyboard Enter/Space disclosure without answering, focus, subsequent reveal, all six card types, reduced motion, long inline content, literal generics/operators, fenced code and step guidance. No page errors or document overflow. Screenshots were visually inspected. No native, marketing, storage, card model, backup format or grading changes are introduced.
+
+## 2026-10-09 - Reference-led web Progress overview
+
+**D495 (supersedes D113's overview composition, preserves D473's achievement rules).**
+The owner supplied `C:\Users\SK\Desktop\itera-mockups\mock progress.png` as the locked
+composition reference, with two explicit exceptions: replace the Cards due
+drawing and keep only the top retention chart. Progress now leads with a green
+retention card containing the percentage and gap-aware trend, a warm streak
+card with seven actual recent local study days, a blue-toned Cards due card
+with a clock/check glyph and real Review now action, and stacked Learned /
+Reviews cards. The duplicate middle retention panel is removed; the activity
+heat map spans that row, above Deck performance and Achievements.
+
+Only Progress routes use a 1600px maximum main frame and 220px local sidebar.
+The live Overview and Review history rows share the Learning heading;
+unbuilt destinations retain D458's visibility policy. Narrow layouts use
+compact section navigation and reflow the same metrics according to available
+content width. Loading retains the heading, controls and new layout geometry.
+The app's existing Light/Dark tokens and shared button treatment supply colors
+and actions. Native and marketing presentation are unchanged.
+
+Retention's deck selector moves into the top card. Its headline and period
+comparison use the same deck subtree and mature attempts as its chart,
+without averaging plotted bucket rates. Reviews continues to follow only the
+date range. Missing buckets remain gaps and isolated observations remain
+points; fewer than two observations retain the existing empty-trend message.
+The date range, heat-map range and lifetime achievements keep their existing
+semantics. A 30-day calendar shows only its actual weeks, rather than the
+mockup's illustrative extra cells. Streak markers end today and never label
+a future day as studied. Cards due offers Browse library at zero.
+
+Deck performance retains due-first ordering and real deck/review links.
+Its added Progress bar names the actual learned-active-card fraction, never
+retention or a fabricated temporal trend. View all decks moves to the header.
+Earned achievement rows use a restrained green tint and their original glyphs;
+pending rows stay neutral with their true progress and Next up identity.
+No achievement row invents a separate detail destination.
+
+Chart buckets support keyboard focus, deck labels truncate within their
+control, and Escape closes both selectors. Heat-map tooltips portal to the
+document so the responsive container cannot change their viewport coordinates.
+No persisted row, schema, scheduler, achievement rule or dependency changes.
+
+Verification: all 123 root test files / 1,162 tests pass with two workers and a
+20-second timeout; forced TypeScript and root lint pass. Chromium verifies
+Light/Dark at 390, 768, 1000, 1280, 1440 and 1586px, date/deck filtering,
+Escape and returned focus, keyboard chart tooltips, all four heat-map ranges
+and tooltip edges, actual Review now navigation, empty/caught-up states and
+reduced motion, without page errors or document overflow.
+
+## 2026-10-09 - Pair the Progress heat map and deck performance
+
+**D496 (refines D495's panel arrangement).** The owner requested Deck performance
+beside the Activity heat map because the full-width heat map felt too stretched.
+Both now share equal-width columns when the Progress content area is at least
+1000px wide. Achievements retains a compact card below Deck performance in the
+right column. Narrower layouts stack Activity, Deck performance and Achievements
+in that order. Loading skeletons use the same arrangement. The approved headline
+cards, panel contents, filters, links, palette and data definitions are retained.
+
+Verification: all 123 test files / 1,162 tests, forced TypeScript and root lint
+pass. Isolated Chromium checks Light/Dark at 1440x900, 1280x900, 1000x900 and
+390x844, paired panel bounds, compact Achievements placement, stacking, all
+heat-map ranges and tooltip edges, hover/focus and deck/library destinations.
+Screenshots were inspected; no page errors or document overflow were found.
+
+## 2026-10-09 - Match Learned and Reviews to the locked Progress reference
+
+**D497 (corrects D495's compact metric presentation).** The owner pointed out
+that Learned and Reviews did not match the supplied Progress mockup. Both now
+keep the icon badge at the upper left, with the uppercase label, 32px value
+and caption aligned in one adjacent vertical column. Learned reads
+"of N active cards" beneath the already displayed learned count. Reviews uses
+the stacked-copy glyph and retains its real selected-period comparison.
+
+A small, muted three-bar glyph sits on the right of each card, matching the
+reference's decorative mark. It is hidden from assistive technology and carries
+no numeric trend claim. The unrelated line sparkline and its page-only data
+wiring are removed. The shared review-series calculation remains available;
+KPI definitions, range behavior, core data and D496's panel arrangement remain
+unchanged. Narrow cards use smaller badge spacing while preserving the same
+composition and readable numbers.
+
+Verification: all 123 test files / 1,162 tests, forced TypeScript and root lint
+pass. Isolated Chromium verifies Light/Dark at 1440x900, the 1586px reference
+width, 1280x900 and 390x844. Label/value/caption alignment, separation from the
+bar glyphs, absence of the line sparkline, real range updates, keyboard range
+activation, empty states and reduced motion pass without overflow or page
+errors. Both theme screenshots were visually inspected against the reference.
+
+## 2026-10-09 - Neutral learned-card coverage in Deck performance
+
+**D498 (refines D495's deck bar presentation).** The owner agreed that green
+could imply a deck was finished, which does not describe spaced repetition.
+Deck performance now labels the bar column "Cards learned" and fills every
+fraction, including 100%, with the existing mutedLight neutral role.
+The track remains navySoft. Accessible names also say "cards learned".
+A full bar reports coverage of active cards, never completion or freedom from
+future reviews. Retention retains its existing success/warning tones.
+Values, bar fractions, deck ordering, destinations and responsive visibility
+are unchanged. No new tokens, storage changes or calculation changes are added.
+
+## 2026-10-09 - Blue learned-card coverage in Deck performance
+
+**D499 (supersedes D498's neutral-fill choice; retains its Cards learned label).**
+The owner rejected gray coverage bars and requested color without green's
+completion signal. Bars now use the existing selectionBorder blue accent on
+navySoft tracks, consistently at partial and full coverage. They do not switch
+to green at 100%. The Cards learned header, accessible coverage text, actual
+learned/active fraction and responsive visibility remain. Retention keeps its
+independent success/warning coloring. No new palette role or metric is added.
+
+Verification: all 123 root test files / 1,162 tests, forced TypeScript and
+root lint pass. Isolated Chromium checks Light/Dark at 1440x900 and 390x844,
+zero/half/full coverage, the blue token at every fraction, Cards learned
+heading and accessible names, hover/focus and phone visibility. Both theme
+screenshots were inspected; no page errors or document overflow were found.
